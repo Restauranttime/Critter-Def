@@ -1,1 +1,1140 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 
+<title>Critter Defense</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:#07111f;
+  color:white;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  touch-action:manipulation;
+}
+
+#app{
+  max-width:650px;
+  margin:auto;
+  padding:10px;
+}
+
+h1{
+  margin:4px 0 8px;
+  font-size:24px;
+}
+
+.stats{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+}
+
+.stat{
+  background:#14243a;
+  border:1px solid #304966;
+  border-radius:11px;
+  padding:8px 12px;
+}
+
+#game{
+  display:block;
+  width:100%;
+  height:auto;
+  margin-top:9px;
+  border:2px solid #29415a;
+  border-radius:15px;
+  background:#75b94f;
+}
+
+.buttons{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:7px;
+  margin-top:8px;
+}
+
+button{
+  border:0;
+  border-radius:11px;
+  padding:13px 6px;
+  background:#1769d1;
+  color:white;
+  font-weight:800;
+  font-size:14px;
+}
+
+button:active{
+  transform:scale(.97);
+}
+
+#message{
+  min-height:35px;
+  padding:8px 2px;
+  color:#b9c9dc;
+  font-size:13px;
+}
+
+.towers{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+}
+
+.tower{
+  background:#132238;
+  border:1px solid #2c4464;
+  border-radius:12px;
+  padding:9px;
+  text-align:center;
+}
+
+.tower .emoji{
+  font-size:32px;
+}
+
+.tower b{
+  display:block;
+  font-size:13px;
+  margin:3px 0;
+}
+
+.tower small{
+  color:#a9b9ce;
+}
+
+.tower button{
+  width:100%;
+  margin-top:7px;
+  padding:10px 4px;
+  font-size:12px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="app">
+
+<h1>🦊 Critter Defense</h1>
+
+<div class="stats">
+  <div class="stat">💰 <b id="money">250</b></div>
+  <div class="stat">❤️ <b id="lives">20</b></div>
+  <div class="stat">🌊 Welle <b id="wave">0</b></div>
+</div>
+
+<canvas id="game" width="600" height="390"></canvas>
+
+<div class="buttons">
+  <button id="start">▶ Welle starten</button>
+  <button id="speed">⚡ 2×</button>
+  <button id="pause">⏸ Pause</button>
+  <button id="restart">↻ Neustart</button>
+</div>
+
+<div id="message">
+Wähle einen Verteidiger und tippe danach auf eine freie Stelle der Karte.
+</div>
+
+<div class="towers">
+
+<div class="tower">
+  <div class="emoji">🦊</div>
+  <b>Fuchs-Funker</b>
+  <small>80€ · schnell</small>
+  <button onclick="selectTower('fox')">Auswählen</button>
+</div>
+
+<div class="tower">
+  <div class="emoji">🐢</div>
+  <b>Panzer-Schildkröte</b>
+  <small>125€ · stark</small>
+  <button onclick="selectTower('turtle')">Auswählen</button>
+</div>
+
+<div class="tower">
+  <div class="emoji">🦉</div>
+  <b>Nacht-Eule</b>
+  <small>160€ · Reichweite</small>
+  <button onclick="selectTower('owl')">Auswählen</button>
+</div>
+
+</div>
+</div>
+
+<script>
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const moneyEl = document.getElementById("money");
+const livesEl = document.getElementById("lives");
+const waveEl = document.getElementById("wave");
+const message = document.getElementById("message");
+
+let money = 250;
+let lives = 20;
+let wave = 0;
+
+let towers = [];
+let enemies = [];
+
+let selectedTower = null;
+
+let running = false;
+let paused = false;
+let fast = false;
+
+let spawnTimer = 0;
+let spawned = 0;
+let totalEnemies = 0;
+
+let lastTime = performance.now();
+
+
+/* =========================
+   MAP
+========================= */
+
+const path = [
+  [-20,70],
+  [130,70],
+  [130,170],
+  [300,170],
+  [300,90],
+  [480,90],
+  [480,300],
+  [620,300]
+];
+
+let segments = [];
+let pathLength = 0;
+
+for(let i=0;i<path.length-1;i++){
+
+  const a = path[i];
+  const b = path[i+1];
+
+  const length =
+    Math.hypot(
+      b[0]-a[0],
+      b[1]-a[1]
+    );
+
+  segments.push({
+    a:a,
+    b:b,
+    length:length
+  });
+
+  pathLength += length;
+}
+
+
+function positionOnPath(distance){
+
+  for(const segment of segments){
+
+    if(distance <= segment.length){
+
+      const p =
+        distance / segment.length;
+
+      return [
+        segment.a[0] +
+        (segment.b[0]-segment.a[0]) * p,
+
+        segment.a[1] +
+        (segment.b[1]-segment.a[1]) * p
+      ];
+    }
+
+    distance -= segment.length;
+  }
+
+  return path[path.length-1];
+}
+
+
+/* =========================
+   TOWERS
+========================= */
+
+const towerData = {
+
+  fox:{
+    cost:80,
+    range:95,
+    attackSpeed:.25,
+    damage:8,
+    emoji:"🦊"
+  },
+
+  turtle:{
+    cost:125,
+    range:82,
+    attackSpeed:.7,
+    damage:25,
+    emoji:"🐢"
+  },
+
+  owl:{
+    cost:160,
+    range:135,
+    attackSpeed:.95,
+    damage:14,
+    emoji:"🦉"
+  }
+
+};
+
+
+function selectTower(type){
+
+  const tower = towerData[type];
+
+  if(money < tower.cost){
+
+    setMessage("Nicht genug Geld!");
+
+    return;
+  }
+
+  selectedTower = type;
+
+  setMessage(
+    tower.emoji +
+    " ausgewählt – jetzt auf die Karte tippen."
+  );
+}
+
+
+/* =========================
+   MAP TOUCH
+========================= */
+
+canvas.addEventListener(
+  "pointerdown",
+  function(event){
+
+    if(!selectedTower){
+
+      setMessage(
+        "Wähle zuerst einen Verteidiger."
+      );
+
+      return;
+    }
+
+    const rect =
+      canvas.getBoundingClientRect();
+
+    const x =
+      (event.clientX - rect.left)
+      * canvas.width / rect.width;
+
+    const y =
+      (event.clientY - rect.top)
+      * canvas.height / rect.height;
+
+
+    /*
+      Nicht direkt auf der Straße bauen
+    */
+
+    const nearest =
+      nearestPathDistance(x,y);
+
+    if(nearest < 32){
+
+      setMessage(
+        "Hier ist die Straße – dort kannst du nicht bauen."
+      );
+
+      return;
+    }
+
+
+    /*
+      Abstand zu anderen Türmen
+    */
+
+    for(const tower of towers){
+
+      if(
+        Math.hypot(
+          tower.x-x,
+          tower.y-y
+        ) < 45
+      ){
+
+        setMessage(
+          "Hier steht bereits ein Verteidiger."
+        );
+
+        return;
+      }
+    }
+
+
+    const data =
+      towerData[selectedTower];
+
+
+    towers.push({
+
+      x:x,
+      y:y,
+
+      type:selectedTower,
+
+      range:data.range,
+
+      damage:data.damage,
+
+      attackSpeed:data.attackSpeed,
+
+      cooldown:0
+
+    });
+
+
+    money -= data.cost;
+
+    updateUI();
+
+    setMessage(
+      data.emoji +
+      " wurde platziert!"
+    );
+
+    selectedTower = null;
+  }
+);
+
+
+function nearestPathDistance(x,y){
+
+  let best = Infinity;
+
+  for(const s of segments){
+
+    const dx = s.b[0]-s.a[0];
+    const dy = s.b[1]-s.a[1];
+
+    const length2 =
+      dx*dx + dy*dy;
+
+    let t =
+      ((x-s.a[0])*dx +
+       (y-s.a[1])*dy) /
+      length2;
+
+    t = Math.max(0,Math.min(1,t));
+
+    const px =
+      s.a[0] + dx*t;
+
+    const py =
+      s.a[1] + dy*t;
+
+    best =
+      Math.min(
+        best,
+        Math.hypot(x-px,y-py)
+      );
+  }
+
+  return best;
+}
+
+
+/* =========================
+   WAVES
+========================= */
+
+document
+.getElementById("start")
+.addEventListener(
+  "click",
+  startWave
+);
+
+
+function startWave(){
+
+  if(running){
+
+    setMessage(
+      "Diese Welle läuft bereits!"
+    );
+
+    return;
+  }
+
+  if(lives <= 0){
+
+    return;
+  }
+
+  wave++;
+
+  waveEl.textContent = wave;
+
+  totalEnemies =
+    8 + wave * 3;
+
+  spawned = 0;
+
+  spawnTimer = 0;
+
+  running = true;
+
+  setMessage(
+    "🌊 Welle " +
+    wave +
+    " gestartet!"
+  );
+}
+
+
+/* =========================
+   ENEMIES
+========================= */
+
+function spawnEnemy(){
+
+  let type = "runner";
+
+  const random =
+    Math.random();
+
+
+  if(
+    wave >= 3 &&
+    random < .25
+  ){
+
+    type = "brute";
+
+  }else if(
+    wave >= 2 &&
+    random < .5
+  ){
+
+    type = "swift";
+
+  }
+
+
+  const stats = {
+
+    runner:{
+      hp:24,
+      speed:70,
+      reward:7,
+      emoji:"👾"
+    },
+
+    swift:{
+      hp:38,
+      speed:115,
+      reward:9,
+      emoji:"🐇"
+    },
+
+    brute:{
+      hp:100,
+      speed:30,
+      reward:17,
+      emoji:"🪨"
+    }
+
+  }[type];
+
+
+  enemies.push({
+
+    type:type,
+
+    distance:0,
+
+    hp:
+      stats.hp +
+      wave * 4,
+
+    maxHp:
+      stats.hp +
+      wave * 4,
+
+    speed:
+      stats.speed *
+      (1 + wave*.02),
+
+    reward:stats.reward,
+
+    emoji:stats.emoji
+
+  });
+}
+
+
+/* =========================
+   GAME UPDATE
+========================= */
+
+function update(dt){
+
+  if(paused){
+
+    return;
+  }
+
+
+  if(fast){
+
+    dt *= 2;
+  }
+
+
+  /*
+    Spawn enemies
+  */
+
+  if(running){
+
+    spawnTimer -= dt;
+
+
+    if(
+      spawned < totalEnemies &&
+      spawnTimer <= 0
+    ){
+
+      spawnEnemy();
+
+      spawned++;
+
+      spawnTimer = .6;
+    }
+
+
+    /*
+      Welle gewonnen
+    */
+
+    if(
+      spawned >= totalEnemies &&
+      enemies.length === 0
+    ){
+
+      running = false;
+
+      const bonus =
+        45 + wave * 12;
+
+      money += bonus;
+
+      updateUI();
+
+      setMessage(
+        "🎉 Welle geschafft! +" +
+        bonus +
+        "€ Bonus"
+      );
+    }
+  }
+
+
+  /*
+    Gegner bewegen
+  */
+
+  for(const enemy of enemies){
+
+    enemy.distance +=
+      enemy.speed * dt;
+
+
+    /*
+      Gegner am Ziel
+    */
+
+    if(
+      enemy.distance >= pathLength
+    ){
+
+      enemy.dead = true;
+
+      lives--;
+
+      updateUI();
+
+
+      if(lives <= 0){
+
+        running = false;
+
+        setMessage(
+          "💥 Dein Flughafen wurde überrannt!"
+        );
+      }
+    }
+  }
+
+
+  enemies =
+    enemies.filter(
+      enemy => !enemy.dead
+    );
+
+
+  /*
+    Türme schießen
+  */
+
+  for(const tower of towers){
+
+    tower.cooldown -= dt;
+
+
+    if(tower.cooldown > 0){
+
+      continue;
+    }
+
+
+    let target = null;
+
+    let furthest = -1;
+
+
+    for(const enemy of enemies){
+
+      const pos =
+        positionOnPath(
+          enemy.distance
+        );
+
+
+      const distance =
+        Math.hypot(
+          tower.x-pos[0],
+          tower.y-pos[1]
+        );
+
+
+      if(
+        distance <= tower.range &&
+        enemy.distance > furthest
+      ){
+
+        target = enemy;
+
+        furthest =
+          enemy.distance;
+      }
+    }
+
+
+    if(target){
+
+      target.hp -=
+        tower.damage;
+
+      tower.cooldown =
+        tower.attackSpeed;
+
+
+      if(target.hp <= 0){
+
+        target.dead = true;
+
+        money += target.reward;
+
+        updateUI();
+      }
+    }
+  }
+
+
+  enemies =
+    enemies.filter(
+      enemy => !enemy.dead
+    );
+}
+
+
+/* =========================
+   DRAW
+========================= */
+
+function draw(){
+
+  ctx.clearRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+
+  /*
+    Wiese
+  */
+
+  ctx.fillStyle =
+    "#75b94f";
+
+  ctx.fillRect(
+    0,
+    0,
+    600,
+    390
+  );
+
+
+  /*
+    Straße
+  */
+
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+
+  ctx.lineWidth = 58;
+
+  ctx.strokeStyle =
+    "#d6b477";
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    path[0][0],
+    path[0][1]
+  );
+
+  for(const point of path.slice(1)){
+
+    ctx.lineTo(
+      point[0],
+      point[1]
+    );
+  }
+
+  ctx.stroke();
+
+
+  /*
+    Asphalt
+  */
+
+  ctx.lineWidth = 43;
+
+  ctx.strokeStyle =
+    "#697783";
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    path[0][0],
+    path[0][1]
+  );
+
+  for(const point of path.slice(1)){
+
+    ctx.lineTo(
+      point[0],
+      point[1]
+    );
+  }
+
+  ctx.stroke();
+
+
+  /*
+    Mittellinie
+  */
+
+  ctx.lineWidth = 2;
+
+  ctx.strokeStyle =
+    "#ffffff";
+
+  ctx.setLineDash([
+    9,
+    9
+  ]);
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    path[0][0],
+    path[0][1]
+  );
+
+  for(const point of path.slice(1)){
+
+    ctx.lineTo(
+      point[0],
+      point[1]
+    );
+  }
+
+  ctx.stroke();
+
+  ctx.setLineDash([]);
+
+
+  /*
+    Türme
+  */
+
+  for(const tower of towers){
+
+    /*
+      Reichweite
+    */
+
+    ctx.fillStyle =
+      "rgba(20,40,70,.12)";
+
+    ctx.beginPath();
+
+    ctx.arc(
+      tower.x,
+      tower.y,
+      tower.range,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /*
+      Turm
+    */
+
+    ctx.font =
+      "32px sans-serif";
+
+    ctx.textAlign =
+      "center";
+
+    ctx.textBaseline =
+      "middle";
+
+
+    ctx.fillText(
+      towerData[tower.type].emoji,
+      tower.x,
+      tower.y
+    );
+
+
+    /*
+      Ring
+    */
+
+    ctx.strokeStyle =
+      "#ffffff";
+
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+
+    ctx.arc(
+      tower.x,
+      tower.y,
+      20,
+      0,
+      Math.PI*2
+    );
+
+    ctx.stroke();
+  }
+
+
+  /*
+    Gegner
+  */
+
+  for(const enemy of enemies){
+
+    const pos =
+      positionOnPath(
+        enemy.distance
+      );
+
+
+    ctx.font =
+      "25px sans-serif";
+
+    ctx.textAlign =
+      "center";
+
+    ctx.textBaseline =
+      "middle";
+
+
+    ctx.fillText(
+      enemy.emoji,
+      pos[0],
+      pos[1]
+    );
+
+
+    /*
+      Lebensbalken
+    */
+
+    ctx.fillStyle =
+      "#222";
+
+    ctx.fillRect(
+      pos[0]-15,
+      pos[1]-21,
+      30,
+      4
+    );
+
+
+    ctx.fillStyle =
+      "#4bd86b";
+
+    ctx.fillRect(
+      pos[0]-15,
+      pos[1]-21,
+      30 *
+      Math.max(
+        0,
+        enemy.hp/enemy.maxHp
+      ),
+      4
+    );
+  }
+}
+
+
+/* =========================
+   BUTTONS
+========================= */
+
+document
+.getElementById("speed")
+.addEventListener(
+  "click",
+  function(){
+
+    fast = !fast;
+
+    this.textContent =
+      fast
+      ? "⚡ 2× AN"
+      : "⚡ 2×";
+  }
+);
+
+
+document
+.getElementById("pause")
+.addEventListener(
+  "click",
+  function(){
+
+    paused = !paused;
+
+    this.textContent =
+      paused
+      ? "▶ Weiter"
+      : "⏸ Pause";
+
+    setMessage(
+      paused
+      ? "Spiel pausiert."
+      : "Weiter geht's!"
+    );
+  }
+);
+
+
+document
+.getElementById("restart")
+.addEventListener(
+  "click",
+  function(){
+
+    location.reload();
+
+  }
+);
+
+
+/* =========================
+   UI
+========================= */
+
+function updateUI(){
+
+  moneyEl.textContent =
+    Math.max(
+      0,
+      Math.floor(money)
+    );
+
+  livesEl.textContent =
+    lives;
+
+  waveEl.textContent =
+    wave;
+}
+
+
+function setMessage(text){
+
+  message.textContent =
+    text;
+}
+
+
+/* =========================
+   GAME LOOP
+========================= */
+
+function gameLoop(time){
+
+  const dt =
+    Math.min(
+      .05,
+      (time-lastTime)/1000
+    );
+
+  lastTime = time;
+
+  update(dt);
+
+  draw();
+
+  requestAnimationFrame(
+    gameLoop
+  );
+}
+
+
+updateUI();
+
+requestAnimationFrame(
+  gameLoop
+);
+
+</script>
+
+</body>
+</html>
