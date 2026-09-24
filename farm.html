@@ -601,7 +601,7 @@ const festToday=()=>FESTS.find(f=>f.s==S.season&&f.d==S.day)||null;
 
 /* ---------- save: device + account ---------- */
 const KEY='hof-sonnental-1';
-const BUILD='2026-09-26-2';
+const BUILD='2026-09-26-3';
 let updating=false;
 async function checkUpdate(){
   if(updating||window.claude||!/^https?:$/.test(location.protocol))return;
@@ -886,7 +886,8 @@ function plan(){
   const o=t&&t.o,lv=S.lv[id]||0;
   if(it.weapon)return['Angriff',attack];
   switch(id){
-    case'hoe':{if(o&&o.k=='dig')return['Graben',()=>{if(!needE(2))return;swing(id);t.o=null;dust(x+.5,y+.8,'#8e5c34',5);sfx('hoe');const f=Math.random()<.55?pick(ARTIFACTS):Math.random()<.5?'stone':'copper';addItem(f,1);pop(x+.5,y,'+1 '+ITEMS[f].n,ITEMS[f].kind=='artifact'?'#ffe38a':'#fff3d6');if(ITEMS[f].kind=='artifact')toast('Ein Fundstück! Sofie im Museum freut sich darüber.',2.6)}];
+    case'hoe':{if(t&&t.g==3&&!t.c&&!o)return['Zuschütten',()=>{if(!needE(1))return;swing(id);t.g=0;t.w=0;t.f=0;dust(x+.5,y+.8,'#5eaa3c',4);sfx('hoe')}];
+      if(o&&o.k=='dig')return['Ausgraben',()=>{if(!needE(2))return;swing(id);t.o=null;dust(x+.5,y+.8,'#8e5c34',5);sfx('hoe');const f=Math.random()<.55?pick(ARTIFACTS):Math.random()<.5?'stone':'copper';addItem(f,1);pop(x+.5,y,'+1 '+ITEMS[f].n,ITEMS[f].kind=='artifact'?'#ffe38a':'#fff3d6');if(ITEMS[f].kind=='artifact')toast('Ein Fundstück! Sofie im Museum freut sich darüber.',2.6)}];
       const a=toolArea(x,y,lv).filter(([i,j])=>tillable(T(i,j)));
       if(a.length)return['Hacken',()=>{if(!needE(2+lv))return;swing(id);a.forEach(([i,j])=>{T(i,j).g=3;dust(i+.5,j+.8,'#8e5c34',3)});sfx('hoe')}];break}
     case'can':{if(t&&t.g==2)return['Auffüllen',()=>{swing(id);S.water=CAN_CAP[lv];barDirty=1;pop(x+.5,y,'Voll!','#9fdcff');sfx('water')}];
@@ -1211,9 +1212,9 @@ function openMenu(){
     <p><b>Anbau:</b> Mit der Hacke Gras umgraben, säen, jeden Tag gießen. Dünger macht Pflanzen schneller.</p>
     <p><b>Geld:</b> Alles Verkaufbare in die Versandkiste neben dem Haus legen. Bezahlt wird über Nacht.</p>
     <p><b>Tiere:</b> Hühner, Enten, Kaninchen, Kühe, Ziegen, Schafe und ein Pferd gibt es bei Ronja. Theo baut Scheune und größeren Stall. Heu ins Silo, jeden Tag streicheln, Erzeugnisse im Stall einsammeln.</p>
-    <p><b>Haus:</b> Tippe auf deine Haustür. Dort kannst du schlafen, in der Küche kochen, an der Werkbank Zäune, Sprinkler und Stoff herstellen und im Speicher Sachen einlagern. Den Speicher kannst du nach und nach vergrößern.</p><p><b>Energie:</b> Nur gekochtes Essen aus der Küche gibt Energie. Rohe Ernte, Eier oder Beeren kannst du nicht mehr essen.</p>
+    <p><b>Haus:</b> Tippe auf deine Haustür. Dort kannst du schlafen, in der Küche kochen, an der Werkbank Zäune, Sprinkler und Stoff herstellen und im Lager Sachen einlagern. Das Lager kannst du nach und nach vergrößern.</p><p><b>Energie:</b> Nur gekochtes Essen aus der Küche gibt Energie. Rohe Ernte, Eier oder Beeren kannst du nicht mehr essen.</p>
     <p><b>Höhle:</b> Rechts unterhalb des Ladens. Bosse auf Ebene 10, 20 und 30. Bruno schmiedet Waffen und schmilzt Erz zu Barren, Dr. Emil verkauft Heiltränke.</p>
-    <p><b>Museum:</b> Edelsteine, Erze und Fundstücke spenden. Fundstücke gräbst du mit der Hacke aus, wo sich Würmer im Boden bewegen.</p>
+    <p><b>Museum:</b> Edelsteine, Erze und Fundstücke spenden. Fundstücke gräbst du mit der Hacke aus kleinen Erdhaufen aus.</p><p><b>Felder entfernen:</b> Hacke auf ein leeres Feld: Zuschütten, dann wächst wieder Gras. Durch Grasbüschel kannst du einfach hindurchlaufen.</p>
     <p><b>Angeln:</b> Beißt ein Fisch, zieh den Finger hoch und runter, damit der grüne Balken dem Fisch folgt.</p>
     <p><b>Speichern:</b> Automatisch. Du kannst das Spiel jederzeit schließen.</p>
     <div class="btns"><button class="btn" id="hOk">Zurück</button></div>`,true);$('#hOk').onclick=openMenu};
@@ -1276,7 +1277,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden){saveNow();
 addEventListener('pagehide',()=>saveNow());
 
 /* ---------- update ---------- */
-function solid(x,y){const t=T(x,y);if(!t)return true;if(t.g==2||t.g==4||t.g==5||t.g==7)return true;const o=t.o;return!!(o&&o.k!='forage'&&o.k!='fegg'&&o.k!='dig'&&!(o.k=='gate'&&o.open)&&!(o.k=='tree'&&o.st<2))}
+function solid(x,y){const t=T(x,y);if(!t)return true;if(t.g==2||t.g==4||t.g==5||t.g==7)return true;const o=t.o;return!!(o&&o.k!='forage'&&o.k!='fegg'&&o.k!='dig'&&o.k!='weed'&&!(o.k=='gate'&&o.open)&&!(o.k=='tree'&&o.st<2))}
 function blocked(px,py){const a=.26;for(const[x,y]of[[px-a,py-.24],[px+a,py-.24],[px-a,py-.02],[px+a,py-.02]])if(solid(Math.floor(x),Math.floor(y)))return true;return false}
 let lastClock='',lastE=-1,lastH=-1,lastGold=-1,lastLab='',lastWx='',midnightWarned=-1,autoT=0;
 function update(dt){
@@ -1488,7 +1489,7 @@ function render(now){
         case'lamp':ctx.drawImage(SP.lamp,sx,sy-16*p,TS,32*p);break;
         case'pbench':ctx.drawImage(SP.pbench,sx,sy,TS,TS);break;
         case'beehive':ctx.drawImage(SP.beehive,sx,sy-4*p,TS,20*p);if(o.ready){ctx.fillStyle='#f0a820';ctx.fillRect(sx+6*p,sy+10*p,4*p,3*p)}break;
-        case'dig':ctx.drawImage(SP.dig,sx,sy+Math.sin(now/200+x)*p*.5,TS,TS);break;
+        case'dig':ctx.drawImage(SP.dig,sx,sy,TS,TS);break;
         default:if(SP[o.k])ctx.drawImage(SP[o.k],sx,sy,TS,TS);
       }}])}
   }
@@ -1819,7 +1820,7 @@ function buildTownSprites(se){
     R(g,34,20,12,10,'#f4f0e8');R(g,36,22,8,6,'#3a2a1a');
   });
   SP.beehive=mk(16,20,g=>{R(g,2,6,12,12,'#e0b060');for(let y=8;y<18;y+=3)R(g,2,y,12,1,'#b8883a');R(g,1,4,14,3,'#8a5a2b');R(g,7,13,2,2,'#3a2a1a');R(g,3,18,2,2,'#5b3417');R(g,11,18,2,2,'#5b3417');if(snow)R(g,1,3,14,2,'#fff')});
-  SP.dig=mk(16,16,g=>{line(g,4,11,7,8,'#6a4a2a',2);line(g,9,10,12,7,'#6a4a2a',2);R(g,6,12,5,1,'#5a3a1a')});
+  SP.dig=mk(16,16,g=>{ell(g,8,12,6.5,3,'#5a3a1a');ell(g,8,11,5.5,3,'#7a5230');ell(g,7,10,3.5,2,'#94683e');R(g,5,9,2,1,'#a87a4a');R(g,10,11,2,1,'#8a8a8a');R(g,4,12,1,1,'#6a6a6a');R(g,8,8,1,1,'#a87a4a')});
   SP.fountain=[0,1].map(wet=>mk(48,48,g=>{
     ell(g,24,30,23,15,'#8a8f95');ell(g,24,29,20,12,wet?'#4aa3df':'#6a6560');if(wet){ell(g,24,28,16,8,'#6fb8e8')}
     R(g,20,6,8,24,'#b8bec4');R(g,20,6,3,24,'#d8dee4');R(g,16,4,16,4,'#9aa0a5');ell(g,24,4,8,3,'#b8bec4');
@@ -2184,7 +2185,7 @@ const QUESTS=[
   {id:'kalle2',npc:'kalle',h:4,t:'Ein neues Rezept',ask:'Ich will einen Honigkuchen erfinden. Dafür brauche ich 2 Eier und 2 Milch.',need:[['egg',2],['milk',2]],done:'Er ist himmlisch! Zwei für dich, der Rest geht aufs Haus.',rw:{gold:1200,item:['hcake',2]}},
   {id:'kalle3',npc:'kalle',h:6,t:'Der König des Teichs',ask:'Jonas erzählt seit Jahren vom Wels im Teich. Bring mir einen, und ich glaube ihm endlich.',need:[['catfish',1]],done:'Bei allen Kürbissen! Jonas hat nicht gelogen!',rw:{gold:4000}},
   {id:'sofie1',npc:'sofie',h:2,t:'Glitzernde Steine',ask:'Für eine Schulstunde bräuchte ich 3 Quarze. Findest du welche in der Höhle?',need:[['quartz',3]],done:'Die Kinder waren begeistert. Danke!',rw:{gold:600}},
-  {id:'sofie2',npc:'sofie',h:4,t:'Ein Ammonit',ask:'Ein Ammonit würde meine Sammlung vollenden. Manche liegen im Boden, wenn sich Würmer darüber bewegen.',need:[['ammonit',1]],done:'Millionen Jahre alt und du hast ihn einfach ausgegraben. Unglaublich.',rw:{gold:1500}},
+  {id:'sofie2',npc:'sofie',h:4,t:'Ein Ammonit',ask:'Ein Ammonit würde meine Sammlung vollenden. Manche stecken in den kleinen Erdhaufen auf deinem Hof.',need:[['ammonit',1]],done:'Millionen Jahre alt und du hast ihn einfach ausgegraben. Unglaublich.',rw:{gold:1500}},
   {id:'sofie3',npc:'sofie',h:6,t:'Das Herz der Edelsteine',ask:'Ein Rubin, ein Smaragd und ein Topas. Zusammen sollen sie das Licht des Sonnensteins spiegeln.',need:[['ruby',1],['emerald',1],['topaz',1]],done:'Sieh nur, wie sie zusammen leuchten. Genau wie in den alten Büchern.',rw:{gold:5000}},
   {id:'emil1',npc:'emil',h:2,t:'Schleim für die Salbe',ask:'Klingt eklig, aber Schleim ist perfekt für Wundsalbe. 5 Stück, bitte.',need:[['slime',5]],done:'Danke! Nimm zwei Heiltränke mit. Du brauchst sie öfter als du denkst.',rw:{gold:700,item:['potion',2]}},
   {id:'emil2',npc:'emil',h:4,t:'Gesunde Ernährung',ask:'Ich esse zu viel Brot. Kochst du mir 2 Fischsuppen?',need:[['fishsoup',2]],done:'Die beste Medizin ist gutes Essen. Und gute Gesellschaft.',rw:{gold:1500}},
@@ -2432,7 +2433,7 @@ const knownRecipe=r=>r[3]!='buy'||(S.recipes||[]).includes(r[0]);
 function houseTile(id,ico,lab,sub){return`<button class="tile" id="${id}">${ic(ico)}<span><b>${lab}</b><small>${sub}</small></span></button>`}
 function openHouse(){
   const used=S.store.filter(Boolean).length;
-  openModal(`<h2>Dein Haus</h2><div class="mgrid">${houseTile('hSleep','bed','Schlafen','Tag beenden')}${houseTile('hCook','pot','Küche','Essen kochen')}${houseTile('hCraft','wbench','Werkbank','Zäune, Sprinkler …')}${houseTile('hStore','crate','Speicher',used+' von '+S.store.length+' Plätzen')}</div><div class="btns"><button class="btn alt" id="hX">Raus</button></div>`);
+  openModal(`<h2>Dein Haus</h2><div class="mgrid">${houseTile('hSleep','bed','Schlafen','Tag beenden')}${houseTile('hCook','pot','Küche','Essen kochen')}${houseTile('hCraft','wbench','Werkbank','Zäune, Sprinkler …')}${houseTile('hStore','crate','Lager',used+' von '+S.store.length+' Plätzen')}</div><div class="btns"><button class="btn alt" id="hX">Raus</button></div>`);
   $('#hSleep').onclick=askSleep;$('#hCook').onclick=openKitchen;$('#hCraft').onclick=openCraft;$('#hStore').onclick=openStore;$('#hX').onclick=closeModal;
 }
 function openRecipes(list,title,sub,self){
@@ -2448,38 +2449,38 @@ function openRecipes(list,title,sub,self){
   $('#crX').onclick=openHouse;
 }
 openCraft=()=>openRecipes(RECIPES,'Werkbank','Stelle Dinge aus deinen Rohstoffen her.',openCraft);
-function openKitchen(){openRecipes(KITCHEN,'Küche','Nur gekochtes Essen gibt dir Energie. Zutaten aus dem Speicher musst du erst in den Rucksack holen.',openKitchen)}
+function openKitchen(){openRecipes(KITCHEN,'Küche','Nur gekochtes Essen gibt dir Energie. Zutaten aus dem Lager musst du erst in den Rucksack holen.',openKitchen)}
 /* storage */
 const STORE_UP=[{g:500,r:[['wood',100]]},{g:2000,r:[['wood',200],['stone',100]]},{g:5000,r:[['wood',300],['iron',15]]},{g:10000,r:[['wood',400],['gold',15]]}];
 function putInto(arr,s){
   if(!ITEMS[s.id].tool){const m=arr.find(x=>x&&x.id==s.id);if(m){m.n+=s.n;return true}}
   const e=arr.indexOf(null);if(e<0)return false;arr[e]={id:s.id,n:s.n};return true}
 let storeInfo='';
-function openStore(){storeInfo='';reModal('<h2>Speicher</h2><div id="stBody"></div>');drawStore()}
+function openStore(){storeInfo='';reModal('<h2>Lager</h2><div id="stBody"></div>');drawStore()}
 function drawStore(){
   const lv=S.storeLv||0,up=STORE_UP[lv];
   const cell=(s,attr,i)=>`<button class="islot" ${attr}="${i}" aria-label="${s?ITEMS[s.id].n:'Leer'}">${s?`${ic(s.id)}<span class="n">${s.id=='can'?S.water:s.n>1?s.n:''}</span>`:''}</button>`;
-  $('#stBody').innerHTML=`<p style="font-size:14px">Tippe ein Teil an, um es zwischen Speicher und Rucksack hin und her zu legen.</p>
-    <div class="lbl">Speicher · ${S.store.length} Plätze</div><div class="inv">${S.store.map((s,i)=>cell(s,'data-s',i)).join('')}</div>
+  $('#stBody').innerHTML=`<p style="font-size:14px">Tippe ein Teil an, um es zwischen Lager und Rucksack hin und her zu legen.</p>
+    <div class="lbl">Lager · ${S.store.length} Plätze</div><div class="inv">${S.store.map((s,i)=>cell(s,'data-s',i)).join('')}</div>
     <div class="lbl">Leiste</div><div class="inv hot">${S.inv.slice(0,HOT).map((s,i)=>cell(s,'data-b',i)).join('')}</div>
     <div class="lbl">Rucksack</div><div class="inv">${S.inv.slice(HOT).map((s,i)=>cell(s,'data-b',i+HOT)).join('')}</div>
     <p id="invInfo"><small>${storeInfo||'&nbsp;'}</small></p>
-    ${up?`<div class="rows"><div class="row">${ic('crate')}<div><b>Speicher vergrößern</b><small>+12 Plätze<br>${up.g} g · ${reqText(up.r)}</small></div><div class="buy"><button class="btn sm" id="stUp" ${S.gold>=up.g&&hasReq(up.r)?'':'disabled'}>Ausbauen</button></div></div></div>`:''}
+    ${up?`<div class="rows"><div class="row">${ic('crate')}<div><b>Lager vergrößern</b><small>+12 Plätze<br>${up.g} g · ${reqText(up.r)}</small></div><div class="buy"><button class="btn sm" id="stUp" ${S.gold>=up.g&&hasReq(up.r)?'':'disabled'}>Ausbauen</button></div></div></div>`:''}
     <div class="btns"><button class="btn" id="stAll">Rucksack einlagern</button><button class="btn alt" id="stX">Zurück</button></div>`;
   hydrate($('#stBody'));
   $('#stBody').querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{const i=+b.dataset.s,s=S.store[i];if(!s)return;
     if(!putInto(S.inv,s)){storeInfo='Dein Rucksack ist voll.';sfx('bad')}else{S.store[i]=null;storeInfo='Geholt: '+s.n+'× '+ITEMS[s.id].n;sfx('pop')}barDirty=1;drawStore()});
   $('#stBody').querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{const i=+b.dataset.b,s=S.inv[i];if(!s)return;
-    if(!putInto(S.store,s)){storeInfo='Der Speicher ist voll.';sfx('bad')}else{S.inv[i]=null;storeInfo='Eingelagert: '+s.n+'× '+ITEMS[s.id].n;sfx('pop')}barDirty=1;drawStore()});
+    if(!putInto(S.store,s)){storeInfo='Das Lager ist voll.';sfx('bad')}else{S.inv[i]=null;storeInfo='Eingelagert: '+s.n+'× '+ITEMS[s.id].n;sfx('pop')}barDirty=1;drawStore()});
   $('#stAll').onclick=()=>{let n=0,full=0;for(let i=HOT;i<S.inv.length;i++){const s=S.inv[i];if(!s||ITEMS[s.id].tool||ITEMS[s.id].weapon)continue;if(putInto(S.store,s)){S.inv[i]=null;n++}else full=1}
-    storeInfo=n?n+' Stapel eingelagert.'+(full?' Der Speicher ist jetzt voll.':''):full?'Der Speicher ist voll.':'Im Rucksack ist nichts zum Einlagern. Werkzeuge und die Leiste bleiben bei dir.';sfx(n?'pop':'bad');barDirty=1;drawStore()};
+    storeInfo=n?n+' Stapel eingelagert.'+(full?' Das Lager ist jetzt voll.':''):full?'Das Lager ist voll.':'Im Rucksack ist nichts zum Einlagern. Werkzeuge und die Leiste bleiben bei dir.';sfx(n?'pop':'bad');barDirty=1;drawStore()};
   const u=$('#stUp');if(u)u.onclick=()=>{if(S.gold<up.g||!hasReq(up.r))return;S.gold-=up.g;up.r.forEach(([q,m])=>removeItems(q,m));S.storeLv=lv+1;for(let k=0;k<12;k++)S.store.push(null);
-    storeInfo='Der Speicher hat jetzt '+S.store.length+' Plätze.';sfx('win');drawStore()};
+    storeInfo='Das Lager hat jetzt '+S.store.length+' Plätze.';sfx('win');drawStore()};
   $('#stX').onclick=openHouse;
 }
 /* egg festival: only reachable, visible spots */
 function reachFarm(){
-  const pass=t=>{if(t.g==2||t.g==4||t.g==5||t.g==7)return false;const o=t.o;return!o||o.k=='forage'||o.k=='fegg'||o.k=='dig'||(o.k=='gate'&&o.open)||(o.k=='tree'&&o.st<2)};
+  const pass=t=>{if(t.g==2||t.g==4||t.g==5||t.g==7)return false;const o=t.o;return!o||o.k=='forage'||o.k=='fegg'||o.k=='dig'||o.k=='weed'||(o.k=='gate'&&o.open)||(o.k=='tree'&&o.st<2)};
   const seen=new Uint8Array(FW*FH),q=[7*FW+5];seen[q[0]]=1;
   while(q.length){const i=q.pop(),x=i%FW,y=(i/FW)|0;for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const X=x+dx,Y=y+dy;if(X<0||Y<0||X>=FW||Y>=FH)continue;const j=Y*FW+X;if(!seen[j]&&pass(S.t[j])){seen[j]=1;q.push(j)}}}
   return seen}
