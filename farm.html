@@ -73,9 +73,14 @@ body{font-synthesis:none;font-family:"Ziffern","Pixelify Sans",ui-monospace,"Cou
   background:radial-gradient(circle at 38% 32%,#ffe38a,#f0b43a 60%,#c9831f);border:4px solid var(--wood-d);box-shadow:0 4px 0 var(--wood-d);
   font-family:inherit;font-weight:700;font-size:15px;color:var(--ink);display:grid;place-items:center;text-align:center;line-height:1.05;padding:4px;cursor:pointer;touch-action:none}
 #aBtn:active,#aBtn.down{transform:translateY(3px);box-shadow:0 1px 0 var(--wood-d)}
+#rideBtn{position:fixed;right:112px;bottom:calc(var(--sab,env(safe-area-inset-bottom,0px)) + 96px);width:54px;height:54px;border-radius:50%;padding:0;display:grid;place-items:center;cursor:pointer;touch-action:manipulation}
+#rideBtn canvas{width:32px;height:32px;image-rendering:pixelated}
+#rideBtn.on{background:#ffe38a;border-color:var(--red)}
 #joy{position:fixed;width:112px;height:112px;margin:-56px 0 0 -56px;border-radius:50%;border:3px solid rgba(255,243,214,.55);background:rgba(20,30,15,.25);pointer-events:none}
 #joy i{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;background:rgba(255,243,214,.8);border:3px solid var(--wood-d)}
 #joy.ghost{opacity:.45}
+#bossBar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--sab,env(safe-area-inset-bottom,0px)) + 190px);width:min(70vw,280px);padding:5px 10px;text-align:center;pointer-events:none;font-size:15px}
+#bossBar .bt{height:10px;background:#4a2b14;border-radius:3px;overflow:hidden;margin-top:3px}#bossFill{display:block;height:100%;background:#e0453a;width:100%}
 #toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 118px);transform:translateX(-50%);max-width:min(88vw,380px);padding:8px 14px;font-size:15px;text-align:center;pointer-events:none;transition:opacity .3s}
 #toast.off{opacity:0}
 #saveDot{position:fixed;right:58px;top:calc(env(safe-area-inset-top,0px) + 18px);font-size:12px;color:#fff3d6;text-shadow:0 1px 0 #000;pointer-events:none;transition:opacity .4s}
@@ -129,6 +134,7 @@ textarea{width:100%;font:12px ui-monospace,Menlo,monospace;border:2px solid var(
 .btn.danger{background:#b8483a}
 .row.set{grid-template-columns:0 1fr auto}
 button,textarea{font-synthesis:none}
+.sws{display:flex;flex-wrap:wrap;gap:6px}.sw{width:34px;height:34px;border-radius:50%;border:3px solid var(--wood-d);padding:0;cursor:pointer}.sw.on{outline:3px solid var(--red);outline-offset:1px}
 [hidden]{display:none!important}
 @media (prefers-reduced-motion:reduce){.bar .fill,#toast,#saveDot{transition:none}}
 </style>
@@ -150,9 +156,11 @@ button,textarea{font-synthesis:none}
 <div id="saveDot" class="off">Gespeichert</div>
 <div id="joy" class="ghost"><i></i></div>
 <button id="aBtn" aria-label="Aktion"><span id="aLab">Hacke</span></button>
+<button id="rideBtn" class="panel" hidden aria-label="Reiten"><canvas width="16" height="16"></canvas></button>
 <div id="bar"></div>
 <div id="fishPad" hidden></div>
 <div id="toast" class="panel off"></div>
+<div id="bossBar" class="panel" hidden><b id="bossName"></b><div class="bt"><i id="bossFill"></i></div></div>
 
 <div id="modalWrap" hidden><div id="modal" class="panel"></div></div>
 
@@ -499,10 +507,12 @@ function buildSprites(se){
     R(g,3,4,6,4,'#9aa3ab');R(g,3,4,6,1,'#dfe5ea');R(g,5,6,2,3,'#6a4424');line(g,11,7,17,2,'#8a5a2b',2);R(g,15,1,4,2,'#9aa3ab');R(g,2,17,16,2,'#8a5a2b');
     if(snow)R(g,0,7,20,1,'#f2f6f8')});
   SP.sign=mk(16,20,g=>{R(g,7,8,2,12,'#7a4a24');R(g,1,2,14,8,'#9a6230');R(g,2,3,12,6,'#c8904a');R(g,4,5,8,1,'#7a4a24');R(g,4,7,5,1,'#7a4a24')});
+  buildTownSprites(se);
   SP.fence=mk(16,20,g=>{R(g,2,6,3,13,'#9a6230');R(g,11,6,3,13,'#9a6230');R(g,0,9,16,2,'#b8783a');R(g,0,14,16,2,'#b8783a');R(g,2,6,3,1,'#c8904a');R(g,11,6,3,1,'#c8904a');if(snow){R(g,2,5,3,1,'#fff');R(g,11,5,3,1,'#fff')}});
 }
 function buildMineSprites(){
-  const Z=[['#7a6450','#6a5442','#8a7460','#3a2e26','#5a4a3e','#4a3c32'],['#5e6c78','#50606c','#6e7c88','#26303a','#44525e','#323e4a'],['#6e4034','#5e342a','#804c3e','#2a1410','#5a2a1e','#3e1c14']];
+  const Z=[['#7a6450','#6a5442','#8a7460','#3a2e26','#5a4a3e','#4a3c32'],['#6a6058','#5a5048','#7a7068','#2a2830','#4a4a58','#3a3a44'],['#5e6c78','#50606c','#6e7c88','#26303a','#44525e','#323e4a'],['#6e4034','#5e342a','#804c3e','#2a1410','#5a2a1e','#3e1c14']];
+  Z.push(Z.splice(1,1)[0]);
   SP.floorZ=Z.map((z,zi)=>[0,1].map(v=>mk(16,16,g=>{R(g,0,0,16,16,z[0]);const r=mul(40+v+zi*7);for(let i=0;i<12;i++)R(g,r()*15|0,r()*15|0,2,1,r()<.5?z[1]:z[2]);if(zi==2&&v)R(g,r()*12|0,r()*12|0,3,1,'#e8702a')})));
   SP.wallZ=Z.map((z,zi)=>mk(16,16,g=>{R(g,0,0,16,16,z[3]);R(g,0,0,16,4,z[4]);R(g,0,4,16,1,dk(z[3],.3));const r=mul(9+zi);for(let i=0;i<8;i++)R(g,r()*15|0,5+r()*10|0,2,1,z[5])}));
   const OC={copper:['#f08a44','#a84a1a'],iron:['#f0ecfa','#7a6a8a'],gold:['#ffd23a','#b8860f']};
@@ -532,7 +542,7 @@ function stampFarm(t,unl){
   const clear=(x0,y0,x1,y1)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const c=at(x,y);if(c.o&&!keep(c.o))c.o=null}};
   clear(12,2,22,6);clear(27,5,37,16);
   const path=(x,y)=>{const c=at(x,y);c.g=1;c.o=null;c.c=null};
-  for(let x=4;x<=35;x++)path(x,7);
+  for(let x=4;x<=FW-1;x++)path(x,7);
   for(let y=8;y<=16;y++)path(26,y);
   for(let y=8;y<=13;y++)path(34,y);
   for(let x=34;x<=36;x++)path(x,13);
@@ -541,6 +551,7 @@ function stampFarm(t,unl){
   at(BOARD[0],BOARD[1]).o={k:'board'};
   {const b=at(BENCH[0],BENCH[1]);b.g=0;b.c=null;b.o={k:'bench'}}
   if(unl&&unl.coop)fill(COOP);else at(COOP.door[0],COOP.door[1]).o={k:'sign'};
+  if(unl&&unl.barn){fill(BARN);clear(19,6,26,6)}
 }
 function genMap(){
   const r=mul(Date.now()%100000),t=[];
@@ -562,7 +573,7 @@ function newGame(){
   S={v:2,day:1,season:0,year:1,time:360,gold:500,energy:270,maxE:270,hp:100,maxHp:100,water:40,invSize:24,
     inv:[{id:'hoe',n:1},{id:'can',n:1},{id:'axe',n:1},{id:'pick',n:1},{id:'scythe',n:1},{id:'rod',n:1},{id:'parsnip_s',n:15}].concat(Array(17).fill(null)),
     sel:0,t:genMap(),weather:'sun',tomorrow:'sun',shipped:[],rel:freshRel(),px:5.5,py:7.9,dir:0,loc:'farm',
-    lv:{hoe:0,can:0},bun:{},bdone:{},unl:{coop:0,mine:0},coop:{hay:0,ch:[],eggs:[]},mineMax:0,mineChest:0,fd:{eggs:0,fish:0,done:0},music:true,sound:true,savedAt:0};
+    lv:{hoe:0,can:0,pick:0,axe:0},bun:{},bdone:{},unl:{coop:0,mine:0,barn:0},animals:[],hay:0,prod:{coop:[],barn:[]},coopLv:0,house:0,horse:0,riding:0,museum:{},quests:{},boss:{},story:{ch:0,step:0,pages:[],got:{},placed:0},mineMax:0,mineChest:0,fd:{eggs:0,fish:0,done:0},music:true,sound:true,savedAt:0,v:3};
   setFarm();spawnForage(5);
 }
 function migrate(s){
@@ -572,8 +583,12 @@ function migrate(s){
   s.invSize=s.invSize||24;while(s.inv.length<s.invSize)s.inv.push(null);
   s.hp=s.hp??100;s.maxHp=s.maxHp||100;s.lv=s.lv||{hoe:0,can:0};s.bun=s.bun||{};s.bdone=s.bdone||{};s.unl=s.unl||{coop:0,mine:0};
   s.coop=s.coop||{hay:0,ch:[],eggs:[]};s.mineMax=s.mineMax||0;s.mineChest=s.mineChest||0;s.fd=s.fd||{eggs:0,fish:0,done:0};
-  if(!(s.sel>=0&&s.sel<8))s.sel=0;s.music=s.music!==false;s.sound=s.sound!==false;s.loc='farm';s.savedAt=s.savedAt||0;
-  if(s.v!=2){stampFarm(s.t,s.unl);s.v=2}
+  if(!(s.sel>=0&&s.sel<8))s.sel=0;s.music=s.music!==false;s.sound=s.sound!==false;s.loc=s.loc=='town'?'town':'farm';s.savedAt=s.savedAt||0;
+  if(s.coop){s.animals=(s.coop.ch||[]).map(c=>({type:'chicken',name:c.name,pts:c.pts||0,pet:c.pet||0,cnt:0}));s.hay=(s.hay||0)+(s.coop.hay||0);s.prod={coop:s.coop.eggs||[],barn:[]};delete s.coop}
+  s.animals=s.animals||[];s.hay=s.hay||0;s.prod=s.prod||{coop:[],barn:[]};s.coopLv=s.coopLv??(s.unl.coop?1:0);s.house=s.house||0;s.horse=s.horse||0;s.riding=s.riding||0;
+  s.story=s.story||{ch:0,step:0,pages:[],got:{},placed:0};s.museum=s.museum||{};s.quests=s.quests||{};s.boss=s.boss||{};s.lv.pick=s.lv.pick||0;s.lv.axe=s.lv.axe||0;
+  if(!s.v||s.v<3){for(let x=36;x<FW;x++){const c=s.t[7*FW+x];c.g=1;c.o=null;c.c=null}}
+  if(!s.v||s.v<2)stampFarm(s.t,s.unl);s.v=3;
   {const b=s.t[BENCH[1]*FW+BENCH[0]];if(!b.o||b.o.k!='bench'){b.g=0;b.c=null;b.o={k:'bench'}}}
   s.t.forEach((c,i)=>{if(c.o&&c.o.k=='tree'&&!c.o.t){c.o.t=WILD[Math.floor(hash(i,17)*WILD.length)];c.o.st=4;c.o.age=0;c.o.fr=0}});
   return s;
@@ -584,7 +599,7 @@ const festToday=()=>FESTS.find(f=>f.s==S.season&&f.d==S.day)||null;
 
 /* ---------- save: device + account ---------- */
 const KEY='hof-sonnental-1';
-const BUILD='2026-09-24-4';
+const BUILD='2026-09-25-1';
 let updating=false;
 async function checkUpdate(){
   if(updating||window.claude||!/^https?:$/.test(location.protocol))return;
@@ -603,6 +618,7 @@ let DB=null,UID=null,cloudBusy=false,cloudAgain=false,cloudState='none',lastClou
 function snapshot(){
   const o=Object.assign({},S);
   if(S.loc=='mine'){o.loc='farm';o.px=CAVE.door[0]+.5;o.py=CAVE.door[1]+1.9;o.dir=0}
+  o.riding=S.loc=='mine'?0:S.riding;
   o.savedAt=Date.now();return o;
 }
 function saveNow(cloud=true){
@@ -634,7 +650,7 @@ async function connectCloud(){
       if(d&&d.json&&(d.savedAt||0)>((S&&S.savedAt)||0)+1500){
         const sv=migrate(JSON.parse(d.json));
         if(sv){
-          if(!started){S=sv;setFarm();buildSprites(S.season);hasSave=true;try{localStorage.setItem(KEY,d.json)}catch(e){}}
+          if(!started){S=sv;placeLoaded();buildSprites(S.season);hasSave=true;try{localStorage.setItem(KEY,d.json)}catch(e){}}
           else offerCloud(sv,d.json);
         }
       }
@@ -650,7 +666,7 @@ function setSaveInfo(){
 function offerCloud(sv,js){
   openModal(`<h2>Neuerer Spielstand gefunden</h2><p>In deinem Konto liegt ein neuerer Spielstand: ${WD[(sv.day-1)%7]}. ${sv.day}. ${SEASONS[sv.season]}, Jahr ${sv.year}, ${sv.gold} g. Möchtest du damit weiterspielen?</p>
     <div class="btns"><button class="btn" id="cY">Laden</button><button class="btn alt" id="cN">Aktuellen behalten</button></div>`,true);
-  $('#cY').onclick=()=>{S=sv;setFarm();buildSprites(S.season);barDirty=1;try{localStorage.setItem(KEY,js)}catch(e){}closeModal();toast('Spielstand geladen.')};
+  $('#cY').onclick=()=>{S=sv;placeLoaded();buildSprites(S.season);barDirty=1;try{localStorage.setItem(KEY,js)}catch(e){}closeModal();toast('Spielstand geladen.')};
   $('#cN').onclick=()=>{closeModal();saveNow()};
 }
 
@@ -683,7 +699,7 @@ function openTransfer(fromTitle){
   $('#tfLoad').onclick=async()=>{const v=$('#tfIn').value.trim();if(!v){msg('Füge zuerst einen Code ein.');return}
     let sv=null;try{sv=await unpackSave(v)}catch(e){}
     if(!sv){msg('Der Code ist unvollständig oder beschädigt. Kopiere ihn noch einmal ganz.');return}
-    S=sv;setFarm();buildSprites(S.season);hasSave=true;barDirty=1;closeModal();
+    S=sv;placeLoaded();buildSprites(S.season);hasSave=true;barDirty=1;closeModal();
     if(!started)start(false);saveNow();toast(`Spielstand geladen: ${S.day}. ${SEASONS[S.season]}, Jahr ${S.year}`,3)};
   $('#tfX').onclick=fromTitle?closeModal:openSettings;
 }
@@ -834,17 +850,22 @@ function plan(){
   if(F)return['Einholen',()=>{F=null;toast('Eingeholt.',1.2)}];
   const{x,y}=target(),t=T(x,y),s=S.inv[S.sel],id=s&&s.id,it=id&&ITEMS[id];
   const k=npcAt(x,y);
+  if(k&&NPCS[k].story)return['Reden',()=>talkNpc(k)];
   if(k){const f=festToday();if(f&&f.type=='show'&&k=='hilde'&&it&&!it.tool&&it.sell&&!S.fd.done)return['Vorzeigen',()=>giftNpc(k)];
-    if(it&&!it.tool&&S.rel[k].gift!=dayKey()&&id!='hay')return['Schenken',()=>giftNpc(k)];return['Reden',()=>talkNpc(k)]}
+    if(it&&!it.tool&&S.rel[k].gift!=dayKey()&&id!='hay'&&id!='shard'&&id!='watch')return['Schenken',()=>giftNpc(k)];return['Reden',()=>talkNpc(k)]}
   if(MAP.id=='farm'){
     if(isDoor(x,y,HOUSE))return['Schlafen',askSleep];
     if(isDoor(x,y,SHOP))return['Laden',openShop];
     if(isDoor(x,y,CAVE))return[S.unl.mine?'Höhle':'Verschüttet',openCave];
-    if(S.unl.coop&&isDoor(x,y,COOP))return['Stall',openCoop];
+    if(S.unl.coop&&isDoor(x,y,COOP))return['Stall',()=>openAnimalHouse('coop')];
+    if(S.unl.barn&&isDoor(x,y,BARN))return['Scheune',()=>openAnimalHouse('barn')];
     if(t&&t.o&&t.o.k=='board')return['Tafel',()=>openBoard(false)];
     if(t&&t.o&&t.o.k=='bench')return['Werkbank',openCraft];
     if(t&&t.o&&t.o.k=='sign')return['Lesen',()=>toast('Bauplatz für einen Hühnerstall. Die Dorftafel am Laden verrät, wie er gebaut wird.',3.5)];
     if(t&&t.g==5)return it&&!it.tool&&it.sell?['Versenden',ship]:['Kiste',()=>toast('Wähle ein Erzeugnis und lege es hier hinein. Bezahlt wird über Nacht.')];
+  }else if(MAP.id=='town'){
+    for(const b in TB)if(isDoor(x,y,TB[b]))return[TB[b].sign[0]+TB[b].sign.slice(1).toLowerCase(),()=>openBuilding(b)];
+    if(x>=FOUNT.x&&x<FOUNT.x+3&&y>=FOUNT.y&&y<FOUNT.y+3)return['Brunnen',()=>typeof fountainAct=='function'?fountainAct():toast('Der alte Sonnenbrunnen. Er ist seit Jahren trocken.',3)];
   }else{
     if(t&&t.o&&t.o.k=='up')return['Hinauf',exitMine];
     if(t&&t.o&&t.o.k=='ladder')return['Hinab',()=>enterMine(M.floor+1)];
@@ -856,10 +877,13 @@ function plan(){
   if(t&&t.o&&t.o.k=='tree'&&t.o.fr>0)return['Pflücken',()=>{const o=t.o,f=TREES[o.t].fruit;if(addItem(f,o.fr)){toast('Dein Rucksack ist voll.');return}pop(x+.5,y-1,'+'+o.fr+' '+ITEMS[f].n);o.fr=0;shakes[y*MAP.w+x]=.3;sfx('pop')}];
   if(t&&t.o&&t.o.k=='tree'&&t.o.st==4&&TREES[t.o.t].seed&&t.o.sk!=dayKey()&&id!='axe')return['Schütteln',()=>{const o=t.o;o.sk=dayKey();shakes[y*MAP.w+x]=.35;sfx('chop');
     if(S.season!=3&&Math.random()<.35){const sd=TREES[o.t].seed;addItem(sd,1);pop(x+.5,y-1,'+1 '+ITEMS[sd].n)}else pop(x+.5,y-1,'Nichts gefallen','#e8dcc0')}];
+  if(t&&t.o&&t.o.k=='beehive'&&t.o.ready)return['Honig',()=>{if(addItem('honey',1)){toast('Dein Rucksack ist voll.');return}t.o.ready=0;t.o.h=0;pop(x+.5,y-.5,'+1 Honig','#ffe38a');sfx('pop')}];
   if(!it)return['—',null];
   const o=t&&t.o,lv=S.lv[id]||0;
+  if(it.weapon)return['Angriff',attack];
   switch(id){
-    case'hoe':{const a=toolArea(x,y,lv).filter(([i,j])=>tillable(T(i,j)));
+    case'hoe':{if(o&&o.k=='dig')return['Graben',()=>{if(!needE(2))return;swing(id);t.o=null;dust(x+.5,y+.8,'#8e5c34',5);sfx('hoe');const f=Math.random()<.55?pick(ARTIFACTS):Math.random()<.5?'stone':'copper';addItem(f,1);pop(x+.5,y,'+1 '+ITEMS[f].n,ITEMS[f].kind=='artifact'?'#ffe38a':'#fff3d6');if(ITEMS[f].kind=='artifact')toast('Ein Fundstück! Sofie im Museum freut sich darüber.',2.6)}];
+      const a=toolArea(x,y,lv).filter(([i,j])=>tillable(T(i,j)));
       if(a.length)return['Hacken',()=>{if(!needE(2+lv))return;swing(id);a.forEach(([i,j])=>{T(i,j).g=3;dust(i+.5,j+.8,'#8e5c34',3)});sfx('hoe')}];break}
     case'can':{if(t&&t.g==2)return['Auffüllen',()=>{swing(id);S.water=CAN_CAP[lv];barDirty=1;pop(x+.5,y,'Voll!','#9fdcff');sfx('water')}];
       const a=toolArea(x,y,lv).filter(([i,j])=>waterable(T(i,j)));
@@ -867,7 +891,7 @@ function plan(){
         for(const[i,j]of a){if(S.water<=0)break;const c=T(i,j);if(!c.w){c.w=1;S.water--}dust(i+.5,j+.7,'#6fb3e8',3)}barDirty=1;sfx('water')}];break}
     case'axe':if(o&&(o.k=='tree'||o.k=='twig'))return['Fällen',()=>{if(!needE(2))return;swing(id);sfx('chop');shakes[y*MAP.w+x]=.25;dust(x+.5,y+.6,'#94603a',4);
       if(o.k=='tree'&&o.st<2){t.o=null;return}
-      if(o.k=='twig'||--o.hp<=0){const T0=o.k=='tree'?TREES[o.t||'oak']:null;
+      if(o.k=='twig'||(o.hp-=1+(S.lv.axe||0))<=0){const T0=o.k=='tree'?TREES[o.t||'oak']:null;
         const n=o.k=='twig'?rnd(1,2):o.st==2?rnd(1,2):o.st==3?rnd(3,5):T0.wood?rnd(T0.wood[0],T0.wood[1]):rnd(6,8);
         t.o=null;addItem('wood',n);let msg='+'+n+' Holz';
         if(T0&&T0.seed&&o.st==4&&Math.random()<.5){const k=rnd(1,2);addItem(T0.seed,k);msg+=', +'+k+' '+ITEMS[T0.seed].n}
@@ -878,9 +902,8 @@ function plan(){
       if(t&&t.g==1&&t.pp&&!o)return['Aufheben',()=>{if(addItem('stonepath',1))return;t.g=0;t.pp=0;sfx('pick')}];
       if(t&&t.g==3&&!t.c&&!o)return['Einebnen',()=>{if(!needE(2))return;swing(id);t.g=0;t.w=0;t.f=0;sfx('pick')}];break;
     case'scythe':if(o&&o.k=='weed')return['Mähen',()=>{swing(id);t.o=null;dust(x+.5,y+.7,'#5eaa3c');sfx('chop');
-      if(Math.random()<.45){addItem('fiber',1);pop(x+.5,y,'+1 Faser')}else if(S.unl.coop&&Math.random()<.5){addItem('hay',1);pop(x+.5,y,'+1 Heu')}}];break;
+      if(Math.random()<.45){addItem('fiber',1);pop(x+.5,y,'+1 Faser')}else if((S.coopLv||S.unl.barn)&&Math.random()<.5){addItem('hay',1);pop(x+.5,y,'+1 Heu')}}];break;
     case'rod':if(t&&t.g==2)return['Angeln',()=>{if(!needE(5))return;swing(id);F={ph:'wait',t:1.2+Math.random()*3,x,y};sfx('cast')}];break;
-    case'sword':return['Angriff',attack];
   }
   if(it.kind=='seed'&&t&&t.g==3&&!t.c&&!o){const c=CROPS[it.crop];
     return['Säen',()=>{if(S.season==3||c.s!=S.season){toast(c.n+' wächst nur im '+SEASONS[c.s]+'.');sfx('bad');return}t.c={id:it.crop,age:0};takeSel();dust(x+.5,y+.8,'#c9a26a',4);sfx('pop')}]}
@@ -892,6 +915,7 @@ function plan(){
   if(it.place&&MAP.id=='farm'&&t&&(t.g==0||t.g==3||t.g==1)&&!o&&!t.c)return['Aufstellen',()=>{t.o={k:id};takeSel();sfx('pick')}];
   if(id=='stonepath'&&MAP.id=='farm'&&t&&t.g==0&&!o)return['Pflastern',()=>{t.g=1;t.pp=1;takeSel();sfx('pick')}];
   if(id=='fert'&&t&&t.g==3&&!t.f&&!o)return['Düngen',()=>{t.f=1;takeSel();dust(x+.5,y+.7,'#e8e0b0',5);sfx('pop')}];
+  if(it.heal)return['Trinken',()=>{if(S.hp>=S.maxHp){toast('Du bist schon ganz gesund.');return}S.hp=Math.min(S.maxHp,S.hp+it.heal);takeSel();pop(S.px,S.py-1.4,'+'+it.heal+' ♥','#ff9a8a');sfx('eat')}];
   if(it.eat){const armed=performance.now()-eatArm<2200;return[armed?'Essen!':'Essen',()=>{
     if(!armed){eatArm=performance.now();toast('Nochmal drücken zum Essen: '+it.n+' (+'+it.eat+' Energie)');return}
     eatArm=0;S.energy=Math.min(S.maxE,S.energy+it.eat);S.hp=Math.min(S.maxHp,S.hp+Math.round(it.eat/2));takeSel();pop(S.px,S.py-1.4,'+'+it.eat+' Energie','#9be07a');sfx('eat')}]}
@@ -963,16 +987,15 @@ function openShop(){
   rows.push(['stone',20,'Baumaterial'],['wood',10,'Baumaterial'],['acorn',50,'Wächst zu einer Eiche'],['maples',50,'Wächst zu einem Ahorn'],['pinec',50,'Wächst zu einer Kiefer']);
   for(const tt of['cherry','peach','apple'])rows.push([tt+'_t',TREES[tt].price,`28 Tage bis zur Ernte · dann jeden Tag im ${SEASONS[TREES[tt].s]} bis zu 3 ${TREES[tt].pl}`]);
   rows.push(['bread',120,'+60 Energie'],['fert',40,'Pflanzen wachsen schneller'],['sprinkler',400,'Gießt jeden Morgen die 4 Nachbarfelder'],['qsprinkler',1200,'Gießt jeden Morgen alle 8 Felder ringsum']);
-  if(S.unl.coop){rows.push(['hay',50,'Futter für deine Hühner']);if(S.coop.ch.length<4)rows.push(['chick',800,`Ein Huhn für den Stall (${S.coop.ch.length}/4)`])}
+  if(S.coopLv||S.unl.barn)rows.push(['hay',50,'Futter für deine Tiere']);
   const up=[];
-  for(const tl of['can','hoe']){const u=UPG[tl][S.lv[tl]+1];if(u)up.push([tl,u])}
   const bag=S.invSize<48;
   const html=`<h2>Hofladen</h2><p>Gold: <b id="shopGold">${S.gold}</b> g</p>${S.season==3?'<p class="note">Im Winter gibt es kein Saatgut. Zeit zum Angeln, Holzhacken und für die Höhle!</p>':''}
   <div class="rows">${rows.map(([id,p,info])=>`<div class="row">${ic(id)}<div><b>${id=='chick'?'Huhn':ITEMS[id].n}</b><small>${info}</small></div><div class="buy"><span class="price">${p} g</span><button class="btn sm" data-b="${id}" data-p="${p}" data-n="1">+1</button>${id=='chick'?'':`<button class="btn sm" data-b="${id}" data-p="${p}" data-n="5">+5</button>`}</div></div>`).join('')}</div>
-  <h3>Werkzeuge verbessern</h3><div class="rows">
+  <h3>Rucksack</h3><p style="font-size:14px">Werkzeuge verbessert jetzt Schmied Bruno im Dorf.</p><div class="rows">
   ${up.map(([tl,u])=>`<div class="row">${ic(tl)}<div><b>${u.n}</b><small>${u.d}<br>${u.g} g + ${reqText(u.r)}</small></div><div class="buy"><button class="btn sm" data-u="${tl}">Kaufen</button></div></div>`).join('')}
   ${bag?`<div class="row">${ic('bag')}<div><b>Größerer Rucksack</b><small>+12 Plätze (jetzt ${S.invSize})</small></div><div class="buy"><span class="price">2000 g</span><button class="btn sm" id="bBag">Kaufen</button></div></div>`:''}
-  ${!up.length&&!bag?'<p>Alles ist schon verbessert!</p>':''}</div>
+  ${!bag?'<p>Dein Rucksack hat schon die größte Stufe.</p>':''}</div>
   <div class="btns"><button class="btn alt" id="shopX">Fertig</button></div>`;
   const st=$('#modalWrap').hidden?0:$('#modal').scrollTop;
   openModal(html);$('#modal').scrollTop=st;
@@ -1009,7 +1032,7 @@ function openBoard(readOnly){
 }
 function bundleReward(id){
   switch(id){
-    case'spring':S.unl.coop=1;stampFarm(S.t,S.unl);S.coop.ch.push({name:'Henni',pts:0,pet:0});S.coop.hay+=10;break;
+    case'spring':S.unl.coop=1;S.coopLv=1;stampFarm(S.t,S.unl);S.animals.push({type:'chicken',name:'Henni',pts:0,pet:0,cnt:0});S.hay+=10;break;
     case'build':S.unl.mine=1;addItem('sword',1);break;
     case'forage':S.maxE+=30;S.energy+=30;break;
     case'fish':addItem('qsprinkler',2);break;
@@ -1093,11 +1116,12 @@ function enterMine(n){
 function exitMine(){setFarm();S.px=CAVE.door[0]+.5;S.py=CAVE.door[1]+1.9;S.dir=0;sfx('ladder');saveNow()}
 function mineRock(x,y,t){
   const o=t.o;if(!needE(2))return;swing('pick');sfx('pick');dust(x+.5,y+.7,'#9aa0a5');
-  if(--o.hp>0)return;
+  if((o.hp-=1+(S.lv.pick||0))>0)return;
   t.o=null;const st=MAP.id=='mine'?1:rnd(2,4);addItem('stone',st);let msg='+'+st+' Stein';
   if(o.ore){const k=ITEMS[o.ore].kind=='gem'?1:rnd(1,2);addItem(o.ore,k);msg='+'+k+' '+ITEMS[o.ore].n}
+  if(MAP.id=='mine'&&Math.random()<.02){const a=pick(['ammonit','bone','coin']);addItem(a,1);msg+=', +1 '+ITEMS[a].n}
   pop(x+.5,y,msg);
-  if(MAP.id=='mine'&&M.floor<30&&(o.ladder||Math.random()<.03)){t.o={k:'ladder'};sfx('ladder');toast('Eine Leiter nach unten!',1.4)}
+  if(MAP.id=='mine'&&M.floor<maxFloor()&&!M.boss&&(o.ladder||Math.random()<.03)){t.o={k:'ladder'};sfx('ladder');toast('Eine Leiter nach unten!',1.4)}
 }
 function attack(){
   if(swingCd>0)return;swingCd=.35;swing('sword');sfx('hit');
@@ -1109,7 +1133,7 @@ function attack(){
 }
 function faint(){
   const fee=Math.min(500,Math.floor(S.gold*.1));S.gold-=fee;setFarm();S.px=CAVE.door[0]+.5;S.py=CAVE.door[1]+1.9;S.dir=0;S.hp=50;S.time=Math.min(S.time+120,1500);
-  openModal(`<h2>Umgekippt!</h2><p>Die Schleime waren zu viel. Jonas hat dich aus der Höhle getragen. Arztkosten: ${fee} g.</p><div class="btns"><button class="btn" id="xOk">Autsch</button></div>`);$('#xOk').onclick=closeModal;
+  openModal(`<h2>Umgekippt!</h2><p>Die Höhle war zu viel. Jonas hat dich hinausgetragen und Dr. Emil hat dich wieder zusammengeflickt. Arztkosten: ${fee} g.</p><div class="btns"><button class="btn" id="xOk">Autsch</button></div>`);$('#xOk').onclick=closeModal;
 }
 
 /* ---------- day cycle ---------- */
@@ -1118,14 +1142,14 @@ function askSleep(){
   $('#sY').onclick=()=>endDay(false);$('#sN').onclick=closeModal;
 }
 function endDay(passOut){
-  if(S.loc=='mine')setFarm();
+  if(S.loc!='farm')setFarm();
   const lines={};let earn=0;
   for(const s of S.shipped){lines[s.id]=(lines[s.id]||0)+s.n;earn+=ITEMS[s.id].sell*s.n}
   S.gold+=earn;S.shipped=[];
   const doneDay=`${WD[(S.day-1)%7]}. ${S.day}. ${SEASONS[S.season]}`;
   for(const t of S.t){if(t.c&&!t.c.dead&&t.w&&!isRipe(t.c))t.c.age+=1+(t.f&&Math.random()<.35?1:0);t.w=0;if(t.g==3&&!t.c&&!t.o&&!t.f&&Math.random()<.04)t.g=0;if(t.o&&t.o.k=='fegg')t.o=null}
-  let eggsLaid=0;
-  if(S.unl.coop)for(const c of S.coop.ch){if(S.coop.hay>0){S.coop.hay--;c.pts=Math.min(1000,c.pts+5);S.coop.eggs.push(c.pts>=600&&Math.random()<.6?'begg':'egg');eggsLaid++}else c.pts=Math.max(0,c.pts-20);if(!c.pet)c.pts=Math.max(0,c.pts-8);c.pet=0}
+  const eggsLaid=animalsNight(),built=applyBuild();
+  for(const t of S.t){const o=t.o;if(o&&o.k=='beehive'&&S.season!=3&&!o.ready){o.h=(o.h||0)+1;if(o.h>=4)o.ready=1}}
   let fee=0;if(passOut){fee=Math.min(1000,Math.floor(S.gold*.1));S.gold-=fee}
   S.day++;let seasonMsg='';
   if(S.day>28){S.day=1;S.season=(S.season+1)%4;if(S.season==0)S.year++;buildSprites(S.season);
@@ -1143,8 +1167,10 @@ function endDay(passOut){
     else if(T0.fruit&&T0.s==S.season&&(o.fr||0)<3)o.fr=(o.fr||0)+1;
     else if(T0.fruit&&T0.s!=S.season)o.fr=0}
   spawnDebris(rnd(3,5),rnd(1,3));
+  {let d=S.t.filter(t=>t.o&&t.o.k=='dig').length;for(let k=0;k<200&&d<5;k++){const x=rnd(2,FW-3),y=rnd(9,FH-3),t=S.t[y*FW+x];if(t.g==0&&!t.o&&!t.c&&!(x>=25&&x<=27)){t.o={k:'dig'};d++;if(Math.random()<.5)break}}}
   if(S.season!=3)for(let k=0;k<8;k++){const x=rnd(3,24),y=rnd(9,26),t=S.t[y*FW+x];if(t.g==0&&!t.o)t.o={k:'weed'}}
   S.fd={eggs:0,fish:0,done:0};if(f&&f.type=='eggs')spawnEggs(12);
+  const fam=familyMorning()+storyMorning();
   S.energy=passOut?Math.round(S.maxE*.5):S.maxE;S.hp=S.maxHp;S.time=360;S.px=5.5;S.py=7.9;S.dir=0;F=null;
   for(const k in NR)NR[k].vis=false;
   barDirty=1;saveNow();
@@ -1153,8 +1179,9 @@ function endDay(passOut){
     ${passOut?`<p class="warn">Du bist um 2 Uhr nachts umgefallen. Jemand hat dich nach Hause gebracht. Arztkosten: ${fee} g.</p>`:''}
     ${ks.length?`<div class="rows">${ks.map(id=>`<div class="row">${ic(id)}<div><b>${ITEMS[id].n}</b><small>${lines[id]} × ${ITEMS[id].sell} g</small></div><span class="price">${lines[id]*ITEMS[id].sell} g</span></div>`).join('')}</div>`:'<p>Heute wurde nichts versendet.</p>'}
     <div class="total">Einnahmen: ${earn} g</div>
-    ${eggsLaid?`<p>Im Hühnerstall ${eggsLaid==1?'liegt 1 frisches Ei':'liegen '+eggsLaid+' frische Eier'}.</p>`:''}
-    ${S.unl.coop&&S.coop.ch.length&&S.coop.hay<S.coop.ch.length?'<p class="warn">Der Futtertrog ist fast leer. Hungrige Hühner legen keine Eier.</p>':''}
+    ${fam}${built?`<p class="note">${built}</p>`:''}
+    ${eggsLaid?`<p>Deine Tiere haben ${eggsLaid} ${eggsLaid==1?'Erzeugnis':'Erzeugnisse'} für dich.</p>`:''}
+    ${S.animals.length&&S.hay<S.animals.length?'<p class="warn">Das Futtersilo ist fast leer. Hungrige Tiere geben nichts.</p>':''}
     ${seasonMsg?`<p><b>${seasonMsg}</b></p>`:''}
     ${f?`<p class="note"><b>Heute: ${f.n}!</b> ${f.desc}</p>`:''}
     <p>Wetter heute: ${wx[S.weather]} · Gespeichert.</p>
@@ -1168,25 +1195,23 @@ function openMenu(){
   const ago=S.savedAt?Math.max(0,Math.round((Date.now()-S.savedAt)/1000)):null;
   const tile=(id,ico,lab,sub)=>`<button class="tile" id="${id}">${ic(ico)}<span><b>${lab}</b><small>${sub}</small></span></button>`;
   openModal(`<h2>Pause</h2><p>${WD[(S.day-1)%7]}. ${S.day}. ${SEASONS[S.season]}, Jahr ${S.year} · ${S.gold} g</p>
-    <div class="mgrid">${tile('mBag','bag','Rucksack','Sachen ordnen')}${tile('mPeople','heart','Dorf','Freunde und Feste')}${tile('mHelp','book','Tipps','So geht’s')}${tile('mSet','gear','Einstel&shy;lungen','Ton, Speichern')}</div>
+    <div class="mgrid">${tile('mJour','journal','Tagebuch','Story und Aufgaben')}${tile('mBag','bag','Rucksack','Sachen ordnen')}${tile('mPeople','heart','Dorf','Freunde und Feste')}${tile('mHelp','book','Tipps','So geht’s')}${tile('mSet','gear','Einstel&shy;lungen','Ton, Speichern')}</div>
     <p class="saved">${ago==null?'Noch nicht gespeichert.':`Automatisch gespeichert vor ${ago<60?ago+' s':Math.round(ago/60)+' min'}.`}</p>
     <div class="btns"><button class="btn wide" id="mBack">Weiterspielen</button></div>`,true);
-  $('#mBack').onclick=closeModal;$('#mBag').onclick=()=>openBag(true);$('#mPeople').onclick=openPeople;$('#mSet').onclick=openSettings;
+  $('#mBack').onclick=closeModal;$('#mJour').onclick=()=>openJournal();$('#mBag').onclick=()=>openBag(true);$('#mPeople').onclick=openPeople;$('#mSet').onclick=openSettings;
   $('#mHelp').onclick=()=>{openModal(`<h2>Tipps</h2>
-    <p><b>Anbau:</b> Mit der Hacke Gras umgraben, Samen wählen und säen, jeden Tag gießen. Reife Pflanzen mit dem Knopf ernten. Dünger macht sie schneller.</p>
-    <p><b>Geld:</b> Ernte, Fische, Eier und Erze in die Versandkiste neben dem Haus legen. Bezahlt wird über Nacht.</p>
-    <p><b>Dorftafel:</b> Neben dem Laden. Erledigte Aufgaben schalten den Hühnerstall, die Höhle und mehr frei.</p>
-    <p><b>Höhle:</b> Rechts unterhalb des Ladens. Mit der Spitzhacke Steine abbauen, darunter liegen Leitern nach unten. Mit dem Schwert gegen Schleime.</p>
-    <p><b>Hühner:</b> Heu in den Futtertrog, jeden Tag streicheln, morgens Eier einsammeln.</p>
-    <p><b>Werkzeuge:</b> Im Laden mit Gold und Erz verbessern. Dann gießen und hacken sie mehrere Felder auf einmal.</p>
-    <p><b>Energie:</b> Werkzeuge kosten Energie. Essen bringt sie zurück: Knopf zweimal drücken, während du etwas Essbares hältst.</p>
-    <p><b>Angeln:</b> Angel wählen, zum Wasser schauen, Knopf drücken. Beißt ein Fisch, zieh den Finger irgendwo auf dem Bildschirm hoch und runter, damit der grüne Balken dem Fisch folgt.</p>
-    <p><b>Bäume:</b> Es gibt Eiche, Ahorn und Kiefer. Schüttel sie einmal am Tag, dann fällt manchmal ein Samen herunter. Samen und Obstbaum-Setzlinge (Kirsche, Pfirsich, Apfel) pflanzt du auf Gras. Obstbäume tragen nach 28 Tagen in ihrer Jahreszeit jeden Tag Früchte.</p>
-    <p><b>Steine und Äste:</b> Jeden Morgen liegen neue auf den Wiesen. Stein und Holz gibt es auch im Laden.</p>
-    <p><b>Werkbank:</b> Steht rechts neben deinem Haus. Dort stellst du Zäune, Dünger, Sprinkler und Essen her.</p>
-    <p><b>Rucksack:</b> Das Symbol rechts neben der Leiste öffnet ihn. Teile per Finger ziehen oder zwei Plätze antippen zum Tauschen.</p>
-    <p><b>Speichern:</b> Automatisch alle paar Sekunden und beim Schließen. Beim nächsten Öffnen geht es genau dort weiter.</p>
-    <p><b>Tastatur:</b> WASD/Pfeile laufen, Leertaste benutzen, 1–9 Werkzeug.</p>
+    <p><b>Geschichte:</b> Im Tagebuch (Pausenmenü) steht immer, was als Nächstes zu tun ist.</p>
+    <p><b>Das Dorf:</b> Folge dem Weg auf deinem Hof nach Osten. Schmiede, Ranch, Zimmerei, Gasthaus, Museum, Rathaus und Arzt haben eigene Öffnungszeiten.</p>
+    <p><b>Leute:</b> Wer ein gelbes Ausrufezeichen trägt, hat eine Aufgabe für dich. Reden und Geschenke bringen Herzen. Jeden Tag gibt es einen neuen Aushang im Rathaus.</p>
+    <p><b>Liebe:</b> Mit 8 Herzen kannst du einem Single einen Sonnenblumenstrauß (Ranch) schenken, mit 10 Herzen und ausgebautem Haus das Sonnenamulett (Gasthaus).</p>
+    <p><b>Anbau:</b> Mit der Hacke Gras umgraben, säen, jeden Tag gießen. Dünger macht Pflanzen schneller.</p>
+    <p><b>Geld:</b> Alles Verkaufbare in die Versandkiste neben dem Haus legen. Bezahlt wird über Nacht.</p>
+    <p><b>Tiere:</b> Hühner, Enten, Kaninchen, Kühe, Ziegen, Schafe und ein Pferd gibt es bei Ronja. Theo baut Scheune und größeren Stall. Heu ins Silo, jeden Tag streicheln, Erzeugnisse im Stall einsammeln.</p>
+    <p><b>Werkbank:</b> Neben deinem Haus. Zäune, Dünger, Sprinkler, Käse, Stoff und Essen.</p>
+    <p><b>Höhle:</b> Rechts unterhalb des Ladens. Bosse auf Ebene 10, 20 und 30. Bruno schmiedet Waffen und schmilzt Erz zu Barren, Dr. Emil verkauft Heiltränke.</p>
+    <p><b>Museum:</b> Edelsteine, Erze und Fundstücke spenden. Fundstücke gräbst du mit der Hacke aus, wo sich Würmer im Boden bewegen.</p>
+    <p><b>Angeln:</b> Beißt ein Fisch, zieh den Finger hoch und runter, damit der grüne Balken dem Fisch folgt.</p>
+    <p><b>Speichern:</b> Automatisch. Du kannst das Spiel jederzeit schließen.</p>
     <div class="btns"><button class="btn" id="hOk">Zurück</button></div>`,true);$('#hOk').onclick=openMenu};
 }
 function openSettings(){
@@ -1233,6 +1258,7 @@ aBtn.addEventListener('pointerdown',e=>{e.preventDefault();unlock();aBtn.classLi
 const aUp=()=>{aBtn.classList.remove('down');holdA=false};
 aBtn.addEventListener('pointerup',aUp);aBtn.addEventListener('pointercancel',aUp);aBtn.addEventListener('pointerleave',aUp);
 $('#menuBtn').onclick=()=>{unlock();openMenu()};
+$('#rideBtn').onclick=()=>{unlock();if(started&&!paused)toggleRide()};
 addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();keys[k]=true;
   if(k==' '||k=='e'||k=='enter'){if(paused)return;e.preventDefault();unlock();if(started){if(F&&F.ph=='game')holdK=true;else if(!e.repeat)doAction()}}
@@ -1246,7 +1272,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden){saveNow();
 addEventListener('pagehide',()=>saveNow());
 
 /* ---------- update ---------- */
-function solid(x,y){const t=T(x,y);if(!t)return true;if(t.g==2||t.g==4||t.g==5||t.g==7)return true;const o=t.o;return!!(o&&o.k!='forage'&&o.k!='fegg'&&!(o.k=='tree'&&o.st<2))}
+function solid(x,y){const t=T(x,y);if(!t)return true;if(t.g==2||t.g==4||t.g==5||t.g==7)return true;const o=t.o;return!!(o&&o.k!='forage'&&o.k!='fegg'&&o.k!='dig'&&!(o.k=='tree'&&o.st<2))}
 function blocked(px,py){const a=.26;for(const[x,y]of[[px-a,py-.24],[px+a,py-.24],[px-a,py-.02],[px+a,py-.02]])if(solid(Math.floor(x),Math.floor(y)))return true;return false}
 let lastClock='',lastE=-1,lastH=-1,lastGold=-1,lastLab='',lastWx='',midnightWarned=-1,autoT=0;
 function update(dt){
@@ -1264,14 +1290,15 @@ function update(dt){
   if(F&&F.ph!='game'&&l>.4){F=null;toast('Die Leine ist eingeholt.',1.2)}
   if(!F&&l>.2){
     if(l>1){mx/=l;my/=l}
-    const sp=(S.energy<=0?2.4:4.4)*dt;
+    if(S.riding&&MAP.id=='mine')S.riding=0;
+    const sp=(S.energy<=0?2.4:4.4)*(S.riding?1.8:1)*dt;
     const nx=S.px+mx*sp,ny=S.py+my*sp;
     if(!blocked(nx,S.py))S.px=nx;if(!blocked(S.px,ny))S.py=ny;
     S.dir=Math.abs(mx)>Math.abs(my)?(mx<0?2:3):(my<0?1:0);
-    moving=true;walkT+=dt;
+    moving=true;walkT+=dt;edgeTravel();
   }
   if(tickWorld(dt))return;
-  if(S.loc!='farm')updateSlimes(dt);
+  if(S.loc=='mine')updateSlimes(dt);
   updateFish(dt);
 }
 // clock, villagers, animals and autosave: run everywhere except in the pause menu
@@ -1281,7 +1308,7 @@ function tickWorld(dt){
   S.time+=dt*2;
   if(S.time>=1440&&midnightWarned!=dayKey()){midnightWarned=dayKey();toast('Mitternacht! Ab ins Bett, sonst fällst du um 2 Uhr um.',3.5)}
   if(S.time>=1560){endDay(true);return true}
-  if(S.loc=='farm'){updateNpcs(dt);updateChickens(dt)}
+  updateNpcs(dt);if(S.loc=='farm')updateAnimals(dt);else if(S.loc=='town')updatePaddock(dt);
   return false;
 }
 function npcVisible(k){
@@ -1365,6 +1392,7 @@ function person(x,y,dir,wt,pal,mv){
   if(dir==1){r(2,1,8,8,pal.hair);if(pal.long)r(2,8,8,5,pal.hair)}
   if(dir==2){r(2,1,8,3,pal.hair);r(6,3,3,5,pal.hair);r(3,6,1,2,eye);if(pal.long)r(7,6,3,7,pal.hair);if(pal.beard)r(3,8,3,2,pal.hair)}
   if(dir==3){r(2,1,8,3,pal.hair);r(3,3,3,5,pal.hair);r(8,6,1,2,eye);if(pal.long)r(2,6,3,7,pal.hair);if(pal.beard)r(6,8,3,2,pal.hair)}
+  if(pal.tail){if(dir==1)r(4,8,4,6,pal.hair);else if(dir==2)r(8,5,2,6,pal.hair);else if(dir==3)r(2,5,2,6,pal.hair);else{r(1,4,1,4,pal.hair);r(10,4,1,4,pal.hair)}}
 }
 function drawTool(x,y){
   if(anim<=0||!animItem)return;const p=TS/16,k=1-anim/.28,d=S.dir;
@@ -1387,9 +1415,9 @@ function drawSlime(s){const p=TS/16,x=s.x*TS-camX,y=s.y*TS-camY,sq=1+Math.sin(s.
   if(s.hp<s.max){ctx.fillStyle='#3a1a10';ctx.fillRect(x-5*p,y-13*p,10*p,1.4*p);ctx.fillStyle='#e0453a';ctx.fillRect(x-5*p,y-13*p,10*p*s.hp/s.max,1.4*p)}}
 function darkness(){const t=S.time;let a=t<1080?0:Math.min(.58,(t-1080)/300*.58);if(S.weather!='sun')a=Math.max(a,.14);return a}
 function render(now){
-  const w=cv.width,h=cv.height,p=TS/16,farm=MAP.id=='farm';
+  const w=cv.width,h=cv.height,p=TS/16,farm=MAP.id=='farm',town=MAP.id=='town',outdoor=!!(farm||town);
   ctx.setTransform(1,0,0,1,0,0);ctx.imageSmoothingEnabled=false;
-  ctx.fillStyle=farm?'#2d4a22':'#140f0c';ctx.fillRect(0,0,w,h);
+  ctx.fillStyle=outdoor?'#2d4a22':'#140f0c';ctx.fillRect(0,0,w,h);
   const mw=MAP.w*TS,mh=MAP.h*TS;let cx=S.px*TS-w/2,cy=(S.py-.5)*TS-h/2;
   if(!started){cx=12*TS-w/2+Math.sin(now/6000)*3*TS;cy=12*TS-h/2}
   cx=mw<w?(mw-w)/2:clamp(cx,0,mw-w);cy=mh<h?(mh-h)/2:clamp(cy,0,mh-h);
@@ -1399,6 +1427,7 @@ function render(now){
   for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
     const t=MAP.t[y*MAP.w+x],sx=x*TS-camX,sy=y*TS-camY;let img;
     if(t.g==1)img=t.pp?SP.ppath:SP.path;else if(t.g==2)img=SP.water[(wf+x)%4];else if(t.g==3)img=t.w?SP.wet:SP.soil;
+    else if(t.g==9||(town&&t.g==4))img=SP.plaza;else if(t.g==11)img=SP.flowerbed;
     else if(t.g==7)img=SP.wallZ[MAP.zone||0];else if(t.g==8)img=SP.floorZ[MAP.zone||0][hash(x,y)<.5?0:1];else img=SP.grass[Math.floor(hash(x,y)*4)];
     ctx.drawImage(img,sx,sy,TS,TS);
     if(t.g==3&&t.f){ctx.fillStyle='rgba(232,224,176,.7)';ctx.fillRect(sx+3*p,sy+4*p,p,p);ctx.fillRect(sx+10*p,sy+7*p,p,p);ctx.fillRect(sx+6*p,sy+11*p,p,p)}
@@ -1430,6 +1459,10 @@ function render(now){
         case'ladder':ctx.drawImage(SP.ladder,sx,sy,TS,TS);break;
         case'up':ctx.drawImage(SP.up,sx,sy-8*p,TS,24*p);break;
         case'chest':ctx.drawImage(SP.chest,sx,sy,TS,TS);break;
+        case'lamp':ctx.drawImage(SP.lamp,sx,sy-16*p,TS,32*p);break;
+        case'pbench':ctx.drawImage(SP.pbench,sx,sy,TS,TS);break;
+        case'beehive':ctx.drawImage(SP.beehive,sx,sy-4*p,TS,20*p);if(o.ready){ctx.fillStyle='#f0a820';ctx.fillRect(sx+6*p,sy+10*p,4*p,3*p)}break;
+        case'dig':ctx.drawImage(SP.dig,sx,sy+Math.sin(now/200+x)*p*.5,TS,TS);break;
         default:if(SP[o.k])ctx.drawImage(SP[o.k],sx,sy,TS,TS);
       }}])}
   }
@@ -1439,15 +1472,21 @@ function render(now){
       ctx.fillStyle='#5b3417';ctx.font=`700 ${Math.round(6.5*p)}px "Ziffern","Pixelify Sans",monospace`;ctx.textAlign='center';ctx.textBaseline='middle';
       ctx.fillText('LADEN',SHOP.x*TS-camX+48*p,(SHOP.y-1)*TS-camY+47.5*p)}]);
     if(S.unl.coop)D.push([5,()=>ctx.drawImage(SP.coop,COOP.x*TS-camX,(COOP.y-1)*TS-camY,4*TS,4*TS)]);
+    if(S.unl.barn)D.push([6,()=>ctx.drawImage(SP.barn,BARN.x*TS-camX,(BARN.y-1)*TS-camY,5*TS,5*TS)]);
     D.push([13,()=>{const X=CAVE.x*TS-camX,Y=(CAVE.y+3)*TS-camY-56*p;ctx.drawImage(SP.cave,X,Y,48*p,56*p);if(!S.unl.mine)ctx.drawImage(SP.boulder,X,Y,48*p,56*p)}]);
     D.push([7,()=>ctx.drawImage(SP.bin,10*TS-camX,7*TS-camY-22*p,32*p,22*p)]);
-    for(const k in NR){const n=NR[k];if(n.vis)D.push([n.y,()=>person(n.x*TS-camX,n.y*TS-camY,n.dir,n.walk,NPCS[k].pal,n.walk>0&&n.wait<=0)])}
-    for(const c of CHV)if(c.out)D.push([c.y,()=>drawChicken(c)]);
-  }else for(const s of M.slimes)D.push([s.y,()=>drawSlime(s)]);
-  D.push([S.py,()=>{const sx=S.px*TS-camX,sy=S.py*TS-camY;if(invul>0&&Math.floor(now/80)%2)return;if(S.dir==1)drawTool(sx,sy);person(sx,sy,S.dir,walkT,ME,moving);if(S.dir!=1)drawTool(sx,sy)}]);
+    S.animals.forEach((a,i)=>{const v=AV[i];if(v&&v.out)D.push([v.y,()=>drawAnimalAt(a.type,v.x*TS-camX,v.y*TS-camY,v.flip,v.peck,p)])});
+    if(S.horse&&!S.riding)D.push([8.6,()=>drawAnimalAt('horse',12.5*TS-camX,8.6*TS-camY,0,0,p)]);
+  }else if(town)townDrawables(D,now,p);
+  else for(const s of M.slimes)D.push([s.y,()=>drawSlime(s)]);
+  for(const k in NR){const n=NR[k];if(n.vis&&n.m==MAP.id)D.push([n.y,()=>{const X=n.x*TS-camX,Y=n.y*TS-camY;person(X,Y,n.dir,n.walk,NPCS[k].pal,n.walk>0&&n.wait<=0);
+    if(!NPCS[k].story&&S.rel[k]&&(questMark(k)||(!S.rel[k].met&&k!='mara'&&k!='jonas'&&k!='hilde'))){ctx.fillStyle='#ffe38a';ctx.strokeStyle='#5b3417';ctx.lineWidth=Math.max(1,p*.6);ctx.fillRect(X-2.5*p,Y-31*p,5*p,7*p);ctx.strokeRect(X-2.5*p,Y-31*p,5*p,7*p);ctx.fillStyle='#d9442f';ctx.fillRect(X-.8*p,Y-30*p,1.6*p,3.5*p);ctx.fillRect(X-.8*p,Y-26*p,1.6*p,1.2*p)}
+    if(NPCS[k].story){ctx.fillStyle='#ffe38a';ctx.fillRect(X-.8*p,Y-30*p,1.6*p,3.5*p);ctx.fillRect(X-.8*p,Y-26*p,1.6*p,1.2*p)}}])}
+  {const kd=drawKid(now,p);if(kd)D.push(kd)}
+  D.push([S.py,()=>{const sx=S.px*TS-camX,sy=S.py*TS-camY;if(invul>0&&Math.floor(now/80)%2)return;const ride=S.riding&&!!outdoor,py2=ride?sy-7*p:sy;if(ride)drawAnimalAt('horse',sx,sy,S.dir==2,0,p);if(S.dir==1)drawTool(sx,py2);person(sx,py2,S.dir,walkT,mePal(),moving&&!ride);if(S.dir!=1)drawTool(sx,py2)}]);
   D.sort((a,b)=>a[0]-b[0]);for(const d of D)d[1]();
-  if(farm&&festToday()&&S.time>=480){const cols=['#e0453a','#f6d53a','#4aa3df','#5cc14a','#f06aa8'];
-    const yAt=x=>6.35*TS-camY+Math.sin((x-20)/14*Math.PI)*6*p;
+  if(town&&festToday()&&S.time>=480){const cols=['#e0453a','#f6d53a','#4aa3df','#5cc14a','#f06aa8'];
+    const yAt=x=>8.9*TS-camY+Math.sin((x-20)/14*Math.PI)*6*p;
     ctx.strokeStyle='#5b3417';ctx.lineWidth=Math.max(1,p*.5);ctx.beginPath();for(let x=20;x<=34;x+=.5){const sx=x*TS-camX;x==20?ctx.moveTo(sx,yAt(x)):ctx.lineTo(sx,yAt(x))}ctx.stroke();
     for(let x=20;x<34;x+=.5){const sx=x*TS-camX,sy=yAt(x+.25);ctx.fillStyle=cols[Math.round(x*2)%5];ctx.beginPath();ctx.moveTo(sx+TS*.03,sy);ctx.lineTo(sx+TS*.47,sy);ctx.lineTo(sx+TS*.25,sy+5*p);ctx.fill()}}
   if(F){const bx=(F.x+.5)*TS-camX,by=(F.y+.55)*TS-camY+Math.sin(now/300)*p;const hx=S.px*TS-camX,hy=S.py*TS-camY-18*p;
@@ -1455,10 +1494,11 @@ function render(now){
     ctx.fillStyle='#e04a3a';ctx.fillRect(bx-2*p,by-2*p,4*p,3*p);ctx.fillStyle='#fff';ctx.fillRect(bx-2*p,by-2*p,4*p,p);
     if(F.ph=='bite'){ctx.fillStyle='#ffe38a';ctx.strokeStyle='#5b3417';ctx.lineWidth=p;ctx.font=`700 ${Math.round(14*p)}px "Ziffern","Pixelify Sans",monospace`;ctx.textAlign='center';ctx.strokeText('!',hx,hy-8*p);ctx.fillText('!',hx,hy-8*p)}}
   for(const q of parts){ctx.fillStyle=q.col;ctx.fillRect(q.x*TS-camX,q.y*TS-camY,1.5*p,1.5*p)}
-  if(farm){
+  if(outdoor){
     const dk_=darkness();
     if(dk_>0){ctx.fillStyle=`rgba(18,20,64,${dk_})`;ctx.fillRect(0,0,w,h);
-      if(S.time>=1080){ctx.fillStyle=`rgba(255,205,110,${Math.min(.85,dk_*1.5)})`;for(const[bx,wx]of[[HOUSE.x,14],[HOUSE.x,66],[SHOP.x,12],[SHOP.x,62]]){const sx=bx*TS-camX+wx*p,sy=(HOUSE.y-1)*TS-camY+(bx==SHOP.x?60:58)*p;ctx.fillRect(sx,sy,(bx==SHOP.x?20:14)*p,(bx==SHOP.x?11:12)*p)}}}
+      if(town&&S.time>=1080){ctx.globalCompositeOperation='lighter';for(let i=0;i<TW*TH;i++){const o=TOWN.t[i].o;if(!o||o.k!='lamp')continue;const lx=(i%TW+.5)*TS-camX,ly=(Math.floor(i/TW)-.3)*TS-camY;const gr=ctx.createRadialGradient(lx,ly,0,lx,ly,TS*2.2);gr.addColorStop(0,`rgba(255,200,110,${dk_*.7})`);gr.addColorStop(1,'rgba(255,200,110,0)');ctx.fillStyle=gr;ctx.fillRect(lx-TS*2.2,ly-TS*2.2,TS*4.4,TS*4.4)}ctx.globalCompositeOperation='source-over'}
+      if(farm&&S.time>=1080){ctx.fillStyle=`rgba(255,205,110,${Math.min(.85,dk_*1.5)})`;for(const[bx,wx]of[[HOUSE.x,14],[HOUSE.x,66],[SHOP.x,12],[SHOP.x,62]]){const sx=bx*TS-camX+wx*p,sy=(HOUSE.y-1)*TS-camY+(bx==SHOP.x?60:58)*p;ctx.fillRect(sx,sy,(bx==SHOP.x?20:14)*p,(bx==SHOP.x?11:12)*p)}}}
     if(S.weather!='sun'){const snow=S.weather=='snow';ctx.fillStyle=snow?'rgba(255,255,255,.85)':'rgba(190,215,255,.55)';
       for(let i=0;i<(snow?90:120);i++){const sp=snow?60:900,fx=hash(i,7)*w,fy=hash(i,3)*h;const yy=(fy+now/1000*sp*dpr)%h,xx=(fx+(snow?Math.sin(now/800+i)*10*dpr:-now/1000*120*dpr))%w;const X=xx<0?xx+w:xx;
         if(snow)ctx.fillRect(X,yy,2*dpr,2*dpr);else ctx.fillRect(X,yy,1.2*dpr,12*dpr)}}
@@ -1466,6 +1506,7 @@ function render(now){
     const px=S.px*TS-camX,py=(S.py-.6)*TS-camY,g=ctx.createRadialGradient(px,py,TS*1.5,px,py,TS*6);
     g.addColorStop(0,'rgba(10,6,4,0)');g.addColorStop(1,'rgba(10,6,4,.82)');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
   }
+  {const gr=outdoor?storyGrey():0;if(gr>0){ctx.globalCompositeOperation='saturation';ctx.fillStyle=`rgba(128,128,128,${gr})`;ctx.fillRect(0,0,w,h);ctx.globalCompositeOperation='source-over'}}
   ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`700 ${Math.round(7*p)}px "Ziffern","Pixelify Sans",monospace`;ctx.lineWidth=Math.max(2,p*1.2);ctx.strokeStyle='#3b2210';
   for(const q of pops){ctx.globalAlpha=Math.min(1,q.t*2);const x=q.x*TS-camX,y=q.y*TS-camY;ctx.strokeText(q.text,x,y);ctx.fillStyle=q.col;ctx.fillText(q.text,x,y)}ctx.globalAlpha=1;
   if(F&&F.ph=='game')drawFishing();
@@ -1496,8 +1537,847 @@ function hud(){
   const hp=Math.round(S.hp);$('#hpBar').hidden=!(S.loc=='mine'||hp<S.maxHp);if(hp!=lastH){lastH=hp;$('#hFill').style.height=clamp(hp/S.maxHp*100,0,100)+'%'}
   const lab=started&&!paused?plan()[0]:'';if(lab!=lastLab){lastLab=lab;const el=$('#aLab');el.textContent=lab;el.style.fontSize=lab.length>9?'12px':lab.length>7?'13px':''}
   const fp=!!(F&&F.ph=='game'&&!paused);if(fp!=fpShown){fpShown=fp;fishPad.hidden=!fp;fDrag=null}
+  const rb=$('#rideBtn'),rs=!!(S.horse&&MAP.id!='mine'&&started);if(rb.hidden==rs)rb.hidden=!rs;rb.classList.toggle('on',!!S.riding);
+  bossHud();
   if(barDirty)renderBar();
 }
+
+/* ========== expansion A: items, town, people, buildings, animals ========== */
+Object.assign(ITEMS,{
+  sword:{n:'Rostiges Schwert',tool:1,weapon:1},dagger:{n:'Dolch',tool:1,weapon:1},isword:{n:'Eisenschwert',tool:1,weapon:1},
+  hammer:{n:'Kriegshammer',tool:1,weapon:1},gsword:{n:'Goldschwert',tool:1,weapon:1},csword:{n:'Kristallklinge',tool:1,weapon:1},
+  copperbar:{n:'Kupferbarren',sell:60},ironbar:{n:'Eisenbarren',sell:120},goldbar:{n:'Goldbarren',sell:250},
+  degg:{n:'Entenei',sell:95,eat:30,kind:'animal'},fur:{n:'Kaninchenfell',sell:330,kind:'animal'},
+  milk:{n:'Milch',sell:125,eat:40,kind:'animal'},bmilk:{n:'Große Milch',sell:190,eat:60,kind:'animal'},
+  gmilk:{n:'Ziegenmilch',sell:225,eat:50,kind:'animal'},wool:{n:'Wolle',sell:340,kind:'animal'},honey:{n:'Honig',sell:100,eat:35,kind:'animal'},
+  cheese:{n:'Käse',sell:230,eat:80,kind:'food'},gcheese:{n:'Ziegenkäse',sell:400,eat:100,kind:'food'},cloth:{n:'Stoff',sell:470},
+  hcake:{n:'Honigkuchen',sell:280,eat:150,kind:'food'},soup:{n:'Gemüsesuppe',sell:60,eat:80,kind:'food'},pie:{n:'Kürbiskuchen',sell:120,eat:140,kind:'food'},
+  coffee:{n:'Kaffee',sell:50,eat:60,kind:'food'},potion:{n:'Heiltrank',sell:60,heal:60},epotion:{n:'Energietrank',sell:150,eat:150},
+  bouquet:{n:'Sonnenblumenstrauß',sell:80},amulet:{n:'Sonnenamulett',sell:1000},beehive:{n:'Bienenstock',sell:200,place:1},
+  ammonit:{n:'Ammonit',sell:150,kind:'artifact'},coin:{n:'Alte Münze',sell:120,kind:'artifact'},arrow:{n:'Pfeilspitze',sell:80,kind:'artifact'},
+  figure:{n:'Tonfigur',sell:200,kind:'artifact'},bone:{n:'Urzeitknochen',sell:180,kind:'artifact'},
+  batwing:{n:'Fledermausflügel',sell:15},shell:{n:'Käferpanzer',sell:40},ecto:{n:'Ektoplasma',sell:60},gear:{n:'Zahnrad',sell:80},
+  shard:{n:'Sonnensplitter'},watch:{n:'Konrads Taschenuhr'}
+});
+const WEAPONS={
+  sword:{dmg:3,cd:.35,rng:1.05,kb:6},dagger:{dmg:3,cd:.18,rng:.95,kb:4,price:800},
+  isword:{dmg:6,cd:.35,rng:1.1,kb:6,price:1500,req:[['ironbar',3]]},hammer:{dmg:11,cd:.7,rng:1.25,kb:11,price:3000,req:[['ironbar',5]]},
+  gsword:{dmg:9,cd:.33,rng:1.15,kb:7,price:4000,req:[['goldbar',3]]},csword:{dmg:14,cd:.3,rng:1.2,kb:8,price:9000,req:[['goldbar',3],['diamond',2]]}
+};
+UPG.pick=[null,{g:1000,r:[['copperbar',5]],n:'Kupfer-Spitzhacke',d:'Steine brechen schneller'},{g:3000,r:[['goldbar',5]],n:'Gold-Spitzhacke',d:'Steine brechen sehr schnell'}];
+UPG.axe=[null,{g:1000,r:[['copperbar',5]],n:'Kupfer-Axt',d:'Bäume fallen schneller'},{g:3000,r:[['goldbar',5]],n:'Gold-Axt',d:'Bäume fallen sehr schnell'}];
+RECIPES.push(['cheese',1,[['milk',1]],'Käse aus frischer Milch'],['gcheese',1,[['gmilk',1]],'Würziger Ziegenkäse'],['cloth',1,[['wool',1]],'Weicher Stoff aus Wolle'],['hcake',1,[['honey',1],['egg',1],['milk',1]],'+150 Energie']);
+const ARTIFACTS=['ammonit','coin','arrow','figure','bone'];
+const ANIMALS={
+  chicken:{n:'Huhn',house:'coop',prod:'egg',big:'begg',every:1,price:800},duck:{n:'Ente',house:'coop',lv:2,prod:'degg',every:2,price:1200},
+  rabbit:{n:'Kaninchen',house:'coop',lv:2,prod:'fur',every:4,price:2500},cow:{n:'Kuh',house:'barn',prod:'milk',big:'bmilk',every:1,price:1500},
+  goat:{n:'Ziege',house:'barn',prod:'gmilk',every:2,price:2000},sheep:{n:'Schaf',house:'barn',prod:'wool',every:3,price:3000}
+};
+const ANAMES=['Henni','Gackerlotte','Frieda','Paula','Berta','Klara','Rosi','Lotti','Elsa','Flocke','Wolke','Hoppel','Schnuffel','Resi','Anton','Emma','Bruni','Kalli','Minka','Tilda'];
+const BARN={x:21,y:2,w:5,h:4,door:[23,5]};
+
+/* ----- icons for the new items ----- */
+const _drawIcon0=drawIcon;
+drawIcon=function(g,id){
+  const bar=c=>{R(g,2,7,12,6,dk(c,.35));R(g,3,6,11,5,c);R(g,4,6,6,1,lt(c,.5))};
+  const blade=(c,h)=>{line(g,5,11,13,3,c,2);line(g,6,11,13,4,lt(c,.5));R(g,3,9,5,2,h);R(g,4,8,2,5,h);R(g,2,12,3,3,'#5b3417')};
+  const bottle=c=>{R(g,6,2,4,3,'#c8c0b0');R(g,4,5,8,9,'#e8f4f8');R(g,5,7,6,6,c);R(g,5,7,2,2,lt(c,.5))};
+  switch(id){
+    case'copperbar':return bar('#e07a3a');case'ironbar':return bar('#c8ccd8');case'goldbar':return bar('#f5c83a');
+    case'dagger':line(g,7,10,12,5,'#d8dee4',2);R(g,4,10,4,2,'#8a5a2b');R(g,3,12,3,3,'#5b3417');return;
+    case'isword':return blade('#d8dee4','#6a6a70');case'gsword':return blade('#f5c83a','#8a5a2b');case'csword':return blade('#9ee8ff','#4a3a8a');
+    case'hammer':line(g,4,14,9,6,'#8a5a2b',2);R(g,7,1,8,6,'#8a8f95');R(g,7,1,8,2,'#b8bec4');return;
+    case'degg':ell(g,8,9,4.5,5.5,'#e8f0f8');R(g,6,6,2,2,'#fff');R(g,9,11,1,1,'#b8c8d8');R(g,7,9,1,1,'#b8c8d8');return;
+    case'fur':ell(g,8,9,6,5,'#b89878');ell(g,7,8,4,3,'#d8c0a0');R(g,4,4,2,3,'#b89878');return;
+    case'milk':case'bmilk':R(g,5,2,6,2,'#c8c8c8');R(g,4,4,8,10,'#f8f8f8');R(g,4,8,8,2,id=='bmilk'?'#f5c83a':'#4aa3df');R(g,5,5,2,2,'#fff');return;
+    case'gmilk':R(g,5,2,6,2,'#c8c8c8');R(g,4,4,8,10,'#f4f0e0');R(g,4,8,8,2,'#8ab85a');return;
+    case'wool':circ(g,6,9,3.5,'#f4f0e8');circ(g,10,8,3.5,'#f8f4ec');circ(g,8,11,3.5,'#ece8e0');R(g,6,7,2,1,'#fff');return;
+    case'honey':R(g,4,5,8,9,'#f0a820');R(g,4,5,8,2,'#f8d060');R(g,5,3,6,2,'#8a5a2b');R(g,5,9,2,3,'#ffe08a');return;
+    case'cheese':R(g,2,7,12,6,'#f5c83a');R(g,2,7,12,2,'#fbe07a');R(g,5,10,2,2,'#d8a020');R(g,10,9,2,2,'#d8a020');return;
+    case'gcheese':circ(g,8,9,6,'#f4ecd8');circ(g,8,9,4,'#fff8e8');R(g,6,7,2,2,'#e8dcc0');return;
+    case'cloth':R(g,3,4,10,9,'#8a6ad8');R(g,3,4,10,2,'#a88af0');R(g,3,8,10,1,'#6a4ab8');R(g,11,12,3,2,'#6a4ab8');return;
+    case'hcake':ell(g,8,11,7,3,'#e8e8e8');R(g,3,6,10,5,'#c8843a');R(g,3,6,10,2,'#f0a820');R(g,5,5,2,1,'#f8d060');return;
+    case'soup':ell(g,8,10,7,4,'#c8c8c8');ell(g,8,9,5.5,2.5,'#e89a3a');R(g,6,8,2,1,'#5eaa3c');R(g,9,9,2,1,'#e2442f');return;
+    case'pie':ell(g,8,10,7,4,'#b8793a');ell(g,8,9,6,3,'#ef8a22');R(g,5,8,6,1,'#f8b060');return;
+    case'coffee':R(g,4,6,8,8,'#f4f0e8');R(g,5,7,6,2,'#5a3a1a');R(g,12,8,2,3,'#f4f0e8');line(g,7,2,8,5,'#d8d0c8');return;
+    case'potion':return bottle('#e0453a');case'epotion':return bottle('#5cc14a');
+    case'bouquet':line(g,8,15,8,8,'#4f8a3a');line(g,6,15,5,9,'#4f8a3a');line(g,10,15,11,9,'#4f8a3a');[[5,6],[8,4],[11,6]].forEach(([x,y])=>{circ(g,x,y,2.5,'#f6d53a');R(g,x,y,1,1,'#8a5a2a')});R(g,6,12,5,2,'#e0453a');return;
+    case'amulet':line(g,3,2,8,8,'#c8a040');line(g,13,2,8,8,'#c8a040');circ(g,8,10,4,'#f5c83a');circ(g,8,10,2.5,'#ffe38a');R(g,7,9,2,2,'#fff');return;
+    case'beehive':R(g,3,4,10,10,'#e0b060');for(let y=5;y<14;y+=3)R(g,3,y,10,1,'#b8883a');R(g,7,10,2,2,'#3a2a1a');R(g,2,3,12,2,'#8a5a2b');return;
+    case'ammonit':circ(g,8,8,6,'#b8a888');circ(g,8,8,4,'#d8c8a8');circ(g,9,8,2,'#b8a888');R(g,9,8,1,1,'#8a7a5a');return;
+    case'coin':circ(g,8,8,5.5,'#b8862a');circ(g,8,8,4.5,'#d8a840');R(g,7,5,2,6,'#a8761a');return;
+    case'arrow':line(g,3,13,11,5,'#8a7a6a',2);R(g,10,2,4,4,'#6a6a70');return;
+    case'figure':R(g,6,3,4,4,'#c8784a');R(g,5,7,6,7,'#b8683a');R(g,6,5,1,1,'#3a2a1a');R(g,9,5,1,1,'#3a2a1a');return;
+    case'bone':line(g,4,12,12,4,'#f0e8d8',2);circ(g,4,12,2,'#f0e8d8');circ(g,12,4,2,'#f0e8d8');return;
+    case'batwing':for(let i=0;i<6;i++)R(g,2+i*2,6+Math.abs(i-2.5)|0,2,5-Math.abs(i-2.5)|0,'#5a3a6a');R(g,7,5,2,4,'#3a2a4a');return;
+    case'shell':ell(g,8,9,6,5,'#3a5a8a');ell(g,7,8,4,3,'#5a7aaa');R(g,8,4,1,10,'#2a3a5a');return;
+    case'ecto':ell(g,8,9,5,5,'rgba(200,230,255,.9)');R(g,6,8,1,2,'#3a3a5a');R(g,9,8,1,2,'#3a3a5a');return;
+    case'gear':circ(g,8,8,5,'#8a8f95');for(const[x,y]of[[7,1],[7,13],[1,7],[13,7]])R(g,x,y,2,2,'#8a8f95');circ(g,8,8,2,'#4a4f55');return;
+    case'shard':for(let y=2;y<15;y++){const w=y<8?(y-1):15-y;R(g,8-w/2|0,y,Math.max(1,w),1,y<8?'#ffe38a':'#f5a623')}R(g,7,4,1,5,'#fff');return;
+    case'watch':circ(g,8,9,5.5,'#c8a040');circ(g,8,9,4.2,'#f8f4e8');R(g,8,6,1,3,'#3a2a1a');R(g,8,9,3,1,'#3a2a1a');R(g,7,1,2,3,'#c8a040');return;
+    case'journal':R(g,3,2,10,12,'#8a4a2a');R(g,4,3,8,10,'#b8683a');R(g,6,6,4,1,'#ffe38a');R(g,6,8,4,1,'#ffe38a');R(g,11,2,1,12,'#5b3417');return;
+    case'horse':R(g,3,6,9,5,'#8a5a2a');R(g,10,3,3,5,'#8a5a2a');R(g,11,2,2,2,'#5a3a1a');R(g,4,11,1,4,'#6a3e1e');R(g,10,11,1,4,'#6a3e1e');R(g,2,6,2,4,'#3a2a1a');R(g,12,4,1,1,'#fff');return;
+    case'duck':ell(g,8,10,5,3.5,'#f4f0e0');circ(g,11,6,2.5,'#2e7a3a');R(g,13,6,2,1,'#f0a020');return;
+    case'rabbit':ell(g,8,10,5,4,'#a88a6a');R(g,9,2,2,5,'#a88a6a');R(g,12,2,2,5,'#a88a6a');circ(g,11,7,2.5,'#a88a6a');R(g,12,7,1,1,'#222');return;
+    case'cow':R(g,2,6,11,6,'#f4f0e8');R(g,4,7,3,3,'#3a2a1a');R(g,9,8,3,2,'#3a2a1a');R(g,11,4,4,4,'#f4f0e8');R(g,13,6,2,2,'#f0a8a0');R(g,3,12,2,3,'#6a5a4a');R(g,10,12,2,3,'#6a5a4a');return;
+    case'goat':R(g,3,6,9,5,'#c8c0b0');R(g,10,3,4,4,'#c8c0b0');R(g,11,1,1,2,'#6a5a4a');R(g,13,1,1,2,'#6a5a4a');R(g,4,11,1,4,'#6a5a4a');R(g,10,11,1,4,'#6a5a4a');return;
+    case'sheep':circ(g,7,9,4.5,'#f8f4ec');circ(g,10,8,3.5,'#f0ece4');R(g,11,6,3,4,'#3a3a3a');R(g,5,13,1,2,'#3a3a3a');R(g,10,13,1,2,'#3a3a3a');return;
+  }
+  return _drawIcon0(g,id);
+};
+
+/* ----- people ----- */
+const ZN={
+  maraFarm:{m:'farm',x0:12,x1:28,y0:7.6,y1:8.2},jonasPond:{m:'farm',x0:25.5,x1:25.5,y0:19.6,y1:23.4},hildeFarm:{m:'farm',x0:29.5,x1:35.5,y0:8.3,y1:9.2},
+  home:{m:'farm',x0:3.6,x1:8.4,y0:7.6,y1:8.4},
+  inn:{m:'town',x0:2.6,x1:9.4,y0:7.6,y1:8.7},plazaN:{m:'town',x0:13.5,x1:29.5,y0:9.8,y1:11.3},plazaS:{m:'town',x0:13.5,x1:29.5,y0:15.8,y1:17.3},
+  hall:{m:'town',x0:13.5,x1:19.5,y0:7.6,y1:8.4},museum:{m:'town',x0:23.5,x1:28.5,y0:7.6,y1:8.4},doc:{m:'town',x0:32.5,x1:36.5,y0:7.6,y1:8.4},
+  smith:{m:'town',x0:3.5,x1:8.5,y0:24.5,y1:25.2},carp:{m:'town',x0:13.5,x1:18.5,y0:24.5,y1:25.2},ranch:{m:'town',x0:24,x1:31,y0:24.5,y1:25.2},
+  falk:{m:'town',x0:20.2,x1:20.8,y0:7.7,y1:8.2},konrad:{m:'town',x0:21,x1:21.8,y0:16.3,y1:16.6}
+};
+NPCS.mara.sch=[[540,ZN.maraFarm],[1020,null],[1080,ZN.inn],[1320,null]];NPCS.mara.single=1;
+NPCS.jonas.sch=[[480,ZN.jonasPond],[1080,null],[1140,ZN.inn],[1320,null]];
+NPCS.hilde.sch=[[600,ZN.hildeFarm],[1140,null]];
+Object.assign(NPCS,{
+  greta:{n:'Bürgermeisterin Greta',pal:{hair:'#8a6a4a',skin:'#f0c8a0',shirt:'#3a5a8a',pants:'#2a3a5a',shoe:'#2a1a10'},
+    loves:['hcake','cheese','peach','cauli','amethyst'],hates:['slime','fiber','batwing'],sch:[[540,ZN.hall],[1020,ZN.plazaN],[1200,null]],
+    intro:'Willkommen in Sonnental! Ich bin Greta, die Bürgermeisterin. Wilhelms Enkelkind, sagt man? Dann gehörst du ab heute zu uns.',
+    lines:[['Das Rathaus hat einen Aushang. Wer dort hilft, hilft dem ganzen Dorf.','Der Brunnen auf dem Platz ist seit Jahren trocken. Früher hat er geleuchtet, sagen die Alten.','Unser Dorf ist klein, aber wir halten zusammen.'],
+      ['Du machst dich gut, weißt du das? Die Leute reden schon über deinen Hof.','Manchmal wünschte ich, ich hätte Wilhelm mehr Fragen gestellt, solange er noch da war.'],
+      ['Ohne dich hätte ich den Mut verloren. Danke.','Wenn Sonnental wieder leuchtet, geben wir das größte Fest seit fünfzig Jahren.']]},
+  bruno:{n:'Schmied Bruno',pal:{hair:'#4a3a30',skin:'#d8a07a',shirt:'#8a4a2a',pants:'#3a3030',shoe:'#1a1010',beard:1},
+    loves:['goldbar','ironbar','diamond','pumpkin','fishsoup'],hates:['fiber','dand','crocus'],sch:[[540,ZN.smith],[1020,null],[1140,ZN.inn],[1380,null]],
+    intro:'Hm. Die neue Person auf Wilhelms Hof. Ich bin Bruno. Wenn du was aus Eisen brauchst, komm her. Wenn du reden willst… komm trotzdem her.',
+    lines:[['Gutes Erz macht gute Klingen. Schlechtes Erz macht Ärger.','Fünf Brocken Erz, ein Barren. So war es schon immer.','Wilhelm hat mir sein altes Messer zum Schleifen gebracht. Jede Woche. Selbst wenn es scharf war.'],
+      ['Du hast kräftige Hände bekommen. Die Höhle tut dir gut.','Ich bin nicht gut mit Worten. Aber ich mag, dass du vorbeikommst.'],
+      ['Weißt du, warum ich Schmied geworden bin? Weil Feuer ehrlich ist. Wie du.']]},
+  ronja:{n:'Ronja',single:1,pal:{hair:'#e8c050',skin:'#f2c8a0',shirt:'#c8503a',pants:'#4a5a8a',shoe:'#3a2414',long:1},
+    loves:['cheese','milk','straw','blue','hcake'],hates:['slime','ecto','gear'],sch:[[420,ZN.ranch],[960,ZN.plazaS],[1260,null]],
+    intro:'Hey! Du bist die Person mit dem alten Hof? Ich bin Ronja und führe die Ranch. Wenn du Tiere willst, bist du hier richtig.',
+    lines:[['Kühe mögen es, wenn man mit ihnen spricht. Ehrlich!','Heu, Heu, Heu. Tiere denken an nichts anderes.','Ein Pferd würde dir gut stehen. Nur so ein Gedanke.'],
+      ['Ich reite morgens gern zum Teich. Da ist es ganz still.','Deine Tiere sehen glücklich aus. Das sieht man an den Augen.'],
+      ['Ich hab mich noch nie so auf den Abend gefreut wie seit du hier bist.','Wenn du lachst, lachen sogar meine Pferde mit.']]},
+  theo:{n:'Theo',single:1,pal:{hair:'#6a3a1a',skin:'#e0b088',shirt:'#5a8a4a',pants:'#5a4a3a',shoe:'#3a2414'},
+    loves:['wood','fmush','apple','omelet','amethyst'],hates:['batwing','slime'],sch:[[540,ZN.carp],[1020,null],[1080,ZN.inn],[1380,null]],
+    intro:'Oh, hallo! Theo, Zimmermann. Wenn du eine Scheune, einen größeren Stall oder ein größeres Haus willst: Ich bau dir alles, nur nicht Luftschlösser.',
+    lines:[['Holz riecht nach Zuhause. Findest du nicht?','Eine gute Scheune hält hundert Jahre. Deine wird zweihundert halten.','Ich habe den Brunnen auf dem Platz mal vermessen. Seltsam. Der Stein darin ist warm.'],
+      ['Ich zeichne abends Häuser, die es noch nicht gibt. Vielleicht baue ich eins davon für dich.','Du hast Sägemehl im Haar. Steht dir.'],
+      ['Mit dir fühlt sich jede Baustelle wie ein Anfang an.']]},
+  kalle:{n:'Wirt Kalle',pal:{hair:'#2a2a2a',skin:'#e8b890',shirt:'#e8e0d0',pants:'#5a3a2a',shoe:'#2a1a10',beard:1},
+    loves:['salmon','melon','pie','fishsoup','gmilk'],hates:['stone','fiber'],sch:[[720,ZN.inn],[1440,null]],
+    intro:'Willkommen im Goldenen Kürbis! Ich bin Kalle. Hier gibt es Suppe, Kuchen und die besten Geschichten im Tal. Die Geschichten sind gratis.',
+    lines:[['Abends kommt das halbe Dorf her. Die andere Hälfte lügt, dass sie keine Zeit hat.','Mein Kürbiskuchen ist berühmt. Na gut, in Sonnental berühmt.','Wilhelm saß immer am Fenster. Hat nie viel gesagt, aber immer gut zugehört.'],
+      ['Für dich ist der Tisch am Fenster ab jetzt reserviert.','Weißt du, was ein Dorf zusammenhält? Suppe. Und Leute wie du.'],
+      ['Wenn du mal nicht weißt, wohin: Hier ist immer Licht an.']]},
+  sofie:{n:'Sofie',single:1,pal:{hair:'#2a1a3a',skin:'#f5d5b5',shirt:'#6a4a9a',pants:'#3a2a4a',shoe:'#2a1a2a',long:1},
+    loves:['amethyst','topaz','ammonit','coin','crocus'],hates:['slime','hay'],sch:[[600,ZN.museum],[1080,ZN.plazaN],[1260,null]],
+    intro:'Oh! Entschuldige, ich war in ein Buch vertieft. Ich bin Sofie und kümmere mich ums Museum. Wenn du Steine oder alte Dinge findest… bring sie mir, bitte!',
+    lines:[['Jeder Stein erzählt eine Geschichte. Man muss nur zuhören.','Im Tal gibt es eine alte Legende über einen leuchtenden Stein. Ich sammle alles darüber.','Ein Ammonit ist Millionen Jahre alt. Und trotzdem so schön.'],
+      ['Ich lese dir gern mal etwas vor. Wenn du willst.','Du findest Dinge, die ich seit Jahren suche. Wie machst du das?'],
+      ['Mit dir wird selbst ein staubiges Archiv zu einem Abenteuer.']]},
+  emil:{n:'Dr. Emil',single:1,pal:{hair:'#d8b070',skin:'#f0c8a8',shirt:'#e8f0f0',pants:'#4a6a8a',shoe:'#2a2a3a'},
+    loves:['epotion','grape','cran','ruby','hcake'],hates:['slime','ecto','fiber'],sch:[[540,ZN.doc],[1020,null],[1080,ZN.inn],[1320,null]],
+    intro:'Hallo, ich bin Emil, der Arzt hier. Ich hoffe, wir sehen uns eher im Gasthaus als in meiner Praxis. Aber falls doch: Ich flicke dich zusammen.',
+    lines:[['Genug schlafen, genug essen. Das ist schon die halbe Medizin.','Die Höhle ist gefährlich. Nimm immer einen Heiltrank mit.','Ich bin aus der Stadt hergezogen. Hier atmet man anders.'],
+      ['Du siehst gesund aus. Das freut mich mehr, als es sollte.','Manchmal sitze ich abends am Teich und zähle Sterne statt Patienten.'],
+      ['Bei dir vergesse ich, dass ich Arzt bin. Das ist ein gutes Gefühl.']]},
+  falk:{n:'Herr Falk',story:1,pal:{hair:'#3a3a3a',skin:'#e8c8a8',shirt:'#5a5a60',pants:'#3a3a40',shoe:'#1a1a1a'},loves:[],hates:[],sch:[],
+    sched:()=>S.story&&S.story.ch==2&&S.story.falkDay<=dayKey()&&!S.story.falkGone&&S.time>=540&&S.time<1080?ZN.falk:null},
+  konrad:{n:'Konrad',story:1,pal:{hair:'#e8e8e8',skin:'#e8c0a0',shirt:'#3a3a48',pants:'#2a2a30',shoe:'#1a1a1a',beard:1},loves:[],hates:[],sch:[],
+    sched:()=>S.story&&S.story.konrad==1&&S.time>=600&&S.time<1200?ZN.konrad:null}
+});
+for(const k in NPCS)if(!NR[k])NR[k]={x:0,y:0,tx:0,ty:0,dir:0,wait:1,walk:0,vis:false,m:null,z:null};
+const people=()=>Object.keys(NPCS).filter(k=>!NPCS[k].story);
+function schedZone(k){
+  const N=NPCS[k],t=S.time,f=festToday();
+  if(N.story)return N.sched();
+  if(S.spouse==k)return t>=360&&t<1320?ZN.home:null;
+  if(f&&t>=540&&t<1320&&!(f.type=='fish'&&k=='jonas'))return people().indexOf(k)%2?ZN.plazaN:ZN.plazaS;
+  let z=null;for(const[st,zz]of N.sch)if(t>=st)z=zz;
+  if(N.rainAway&&S.weather!='sun'&&z==ZN.jonasPond)z=t>=720?ZN.inn:null;
+  return z;
+}
+updateNpcs=function(dt){
+  for(const k in NR){const n=NR[k],z=schedZone(k);
+    if(!z){n.vis=false;n.z=null;n.m=null;continue}
+    if(n.z!==z){n.z=z;n.m=z.m;n.x=z.x0+Math.random()*(z.x1-z.x0);n.y=z.y0+Math.random()*(z.y1-z.y0);n.tx=n.x;n.ty=n.y;n.wait=1+Math.random()*2}
+    n.vis=true;
+    if(n.wait>0){n.wait-=dt;n.walk=0;continue}
+    const dx=n.tx-n.x,dy=n.ty-n.y,l=Math.hypot(dx,dy);
+    if(l<.05){n.wait=2+Math.random()*4;n.tx=z.x0+Math.random()*(z.x1-z.x0);n.ty=z.y0+Math.random()*(z.y1-z.y0);if(NPCS[k].face!=null&&z==ZN.jonasPond)n.dir=NPCS[k].face;continue}
+    if(n.m==MAP.id&&Math.hypot(S.px-n.x,S.py-n.y)<1){n.walk=0;continue}
+    const s=Math.min(l,1.5*dt);n.x+=dx/l*s;n.y+=dy/l*s;n.walk+=dt;n.dir=faceTo(0,0,dx,dy);
+  }
+};
+npcAt=function(x,y){for(const k in NR){const n=NR[k];if(n.vis&&n.m==MAP.id&&Math.hypot(n.x-(x+.5),n.y-(y+.7))<.95)return k}return null};
+const pn=()=>(S.player&&S.player.name)||'du';
+
+/* ----- the town map ----- */
+const TW=44,TH=30;
+const TB={
+  inn:{n:'Gasthaus „Zum Goldenen Kürbis“',x:3,y:2,w:6,h:5,dx:2,open:[720,1440],owner:'kalle',sign:'GASTHAUS',wall:'#e8d8b0',plank:'#8a5a2b',roof:'#8a3a2a',frame:1},
+  hall:{n:'Rathaus',x:13,y:2,w:7,h:5,dx:3,open:[540,1020],owner:'greta',sign:'RATHAUS',wall:'#d8d0c0',plank:'#b8b0a0',roof:'#4a5a7a',cols:1},
+  museum:{n:'Museum',x:23,y:2,w:6,h:5,dx:2,open:[600,1080],owner:'sofie',sign:'MUSEUM',wall:'#e8e0d0',plank:'#c8c0b0',roof:'#6a4a8a',cols:1},
+  doc:{n:'Arztpraxis',x:32,y:2,w:5,h:5,dx:2,open:[540,1020],owner:'emil',sign:'ARZT',wall:'#f4f4f0',plank:'#d8d8d0',roof:'#3a8a8a',cross:1},
+  smith:{n:'Schmiede',x:3,y:19,w:6,h:5,dx:2,open:[540,1020],owner:'bruno',sign:'SCHMIEDE',wall:'#9a9aa0',plank:'#7a7a80',roof:'#4a3a3a',chimney:1},
+  carp:{n:'Zimmerei',x:13,y:19,w:6,h:5,dx:2,open:[540,1020],owner:'theo',sign:'ZIMMEREI',wall:'#c8904a',plank:'#a8702e',roof:'#4a7a3a'},
+  ranch:{n:'Ranch',x:24,y:19,w:7,h:5,dx:3,open:[540,960],owner:'ronja',sign:'RANCH',wall:'#b84a3a',plank:'#983a2a',roof:'#6a3a2a',trim:1}
+};
+for(const k in TB){const b=TB[k];b.id=k;b.door=[b.x+b.dx,b.y+b.h-1]}
+const FOUNT={x:20,y:12};
+const PADDOCK=[];
+let TOWN=null;
+function genTown(){
+  const t=[];for(let i=0;i<TW*TH;i++)t.push({g:0,w:0,o:null,c:null});
+  const at=(x,y)=>t[y*TW+x],r=mul(4242);
+  const fill=(x0,y0,x1,y1,g)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)at(x,y).g=g};
+  fill(0,7,TW-3,7,1);fill(2,24,TW-3,24,1);fill(10,8,10,23,1);fill(33,8,33,23,1);
+  fill(12,9,31,17,9);fill(21,8,21,8,9);fill(21,18,21,23,9);
+  for(const[x,y]of[[12,9],[13,9],[12,10],[31,9],[30,9],[31,10],[12,17],[13,17],[12,16],[31,17],[30,17],[31,16]])at(x,y).g=11;
+  for(const k in TB){const b=TB[k];fill(b.x,b.y,b.x+b.w-1,b.y+b.h-1,4)}
+  fill(FOUNT.x,FOUNT.y,FOUNT.x+2,FOUNT.y+2,4);
+  for(let x=35;x<=41;x++){at(x,18).o={k:'fence'};at(x,23).o={k:'fence'}}
+  for(let y=19;y<=22;y++){at(35,y).o={k:'fence'};at(41,y).o={k:'fence'}}
+  for(const[x,y]of[[14,9],[29,9],[14,17],[29,17],[11,6],[32,6]])if(at(x,y).g!=4)at(x,y).o={k:'lamp'};
+  for(const[x,y]of[[17,10],[25,10],[17,16],[25,16]])at(x,y).o={k:'pbench'};
+  for(let y=0;y<TH;y++)for(let x=0;x<TW;x++){const c=at(x,y);if(c.g||c.o)continue;
+    if(x<2||x>=TW-2||y<1||y>=TH-2){if(!(y==7&&x<2))c.o=wildTree();continue}
+    const v=r();
+    if((y>=25&&v<.2)||(x>=36&&y>=8&&y<=16&&v<.25)||(x>=2&&x<=8&&y>=9&&y<=17&&v<.18)||(x>=38&&y>=24&&v<.3))c.o=wildTree();
+  }
+  return{id:'town',w:TW,h:TH,t};
+}
+function setTown(){if(!TOWN)TOWN=genTown();MAP=TOWN;M=null;S.loc='town'}
+function placeLoaded(){FARM={id:'farm',w:FW,h:FH,t:S.t};if(S.loc=='town')setTown();else setFarm()}
+function goTown(){setTown();S.px=.7;S.py=7.9;S.dir=3;F=null;if(S.riding===undefined)S.riding=0;onEnterTown()}
+function goFarmFromTown(){setFarm();S.px=FW-.7;S.py=7.9;S.dir=2;F=null}
+function onEnterTown(){if(typeof storyEnterTown=='function')storyEnterTown()}
+function edgeTravel(){
+  if(MAP.id=='farm'&&S.px>FW-.5&&Math.abs(S.py-7.9)<1.3)goTown();
+  else if(MAP.id=='town'&&S.px<.5&&Math.abs(S.py-7.9)<1.3)goFarmFromTown();
+}
+
+/* ----- town & animal sprites ----- */
+function mkBuilding(b,snow){
+  const W=b.w*16,H=(b.h+1)*16,wallTop=Math.round(H*.44),dx=b.dx*16;
+  return mk(W,H,g=>{
+    R(g,4,wallTop,W-8,H-wallTop-4,b.wall);for(let y=wallTop+5;y<H-4;y+=6)R(g,4,y,W-8,1,b.plank);
+    if(b.frame){for(let x=4;x<W-4;x+=14)R(g,x,wallTop,2,H-wallTop-4,'#6a3e1e');R(g,4,wallTop+14,W-8,2,'#6a3e1e')}
+    if(b.trim){R(g,4,wallTop,W-8,2,'#f4f0e8');R(g,4,wallTop,2,H-wallTop-4,'#f4f0e8');R(g,W-6,wallTop,2,H-wallTop-4,'#f4f0e8')}
+    R(g,2,H-4,W-4,4,'#7a746c');
+    if(b.chimney){R(g,W-22,2,9,18,'#6a6460');R(g,W-23,0,11,3,'#4a4440')}
+    for(let y=6;y<wallTop+4;y++){const i=Math.round((wallTop+3-y)*.42);g.fillStyle=snow&&y<wallTop*.45?'#f2f6f8':(y%6==0?dk(b.roof,.25):b.roof);g.fillRect(Math.max(0,i-2),y,Math.min(W,W-2*i+4),1)}
+    const sw=Math.min(W-24,52),sx=(W-sw)/2|0;R(g,sx,wallTop-2,sw,11,'#5b3417');R(g,sx+2,wallTop,sw-4,7,'#f6dcaa');
+    if(b.cols)for(let x=8;x<W-8;x+=18)if(Math.abs(x+2-dx-8)>10){R(g,x,wallTop+10,5,H-wallTop-14,'#f4f0e8');R(g,x,wallTop+10,5,2,'#c8c0b0')}
+    R(g,dx,H-34,16,34,'#4a2a12');R(g,dx+2,H-32,12,28,dk(b.wall,.45));R(g,dx+11,H-18,2,2,'#ffcf3f');
+    const wins=[6,W-22];for(const wx of wins)if(Math.abs(wx-dx)>18){R(g,wx,H-30,16,13,'#5b3417');R(g,wx+2,H-28,12,9,'#9fd5f0');R(g,wx+7,H-28,2,9,'#e8f6ff')}
+    if(b.cross){R(g,W-18,wallTop+14,10,4,'#e0453a');R(g,W-15,wallTop+11,4,10,'#e0453a')}
+    if(b.id=='inn'){ball(g,W-12,wallTop+18,4,'#ef8a22');R(g,W-13,wallTop+13,2,2,'#5a7a2a')}
+    if(b.id=='smith'){R(g,W-18,H-12,12,4,'#4a4a50');R(g,W-15,H-8,6,4,'#3a3a40')}
+    if(b.id=='carp'){for(let i=0;i<3;i++)ell(g,W-12,H-8-i*4,6,2,i%2?'#a8723c':'#8a5a2b')}
+    if(b.id=='ranch'){R(g,W-18,H-14,12,10,'#e8c85a');R(g,W-18,H-14,12,2,'#c8a83a')}
+  });
+}
+function buildTownSprites(se){
+  const snow=se==3;
+  SP.tb={};for(const k in TB)SP.tb[k]=mkBuilding(TB[k],snow);
+  SP.plaza=mk(16,16,g=>{R(g,0,0,16,16,snow?'#d8dce0':'#c8bca8');for(let y=0;y<16;y+=4)for(let x=(y/4%2)*4;x<16;x+=8){R(g,x,y,7,3,snow?'#e8ecf0':'#d8ccb8');R(g,x,y+3,7,1,snow?'#b8c0c8':'#a89c88')}});
+  SP.flowerbed=mk(16,16,g=>{R(g,0,0,16,16,'#6a4a2a');const r=mul(21);for(let i=0;i<9;i++){const x=r()*14|0,y=r()*14|0;R(g,x,y+1,1,2,'#4f9a3a');R(g,x,y,2,1,se==3?'#e8eef2':['#f06aa8','#f6d53a','#e0453a','#9a6ad8'][i%4])}});
+  SP.lamp=mk(16,32,g=>{R(g,7,8,2,22,'#3a3a40');R(g,5,29,6,3,'#2a2a30');R(g,4,2,8,7,'#3a3a40');R(g,5,3,6,5,'#ffe38a');R(g,3,1,10,2,'#2a2a30')});
+  SP.pbench=mk(16,16,g=>{R(g,1,6,14,3,'#9a6230');R(g,1,6,14,1,'#b8783a');R(g,1,3,14,2,'#8a5a2b');R(g,2,9,2,5,'#5b3417');R(g,12,9,2,5,'#5b3417');if(snow)R(g,1,5,14,1,'#fff')});
+  SP.barn=mk(80,80,g=>{
+    R(g,4,36,72,40,'#b84a3a');for(let x=8;x<76;x+=6)R(g,x,36,1,40,'#983a2a');R(g,2,76,76,4,'#7a746c');
+    for(let y=6;y<40;y++){const i=Math.round((39-y)*.55);g.fillStyle=snow&&y<16?'#f2f6f8':(y%5==0?'#4a2a1a':'#6a3a2a');g.fillRect(Math.max(0,i),y,80-2*i,1)}
+    R(g,31,48,18,32,'#f4f0e8');R(g,33,50,14,28,'#8a3a2a');line(g,33,50,46,77,'#f4f0e8');line(g,46,50,33,77,'#f4f0e8');
+    R(g,34,20,12,10,'#f4f0e8');R(g,36,22,8,6,'#3a2a1a');
+  });
+  SP.beehive=mk(16,20,g=>{R(g,2,6,12,12,'#e0b060');for(let y=8;y<18;y+=3)R(g,2,y,12,1,'#b8883a');R(g,1,4,14,3,'#8a5a2b');R(g,7,13,2,2,'#3a2a1a');R(g,3,18,2,2,'#5b3417');R(g,11,18,2,2,'#5b3417');if(snow)R(g,1,3,14,2,'#fff')});
+  SP.dig=mk(16,16,g=>{line(g,4,11,7,8,'#6a4a2a',2);line(g,9,10,12,7,'#6a4a2a',2);R(g,6,12,5,1,'#5a3a1a')});
+  SP.fountain=[0,1].map(wet=>mk(48,48,g=>{
+    ell(g,24,30,23,15,'#8a8f95');ell(g,24,29,20,12,wet?'#4aa3df':'#6a6560');if(wet){ell(g,24,28,16,8,'#6fb8e8')}
+    R(g,20,6,8,24,'#b8bec4');R(g,20,6,3,24,'#d8dee4');R(g,16,4,16,4,'#9aa0a5');ell(g,24,4,8,3,'#b8bec4');
+  }));
+}
+function drawAnimalAt(type,x,y,flip,peck,p){
+  ctx.save();ctx.translate(x,y);if(flip)ctx.scale(-1,1);
+  const r=(a,b,w,h,col)=>{ctx.fillStyle=col;ctx.fillRect(Math.round(a*p),Math.round(b*p),Math.ceil(w*p),Math.ceil(h*p))};
+  ctx.fillStyle='rgba(0,0,0,.2)';ctx.beginPath();ctx.ellipse(0,-p*.5,(type=='cow'||type=='horse'?7:4)*p,1.6*p,0,0,7);ctx.fill();
+  const hy=peck?3:0;
+  switch(type){
+    case'chicken':r(-4,-7,7,5,'#fafafa');r(-5,-6,2,3,'#e6e6e6');r(1,-9+hy+2*!!peck,3,3,'#fafafa');r(2,-10+hy,2,1,'#e0453a');r(4,-8+hy,1.5,1,'#f0b43a');r(2.5,-8.2+hy,1,1,'#222');r(-2,-2,1,2,'#f0b43a');r(1,-2,1,2,'#f0b43a');break;
+    case'duck':r(-4,-6,8,4,'#f4f0e0');r(-5,-5,2,2,'#e8e4d0');r(2,-9+hy,3,3,'#2e7a3a');r(5,-8+hy,2,1,'#f0a020');r(3,-8.2+hy,1,1,'#111');r(-2,-2,1,2,'#f0a020');r(1,-2,1,2,'#f0a020');break;
+    case'rabbit':r(-3,-5,6,4,'#a88a6a');r(2,-7+hy,3,3,'#a88a6a');r(2,-10+hy,1,3,'#a88a6a');r(4,-10+hy,1,3,'#b89a7a');r(4,-6+hy,1,1,'#222');r(-4,-4,2,2,'#f4f0e8');break;
+    case'cow':r(-7,-11,12,7,'#f4f0e8');r(-5,-10,4,4,'#3a2a1a');r(1,-9,3,3,'#3a2a1a');r(5,-13+hy,4,5,'#f4f0e8');r(6,-10+hy,3,2,'#f0a8a0');r(7,-12+hy,1,1,'#111');r(5,-14+hy,1,1,'#c8c0b0');
+      r(-6,-4,2,4,'#6a5a4a');r(2,-4,2,4,'#6a5a4a');break;
+    case'goat':r(-5,-9,9,5,'#c8c0b0');r(4,-12+hy,3,4,'#c8c0b0');r(4,-14+hy,1,2,'#6a5a4a');r(6,-14+hy,1,2,'#6a5a4a');r(6,-10+hy,1,1,'#111');r(5,-8+hy,1,2,'#8a8070');r(-4,-4,1,4,'#6a5a4a');r(2,-4,1,4,'#6a5a4a');break;
+    case'sheep':ctx.fillStyle='#f8f4ec';ctx.beginPath();ctx.ellipse(-p,-7*p,6*p,4.5*p,0,0,7);ctx.fill();r(4,-10+hy,3,4,'#3a3a3a');r(5,-9+hy,1,1,'#fff');r(-4,-3,1,3,'#3a3a3a');r(1,-3,1,3,'#3a3a3a');break;
+    case'horse':r(-8,-14,14,7,'#8a5a2a');r(4,-19,4,8,'#8a5a2a');r(5,-20,3,2,'#6a3e1e');r(6,-18,1,1,'#111');r(-9,-14,2,7,'#3a2a1a');r(3,-19,1,6,'#3a2a1a');
+      r(-7,-7,2,7,'#6a3e1e');r(3,-7,2,7,'#6a3e1e');r(-3,-7,2,7,'#7a4a24');break;
+  }
+  ctx.restore();
+}
+
+/* ----- town rendering ----- */
+function townDrawables(D,now,p){
+  for(const k in TB){const b=TB[k];D.push([b.y+b.h,()=>{
+    const X=b.x*TS-camX,Y=(b.y-1)*TS-camY;ctx.drawImage(SP.tb[k],X,Y,b.w*TS,(b.h+1)*TS);
+    const wallTop=Math.round((b.h+1)*16*.44);
+    ctx.fillStyle='#5b3417';ctx.font=`700 ${Math.round(5.5*p)}px "Ziffern","Pixelify Sans",monospace`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(b.sign,X+b.w*8*p,Y+(wallTop+3.5)*p)}])}
+  D.push([FOUNT.y+3,()=>{const st=S.story||{},X=FOUNT.x*TS-camX,Y=FOUNT.y*TS-camY;ctx.drawImage(SP.fountain[(st.placed||0)>0?1:0],X,Y,3*TS,3*TS);
+    const n=st.placed||0;for(let i=0;i<7;i++){const a=Math.PI*(.15+i*.7/6),sx=X+24*p-Math.cos(a)*19*p,sy=Y+31*p+Math.sin(a)*10*p;
+      ctx.fillStyle=i<n?'#ffe38a':'#5a5650';ctx.fillRect(sx-1.5*p,sy-1.5*p,3*p,3*p);if(i<n){ctx.fillStyle='rgba(255,227,138,.35)';ctx.fillRect(sx-3*p,sy-3*p,6*p,6*p)}}
+    if(st.ch>=5){ctx.fillStyle='rgba(255,236,160,'+(.25+.15*Math.sin(now/400))+')';ctx.beginPath();ctx.ellipse(X+24*p,Y+8*p,10*p,10*p,0,0,7);ctx.fill()}}]);
+  if(!PADDOCK.length)for(const t of['cow','cow','sheep','goat'])PADDOCK.push({t,x:37+Math.random()*3,y:20+Math.random()*2,tx:0,ty:0,w:0,f:0});
+  for(const a of PADDOCK){D.push([a.y,()=>drawAnimalAt(a.t,a.x*TS-camX,a.y*TS-camY,a.f,0,p)])}
+}
+function updatePaddock(dt){for(const a of PADDOCK){if(a.w>0){a.w-=dt;continue}if(!a.tx){a.tx=36.5+Math.random()*4;a.ty=19.6+Math.random()*2.6}
+  const dx=a.tx-a.x,dy=a.ty-a.y,l=Math.hypot(dx,dy);if(l<.05){a.tx=0;a.w=2+Math.random()*5;continue}const s=Math.min(l,.5*dt);a.x+=dx/l*s;a.y+=dy/l*s;a.f=dx<0?1:0}}
+
+/* ----- building menus ----- */
+const fmtT=m=>Math.floor(m/60)%24+':'+String(m%60).padStart(2,'0');
+function reModal(html,fr){const st=$('#modalWrap').hidden?0:$('#modal').scrollTop;openModal(html,fr);$('#modal').scrollTop=st}
+function bHead(k,title,sub){return`<div class="who"><img alt="" src="${portrait(k)}"><div><h2 style="margin:0">${title}</h2><small>${sub}</small></div></div><p>Gold: <b>${S.gold}</b> g</p>`}
+function rowHtml(r,i){return`<div class="row${r.dis?' done':''}">${ic(r.icon||r.id)}<div><b>${r.name||ITEMS[r.id].n}</b><small>${r.info||''}</small></div><div class="buy">${r.price!=null?`<span class="price">${r.price} g</span>`:''}<button class="btn sm" data-r="${i}" ${r.dis?'disabled':''}>${r.btn||'+1'}</button>${r.five?`<button class="btn sm" data-r5="${i}">+5</button>`:''}</div></div>`}
+function listHtml(rows,from,to){return`<div class="rows">${rows.slice(from,to).map((r,i)=>rowHtml(r,i+from)).join('')}</div>`}
+function bindRows(rows,reopen){
+  $('#modal').querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>doRow(rows[+b.dataset.r],1,reopen));
+  $('#modal').querySelectorAll('[data-r5]').forEach(b=>b.onclick=()=>doRow(rows[+b.dataset.r5],5,reopen));
+}
+function doRow(r,n,reopen){
+  if(r.act){r.act();return}
+  const cost=(r.price||0)*n;
+  if(S.gold<cost){toast('Nicht genug Gold.');sfx('bad');return}
+  if(r.req&&!r.req.every(([id,m])=>count(id)>=m*n)){toast('Dafür brauchst du '+r.req.map(([id,m])=>m*n+'× '+ITEMS[id].n).join(', ')+'.',3);sfx('bad');return}
+  if(addItem(r.id,n)){toast('Dein Rucksack ist voll.');return}
+  S.gold-=cost;if(r.req)r.req.forEach(([id,m])=>removeItems(id,m*n));sfx('coin');toast((r.done||'Gekauft')+': '+n+'× '+ITEMS[r.id].n,1.4);reopen();
+}
+function openBuilding(id){
+  const b=TB[id];
+  if(S.time<b.open[0]||S.time>=b.open[1]){toast(`${b.n} hat von ${fmtT(b.open[0])} bis ${fmtT(b.open[1])} Uhr geöffnet.`,3);sfx('bad');return}
+  ({inn:openInn,hall:openHall,museum:openMuseum,doc:openDoc,smith:openSmith,carp:openCarp,ranch:openRanch})[id]();
+}
+function buyUpg(tl){const u=UPG[tl][S.lv[tl]+1];
+  if(S.gold<u.g||!hasReq(u.r)){toast('Dafür brauchst du '+u.g+' g und '+u.r.map(([id,n])=>n+'× '+ITEMS[id].n).join(', ')+'.',3.2);sfx('bad');return}
+  S.gold-=u.g;u.r.forEach(([id,n])=>removeItems(id,n));S.lv[tl]=(S.lv[tl]||0)+1;if(tl=='can')S.water=CAN_CAP[S.lv.can];barDirty=1;sfx('win');toast(u.n+' ist fertig!');openSmith()}
+function openSmith(){
+  const rows=[];
+  for(const[b,o]of[['copperbar','copper'],['ironbar','iron'],['goldbar','gold']])rows.push({id:b,price:10,info:`5× ${ITEMS[o].n} + 10 g · du hast ${count(o)} Erz`,btn:'Schmelzen',done:'Geschmolzen',req:[[o,5]],five:1});
+  const w0=rows.length;
+  for(const w in WEAPONS){const W=WEAPONS[w];if(!W.price&&w!='sword')continue;const has=count(w)>0;
+    if(w=='sword'){if(!has&&S.unl.mine)rows.push({id:w,price:500,info:'Schaden 3 · Ersatz für dein erstes Schwert'});continue}
+    rows.push({id:w,price:W.price,info:`Schaden ${W.dmg} · ${W.cd<.3?'schnell':W.cd>.5?'langsam, trifft hart':'ausgewogen'}${W.req?' · '+W.req.map(([i,m])=>m+'× '+ITEMS[i].n).join(', '):''}`,btn:has?'Hast du':'Kaufen',dis:has,req:W.req})}
+  const u0=rows.length;
+  for(const tl of['can','hoe','pick','axe']){const u=UPG[tl][(S.lv[tl]||0)+1];if(u)rows.push({icon:tl,name:u.n,info:`${u.d}<br>${u.g} g + ${reqText(u.r)}`,btn:'Kaufen',act:()=>buyUpg(tl)})}
+  reModal(`${bHead('bruno','Schmiede','Bruno schmiedet Waffen, verbessert Werkzeug und schmilzt Erz')}
+    <h3>Erz einschmelzen</h3>${listHtml(rows,0,w0)}<h3>Waffen</h3>${listHtml(rows,w0,u0)}<h3>Werkzeuge verbessern</h3>${u0<rows.length?listHtml(rows,u0):'<p>Alles ist schon aus Gold. Bruno ist stolz auf dich.</p>'}
+    <div class="btns"><button class="btn alt" id="xB">Fertig</button></div>`);
+  bindRows(rows,openSmith);$('#xB').onclick=closeModal;
+}
+function capOf(h){return h=='coop'?(S.coopLv>=2?8:S.coopLv?4:0):(S.unl.barn?8:0)}
+const inHouse=h=>S.animals.filter(a=>ANIMALS[a.type].house==h);
+function buyAnimal(type){const A=ANIMALS[type];
+  if(!capOf(A.house)){toast(A.house=='coop'?'Du brauchst zuerst einen Hühnerstall.':'Du brauchst zuerst eine Scheune. Theo in der Zimmerei baut sie dir.',3);sfx('bad');return}
+  if(A.lv&&S.coopLv<A.lv){toast('Dafür muss Theo erst deinen Hühnerstall ausbauen.',3);sfx('bad');return}
+  if(inHouse(A.house).length>=capOf(A.house)){toast('Kein Platz mehr. Maximal '+capOf(A.house)+' Tiere.',2.6);sfx('bad');return}
+  if(S.gold<A.price){toast('Nicht genug Gold.');sfx('bad');return}
+  const used=S.animals.map(a=>a.name);S.gold-=A.price;S.animals.push({type,name:pick(ANAMES.filter(n=>!used.includes(n)))||A.n,pts:0,pet:0,cnt:0});
+  sfx('cluck');toast(`${A.n} ${S.animals[S.animals.length-1].name} wohnt jetzt auf deinem Hof!`,2.6);openRanch();
+}
+function openRanch(){
+  const rows=[];
+  for(const t in ANIMALS){const A=ANIMALS[t],cap=capOf(A.house),n=inHouse(A.house).length;
+    rows.push({icon:t=='chicken'?'chick':t,name:A.n,price:A.price,info:`${A.house=='coop'?'Hühnerstall':'Scheune'} ${n}/${cap||0} · gibt ${ITEMS[A.prod].n}${A.every>1?' alle '+A.every+' Tage':' jeden Tag'}${A.lv&&S.coopLv<A.lv?' · braucht ausgebauten Stall':''}`,btn:'Kaufen',act:()=>buyAnimal(t)})}
+  const hp=S.horseDisc?2500:5000;
+  if(!S.horse)rows.push({icon:'horse',name:'Pferd',price:hp,info:'Damit reitest du doppelt so schnell über Hof und Dorf',btn:'Kaufen',act:()=>{if(S.gold<hp){toast('Nicht genug Gold.');sfx('bad');return}S.gold-=hp;S.horse=1;sfx('win');toast('Dein Pferd wartet auf dem Hof! Tippe auf das Hufeisen, um aufzusteigen.',3.5);openRanch()}});
+  rows.push({id:'hay',price:50,info:'Futter für alle Tiere',five:1},{id:'bouquet',price:200,info:'Für eine Person, die dir sehr viel bedeutet (ab 8 Herzen)'});
+  reModal(`${bHead('ronja','Ranch','Ronja verkauft Tiere und Futter')}${listHtml(rows,0)}<p style="font-size:14px">Heu im Silo: ${S.hay}. Tiere fressen jede Nacht 1 Heu.</p><div class="btns"><button class="btn alt" id="xB">Fertig</button></div>`);
+  bindRows(rows,openRanch);$('#xB').onclick=closeModal;
+}
+const BUILDS={
+  barn:{n:'Scheune',g:6000,r:[['wood',250],['stone',100]],d:'Platz für 8 Kühe, Ziegen und Schafe',ok:()=>!S.unl.barn},
+  coop2:{n:'Großer Hühnerstall',g:4000,r:[['wood',150]],d:'8 Plätze, dazu Enten und Kaninchen',ok:()=>S.coopLv==1},
+  house1:{n:'Hausausbau: Küche und Schlafzimmer',g:10000,r:[['wood',300]],d:'Mehr Platz für zwei. Nötig für eine Hochzeit.',ok:()=>!S.house},
+  house2:{n:'Hausausbau: Kinderzimmer',g:20000,r:[['wood',300],['stone',100]],d:'Platz für die Familie',ok:()=>S.house==1}
+};
+function openCarp(){
+  const rows=[],disc=S.carpDisc?.75:1;
+  for(const k in BUILDS){const B=BUILDS[k];if(!B.ok())continue;const g=Math.round(B.g*disc);
+    rows.push({icon:k=='barn'?'cow':k=='coop2'?'duck':'bench',name:B.n,price:g,info:`${B.d}<br>${reqText(B.r)}`,btn:S.pend?'Theo ist beschäftigt':'Bauen',dis:!!S.pend,act:()=>{
+      if(S.gold<g||!hasReq(B.r)){toast('Dafür brauchst du '+g+' g und '+B.r.map(([id,n])=>n+'× '+ITEMS[id].n).join(', ')+'.',3.2);sfx('bad');return}
+      S.gold-=g;B.r.forEach(([id,n])=>removeItems(id,n));S.pend=k;if(S.carpDisc)S.carpDisc=0;sfx('win');toast(`Theo baut über Nacht: ${B.n}. Morgen früh ist alles fertig!`,3.5);openCarp()}})}
+  rows.push({id:'beehive',price:600,info:'Gibt alle 4 Tage Honig (außer im Winter) · + 20 Holz',req:[['wood',20]]});
+  reModal(`${bHead('theo','Zimmerei','Theo baut und erweitert deinen Hof')}${S.pend?`<p class="note">Theo arbeitet gerade an: ${BUILDS[S.pend].n}. Morgen ist es fertig.</p>`:''}${listHtml(rows,0)}<div class="btns"><button class="btn alt" id="xB">Fertig</button></div>`);
+  bindRows(rows,openCarp);$('#xB').onclick=closeModal;
+}
+function applyBuild(){const k=S.pend;if(!k)return'';S.pend=null;
+  if(k=='barn'){S.unl.barn=1;stampFarm(S.t,S.unl)}else if(k=='coop2')S.coopLv=2;else if(k=='house1')S.house=1;else if(k=='house2')S.house=2;
+  return BUILDS[k].n+' ist fertig gebaut!'}
+function openInn(){
+  const rows=[{id:'soup',price:150,info:'+80 Energie'},{id:'coffee',price:250,info:'+60 Energie, wach bis in die Nacht'},{id:'pie',price:300,info:'+140 Energie'}];
+  if(!S.spouse)rows.push({id:'amulet',price:5000,info:'Ein Zeichen für die Ewigkeit. Für einen Antrag (10 Herzen, ausgebautes Haus).'});
+  const here=people().filter(k=>NR[k].vis&&NR[k].z==ZN.inn&&k!='kalle').map(k=>NPCS[k].n);
+  reModal(`${bHead('kalle','Gasthaus „Zum Goldenen Kürbis“','Kalle hat bis Mitternacht geöffnet')}${listHtml(rows,0)}<p style="font-size:14px">${here.length?'Heute Abend hier: '+here.join(', ')+'.':'Gerade ist es ruhig. Abends kommen viele Leute her.'}</p><div class="btns"><button class="btn alt" id="xB">Fertig</button></div>`);
+  bindRows(rows,openInn);$('#xB').onclick=closeModal;
+}
+function openDoc(){
+  const rows=[{id:'potion',price:150,info:'+60 Lebensenergie. Für die Höhle!',five:1},{id:'epotion',price:400,info:'+150 Energie'}];
+  reModal(`${bHead('emil','Arztpraxis','Dr. Emil hilft, wenn es wehtut')}${listHtml(rows,0)}<div class="btns"><button class="btn alt" id="xB">Fertig</button></div>`);
+  bindRows(rows,openDoc);$('#xB').onclick=closeModal;
+}
+
+/* ----- animals on the farm ----- */
+const AV=[];
+function updateAnimals(dt){
+  const out=S.time>=420&&S.time<1140&&S.weather=='sun'&&S.season!=3;
+  while(AV.length<S.animals.length)AV.push({x:0,y:0,tx:0,ty:0,wait:0,flip:0,peck:0,init:0});
+  AV.length=S.animals.length;
+  S.animals.forEach((a,i)=>{const v=AV[i],barn=ANIMALS[a.type].house=='barn';v.out=out;if(!out)return;
+    const bx=barn?[19.5,26.5]:[12.5,20.5],by=barn?[6.2,6.9]:[5.3,6.8];
+    if(!v.init){v.init=1;v.x=bx[0]+Math.random()*(bx[1]-bx[0]);v.y=by[0]+Math.random()*(by[1]-by[0])}
+    if(v.wait>0){v.wait-=dt;v.peck=Math.sin(v.wait*12)>.5?1:0;return}
+    v.peck=0;if(!v.tx){v.tx=bx[0]+Math.random()*(bx[1]-bx[0]);v.ty=by[0]+Math.random()*(by[1]-by[0])}
+    const dx=v.tx-v.x,dy=v.ty-v.y,l=Math.hypot(dx,dy);
+    if(l<.05){v.tx=0;v.wait=1+Math.random()*3;if(Math.random()<.1)sfx('cluck');return}
+    const s=Math.min(l,(barn?.6:.9)*dt);v.x+=dx/l*s;v.y+=dy/l*s;v.flip=dx<0?1:0;
+  });
+}
+function animalsNight(){
+  let made=0;
+  for(const a of S.animals){const A=ANIMALS[a.type];
+    if(S.hay>0){S.hay--;a.pts=Math.min(1000,a.pts+5);a.cnt=(a.cnt||0)+1;
+      if(a.cnt>=A.every){a.cnt=0;S.prod[A.house].push(A.big&&a.pts>=600&&Math.random()<.6?A.big:A.prod);made++}}
+    else a.pts=Math.max(0,a.pts-20);
+    if(!a.pet)a.pts=Math.max(0,a.pts-8);a.pet=0}
+  return made;
+}
+function openAnimalHouse(h){
+  const list=S.animals.map((a,i)=>[a,i]).filter(([a])=>ANIMALS[a.type].house==h),prod=S.prod[h];
+  const title=h=='coop'?(S.coopLv>=2?'Großer Hühnerstall':'Hühnerstall'):'Scheune';
+  reModal(`<h2>${title}</h2>
+    <div class="rows"><div class="row">${ic('hay')}<div><b>Futtersilo: ${S.hay} Heu</b><small>Jedes Tier frisst jede Nacht 1 Heu. Heu gibt es bei Ronja, im Hofladen und beim Mähen.</small></div><div class="buy">${count('hay')?`<button class="btn sm" id="aHay">Einfüllen (${count('hay')})</button>`:''}</div></div>
+    ${prod.length?`<div class="row">${ic(prod[0])}<div><b>${prod.length} ${prod.length==1?'Erzeugnis':'Erzeugnisse'} bereit</b><small>${[...new Set(prod)].map(id=>ITEMS[id].n).join(', ')}</small></div><div class="buy"><button class="btn sm" id="aCol">Einsammeln</button></div></div>`:''}</div>
+    <h3>Deine Tiere (${list.length}/${capOf(h)})</h3>${list.length?`<div class="rows">${list.map(([a,i])=>`<div class="row">${ic(a.type=='chicken'?'chick':a.type)}<div><b>${a.name}</b><small>${ANIMALS[a.type].n}</small><span class="hearts">${hearts(a.pts,5,200)}</span></div><div class="buy">${a.pet?'<small>gestreichelt</small>':`<button class="btn sm" data-p="${i}">Streicheln</button>`}</div></div>`).join('')}</div>`:'<p>Noch keine Tiere hier. Ronja auf der Ranch im Dorf verkauft welche.</p>'}
+    <p style="font-size:14px">Gefütterte, glückliche Tiere geben mehr und bessere Erzeugnisse. Streichle sie jeden Tag.</p>
+    <div class="btns"><button class="btn alt" id="aX">Fertig</button></div>`);
+  const hb=$('#aHay');if(hb)hb.onclick=()=>{const n=count('hay');removeItems('hay',n);S.hay+=n;sfx('pop');openAnimalHouse(h)};
+  const cb=$('#aCol');if(cb)cb.onclick=()=>{const left=[];for(const id of prod)if(addItem(id,1))left.push(id);S.prod[h]=left;if(left.length)toast('Dein Rucksack ist voll.');sfx('pop');openAnimalHouse(h)};
+  $('#modal').querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const a=S.animals[+b.dataset.p];a.pet=1;a.pts=Math.min(1000,a.pts+15);sfx('cluck');openAnimalHouse(h)});
+  $('#aX').onclick=closeModal;
+}
+
+/* ----- horse ----- */
+function toggleRide(){if(!S.horse)return;if(MAP.id=='mine'){toast('In der Höhle geht es nur zu Fuß.');return}S.riding=S.riding?0:1;sfx(S.riding?'win':'pop');barDirty=1}
+
+/* ----- museum ----- */
+const MUSEUM={min:{n:'Mineralien',items:['quartz','amethyst','topaz','emerald','ruby','diamond','copper','iron','gold']},art:{n:'Fundstücke',items:ARTIFACTS}};
+const MUSEUM_RW=[[3,'gold',500,'500 Gold'],[6,'item','epotion','2 Energietränke'],[9,'gold',2000,'2000 Gold'],[12,'item','csword','Eine Kristallklinge'],[14,'gold',5000,'5000 Gold']];
+function museumCount(){return Object.keys(S.museum||{}).length}
+function openMuseum(){
+  const sec=Object.entries(MUSEUM).map(([k,c])=>`<h3>${c.n} (${c.items.filter(i=>S.museum[i]).length}/${c.items.length})</h3><div class="rows">${c.items.map(id=>{const d=S.museum[id],h=count(id);
+    return`<div class="row${d?' done':''}">${ic(d||h?id:'stone')}<div><b>${d||h?ITEMS[id].n:'???'}</b><small>${d?'Ausgestellt':h?'Du hast '+h:'Noch nicht gefunden'}</small></div><div class="buy">${!d&&h?`<button class="btn sm" data-d="${id}">Spenden</button>`:''}</div></div>`}).join('')}</div>`).join('');
+  const next=MUSEUM_RW.find(r=>museumCount()<r[0]);
+  reModal(`${bHead('sofie','Museum','Sofie stellt aus, was du findest')}<p>Gespendet: <b>${museumCount()}</b>${next?` · Nächste Belohnung bei ${next[0]}: ${next[3]}`:''}</p>${sec}<div class="btns"><button class="btn alt" id="xB">Fertig</button></div>`);
+  $('#modal').querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{const id=b.dataset.d;removeItems(id,1);S.museum[id]=1;sfx('win');
+    const n=museumCount(),rw=MUSEUM_RW.find(r=>r[0]==n);let msg=ITEMS[id].n+' ist jetzt ausgestellt!';
+    if(rw){if(rw[1]=='gold')S.gold+=rw[2];else addItem(rw[2],rw[2]=='epotion'?2:1);msg+=' Sofie schenkt dir: '+rw[3]+'.'}
+    toast(msg,3);if(typeof storyMuseum=='function')storyMuseum();openMuseum()});
+  $('#xB').onclick=closeModal;
+}
+
+/* ----- town hall: daily request ----- */
+function dailyRequest(){
+  const dk=dayKey();if(S.daily&&S.daily.dk==dk)return S.daily;
+  const r=mul(dk*7+13),pool=[['wood',20],['stone',15],['fiber',10],['copper',5],['carp',2],['egg',3]];
+  for(const k in CROPS)if(CROPS[k].s==S.season)pool.push([k,3]);
+  for(const k in FORAGE)if(FORAGE[k].s==S.season)pool.push([k,2]);
+  if(S.mineMax>=6)pool.push(['iron',3]);if(S.unl.barn)pool.push(['milk',2]);
+  const[item,n]=pool[Math.floor(r()*pool.length)],ppl=people().filter(k=>k!=S.spouse),npc=ppl[Math.floor(r()*ppl.length)];
+  S.daily={dk,item,n,npc,gold:Math.max(150,(ITEMS[item].sell||10)*n*3),done:0};return S.daily;
+}
+function openHall(){
+  const d=dailyRequest(),has=count(d.item);
+  reModal(`${bHead('greta','Rathaus','Bürgermeisterin Greta')}<h3>Aushang von heute</h3>
+    <div class="rows"><div class="row${d.done?' done':''}">${ic(d.item)}<div><b>${NPCS[d.npc].n} sucht ${d.n}× ${ITEMS[d.item].n}</b><small>Belohnung: ${d.gold} g und Freundschaft · du hast ${has}</small></div><div class="buy">${d.done?'<small>erledigt</small>':`<button class="btn sm" id="hGive" ${has>=d.n?'':'disabled'}>Abgeben</button>`}</div></div></div>
+    <p style="font-size:14px">Jeden Tag hängt hier eine neue Bitte aus dem Dorf.</p>
+    ${typeof storyHallHtml=='function'?storyHallHtml():''}
+    <div class="btns"><button class="btn alt" id="xB">Fertig</button></div>`);
+  const g=$('#hGive');if(g)g.onclick=()=>{if(count(d.item)<d.n)return;removeItems(d.item,d.n);d.done=1;S.gold+=d.gold;S.rel[d.npc].pts=Math.min(relCap(d.npc),S.rel[d.npc].pts+60);sfx('win');toast(`${NPCS[d.npc].n} freut sich sehr! +${d.gold} g`,2.6);openHall()};
+  $('#xB').onclick=closeModal;
+}
+function relCap(k){return NPCS[k].single&&S.dating!=k&&S.spouse!=k?2000:2500}
+
+/* ========== expansion C: monsters, bosses, weapons ========== */
+const MON={
+  slime:{hp:[4,7,10,14],dmg:[6,10,14,18],spd:1.1,col:['#5cc14a','#4a8ae0','#d8453a','#8a8a90'],drop:'slime'},
+  bat:{hp:5,dmg:7,spd:2.2,fly:1,col:'#6a4a8a',drop:'batwing'},
+  beetle:{hp:16,dmg:12,spd:.8,col:'#3a5a8a',drop:'shell'},
+  ghost:{hp:12,dmg:14,spd:1.5,fly:1,col:'#dce6ff',drop:'ecto'},
+  drone:{hp:18,dmg:16,spd:1.9,fly:1,col:'#9a9aa2',drop:'gear'}
+};
+const BOSSES={
+  10:{type:'king',n:'Schleimkönig',hp:70,dmg:12,spd:.9,size:2.2,col:'#5cc14a',loot:[['slime',10],['copperbar',3]]},
+  20:{type:'golem',n:'Felsgolem',hp:130,dmg:18,spd:.7,size:2.4,col:'#8a847c',loot:[['gold',5],['ironbar',3]]},
+  30:{type:'worm',n:'Kristallwurm',hp:170,dmg:20,spd:1.3,size:2,col:'#9ee8ff',loot:[['diamond',3]]},
+  40:{type:'drill',n:'Bohrkoloss',hp:240,dmg:24,spd:.8,size:2.6,col:'#c8a040',loot:[['gear',10],['goldbar',3]]}
+};
+const maxFloor=()=>S.story&&S.story.ch>=4?40:30;
+const zoneOf=n=>n<10?0:n<20?1:n<31?2:3;
+function monPool(n){if(n<5)return['slime'];if(n<12)return['slime','slime','bat'];if(n<22)return['slime','bat','beetle'];if(n<31)return['bat','beetle','ghost','slime'];return['drone','drone','beetle','ghost']}
+function mkMon(type,x,y,n){const D=MON[type],z=zoneOf(n),hp=Array.isArray(D.hp)?D.hp[z]:Math.round(D.hp*(1+n/40));
+  return{type,x,y,hp,max:hp,dmg:Array.isArray(D.dmg)?D.dmg[z]:Math.round(D.dmg*(1+n/60)),spd:D.spd+n*.02,fly:D.fly,col:Array.isArray(D.col)?D.col[z]:D.col,kx:0,ky:0,hop:Math.random()*6}}
+genFloor=function(n){
+  const w=18,h=14,t=[],bossHere=BOSSES[n]&&!S.boss[n]&&(n<40||maxFloor()>=40);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++)t.push({g:(x==0||y==0||x==w-1||y==h-1)?7:8,w:0,o:null,c:null});
+  const at=(x,y)=>t[y*w+x];
+  if(!bossHere)for(let k=0;k<6;k++){const cx=rnd(2,w-3),cy=rnd(2,h-3);for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++)if(Math.random()<.6)at(cx+i,cy+j).g=7}
+  const ex=bossHere?2:rnd(2,w-3),ey=bossHere?1:rnd(1,h-4);
+  for(let j=0;j<=2;j++)for(let i=-1;i<=1;i++){const c=at(ex+i,ey+j);c.g=8;c.o=null}
+  at(ex,ey).o={k:'up'};
+  const rocks=[];
+  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){const c=at(x,y);if(c.g!=8||c.o)continue;if(Math.abs(x-ex)<=1&&y>=ey&&y<=ey+2)continue;
+    const edge=x<3||x>w-4||y<3||y>h-4;if(bossHere&&!edge)continue;
+    if(Math.random()<(bossHere?.18:.4)){c.o={k:'rock',hp:n<10?1:n<20?2:3,ore:oreFor(n)};rocks.push(c)}}
+  if(!bossHere&&n<maxFloor()&&rocks.length)pick(rocks).o.ladder=1;
+  if(n==30&&!S.mineChest){const c=at(clamp(ex+3,1,w-2),clamp(ey+4,1,h-2));c.g=8;c.o={k:'chest'}}
+  const sl=[];
+  if(bossHere){const B=BOSSES[n];sl.push({type:B.type,x:w/2+.5,y:h/2+1,hp:B.hp,max:B.hp,dmg:B.dmg,spd:B.spd,size:B.size,col:B.col,kx:0,ky:0,hop:0,fly:1,t:0,boss:n})}
+  else{const cnt=Math.min(8,2+Math.floor(n/4)),pool=monPool(n);
+    for(let k=0;k<300&&sl.length<cnt;k++){const x=rnd(1,w-2),y=rnd(1,h-2),c=at(x,y);if(c.g!=8||c.o||Math.hypot(x-ex,y-ey)<5)continue;sl.push(mkMon(pick(pool),x+.5,y+.8,n))}}
+  return{id:'mine',w,h,t,floor:n,slimes:sl,ex,ey,zone:zoneOf(n),boss:bossHere};
+};
+const _enterMine0=enterMine;
+enterMine=function(n){_enterMine0(n);
+  if(M.boss)toast(`Ebene ${n}: ${BOSSES[n].n}!`,2.6);
+  else if(n==31&&!S.seen31){S.seen31=1;toast('Die Grauwerk-Stollen! Hier haben Maschinen gegraben.',3.5)}};
+attack=function(){
+  const sel=S.inv[S.sel],wid=sel&&WEAPONS[sel.id]?sel.id:'sword',W=WEAPONS[wid];
+  if(swingCd>0)return;swingCd=W.cd;swing(wid);sfx('hit');
+  if(MAP.id!='mine')return;
+  const cx=S.px+DX[S.dir]*.7,cy=S.py-.3+DY[S.dir]*.7;
+  for(const s of M.slimes){if(s.hid)continue;const r=W.rng+(s.size?s.size*.35:0);
+    if(Math.hypot(s.x-cx,s.y-.3*(s.size||1)-cy)<r){s.hp-=W.dmg;const l=Math.hypot(s.x-S.px,s.y-S.py)||1,kb=s.size?W.kb*.2:W.kb;s.kx=(s.x-S.px)/l*kb;s.ky=(s.y-S.py)/l*kb;dust(s.x,s.y-.3,s.col,5);sfx('slime')}}
+  const dead=M.slimes.filter(s=>s.hp<=0);M.slimes=M.slimes.filter(s=>s.hp>0);
+  for(const s of dead){if(s.boss){bossDown(s);continue}
+    const d=MON[s.type].drop;addItem(d,1);pop(s.x,s.y-.8,'+1 '+ITEMS[d].n,'#9be07a');
+    if(Math.random()<.3){const o=oreFor(M.floor)||'copper';addItem(o,1);pop(s.x,s.y-1.2,'+1 '+ITEMS[o].n)}}
+};
+function bossDown(s){const n=s.boss,B=BOSSES[n];S.boss[n]=1;sfx('win');
+  B.loot.forEach(([id,k])=>addItem(id,k));
+  const tx=clamp(Math.floor(s.x),1,M.w-2),ty=clamp(Math.floor(s.y-.3),1,M.h-2),t=M.t[ty*M.w+tx];
+  if(n<maxFloor()){t.g=8;t.o={k:'ladder'}}
+  let msg=`<p>Der ${B.n} ist besiegt! Beute: ${B.loot.map(([id,k])=>k+'× '+ITEMS[id].n).join(', ')}.</p>`;
+  if(typeof storyBoss=='function')msg+=storyBoss(n)||'';
+  openModal(`<h2>Sieg!</h2>${msg}<div class="btns"><button class="btn" id="xOk">Weiter</button></div>`,true);$('#xOk').onclick=closeModal;saveNow();
+}
+function bossAI(s,dt){
+  s.t+=dt;if(s.chg>0)s.chg-=dt;
+  const dx=S.px-s.x,dy=S.py-s.y,d=Math.hypot(dx,dy)||1;
+  if(s.type=='king'&&s.t>4){s.t=0;const mins=M.slimes.filter(m=>!m.boss).length;if(mins<6)for(let i=0;i<2;i++){const m=mkMon('slime',clamp(s.x+(Math.random()-.5)*3,1.5,M.w-1.5),clamp(s.y+(Math.random()-.5)*2,1.5,M.h-1.5),10);M.slimes.push(m)}sfx('slime')}
+  if((s.type=='golem'||s.type=='drill')&&s.t>(s.type=='drill'?4:5)){s.t=0;s.chg=.8;s.cvx=dx/d*5.5;s.cvy=dy/d*5.5;sfx('hit');
+    if(s.type=='drill'){s.c=(s.c||0)+1;if(s.c%2==0&&M.slimes.length<5)M.slimes.push(mkMon('drone',clamp(s.x+1.5,1.5,M.w-1.5),clamp(s.y,1.5,M.h-1.5),40))}}
+  if(s.type=='worm'){if(!s.hid&&s.t>3.5){s.hid=.9;s.t=0;dust(s.x,s.y-.3,'#9ee8ff',8)}
+    if(s.hid){s.hid-=dt;if(s.hid<=0){s.hid=0;s.x=clamp(S.px+(Math.random()-.5)*5,1.5,M.w-1.5);s.y=clamp(S.py+(Math.random()-.5)*4,1.8,M.h-1.2);dust(s.x,s.y-.3,'#9ee8ff',8);sfx('slime')}}}
+}
+updateSlimes=function(dt){
+  for(const s of M.slimes){
+    s.hop+=dt*6;if(s.boss)bossAI(s,dt);
+    let vx=s.kx,vy=s.ky;s.kx*=Math.pow(.02,dt);s.ky*=Math.pow(.02,dt);
+    const dx=S.px-s.x,dy=S.py-s.y,d=Math.hypot(dx,dy);
+    if(!s.hid){if(s.chg>0){vx+=s.cvx;vy+=s.cvy}else if(d<(s.boss?30:7)&&d>.1){vx+=dx/d*s.spd;vy+=dy/d*s.spd}
+      if(s.type=='bat'){vx+=Math.sin(s.hop*1.3)*1.8;vy+=Math.cos(s.hop*1.1)*1.8}
+      if(s.type=='ghost'){vx+=Math.sin(s.hop*.7)*.8}}
+    const nx=s.x+vx*dt,ny=s.y+vy*dt;
+    if(s.fly){s.x=clamp(nx,1.2,M.w-1.2);s.y=clamp(ny,1.6,M.h-1.1)}
+    else{if(!solid(Math.floor(nx),Math.floor(s.y-.2)))s.x=nx;if(!solid(Math.floor(s.x),Math.floor(ny-.2)))s.y=ny}
+    const hitR=s.size?s.size*.45:.6;
+    if(!s.hid&&d<hitR&&invul<=0){S.hp-=s.dmg;invul=.9;sfx('bad');pop(S.px,S.py-1.4,'-'+s.dmg,'#ff8a7a');
+      const l=d||1,px=S.px-dx/l*.6,py=S.py-dy/l*.6;if(!blocked(px,py)){S.px=px;S.py=py}
+      if(S.hp<=0){faint();return}}
+  }
+};
+drawSlime=function(s){
+  const p=TS/16,x=s.x*TS-camX,y=s.y*TS-camY,sq=1+Math.sin(s.hop)*.12,Z=(s.size||1);
+  const el=(cx,cy,rx,ry,c)=>{ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,0,7);ctx.fill()};
+  if(s.hid){el(x,y-p,6*p*Z*.6,2.5*p,'rgba(60,50,40,.7)');return}
+  el(x,y-p,5*p*Z,2*p*Z*.6,'rgba(0,0,0,.25)');
+  switch(s.type){
+    case'slime':case'king':
+      el(x,y-5*p*sq*Z,6*p/sq*Z,5*p*sq*Z,s.col);ctx.fillStyle='rgba(255,255,255,.45)';ctx.fillRect(x-3*p*Z,y-8*p*sq*Z,2*p*Z,p*Z);
+      ctx.fillStyle='#1a1a1a';ctx.fillRect(x-2.5*p*Z,y-6*p*sq*Z,1.2*p*Z,1.6*p*Z);ctx.fillRect(x+1.3*p*Z,y-6*p*sq*Z,1.2*p*Z,1.6*p*Z);
+      if(s.type=='king'){ctx.fillStyle='#f5c83a';const cy=y-10.5*p*sq*Z;ctx.fillRect(x-4*p*Z,cy,8*p*Z,2*p*Z);for(const o of[-4,-.5,3])ctx.fillRect(x+o*p*Z,cy-2*p*Z,1.2*p*Z,2*p*Z)}break;
+    case'bat':{const f=Math.sin(s.hop*3)*3*p,cy=y-9*p;ctx.fillStyle=s.col;ctx.beginPath();ctx.moveTo(x,cy);ctx.lineTo(x-7*p,cy-f);ctx.lineTo(x-4*p,cy+2*p);ctx.lineTo(x+4*p,cy+2*p);ctx.lineTo(x+7*p,cy-f);ctx.fill();
+      el(x,cy,2.5*p,2.5*p,dk(s.col,.3));ctx.fillStyle='#ffe38a';ctx.fillRect(x-1.5*p,cy-p,p,p);ctx.fillRect(x+.5*p,cy-p,p,p);break}
+    case'beetle':ctx.fillStyle='#1a1a1a';for(const o of[-4,0,4]){ctx.fillRect(x+o*p-3*p,y-3*p,p,2*p);ctx.fillRect(x+o*p+2*p,y-3*p,p,2*p)}
+      el(x,y-5*p,6*p,4.5*p,s.col);ctx.fillStyle=dk(s.col,.35);ctx.fillRect(x-.5*p,y-9*p,p,8*p);ctx.fillStyle=lt(s.col,.4);ctx.fillRect(x-4*p,y-8*p,2*p,p);break;
+    case'ghost':{ctx.globalAlpha=.7+.2*Math.sin(s.hop);const cy=y-8*p+Math.sin(s.hop)*p;el(x,cy,5*p,5*p,s.col);ctx.fillStyle=s.col;ctx.fillRect(x-5*p,cy,10*p,5*p);
+      ctx.fillStyle='#3a3a5a';ctx.fillRect(x-2.5*p,cy-p,1.4*p,2*p);ctx.fillRect(x+1*p,cy-p,1.4*p,2*p);ctx.globalAlpha=1;break}
+    case'drone':{const cy=y-9*p;ctx.fillStyle='#5a5a60';ctx.fillRect(x-5*p,cy-3*p,10*p,6*p);ctx.fillStyle=s.col;ctx.fillRect(x-4*p,cy-2*p,8*p,4*p);ctx.fillStyle='#e0453a';ctx.fillRect(x-p,cy-p,2*p,2*p);
+      const r=Math.sin(s.hop*6)*5*p;ctx.fillStyle='#3a3a40';ctx.fillRect(x-r,cy-5*p,2*r||p,p);break}
+    case'golem':ctx.fillStyle=dk(s.col,.25);ctx.fillRect(x-9*p,y-8*p,5*p,8*p);ctx.fillRect(x+4*p,y-8*p,5*p,8*p);el(x,y-14*p,9*p,9*p,s.col);el(x-2*p,y-17*p,4*p,3*p,lt(s.col,.3));
+      ctx.fillStyle='#ffb040';ctx.fillRect(x-4*p,y-16*p,2*p,2*p);ctx.fillRect(x+2*p,y-16*p,2*p,2*p);break;
+    case'worm':for(let i=3;i>=0;i--){const ox=Math.sin(s.hop+i)*2*p;el(x+ox,y-4*p-i*5*p,(6-i*.6)*p,4*p,i?dk(s.col,.1*i):s.col)}
+      ctx.fillStyle='#1a1a3a';ctx.fillRect(x-3*p,y-21*p,2*p,2*p);ctx.fillRect(x+1*p,y-21*p,2*p,2*p);ctx.fillStyle='#fff';ctx.fillRect(x-4*p,y-25*p,p,3*p);ctx.fillRect(x+3*p,y-25*p,p,3*p);break;
+    case'drill':ctx.fillStyle='#5a5a60';ctx.fillRect(x-10*p,y-16*p,20*p,14*p);ctx.fillStyle=s.col;ctx.fillRect(x-9*p,y-15*p,18*p,6*p);
+      ctx.fillStyle='#3a3a40';for(let i=-9;i<9;i+=3)ctx.fillRect(x+i*p,y-3*p,2*p,3*p);ctx.fillStyle='#e0453a';ctx.fillRect(x-6*p,y-13*p,3*p,2*p);ctx.fillRect(x+3*p,y-13*p,3*p,2*p);
+      {const dir=Math.sign(S.px-s.x)||1,tip=x+dir*18*p,sp=Math.sin(s.hop*8)*p;ctx.fillStyle='#b8bec4';ctx.beginPath();ctx.moveTo(x+dir*10*p,y-13*p+sp);ctx.lineTo(tip,y-9*p);ctx.lineTo(x+dir*10*p,y-5*p-sp);ctx.fill()}
+      ctx.fillStyle='#fff3d6';ctx.font=`700 ${Math.round(4*p)}px "Pixelify Sans",monospace`;ctx.textAlign='center';ctx.fillText('GRAUWERK',x,y-7*p);break;
+  }
+  if(!s.boss&&s.hp<s.max){ctx.fillStyle='#3a1a10';ctx.fillRect(x-5*p,y-15*p,10*p,1.4*p);ctx.fillStyle='#e0453a';ctx.fillRect(x-5*p,y-15*p,10*p*s.hp/s.max,1.4*p)}
+};
+function bossHud(){const b=MAP.id=='mine'&&M&&M.slimes.find(s=>s.boss),el=$('#bossBar');
+  if(!b){if(!el.hidden)el.hidden=true;return}
+  if(el.hidden){el.hidden=false;$('#bossName').textContent=BOSSES[b.boss].n}
+  $('#bossFill').style.width=Math.max(0,b.hp/b.max*100)+'%'}
+openCave=function(){
+  if(!S.unl.mine){toast('Der Eingang ist verschüttet. Vielleicht kann die Dorftafel helfen, ihn freizuräumen.',3.2);sfx('bad');return}
+  const lv=[1];for(let n=5;n<=Math.min(S.mineMax,maxFloor());n+=5)lv.push(n);
+  openModal(`<h2>Die alte Höhle</h2><p>Tiefste Ebene bisher: ${S.mineMax||'–'}. Ab jeder 5. Ebene kannst du direkt hinunterfahren.</p>
+    <p style="font-size:14px">Auf den Ebenen 10, 20 und 30 warten Bosse. Nimm Heiltränke von Dr. Emil mit. Bessere Waffen schmiedet Bruno.${maxFloor()>30?' Unter Ebene 30 liegen jetzt die Grauwerk-Stollen.':''}</p>
+    <div class="btns">${lv.map(n=>`<button class="btn sm" data-f="${n}">Ebene ${n}</button>`).join('')}<button class="btn alt sm" id="cvX">Doch nicht</button></div>`);
+  $('#modal').querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{closeModal();enterMine(+b.dataset.f)});
+  $('#cvX').onclick=closeModal;
+};
+
+/* ========== expansion D: quests, love, family, player ========== */
+const QUESTS=[
+  {id:'greta1',npc:'greta',h:2,t:'Neue Bänke für den Platz',ask:'Die Bänke auf dem Platz sind morsch. Könntest du mir 30 Holz und 20 Stein bringen?',need:[['wood',30],['stone',20]],done:'Wunderbar! Heute Abend sitzt das halbe Dorf auf deinen Bänken.',rw:{gold:800}},
+  {id:'greta2',npc:'greta',h:4,t:'Licht für den Platz',ask:'Die alten Laternen rosten. Bruno meint, mit 5 Kupferbarren könnte er neue machen.',need:[['copperbar',5]],done:'Sieh nur, wie der Platz jetzt abends leuchtet. Das hast du gemacht.',rw:{gold:1500,item:['amethyst',1]}},
+  {id:'greta3',npc:'greta',h:6,t:'Ein Festessen',ask:'Ich möchte den Ältesten ein Festessen geben. Bringst du mir einen Honigkuchen und einen Käse?',need:[['hcake',1],['cheese',1]],done:'Oma Hilde hat geweint vor Freude. Danke, wirklich.',rw:{gold:3000,item:['epotion',2]}},
+  {id:'bruno1',npc:'bruno',h:2,t:'Frisches Erz',ask:'Mir geht das Kupfer aus. 10 Brocken Kupfererz, dann schmiede ich dir was.',need:[['copper',10]],done:'Gutes Erz. Hier, zwei Barren für dich.',rw:{gold:800,item:['copperbar',2]}},
+  {id:'bruno2',npc:'bruno',h:4,t:'Gutes Eisen',ask:'Ich will eine Klinge schmieden, die hundert Jahre hält. Dafür brauche ich 5 Eisenbarren.',need:[['ironbar',5]],done:'Sie ist fertig. Und sie gehört dir.',rw:{gold:500,item:['isword',1]}},
+  {id:'bruno3',npc:'bruno',h:6,t:'Ein Meisterstück',ask:'Einmal im Leben will ich ein echtes Meisterstück schmieden. Ein Diamant und 3 Goldbarren.',need:[['diamond',1],['goldbar',3]],done:'Das beste Stück, das je aus meiner Esse kam. Nimm es. Du hast es verdient.',rw:{gold:2000,item:['gsword',1]}},
+  {id:'ronja1',npc:'ronja',h:2,t:'Futter für die Herde',ask:'Der Winter war lang und mein Heu ist knapp. Hast du 20 Heu für mich?',need:[['hay',20]],done:'Die Kühe sagen danke. Und ich auch!',rw:{gold:500,item:['milk',3]}},
+  {id:'ronja2',npc:'ronja',h:4,t:'Ein krankes Fohlen',ask:'Mein kleines Fohlen ist krank. Dr. Emil hat Heiltränke, kannst du mir einen bringen?',need:[['potion',1]],done:'Es steht wieder! Als Dank bekommst du ein Pferd von mir für den halben Preis.',rw:{gold:300,flag:'horseDisc'}},
+  {id:'ronja3',npc:'ronja',h:6,t:'Käse für den Markt',ask:'Ich will auf dem Markt in der Stadt Käse verkaufen. Machst du mir 3 Stück an deiner Werkbank?',need:[['cheese',3]],done:'Du bist die beste Person, die ich kenne. Hier, für jemand Besonderen.',rw:{gold:3000,item:['bouquet',1]}},
+  {id:'theo1',npc:'theo',h:2,t:'Bretter',ask:'Ich brauche 50 Holz für ein Gartenhaus. Hilfst du mir?',need:[['wood',50]],done:'Perfekt. Das riecht nach Frühling.',rw:{gold:600}},
+  {id:'theo2',npc:'theo',h:4,t:'Neue Beschläge',ask:'Meine Werkzeuge sind stumpf. Mit 3 Eisenbarren könnte ich alles erneuern.',need:[['ironbar',3]],done:'Danke! Dein nächster Bau bei mir kostet ein Viertel weniger.',rw:{gold:0,flag:'carpDisc'}},
+  {id:'theo3',npc:'theo',h:6,t:'Theos Traumhaus',ask:'Ich baue ein Modell von meinem Traumhaus. 99 Holz, ein Goldbarren und ein Amethyst für das Fenster.',need:[['wood',99],['goldbar',1],['amethyst',1]],done:'Schau, das Fenster leuchtet lila. Weißt du, für wen ich es gebaut habe?',rw:{gold:4000}},
+  {id:'kalle1',npc:'kalle',h:2,t:'Frischer Fisch',ask:'Der Fischhändler ist krank. 3 Karpfen, und du bekommst den besten Kuchen im Tal.',need:[['carp',3]],done:'Frisch wie der Morgen! Hier, dein Kuchen.',rw:{gold:500,item:['pie',1]}},
+  {id:'kalle2',npc:'kalle',h:4,t:'Ein neues Rezept',ask:'Ich will einen Honigkuchen erfinden. Dafür brauche ich 2 Eier und 2 Milch.',need:[['egg',2],['milk',2]],done:'Er ist himmlisch! Zwei für dich, der Rest geht aufs Haus.',rw:{gold:1200,item:['hcake',2]}},
+  {id:'kalle3',npc:'kalle',h:6,t:'Der König des Teichs',ask:'Jonas erzählt seit Jahren vom Wels im Teich. Bring mir einen, und ich glaube ihm endlich.',need:[['catfish',1]],done:'Bei allen Kürbissen! Jonas hat nicht gelogen!',rw:{gold:4000}},
+  {id:'sofie1',npc:'sofie',h:2,t:'Glitzernde Steine',ask:'Für eine Schulstunde bräuchte ich 3 Quarze. Findest du welche in der Höhle?',need:[['quartz',3]],done:'Die Kinder waren begeistert. Danke!',rw:{gold:600}},
+  {id:'sofie2',npc:'sofie',h:4,t:'Ein Ammonit',ask:'Ein Ammonit würde meine Sammlung vollenden. Manche liegen im Boden, wenn sich Würmer darüber bewegen.',need:[['ammonit',1]],done:'Millionen Jahre alt und du hast ihn einfach ausgegraben. Unglaublich.',rw:{gold:1500}},
+  {id:'sofie3',npc:'sofie',h:6,t:'Das Herz der Edelsteine',ask:'Ein Rubin, ein Smaragd und ein Topas. Zusammen sollen sie das Licht des Sonnensteins spiegeln.',need:[['ruby',1],['emerald',1],['topaz',1]],done:'Sieh nur, wie sie zusammen leuchten. Genau wie in den alten Büchern.',rw:{gold:5000}},
+  {id:'emil1',npc:'emil',h:2,t:'Schleim für die Salbe',ask:'Klingt eklig, aber Schleim ist perfekt für Wundsalbe. 5 Stück, bitte.',need:[['slime',5]],done:'Danke! Nimm zwei Heiltränke mit. Du brauchst sie öfter als du denkst.',rw:{gold:700,item:['potion',2]}},
+  {id:'emil2',npc:'emil',h:4,t:'Gesunde Ernährung',ask:'Ich esse zu viel Brot. Kochst du mir 2 Fischsuppen?',need:[['fishsoup',2]],done:'Die beste Medizin ist gutes Essen. Und gute Gesellschaft.',rw:{gold:1500}},
+  {id:'emil3',npc:'emil',h:6,t:'Nachtdienst',ask:'Für ein Forschungsprojekt brauche ich 3 Fledermausflügel und ein Ektoplasma. Frag nicht.',need:[['batwing',3],['ecto',1]],done:'Du hast mir mehr geholfen, als du ahnst.',rw:{gold:4000,item:['epotion',2]}},
+  {id:'mara1',npc:'mara',h:4,t:'Neue Ware für den Laden',ask:'Die Leute fragen ständig nach Honig. Bringst du mir 5 Gläser?',need:[['honey',5]],done:'Ausverkauft in einer Stunde! Du bist ein Schatz.',rw:{gold:2000}},
+  {id:'hilde1',npc:'hilde',h:3,t:'Ein warmes Omelett',ask:'Kindchen, meine Knochen sind kalt. Machst du mir ein Omelett an deiner Werkbank?',need:[['omelet',1]],done:'Genau wie dein Opa es gemacht hat. Danke.',rw:{gold:500}},
+  {id:'jonas1',npc:'jonas',h:4,story:3,t:'Opas alter Haken',ask:'Dein Opa hat mal etwas Leuchtendes im Teich versenkt, damit es sicher ist. Nur der Wels oder der Hecht schwimmen so tief. Fang einen, vielleicht hat er es geschluckt.',need:[['catfish|pike',1]],done:'Schau in sein Maul… da! Es glitzert. Das gehört dir.',rw:{gold:1000,story:'jonas'}}
+];
+const qItemCount=id=>id.split('|').reduce((a,i)=>a+count(i),0);
+function qTake(id,n){for(const i of id.split('|')){const k=Math.min(n,count(i));removeItems(i,k);n-=k;if(!n)break}}
+const qReady=q=>q.need.every(([id,n])=>qItemCount(id)>=n);
+const qName=id=>id.split('|').map(i=>ITEMS[i].n).join(' oder ');
+function questFor(k){
+  for(const q of QUESTS){if(q.npc!=k)continue;const st=S.quests[q.id];if(st==2)continue;
+    if(st==1)return{q,state:'active'};
+    if(q.story&&(!S.story||S.story.ch<q.story))return null;
+    return S.rel[k].pts>=q.h*250?{q,state:'offer'}:null}
+  return null;
+}
+function questMark(k){const r=questFor(k);return r&&(r.state=='offer'||qReady(r.q))}
+function npcDialog(k,text,btns,extra){
+  const r=S.rel[k],N=NPCS[k];
+  openModal(`<div class="who"><img alt="" src="${portrait(k)}"><div><h2 style="margin:0">${N.n}</h2>${N.story?'':`<div class="hearts">${hearts(r.pts)}</div>`}${S.spouse==k?'<small>verheiratet mit dir</small>':S.dating==k?'<small>ihr seid zusammen</small>':''}</div></div>
+    <p style="margin-top:12px">„${text}“</p>${extra||''}<div class="btns">${(btns||[]).map((b,i)=>`<button class="btn${b.alt?' alt':''}" id="nb${i}">${b.label}</button>`).join('')}<button class="btn alt" id="mOk">Tschüss</button></div>`);
+  (btns||[]).forEach((b,i)=>$('#nb'+i).onclick=b.fn);$('#mOk').onclick=closeModal;
+}
+npcModal=function(k,text){npcDialog(k,text)};
+function giveQuestReward(q){const rw=q.rw,out=[];
+  if(rw.gold){S.gold+=rw.gold;out.push(rw.gold+' g')}
+  if(rw.item){addItem(rw.item[0],rw.item[1]);out.push(rw.item[1]+'× '+ITEMS[rw.item[0]].n)}
+  if(rw.flag){S[rw.flag]=1;out.push(rw.flag=='horseDisc'?'Pferd zum halben Preis':'25 % Rabatt beim nächsten Bau')}
+  S.rel[q.npc].pts=Math.min(relCap(q.npc),S.rel[q.npc].pts+250);out.push('+1 Herz');
+  let extra='';if(rw.story&&typeof storyQuest=='function')extra=storyQuest(rw.story)||'';
+  return out.join(', ')+extra;
+}
+function questTalk(k){
+  const r=questFor(k);if(!r)return false;const q=r.q;
+  if(r.state=='offer'){npcDialog(k,q.ask,[{label:'Mach ich',fn:()=>{S.quests[q.id]=1;sfx('pop');toast('Neue Aufgabe: '+q.t,2.4);closeModal()}},{label:'Später',alt:1,fn:closeModal}]);return true}
+  if(qReady(q)){npcDialog(k,'Hast du an '+q.need.map(([id,n])=>n+'× '+qName(id)).join(' und ')+' gedacht?',[{label:'Übergeben',fn:()=>{q.need.forEach(([id,n])=>qTake(id,n));S.quests[q.id]=2;sfx('win');
+    const rw=giveQuestReward(q);npcDialog(k,q.done,null,'<p class="note">Belohnung: '+rw+'</p>')}}]);return true}
+  return false;
+}
+const SPOUSE_LINES=['Guten Morgen, Schatz. Ich hab schon mal nach den Tieren geschaut.','Ich bin so froh, dass wir hier zusammen leben.','Vergiss nicht zu essen! Du arbeitest zu viel.','Weißt du noch, wie wir uns kennengelernt haben? Ich schon.','Der Hof fühlt sich an wie ein richtiges Zuhause.'];
+const _talkNpc0=talkNpc;
+talkNpc=function(k){
+  const N=NPCS[k];if(N.story){if(typeof storyTalk=='function')storyTalk(k);return}
+  const r=S.rel[k];NR[k].dir=faceTo(NR[k].x,NR[k].y,S.px,S.py);
+  if(storyTalk(k)){r.met=1;if(r.talk!=dayKey()){r.talk=dayKey();r.pts=Math.min(relCap(k),r.pts+20)}return}
+  if(r.met&&questTalk(k)){if(r.talk!=dayKey()){r.talk=dayKey();r.pts=Math.min(relCap(k),r.pts+20)}return}
+  if(S.spouse==k){if(r.talk!=dayKey()){r.talk=dayKey();r.pts=Math.min(2500,r.pts+20)}npcDialog(k,pick(SPOUSE_LINES).replace('Schatz',pn()));return}
+  _talkNpc0(k);r.pts=Math.min(relCap(k),r.pts);
+};
+const _giftNpc0=giftNpc;
+giftNpc=function(k){
+  const s=S.inv[S.sel],id=s.id,r=S.rel[k],N=NPCS[k];
+  if(id=='bouquet'){
+    if(!N.single){npcDialog(k,'Oh, wie hübsch! Aber ich glaube, der ist für jemand anderen gedacht.');return}
+    if(S.spouse||S.dating){npcDialog(k,S.spouse==k||S.dating==k?'Du bist so süß. Aber wir sind doch schon zusammen!':'Oh… ich glaube, dein Herz gehört schon jemandem.');return}
+    if(r.pts<2000){npcDialog(k,'Oh! Das ist… sehr lieb. Aber so gut kennen wir uns noch nicht, oder?');return}
+    takeSel();S.dating=k;sfx('win');npcDialog(k,`Für mich? ${pn()}, ich… ja. Ja, ich möchte mit dir zusammen sein.`);return}
+  if(id=='amulet'){
+    if(S.spouse){npcDialog(k,'Das ist wunderschön. Aber du bist doch schon verheiratet!');return}
+    if(S.dating!=k){npcDialog(k,'Ein Sonnenamulett? Das gibt man nur dem Menschen, mit dem man für immer zusammen sein will.');return}
+    if(r.pts<2500){npcDialog(k,'Ich liebe dich. Aber lass uns noch etwas Zeit miteinander verbringen, bevor wir so etwas entscheiden.');return}
+    if(S.house<1){npcDialog(k,'Ja! Tausendmal ja! Aber… wo sollen wir wohnen? Dein Haus ist so klein. Theo kann es ausbauen.');return}
+    takeSel();S.wedDay=dayKey()+3;sfx('win');npcDialog(k,`Ja! Oh, ${pn()}, ja! In drei Tagen feiern wir Hochzeit auf dem Marktplatz!`);return}
+  _giftNpc0(k);r.pts=Math.min(relCap(k),r.pts);
+};
+const KIDNAMES=['Lina','Paul','Mila','Jonah','Ida','Theo','Ella','Finn'];
+function familyMorning(){
+  const out=[];
+  if(S.wedDay&&dayKey()>=S.wedDay&&S.dating){S.spouse=S.dating;S.dating=null;S.wedDay=0;S.married=dayKey();
+    out.push(`<p class="note"><b>Heute ist eure Hochzeit!</b> Das ganze Dorf feiert auf dem Marktplatz. ${NPCS[S.spouse].n} zieht zu dir auf den Hof.</p>`)}
+  if(S.spouse&&S.house>=2&&!S.kid){S.kidWait=(S.kidWait||0)+1;if(S.kidWait>=7){S.kid={name:pick(KIDNAMES),born:dayKey(),age:0};out.push(`<p class="note"><b>Ein Baby!</b> ${NPCS[S.spouse].n} und du habt ein Kind bekommen. Ihr nennt es ${S.kid.name}.</p>`)}}
+  if(S.kid)S.kid.age++;
+  if(S.spouse){const r=Math.random(),sp=NPCS[S.spouse].n;
+    if(r<.35&&S.season!=3){for(const t of S.t)if(t.g==3)t.w=1;out.push(`<p>${sp} hat heute früh alle Beete gegossen.</p>`)}
+    else if(r<.6&&S.animals.length){S.hay+=5;out.push(`<p>${sp} hat 5 Heu ins Silo gefüllt.</p>`)}
+    else if(r<.8){const f=pick(['soup','pie','coffee']);addItem(f,1);out.push(`<p>${sp} hat dir ${ITEMS[f].n} gemacht.</p>`)}}
+  return out.join('');
+}
+function drawKid(now,p){if(!S.kid||MAP.id!='farm'||S.time<480||S.time>1200)return null;
+  const x=(6.2+Math.sin(now/2500)*1.2)*TS-camX,y=8.3*TS-camY,sc=S.kid.age<14?.45:.62,pal=S.player?mePal():ME;
+  return[8.3,()=>{const T0=TS;TS=T0*sc;person(x,y,0,now/1000,{...pal,shirt:'#f0a8c8'},S.kid.age>=14);TS=T0}]}
+
+/* ----- player look ----- */
+const HAIRC=['#6b3a1e','#2a1a10','#e8c050','#c4452f','#8a8a8a','#4a3a8a'],SKINC=['#f2c69b','#e8b48a','#c68a5a','#8a5a3a','#fbe0c8'],SHIRTC=['#3f7fd0','#d9442f','#5cc14a','#e8b43a','#9a6ad8','#3a3a48'];
+function mePal(){const P=S.player;if(!P)return ME;return{hair:P.hc,skin:P.skin,shirt:P.shirt,pants:'#3b4a7a',shoe:'#3a2414',long:P.hair=='long',tail:P.hair=='tail'}}
+function openCreator(done){
+  const P=S.player||{name:'',hair:'short',hc:HAIRC[0],skin:SKINC[0],shirt:SHIRTC[0]};S.player=P;
+  const sw=(k,arr)=>arr.map(c=>`<button class="sw${P[k]==c?' on':''}" data-k="${k}" data-v="${c}" style="background:${c}" aria-label="Farbe"></button>`).join('');
+  openModal(`<h2>Wer bist du?</h2><p>Opas Hof bekommt eine neue Bäuerin oder einen neuen Bauern. Wie sollen dich die Leute nennen?</p>
+    <div class="who"><canvas id="crPrev" width="16" height="16" style="width:64px;height:64px;image-rendering:pixelated;background:#cfe6b0;border:3px solid var(--wood-d);border-radius:5px"></canvas>
+    <input id="crName" maxlength="12" placeholder="Dein Name" value="${P.name.replace(/"/g,'')}" style="font:inherit;font-size:18px;padding:8px;border:2px solid var(--parch-d);border-radius:5px;width:100%;background:#fff8e8;color:var(--ink)"></div>
+    <h3>Frisur</h3><div class="btns" style="margin-top:4px">${[['short','Kurz'],['long','Lang'],['tail','Zopf']].map(([v,l])=>`<button class="btn sm${P.hair==v?'':' alt'}" data-k="hair" data-v="${v}">${l}</button>`).join('')}</div>
+    <h3>Haarfarbe</h3><div class="sws">${sw('hc',HAIRC)}</div><h3>Hautfarbe</h3><div class="sws">${sw('skin',SKINC)}</div><h3>Kleidung</h3><div class="sws">${sw('shirt',SHIRTC)}</div>
+    <p id="crMsg" role="status"></p><div class="btns"><button class="btn wide" id="crGo">Los geht's</button></div>`,true);
+  const prev=()=>{const g=$('#crPrev').getContext('2d'),pal=mePal();R(g,0,0,16,16,'#cfe6b0');R(g,4,3,8,9,pal.skin);R(g,3,1,10,4,pal.hair);
+    if(pal.long){R(g,2,3,2,11,pal.hair);R(g,12,3,2,11,pal.hair)}else{R(g,3,3,1,4,pal.hair);R(g,12,3,1,4,pal.hair)}if(pal.tail)R(g,12,4,3,7,pal.hair);
+    R(g,6,7,1,2,'#2a1a10');R(g,9,7,1,2,'#2a1a10');R(g,5,10,1,1,'#f09a8a');R(g,10,10,1,1,'#f09a8a');R(g,7,10,2,1,'#b85a4a');R(g,3,12,10,4,pal.shirt)};
+  prev();
+  $('#modal').querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{P.name=$('#crName').value;P[b.dataset.k]=b.dataset.v;openCreator(done)});
+  $('#crGo').onclick=()=>{const n=$('#crName').value.trim();if(!n){$('#crMsg').textContent='Gib dir zuerst einen Namen.';return}P.name=n;closeModal();saveNow();done&&done()};
+}
+function openPeople2(){
+  const rows=people().map(k=>{const r=S.rel[k],q=questFor(k),st=S.spouse==k?' · verheiratet':S.dating==k?' · zusammen':NPCS[k].single?' · Single':'';
+    return`<div class="row"><img alt="" src="${portrait(k)}"><div><b>${NPCS[k].n}</b><span class="hearts">${hearts(r.pts)}</span><small style="display:block">${r.met?'Liebt: '+NPCS[k].loves.slice(0,3).map(i=>ITEMS[i].n).join(', ')+st:'Noch nicht kennengelernt'}${q&&q.state=='active'?'<br>Aufgabe: '+q.q.t:''}</small></div><span>${questMark(k)?'<b style="color:#d9442f">!</b>':''}</span></div>`}).join('');
+  openModal(`<h2>Dorf</h2>${S.kid?`<p class="note">Dein Kind ${S.kid.name} ist ${S.kid.age} Tage alt.</p>`:''}<div class="rows">${rows}</div>
+    <h3>Feste</h3><div class="rows">${FESTS.map(f=>`<div class="row"><span></span><div><b>${f.n}</b><small>${f.d}. ${SEASONS[f.s]} · ${f.desc}</small></div><span></span></div>`).join('')}</div>
+    <p style="font-size:14px">Mit 8 Herzen kannst du einem Single einen Sonnenblumenstrauß (Ranch) schenken. Mit 10 Herzen und ausgebautem Haus das Sonnenamulett (Gasthaus).</p>
+    <div class="btns"><button class="btn alt" id="pX">Zurück</button></div>`,true);$('#pX').onclick=openMenu;
+}
+openPeople=openPeople2;
+
+/* ========== expansion E: the story ========== */
+const PAGES={
+  1:['Opas Brief','Mein liebes Enkelkind, wenn du diesen Brief liest, bin ich nicht mehr da. Der Hof gehört jetzt dir. Er ist alt und voller Unkraut, aber er hat ein gutes Herz, genau wie das Tal. Pass auf die Leute auf, sie passen auch auf dich auf. Und wenn eines Morgens die Farben blasser werden: Frag Hilde. Sie weiß, was zu tun ist. In Liebe, dein Opa Wilhelm.'],
+  2:['Der Hüter','Frühling, vor 52 Jahren. Heute hat Vater mir den Sonnenstein gezeigt, tief unter der Höhle. Er ist warm wie ein Brot aus dem Ofen. Solange er leuchtet, blüht das Tal. Ab heute bin ich sein Hüter. Konrad war beleidigt, dass Vater mich gewählt hat und nicht ihn.'],
+  3:['Zwei Brüder','Konrad und ich haben als Jungen am Teich Steine springen lassen. Er schaffte immer einen Sprung mehr als ich. Er wollte in die Stadt, große Häuser bauen, die Welt sehen. Ich wollte nur hierbleiben. Wir hätten beides sein können.'],
+  4:['Die Nacht des Streits','Heute Nacht kam Konrad mit fremden Männern. Er will den Stein ausgraben und verkaufen. „Er gehört uns beiden, Wilhelm!“ Ich habe ihn vom Hof gejagt. Ich habe Dinge gesagt, die man einem Bruder nicht sagt.'],
+  5:['Die Grauwerk AG','Ein Brief aus der Stadt. Konrad hat eine Firma gegründet, die Grauwerk AG. Sie bohren Berge auf. Ich habe den Brief nicht beantwortet. Ich habe keinen seiner Briefe beantwortet.'],
+  6:['Späte Einsicht','Ich werde alt. Manchmal denke ich, ich hätte ihm zuhören sollen. Vielleicht wollte er gar nicht den Stein. Vielleicht wollte er nur, dass ich ihn frage, ob er bleibt.'],
+  7:['Sieben Splitter','Der Stein ist zersprungen, als ich krank wurde. Sieben Splitter. Ich habe sie im Tal verteilt: bei Menschen, denen ich vertraue, und an Orten, die nur Mutige finden. Wer sie alle zusammenbringt, braucht das ganze Dorf. Das ist Absicht.'],
+  8:['Ein Brief, nie abgeschickt','Lieber Konrad. Ich schreibe dir diesen Brief seit dreißig Jahren und schicke ihn nie ab. Das Licht gehört dem Tal. Aber mein Herz hat immer auch dir gehört, kleiner Bruder. Komm nach Hause. Dein Wilhelm.']
+};
+const CHAPTERS=['Prolog: Opas Brief','Kapitel 1: Der graue Morgen','Kapitel 2: Die Grauwerk AG','Kapitel 3: Splitter und Seiten','Kapitel 4: Der Wettlauf','Epilog: Das Sonnenfest'];
+const SHARD_HINTS={s1:'Oma Hilde',s2:'Höhle, Ebene 10: Schleimkönig',s3:'Höhle, Ebene 20: Felsgolem',s4:'Museum: 6 Stücke spenden',s5:'Jonas am Teich (ab 4 Herzen)',s6:'Beim nächsten Fest: Greta auf dem Marktplatz',s7:'Grauwerk-Stollen, Ebene 40'};
+const ST=()=>S.story;
+function addPage(n){if(!ST().pages.includes(n)){ST().pages.push(n);return`<p class="note"><b>Neue Tagebuchseite: „${PAGES[n][0]}“</b><br>${PAGES[n][1]}</p>`}return''}
+function giveShard(id,page){if(ST().got[id])return'';ST().got[id]=1;addItem('shard',1);sfx('win');
+  return`<p class="note"><b>Ein Sonnensplitter!</b> Er ist warm und leuchtet leise. Bring ihn zum Brunnen auf dem Marktplatz.</p>`+(page?addPage(page):'')}
+function scene(title,html,fn,btn){openModal(`<h2>${title}</h2>${html}<div class="btns"><button class="btn wide" id="scOk">${btn||'Weiter'}</button></div>`,true);$('#scOk').onclick=()=>{closeModal();fn&&fn()}}
+const bundlesDone=()=>BUNDLES.filter(b=>S.bdone[b.id]).length;
+const friendsWith=h=>people().filter(k=>S.rel[k].pts>=h*250).length;
+const proofOk=()=>bundlesDone()>=3&&friendsWith(3)>=4;
+const finaleOk=()=>bundlesDone()>=4&&friendsWith(4)>=6;
+function storyGrey(){const s=S.story;if(!s||s.ch<1||(s.ch==1&&s.step==0)||s.ch>=5)return 0;return .5*(1-(s.placed||0)/7)}
+function storyStart(){const s=ST();
+  if(s.ch==0&&s.step==0){s.step=1;
+    scene(CHAPTERS[0],`<p>Auf dem Küchentisch liegt ein Umschlag mit deinem Namen. Die Schrift kennst du: Opa Wilhelm.</p><p class="note">${PAGES[1][1]}</p><p>Unter dem Brief liegt ein kleines, abgegriffenes Tagebuch. Die meisten Seiten fehlen.</p><p><b>Ziel:</b> Der Weg nach Osten führt ins Dorf. Schau dich dort um.</p>`,()=>{s.pages.includes(1)||s.pages.push(1);saveNow()})}
+}
+function storyEnterTown(){const s=ST();
+  if(s.ch==0){s.ch=1;s.step=0;s.c1=dayKey();S.rel.greta.met=1;
+    scene('Willkommen in Sonnental',`<p>Kaum betrittst du den Marktplatz, eilt eine Frau mit Brille auf dich zu.</p><p>„Du musst ${pn()} sein! Ich bin Greta, die Bürgermeisterin. Wilhelm hat so oft von dir erzählt. Das Dorf ist klein, aber hier hilft jeder jedem. Schau dich um: Bruno, Ronja, Theo, Kalle, Sofie und Dr. Emil freuen sich auf dich.“</p><p>Sie sieht zum trockenen Brunnen in der Mitte des Platzes. „Früher hat er geleuchtet. Aber das ist lange her.“</p>`)}
+}
+function storyMorning(){const s=ST();let out='';
+  if(s.ch==1&&s.step==0&&dayKey()>s.c1){s.step=1;out+=`<p class="note"><b>${CHAPTERS[1]}</b><br>Als du aufwachst, ist etwas anders. Das Gras, der Himmel, sogar die Blumen wirken blasser, als hätte jemand die Farbe aus dem Tal gewaschen. Opa schrieb: „Frag Hilde.“</p>`}
+  if(s.ch==2&&s.step==0&&s.falkDay==dayKey())out+=`<p class="note"><b>${CHAPTERS[2]}</b><br>Im Dorf erzählt man sich von einem Fremden im grauen Anzug, der vor dem Rathaus wartet.</p>`;
+  if(s.ch==3&&(s.placed||0)>=6){s.ch=4;s.step=0;out+=`<p class="note"><b>${CHAPTERS[4]}</b><br>Heute Nacht hat der Boden gebebt. Jonas erzählt, aus der Höhle kämen Maschinengeräusche. Die Grauwerk AG gräbt sich von der anderen Seite zum Sonnenstein! Unter Ebene 30 hat sich ein neuer Gang geöffnet.</p>`}
+  return out;
+}
+function storyTalk(k){const s=ST();
+  if(k=='hilde'&&s.ch==1&&s.step==1){s.step=2;S.rel.hilde.met=1;
+    const g=giveShard('s1',2);
+    scene('Die Legende vom Sonnenstein',`<p>Oma Hilde nimmt deine Hände. „Du hast es also auch gesehen. Die Farben verblassen.“</p><p>„Tief unter der Höhle liegt der Sonnenstein. Er hält das Tal warm und fruchtbar, seit es Menschen hier gibt. Dein Opa war sein Hüter. Als er krank wurde, ist der Stein zersprungen. Sieben Splitter. Einen hat er mir gegeben, damit ich ihn dem richtigen Menschen gebe.“</p><p>Sie drückt dir etwas Warmes in die Hand.</p>${g}<p><b>Ziel:</b> Setze den Splitter in den Brunnen auf dem Marktplatz.</p>`);return true}
+  if(k=='falk'){
+    if(s.ch==2&&s.step==0){s.step=1;
+      scene('Ein Angebot',`<p>Der Mann im grauen Anzug lächelt ein Lächeln, das nicht bis zu den Augen reicht.</p><p>„Falk, Grauwerk AG. Sie sind also die neue Person auf dem Hof. Mein Chef möchte das ganze Tal kaufen. Die Höfe, das Dorf, die Höhle. Zu einem sehr großzügigen Preis.“</p><p>Greta tritt aus dem Rathaus. „Wir verkaufen nicht.“</p><p>„Noch nicht“, sagt Falk. „Ein Dorf, das stirbt, verkauft irgendwann alles. Ich komme wieder, wenn Sie so weit sind.“</p><p>Greta sieht dich an. „Wenn wir ihm beweisen wollen, dass Sonnental lebt, brauchen wir dich.“</p><p class="note"><b>Ziel:</b> Erledige 3 Aufgaben der Dorftafel und freunde dich mit 4 Leuten an (je mindestens 3 Herzen). Dann sprich mit Greta.</p>`);return true}
+    npcDialog(k,'Die Grauwerk AG hat Zeit, meine Liebe. Viel Zeit. Und viel Geld.');return true}
+  if(k=='greta'&&s.ch==2&&s.step==1){
+    if(!proofOk()){npcDialog('greta',`Wir sind auf dem richtigen Weg. Dorftafel: ${bundlesDone()}/3, Freundschaften mit 3 Herzen: ${Math.min(4,friendsWith(3))}/4. Halte durch!`);return true}
+    s.ch=3;s.step=0;s.falkGone=1;S.rel.greta.pts=Math.min(relCap('greta'),S.rel.greta.pts+100);
+    const pg=addPage(3);
+    scene('Sonnental sagt Nein',`<p>Greta marschiert mit dir zum Rathaus. Herr Falk wartet schon.</p><p>„Das Dorf hat abgestimmt“, sagt sie. „Einstimmig. Sonnental ist nicht zu verkaufen.“</p><p>Falk klappt seine Mappe zu. „Herr Konrad wird davon hören. Er vergisst nichts.“ Dann ist er fort.</p><p>„Konrad“, flüstert Greta. „So hieß Wilhelms Bruder. Hier, das hat Wilhelm mir damals gegeben. Ich glaube, es gehört in dein Tagebuch.“</p>${pg}<p class="note"><b>${CHAPTERS[3]}</b><br>Finde die übrigen Sonnensplitter. Wo sie sein könnten, steht in deinem Tagebuch.</p>`);return true}
+  if(k=='greta'&&s.ch>=3&&festToday()&&!s.got.s6){const g=giveShard('s6',0);
+    scene('Ein Geschenk zum Fest',`<p>„Das ganze Dorf hat zusammengelegt“, sagt Greta und strahlt. „Dieser Stein lag seit Jahren in der Rathausvitrine. Niemand wusste, was er ist. Jetzt wissen wir es.“</p>${g}`);return true}
+  if(k=='konrad')return konradTalk();
+  return false;
+}
+function konradTalk(){const s=ST();if(!s.konrad)return false;
+  if(s.konrad==2){npcDialog('konrad','Wilhelm hätte sich gefreut, dich hier zu sehen. Ich tue es auch.');return true}
+  if(!finaleOk()){
+    scene('Konrad',`<p>Ein alter Mann in grauem Anzug steht am Brunnen. Er hat Opas Augen.</p><p>„Du bist also Wilhelms Enkelkind. Ich bin Konrad. Ich habe gehört, was du hier machst. Splitter sammeln, Leuten helfen. Sehr rührend.“</p><p>„Aber ein Tal voller Fremder, die sich nicht kennen, ist nichts wert. Beweis mir, dass dieses Dorf wirklich zusammenhält. Dann reden wir.“</p><p class="note"><b>Ziel:</b> ${friendsWith(4)}/6 Freundschaften mit mindestens 4 Herzen und ${bundlesDone()}/4 Aufgaben der Dorftafel. Dann sprich wieder mit Konrad.</p>`);return true}
+  const letter=s.pages.includes(8);
+  scene('Das Sonnenfest',`<p>Konrad sieht sich auf dem Platz um. Überall stehen Leute: Greta, Bruno, Ronja, Theo, Kalle, Sofie, Emil, Mara, Jonas und Oma Hilde. Sie sind alle deinetwegen gekommen.</p>
+    ${letter?`<p>Du gibst ihm die letzte Seite aus Opas Tagebuch. Er liest sie lange. Seine Hände zittern.</p><p>„Dreißig Jahre“, sagt er leise. „Dreißig Jahre, und er hat nie…“ Er bricht ab.</p>`:''}
+    <p>„Wilhelm hatte recht“, sagt Konrad schließlich. „Das Licht gehört dem Tal. Die Grauwerk AG zieht ab. Und ich…“ Er schaut zu Oma Hilde, die ihm zunickt. „Ich glaube, ich bleibe ein bisschen.“</p>
+    <p>Da beginnt der Brunnen zu leuchten. Wasser steigt auf, golden wie Honig, und die Farben kehren zurück ins Tal, heller als je zuvor. Kalle bringt Kuchen, Jonas spielt Mundharmonika, und das ganze Dorf feiert bis tief in die Nacht.</p>
+    <p class="note"><b>Du hast Sonnental gerettet!</b> Konrad schenkt dir seine alte Taschenuhr und 10.000 Gold. Du kannst ab jetzt frei weiterspielen.</p>`,()=>{},'Danke, Sonnental');
+  s.ch=5;s.konrad=2;S.gold+=10000;addItem('watch',1);for(const k of people())S.rel[k].pts=Math.min(relCap(k),S.rel[k].pts+100);sfx('win');saveNow();return true;
+}
+function storyQuest(tag){if(tag=='jonas')return'</p>'+giveShard('s5',7)+'<p>';return''}
+function storyBoss(n){if(n==10)return giveShard('s2',4);if(n==20)return giveShard('s3',5);if(n==40){ST().step=1;return giveShard('s7',8)}return''}
+function storyMuseum(){if(museumCount()>=6&&!ST().got.s4){const g=giveShard('s4',6);
+  setTimeout(()=>scene('Sofies Entdeckung',`<p>Sofie hält einen goldenen Splitter gegen das Licht. „Der lag zwischen den alten Mineralien, die dein Opa uns vor Jahren geschenkt hat. Er hat ihn hier versteckt, bei den Steinen, wo ihn nur jemand findet, der sammelt.“</p>${g}`),0)}}
+function storyHallHtml(){const s=ST();
+  if(s.ch==2&&s.step>=1)return`<p class="note"><b>Die Grauwerk AG will das Tal kaufen.</b> Dorftafel: ${bundlesDone()}/3 · Freundschaften mit 3 Herzen: ${Math.min(4,friendsWith(3))}/4</p>`;
+  if(s.ch==4&&s.konrad==1)return`<p class="note">Konrad wartet auf dem Marktplatz.</p>`;return''}
+function fountainAct(){const s=ST(),have=count('shard');
+  if(s.ch<1||(s.ch==1&&s.step<2)){toast(have?'Der Splitter wird warm, aber noch passiert nichts. Frag Oma Hilde.':'Der alte Sonnenbrunnen. Er ist seit Jahren trocken.',3.2);return}
+  if(!have){toast(s.ch>=5?'Der Brunnen leuchtet golden. Sonnental strahlt.':`${s.placed||0} von 7 Splittern leuchten im Brunnen.`,2.6);return}
+  removeItems('shard',have);s.placed=(s.placed||0)+have;sfx('win');let html=`<p>Du legst ${have==1?'den Splitter':have+' Splitter'} in den Brunnen. Ein warmes Licht breitet sich aus, und für einen Moment sieht das Tal ein bisschen bunter aus.</p><p><b>${s.placed} von 7</b> Splittern sind zurück.</p>`;
+  if(s.ch==1){s.ch=2;s.step=0;s.falkDay=dayKey()+1;html+=`<p>Aus dem Brunnen sickert ein wenig Wasser. Greta kommt angelaufen. „Das… das habe ich seit fünfzig Jahren nicht gesehen!“</p>`}
+  if(s.placed>=6&&s.ch==3)html+='<p>Nur noch ein Splitter fehlt. Tief unter dir grollt die Erde.</p>';
+  if(s.placed>=7&&s.ch==4){s.konrad=1;html+='<p class="note">Plötzlich wird es still auf dem Platz. Ein alter Mann im grauen Anzug steht am Brunnen und sieht dich an. Sprich mit ihm.</p>'}
+  scene('Der Sonnenbrunnen',html);saveNow();
+}
+function storyObjective(){const s=ST();
+  if(s.ch==0)return s.step?'Folge dem Weg nach Osten ins Dorf.':'Lies Opas Brief.';
+  if(s.ch==1)return['Lebe dich ein. Irgendetwas stimmt mit dem Tal nicht…','Frag Oma Hilde, was mit dem Tal los ist. Sie ist tagsüber auf deinem Hof beim Laden.','Setze den Sonnensplitter in den Brunnen auf dem Marktplatz.'][s.step];
+  if(s.ch==2)return s.step==0?(s.falkDay>dayKey()?'Morgen passiert etwas im Dorf…':'Ein Fremder wartet vor dem Rathaus (9–18 Uhr). Sprich mit ihm.'):`Zeige, dass Sonnental lebt: Dorftafel ${bundlesDone()}/3, Freundschaften mit 3 Herzen ${Math.min(4,friendsWith(3))}/4. Dann sprich mit Greta.`;
+  if(s.ch==3)return`Finde die Sonnensplitter und setze sie in den Brunnen (${s.placed||0}/6).`;
+  if(s.ch==4)return s.konrad==1?`Sprich mit Konrad auf dem Marktplatz (10–20 Uhr). Das Dorf muss hinter dir stehen: Freundschaften mit 4 Herzen ${Math.min(6,friendsWith(4))}/6, Dorftafel ${bundlesDone()}/4.`:s.got.s7?'Setze den letzten Splitter in den Brunnen.':'Die Grauwerk AG gräbt von unten zur Höhle! Stoppe den Bohrkoloss auf Ebene 40.';
+  return'Das Tal leuchtet wieder. Genieße dein Leben in Sonnental!';
+}
+function openJournal(tab){
+  const s=ST();tab=tab||'story';
+  const tabs=[['story','Geschichte'],['quests','Aufgaben'],['pages','Tagebuch']].map(([k,l])=>`<button class="btn sm${tab==k?'':' alt'}" data-t="${k}">${l}</button>`).join('');
+  let body='';
+  if(tab=='story'){body=`<h3>${CHAPTERS[Math.min(s.ch,5)]}</h3><p class="note">${storyObjective()}</p>`;
+    if(s.ch>=2){body+=`<h3>Sonnensplitter (${Object.keys(s.got).length}/7 gefunden, ${s.placed||0} im Brunnen)</h3><div class="rows">${Object.entries(SHARD_HINTS).map(([id,h])=>`<div class="row${s.got[id]?' done':''}">${ic('shard')}<div><b>${s.got[id]?'Gefunden':'Noch verborgen'}</b><small>${h}</small></div><span>${s.got[id]?'✔':''}</span></div>`).join('')}</div>`}}
+  if(tab=='quests'){const act=QUESTS.filter(q=>S.quests[q.id]==1),d=S.daily&&S.daily.dk==dayKey()?S.daily:null;
+    body=act.length?`<div class="rows">${act.map(q=>`<div class="row">${ic(q.need[0][0].split('|')[0])}<div><b>${q.t}</b><small>für ${NPCS[q.npc].n}: ${q.need.map(([id,n])=>`${Math.min(n,qItemCount(id))}/${n} ${qName(id)}`).join(', ')}</small></div><span>${qReady(q)?'✔':''}</span></div>`).join('')}</div>`:'<p>Keine offenen Aufgaben. Sprich mit Leuten, die ein Ausrufezeichen haben.</p>';
+    if(d&&!d.done)body+=`<h3>Aushang im Rathaus</h3><p>${NPCS[d.npc].n} sucht ${d.n}× ${ITEMS[d.item].n}.</p>`;
+    const doneN=QUESTS.filter(q=>S.quests[q.id]==2).length;body+=`<p style="font-size:14px">Erledigt: ${doneN} von ${QUESTS.length} Herzaufgaben.</p>`}
+  if(tab=='pages'){body=s.pages.length?s.pages.slice().sort((a,b)=>a-b).map(n=>`<h3>${PAGES[n][0]}</h3><p>${PAGES[n][1]}</p>`).join(''):'<p>Noch keine Seiten.</p>';body+=`<p style="font-size:14px">${s.pages.length} von 8 Seiten gefunden.</p>`}
+  openModal(`<h2>Tagebuch</h2><div class="btns" style="margin-top:0">${tabs}</div>${body}<div class="btns"><button class="btn alt" id="jX">Zurück</button></div>`,true);
+  $('#modal').querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>openJournal(b.dataset.t));$('#jX').onclick=openMenu;
+}
+NPCS.konrad.sched=()=>{const k=S.story&&S.story.konrad;if(k==1)return S.time>=600&&S.time<1200?ZN.konrad:null;if(k==2)return S.time>=1080&&S.time<1320?ZN.inn:null;return null};
 
 /* ---------- boot ---------- */
 function resize(){
@@ -1516,13 +2396,16 @@ function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);re
 function start(fresh){
   if(fresh)newGame();
   buildSprites(S.season);barDirty=1;$('#title').hidden=true;started=true;paused=false;unlock();
-  if(fresh){saveNow();setTimeout(()=>toast('Willkommen auf dem Hof! Gras umgraben, Pastinaken säen, gießen.',4),300)}
-  else toast('Willkommen zurück!',1.6);
+  const after=()=>{if(typeof storyStart=='function')storyStart()};
+  if(fresh){saveNow();openCreator(()=>{toast('Willkommen auf dem Hof, '+pn()+'!',3);after()})}
+  else if(!S.player)openCreator(()=>{toast('Schön, dich kennenzulernen, '+pn()+'!',3);after()});
+  else{toast('Willkommen zurück, '+pn()+'!',1.8);after()}
 }
 (function init(){
-  resize();buildMineSprites();
+  resize();buildMineSprites();TOWN=genTown();
+  $('#rideBtn canvas').getContext('2d').drawImage(icon('horse'),0,0);
   const sv=migrate(loadLocal());
-  if(sv){S=sv;hasSave=true;setFarm()}else newGame();
+  if(sv){S=sv;hasSave=true;placeLoaded()}else newGame();
   buildSprites(S.season);setSaveInfo();
   $('#bCont').onclick=()=>start(false);
   $('#bCode').onclick=()=>openTransfer(true);
