@@ -231,8 +231,20 @@ const ITEMS={
   fence:{n:'Zaun',sell:1,place:1},stonepath:{n:'Steinweg',sell:1},fert:{n:'Dünger',sell:10},
   bread:{n:'Brot',sell:30,eat:60,kind:'food'},salad:{n:'Salat',sell:110,eat:110,kind:'food'},
   fmush:{n:'Pilzpfanne',sell:150,eat:120,kind:'food'},omelet:{n:'Omelett',sell:125,eat:100,kind:'food'},
-  fishsoup:{n:'Fischsuppe',sell:170,eat:150,kind:'food'}
+  fishsoup:{n:'Fischsuppe',sell:170,eat:150,kind:'food'},
+  acorn:{n:'Eichel',sell:20,kind:'tseed',tree:'oak'},maples:{n:'Ahornsamen',sell:20,kind:'tseed',tree:'maple'},pinec:{n:'Kiefernzapfen',sell:20,kind:'tseed',tree:'pine'},
+  cherry_t:{n:'Kirschbaum-Setzling',sell:300,kind:'tseed',tree:'cherry'},peach_t:{n:'Pfirsichbaum-Setzling',sell:400,kind:'tseed',tree:'peach'},apple_t:{n:'Apfelbaum-Setzling',sell:350,kind:'tseed',tree:'apple'},
+  cherry:{n:'Kirsche',sell:80,eat:35,kind:'fruit'},peach:{n:'Pfirsich',sell:140,eat:50,kind:'fruit'},apple:{n:'Apfel',sell:100,eat:45,kind:'fruit'}
 };
+const TREES={
+  oak:{n:'Eiche',seed:'acorn',wood:[8,12]},maple:{n:'Ahorn',seed:'maples',wood:[8,12]},pine:{n:'Kiefer',seed:'pinec',wood:[10,14]},
+  cherry:{n:'Kirschbaum',fruit:'cherry',s:0,col:'#d8203a',bloom:'#f8b8d0',price:1200,pl:'Kirschen'},
+  peach:{n:'Pfirsichbaum',fruit:'peach',s:1,col:'#f5a070',bloom:'#ffd8e0',price:1600,pl:'Pfirsiche'},
+  apple:{n:'Apfelbaum',fruit:'apple',s:2,col:'#e03a2a',bloom:'#fff4f4',price:1400,pl:'Äpfel'}
+};
+const WILD=['oak','oak','oak','maple','maple','pine','pine'];
+const wildTree=t=>({k:'tree',t:t||pick(WILD),st:4,age:0,hp:8,fr:0});
+const TREE_HP=[1,1,1,3,8];
 for(const k in CROPS){const c=CROPS[k];ITEMS[k]={n:c.n,sell:c.sell,eat:Math.min(80,Math.round(12+c.sell*.2)),kind:'crop'};ITEMS[k+'_s']={n:c.n+'-Samen',sell:Math.floor(c.price/2),kind:'seed',crop:k}}
 for(const k in FORAGE){const f=FORAGE[k];ITEMS[k]={n:f.n,sell:f.sell,eat:f.eat,kind:'forage'}}
 for(const k in FISH){const f=FISH[k];ITEMS[k]={n:f.n,sell:f.sell,kind:'fish'}}
@@ -274,7 +286,7 @@ const CHICK_NAMES=['Henni','Gackerlotte','Frieda','Paula','Berta','Klara','Rosi'
 /* ---------- people ---------- */
 const NPCS={
   mara:{n:'Mara',pal:{hair:'#c4452f',skin:'#e8b48a',shirt:'#7fbf5a',pants:'#6b4a8a',shoe:'#3a2414',long:1},
-    loves:['cauli','melon','pumpkin','straw','crocus','salad'],hates:['stone','wood','fiber','slime'],hours:[540,1200],
+    loves:['cauli','melon','pumpkin','straw','crocus','salad','cherry'],hates:['stone','wood','fiber','slime'],hours:[540,1200],
     zone:{x0:12,x1:28,y0:7.6,y1:8.2},
     intro:'Oh, hallo! Du hast den alten Hof deines Opas übernommen? Ich bin Mara und wohne drüben am Laden. Willkommen in Sonnental!',
     lines:[['Der Laden hat von 9 bis 17 Uhr offen. Pastinaken sind perfekt für den Anfang!','Gieß deine Pflanzen jeden Tag. Nur wenn es regnet, darfst du faulenzen.','Unkraut, Steine, Äste… der alte Hof braucht wirklich Liebe.','Hast du die Dorftafel neben dem Laden gesehen? Da hängen Aufgaben fürs ganze Dorf.'],
@@ -288,10 +300,10 @@ const NPCS={
       ['Setz dich ruhig. Stille ist auch eine Art Gespräch.','Der Wels ist der König des Teichs. Ich hab ihn einmal gesehen. Einmal!','Zwei Karpfen und ein bisschen Geduld: Fischsuppe. Mehr braucht man nicht.'],
       ['Du bist die erste Person seit Jahren, mit der ich gern angle.','Mein Vater hat mir diese Angel geschenkt. Die Geschichte erzähl ich dir irgendwann.']]},
   hilde:{n:'Oma Hilde',pal:{hair:'#d8d8d8',skin:'#efc6a0',shirt:'#a84a6a',pants:'#5a4a6a',shoe:'#3a2414',long:1},
-    loves:['bread','pumpkin','omelet','bberry','holly','fmush'],hates:['slime','stone','fiber'],hours:[600,1140],
+    loves:['bread','pumpkin','omelet','bberry','holly','fmush','apple'],hates:['slime','stone','fiber'],hours:[600,1140],
     zone:{x0:29.5,x1:35.5,y0:8.3,y1:9.2},
     intro:'Ach, Kindchen! Du bist also die neue Person auf dem Hof deines Opas. Ich hab ihn gut gekannt. Er hat immer von dir erzählt.',
-    lines:[['Früher war hier jeden Sonntag Markt. Vielleicht wird es ja wieder so.','Die Dorftafel neben dem Laden… hilf ruhig mit! Dein Opa hat das auch immer gemacht.','Mein Rücken sagt, morgen regnet es. Oder übermorgen.','Hinter dem Laden liegt die alte Höhle. Früher hat man da Erz geholt.'],
+    lines:[['Früher war hier jeden Sonntag Markt. Vielleicht wird es ja wieder so.','Die Dorftafel neben dem Laden… hilf ruhig mit! Dein Opa hat das auch immer gemacht.','Mein Rücken sagt, morgen regnet es. Oder übermorgen.','Hinter dem Laden liegt die alte Höhle. Früher hat man da Erz geholt.','Steine wachsen hier wie Unkraut. Jeden Morgen liegen neue auf den Wiesen, glaub mir.','Schüttel mal an einer Eiche. Mit etwas Glück fällt eine Eichel herunter, und daraus wächst ein neuer Baum.'],
       ['Dein Opa hat im Frühling immer Blumenkohl gepflanzt. Den mochte ganz Sonnental.','Hühner sind klüger, als man denkt. Streichle sie jeden Tag, dann legen sie große Eier.','Ein warmes Omelett, das wär was für meine alten Knochen.'],
       ['Du erinnerst mich an ihn, weißt du das? Diese Ruhe.','Wenn ich dich auf dem Feld sehe, fühlt sich das Tal wieder jung an.']]}
 };
@@ -353,6 +365,14 @@ function drawIcon(g,id){
     case'holly':ell(g,5,8,4,2.5,'#2f7a3a');ell(g,11,8,4,2.5,'#2f7a3a');ell(g,8,5,2.5,3.5,'#3f8a4a');ball(g,7,10,1.8,'#d8303a');ball(g,10,11,1.8,'#d8303a');return;
     case'crocus':line(g,8,15,8,8,'#5eaa3c');ell(g,8,6,3,4,'#9a6ad8');R(g,8,3,1,5,'#c9a8f0');R(g,7,7,3,1,'#f6d53a');return;
   }
+  if(it&&it.kind=='tseed'){const tt=it.tree;
+    if(tt=='oak'){ell(g,8,10,3.5,4.5,'#a8702e');R(g,5,5,7,3,'#6a4424');R(g,5,5,7,1,'#8a5a30');R(g,8,3,1,2,'#5a3a1a');return}
+    if(tt=='maple'){ell(g,6,11,2.5,2.5,'#8a5a2a');line(g,7,10,13,3,'#c8a060',2);line(g,6,10,10,2,'#d8b070',2);return}
+    if(tt=='pine'){for(let y=3;y<14;y++){const w=Math.round(2+Math.sin((y-3)/11*Math.PI)*3.5);R(g,8-w,y,w*2,1,y%2?'#7a4a24':'#9a6234')}return}
+    const c=TREES[tt];R(g,5,11,6,4,'#8a5a2b');R(g,4,10,8,2,'#a8723c');R(g,7,5,2,6,'#6a4424');circ(g,5,5,2.5,'#5eaa3c');circ(g,11,4,2.5,'#4f9a3a');circ(g,8,3,2,'#78c257');R(g,10,6,2,2,c.col);return}
+  if(it&&it.kind=='fruit'){const c=TREES[id].col;
+    if(id=='cherry'){line(g,6,10,9,3,'#5a7a2a');line(g,11,10,9,3,'#5a7a2a');ball(g,5,11,3,c);ball(g,11,11,3,c);R(g,9,2,3,2,'#5eaa3c');return}
+    ball(g,8,9,6,c);R(g,8,2,1,3,'#6a4424');R(g,9,2,3,2,'#5eaa3c');if(id=='peach')R(g,7,5,1,8,dk(c,.15));return}
   if(!it)return;
   if(it.kind=='seed'){const c=CROPS[it.crop];R(g,3,2,10,12,'#8a6a3a');R(g,4,3,8,10,'#eedcae');R(g,4,3,8,2,'#d8c08a');circ(g,8,9,2.6,c.col);R(g,7,8,1,1,lt(c.col,.6));return}
   if(it.kind=='fish'){const c=FISH[id].col;R(g,1,5,1,6,dk(c,.2));R(g,2,6,1,4,dk(c,.2));R(g,3,7,1,2,dk(c,.2));ell(g,9,8,5.5,3.2,c);R(g,5,9,8,1,lt(c,.4));R(g,12,7,1,1,'#1d1d1d');R(g,8,4,3,1,dk(c,.3));return}
@@ -395,13 +415,28 @@ function buildSprites(se){
   const wc=se==3?'#6aaad8':'#3f8fd2',wl=se==3?'#b8dcf2':'#6fb3e8';
   SP.water=[0,1,2,3].map(f=>mk(16,16,g=>{R(g,0,0,16,16,wc);for(let i=0;i<4;i++)R(g,(i*5+f*2)%12,(i*4+f)%16,4,1,wl)}));
   const cb=['#4f9a3a','#3e8a2e','#d27a2a','#dfe6ea'][se],cdk=['#3a7a2c','#2e6a22','#a8541c','#9aa8b0'][se],cll=['#78c257','#5ea846','#f2a64a','#ffffff'][se];
-  SP.tree=mk(32,44,g=>{
-    R(g,13,26,6,16,'#7a4a24');R(g,13,26,2,16,'#94603a');R(g,11,40,10,2,'#6a3e1e');
-    const cs=[[16,12,11],[9,18,7.5],[23,18,7.5],[16,20,8]];const r=mul(5);
-    for(let y=0;y<30;y++)for(let x=0;x<32;x++){if(!cs.some(([cx,cy,rr])=>(x+.5-cx)**2+(y+.5-cy)**2<=rr*rr))continue;
-      const s=(x-16)+(y-14)*1.3+r()*6-3;g.fillStyle=s<-10?cll:s>9?cdk:cb;g.fillRect(x,y,1,1)}
-    if(se==2){R(g,8,10,2,2,'#f2c64a');R(g,21,15,2,2,'#e8a03a')}
-  });
+  const PAL={oak:[[cb,cdk,cll]],maple:[['#5aa83e','#3f8a2e','#80c860'],['#4a9a34','#347a26','#6ab84a'],['#d8452a','#a82a1a','#f07a4a'],['#dfe6ea','#9aa8b0','#ffffff']],
+    fruit:[['#6ab84a','#4a983a','#8ad06a'],['#4fa83a','#3a8a2c','#70c050'],['#c8a040','#a07a2a','#e0c060'],['#d8dee2','#8a969c','#ffffff']]};
+  const round=(g,cs,[b,d,l],seed)=>{const r=mul(seed);for(let y=0;y<31;y++)for(let x=0;x<32;x++){if(!cs.some(([cx,cy,rr])=>(x+.5-cx)**2+(y+.5-cy)**2<=rr*rr))continue;
+      const v=(x-16)+(y-14)*1.3+r()*6-3;g.fillStyle=v<-10?l:v>9?d:b;g.fillRect(x,y,1,1)}};
+  const trunk=(g,w=6)=>{R(g,16-w/2,26,w,16,'#7a4a24');R(g,16-w/2,26,2,16,'#94603a');R(g,11,40,10,2,'#6a3e1e')};
+  SP.tree={};
+  SP.tree.oak=mk(32,44,g=>{trunk(g);round(g,[[16,12,11],[9,18,7.5],[23,18,7.5],[16,20,8]],[cb,cdk,cll],5);if(se==2){R(g,8,10,2,2,'#f2c64a');R(g,21,15,2,2,'#e8a03a')}});
+  SP.tree.maple=mk(32,44,g=>{trunk(g);round(g,[[16,10,9],[7,16,7.5],[25,16,7.5],[16,20,8.5],[11,6,5],[21,6,5]],PAL.maple[se],8);if(se==2){R(g,6,19,2,2,'#f2c64a');R(g,24,9,2,2,'#f6d53a')}});
+  SP.tree.pine=mk(32,44,g=>{trunk(g,4);const snow=se==3;
+    for(let k=0;k<4;k++){const top=1+k*7;for(let y=0;y<10;y++){const hw=Math.min(14,Math.round(2+y*(.75+k*.28)));const yy=top+y;
+      R(g,16-hw,yy,hw*2,1,'#2f6e3c');R(g,16+Math.round(hw*.3),yy,Math.round(hw*.7),1,'#24582f');R(g,16-hw,yy,Math.max(1,Math.round(hw*.35)),1,'#3f8a4a');
+      if(snow&&y<2)R(g,16-hw,yy,hw*2,1,'#f2f6f8')}}});
+  for(const ft of['cherry','peach','apple'])SP.tree[ft]=mk(32,44,g=>{trunk(g,5);round(g,[[16,13,10],[9,18,7],[23,18,7]],PAL.fruit[se],ft.length*3);
+    if(se==0){const r=mul(ft.length);for(let i=0;i<16;i++){const x=6+r()*20|0,y=5+r()*18|0;R(g,x,y,2,2,TREES[ft].bloom)}}});
+  const sp=(tt,st)=>mk(16,24,g=>{const pine=tt=='pine',fr=!!TREES[tt].fruit,L=pine?'#2f6e3c':'#5eaa3c',D=pine?'#24582f':'#3f7f2a';
+    if(st==0){if(fr){R(g,7,15,2,6,'#6a4424');R(g,5,14,2,2,L);R(g,9,13,2,2,D)}else{ell(g,8,20.5,2.5,1.8,pine?'#7a4a24':'#a8702e');R(g,6,19,4,1,'#6a4424')}return}
+    if(st==1){R(g,7,15,2,7,'#7a4a24');if(pine){R(g,5,14,6,2,L);R(g,6,12,4,2,L);R(g,7,10,2,2,L)}else{R(g,4,13,3,3,L);R(g,9,12,3,3,D);R(g,7,11,2,2,L)}return}
+    if(st==2){R(g,7,10,2,12,'#7a4a24');if(pine)for(let y=0;y<10;y++){const hw=1+Math.round(y*.45);R(g,8-hw,4+y,hw*2,1,y%3?L:D)}else{circ(g,5,11,3,L);circ(g,11,9,3,D);circ(g,8,6,3,L)}return}
+    R(g,6,13,4,9,'#7a4a24');R(g,6,13,1,9,'#94603a');
+    if(pine)for(let y=0;y<14;y++){const hw=1+Math.round(y*.5);R(g,8-hw,y,hw*2,1,y%3?L:D)}
+    else{const c=tt=='maple'?PAL.maple[se][0]:TREES[tt].fruit?PAL.fruit[se][0]:cb;circ(g,8,8,6.5,dk(c,.2));circ(g,7.5,7.5,5.5,c);R(g,5,4,2,1,lt(c,.4))}});
+  SP.sap={};for(const tt in TREES)SP.sap[tt]=[0,1,2,3].map(st=>sp(tt,st));
   SP.rock=mk(16,16,g=>{ell(g,8,10,6.5,5,'#6a6f73');ell(g,7.5,9.3,5.5,4,'#9aa0a5');R(g,5,7,3,1,'#c6cbcf');R(g,10,10,1,2,'#6a6f73');if(se==3)R(g,4,5,7,2,'#ffffff')});
   const wcol=['#4f9a3a','#3f8a2e','#a8862a','#8a9a8a'][se];
   SP.weed=mk(16,16,g=>{line(g,4,14,2,7,wcol,2);line(g,7,14,7,4,dk(wcol,.2),2);line(g,10,14,13,6,wcol,2);line(g,8,14,10,8,lt(wcol,.25))});
@@ -493,11 +528,11 @@ function genMap(){
   const at=(x,y)=>t[y*FW+x];
   for(let y=0;y<FH;y++)for(let x=0;x<FW;x++){const dx=(x+.5-32)/5.6,dy=(y+.5-21.5)/4;if(dx*dx+dy*dy<=1)at(x,y).g=2}
   for(let y=0;y<FH;y++)for(let x=0;x<FW;x++){const c=at(x,y);if(c.g)continue;
-    if(x<2||y<2||x>=FW-2||y>=FH-2){c.o={k:'tree',hp:8};continue}
+    if(x<2||y<2||x>=FW-2||y>=FH-2){c.o=wildTree();continue}
     const v=r();
-    if(inField(x,y)){if(x<=10&&y<=12)continue;if(v<.16)c.o={k:'weed'};else if(v<.22)c.o={k:'rock',hp:2};else if(v<.27)c.o={k:'twig'};else if(v<.285)c.o={k:'tree',hp:8}}
-    else if(y<9){if(x>=23&&x<=26&&y<=5&&v<.2)c.o={k:'tree',hp:8}}
-    else if(!(x>=25&&x<=27)&&!(x>=27&&y<=16)){if(v<.05)c.o={k:'weed'};else if(v<.1)c.o={k:'tree',hp:8};else if(v<.115)c.o={k:'rock',hp:2}}
+    if(inField(x,y)){if(x<=10&&y<=12)continue;if(v<.16)c.o={k:'weed'};else if(v<.22)c.o={k:'rock',hp:2};else if(v<.27)c.o={k:'twig'};else if(v<.285)c.o=wildTree()}
+    else if(y<9){if(x>=23&&x<=26&&y<=5&&v<.2)c.o=wildTree()}
+    else if(!(x>=25&&x<=27)&&!(x>=27&&y<=16)){if(v<.05)c.o={k:'weed'};else if(v<.1)c.o=wildTree();else if(v<.115)c.o={k:'rock',hp:2}}
   }
   stampFarm(t,null);
   return t;
@@ -519,6 +554,7 @@ function migrate(s){
   s.coop=s.coop||{hay:0,ch:[],eggs:[]};s.mineMax=s.mineMax||0;s.mineChest=s.mineChest||0;s.fd=s.fd||{eggs:0,fish:0,done:0};
   if(!(s.sel>=0&&s.sel<8))s.sel=0;s.music=s.music!==false;s.sound=s.sound!==false;s.loc='farm';s.savedAt=s.savedAt||0;
   if(s.v!=2){stampFarm(s.t,s.unl);s.v=2}
+  s.t.forEach((c,i)=>{if(c.o&&c.o.k=='tree'&&!c.o.t){c.o.t=WILD[Math.floor(hash(i,17)*WILD.length)];c.o.st=4;c.o.age=0;c.o.fr=0}});
   return s;
 }
 function setFarm(){FARM={id:'farm',w:FW,h:FH,t:S.t};MAP=FARM;M=null;S.loc='farm'}
@@ -629,6 +665,12 @@ function spawnForage(n){
   const pool=Object.keys(FORAGE).filter(k=>FORAGE[k].s==S.season);
   for(let k=0;k<200&&n>0;k++){const x=2+Math.floor(Math.random()*(FW-4)),y=8+Math.floor(Math.random()*(FH-10));const t=S.t[y*FW+x];
     if(t.g!=0||t.o||inField(x,y))continue;t.o={k:'forage',id:pick(pool)};n--}
+}
+function spawnDebris(rocks,twigs){
+  const have=k=>S.t.reduce((n,t)=>n+(t.o&&t.o.k==k?1:0),0);rocks=Math.min(rocks,Math.max(0,35-have('rock')));twigs=Math.min(twigs,Math.max(0,20-have('twig')));
+  const ok=(x,y)=>{const t=S.t[y*FW+x];return t.g==0&&!t.o&&!t.c&&y>=9&&!(x>=25&&x<=27)&&!(x>=27&&y<=16)};
+  for(let k=0;k<300&&(rocks>0||twigs>0);k++){const x=rnd(2,FW-3),y=rnd(9,FH-3);if(!ok(x,y))continue;
+    if(rocks>0){S.t[y*FW+x].o={k:'rock',hp:2};rocks--}else{S.t[y*FW+x].o={k:'twig'};twigs--}}
 }
 function spawnEggs(n){
   for(let k=0;k<400&&n>0;k++){const x=rnd(2,FW-3),y=rnd(8,FH-3),t=S.t[y*FW+x];if(t.g!=0||t.o||t.c)continue;t.o={k:'fegg',c:rnd(0,3)};n--}
@@ -774,6 +816,9 @@ function plan(){
   if(t&&t.c){if(t.c.dead)return['Entfernen',()=>{t.c=null;dust(x+.5,y+.8,'#8a6a3a');sfx('pick')}];if(isRipe(t.c))return['Ernten',()=>harvest(x,y)]}
   if(t&&t.o&&t.o.k=='forage')return['Sammeln',()=>{if(addItem(t.o.id,1)){toast('Dein Rucksack ist voll.');return}pop(x+.5,y,'+1 '+ITEMS[t.o.id].n);t.o=null;sfx('pop')}];
   if(t&&t.o&&t.o.k=='fegg')return['Sammeln',()=>collectEgg(x,y)];
+  if(t&&t.o&&t.o.k=='tree'&&t.o.fr>0)return['Pflücken',()=>{const o=t.o,f=TREES[o.t].fruit;if(addItem(f,o.fr)){toast('Dein Rucksack ist voll.');return}pop(x+.5,y-1,'+'+o.fr+' '+ITEMS[f].n);o.fr=0;shakes[y*MAP.w+x]=.3;sfx('pop')}];
+  if(t&&t.o&&t.o.k=='tree'&&t.o.st==4&&TREES[t.o.t].seed&&t.o.sk!=dayKey()&&id!='axe')return['Schütteln',()=>{const o=t.o;o.sk=dayKey();shakes[y*MAP.w+x]=.35;sfx('chop');
+    if(S.season!=3&&Math.random()<.35){const sd=TREES[o.t].seed;addItem(sd,1);pop(x+.5,y-1,'+1 '+ITEMS[sd].n)}else pop(x+.5,y-1,'Nichts gefallen','#e8dcc0')}];
   if(!it)return['—',null];
   const o=t&&t.o,lv=S.lv[id]||0;
   switch(id){
@@ -784,7 +829,12 @@ function plan(){
       if(a.length)return['Gießen',()=>{if(S.water<=0){toast('Die Gießkanne ist leer. Fülle sie am Teich auf.');return}if(!needE(2+lv))return;swing(id);
         for(const[i,j]of a){if(S.water<=0)break;const c=T(i,j);if(!c.w){c.w=1;S.water--}dust(i+.5,j+.7,'#6fb3e8',3)}barDirty=1;sfx('water')}];break}
     case'axe':if(o&&(o.k=='tree'||o.k=='twig'))return['Fällen',()=>{if(!needE(2))return;swing(id);sfx('chop');shakes[y*MAP.w+x]=.25;dust(x+.5,y+.6,'#94603a',4);
-      if(o.k=='twig'||--o.hp<=0){const n=o.k=='twig'?rnd(1,2):rnd(8,12);t.o=null;addItem('wood',n);pop(x+.5,y,'+'+n+' Holz')}}];
+      if(o.k=='tree'&&o.st<2){t.o=null;return}
+      if(o.k=='twig'||--o.hp<=0){const T0=o.k=='tree'?TREES[o.t||'oak']:null;
+        const n=o.k=='twig'?rnd(1,2):o.st==2?rnd(1,2):o.st==3?rnd(3,5):T0.wood?rnd(T0.wood[0],T0.wood[1]):rnd(6,8);
+        t.o=null;addItem('wood',n);let msg='+'+n+' Holz';
+        if(T0&&T0.seed&&o.st==4&&Math.random()<.5){const k=rnd(1,2);addItem(T0.seed,k);msg+=', +'+k+' '+ITEMS[T0.seed].n}
+        pop(x+.5,y,msg)}}];
       if(o&&o.k=='fence')return['Abbauen',()=>{if(addItem('fence',1))return;t.o=null;sfx('chop')}];break;
     case'pick':if(o&&o.k=='rock')return['Abbauen',()=>mineRock(x,y,t)];
       if(o&&ITEMS[o.k]&&ITEMS[o.k].place)return['Aufheben',()=>{if(addItem(o.k,1)){toast('Dein Rucksack ist voll.');return}t.o=null;sfx('pop')}];
@@ -797,6 +847,11 @@ function plan(){
   }
   if(it.kind=='seed'&&t&&t.g==3&&!t.c&&!o){const c=CROPS[it.crop];
     return['Säen',()=>{if(S.season==3||c.s!=S.season){toast(c.n+' wächst nur im '+SEASONS[c.s]+'.');sfx('bad');return}t.c={id:it.crop,age:0};takeSel();dust(x+.5,y+.8,'#c9a26a',4);sfx('pop')}]}
+  if(it.kind=='tseed'&&MAP.id=='farm'&&t&&(t.g==0||t.g==3)&&!o&&!t.c)return['Pflanzen',()=>{
+    const near=[[-1,0],[1,0],[0,-1],[0,1]].some(([i,j])=>{const c=T(x+i,y+j);return c&&c.o&&c.o.k=='tree'&&TREES[c.o.t].fruit});
+    if(TREES[it.tree].fruit&&near){toast('Obstbäume brauchen Platz. Pflanze ihn nicht direkt neben einen anderen Obstbaum.');sfx('bad');return}
+    t.o={k:'tree',t:it.tree,st:0,age:0,hp:1,fr:0};t.w=0;takeSel();dust(x+.5,y+.8,'#8e5c34',4);sfx('pop');
+    toast(TREES[it.tree].fruit?TREES[it.tree].n+' gepflanzt. In 28 Tagen trägt er Früchte.':TREES[it.tree].n+' gepflanzt. In etwa 12 Tagen ist sie ausgewachsen.',2.6)}];
   if(it.place&&MAP.id=='farm'&&t&&(t.g==0||t.g==3||t.g==1)&&!o&&!t.c)return['Aufstellen',()=>{t.o={k:id};takeSel();sfx('pick')}];
   if(id=='stonepath'&&MAP.id=='farm'&&t&&t.g==0&&!o)return['Pflastern',()=>{t.g=1;t.pp=1;takeSel();sfx('pick')}];
   if(id=='fert'&&t&&t.g==3&&!t.f&&!o)return['Düngen',()=>{t.f=1;takeSel();dust(x+.5,y+.7,'#e8e0b0',5);sfx('pop')}];
@@ -868,6 +923,8 @@ function openShop(){
   if(S.time<540||S.time>=1020){toast('Der Laden hat von 9:00 bis 17:00 Uhr geöffnet.');sfx('bad');return}
   const rows=[];
   for(const k in CROPS){const c=CROPS[k];if(c.s!=S.season)continue;rows.push([k+'_s',c.price,`${c.days} Tage · Ernte ${c.sell} g${c.regrow?' · trägt immer wieder':''}${c.yld?' · '+c.yld+' pro Ernte':''}`])}
+  rows.push(['stone',20,'Baumaterial'],['wood',10,'Baumaterial'],['acorn',50,'Wächst zu einer Eiche'],['maples',50,'Wächst zu einem Ahorn'],['pinec',50,'Wächst zu einer Kiefer']);
+  for(const tt of['cherry','peach','apple'])rows.push([tt+'_t',TREES[tt].price,`28 Tage bis zur Ernte · dann jeden Tag im ${SEASONS[TREES[tt].s]} bis zu 3 ${TREES[tt].pl}`]);
   rows.push(['bread',120,'+60 Energie'],['fert',40,'Pflanzen wachsen schneller'],['sprinkler',400,'Gießt jeden Morgen die 4 Nachbarfelder'],['qsprinkler',1200,'Gießt jeden Morgen alle 8 Felder ringsum']);
   if(S.unl.coop){rows.push(['hay',50,'Futter für deine Hühner']);if(S.coop.ch.length<4)rows.push(['chick',800,`Ein Huhn für den Stall (${S.coop.ch.length}/4)`])}
   const up=[];
@@ -1044,6 +1101,11 @@ function endDay(passOut){
   for(let y=0;y<FH;y++)for(let x=0;x<FW;x++){const o=S.t[y*FW+x].o;if(!o||(o.k!='sprinkler'&&o.k!='qsprinkler'))continue;
     for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){if(!i&&!j)continue;if(o.k=='sprinkler'&&i&&j)continue;const xx=x+i,yy=y+j;if(xx<0||yy<0||xx>=FW||yy>=FH)continue;const t=S.t[yy*FW+xx];if(t.g==3)t.w=1}}
   spawnForage(rnd(2,4));
+  for(const t of S.t){const o=t.o;if(!o||o.k!='tree')continue;const T0=TREES[o.t||'oak'];
+    if(o.st<4){if(T0.fruit||S.season!=3){o.age=(o.age||0)+1;if(o.age>=(T0.fruit?7:3)){o.st++;o.age=0;o.hp=TREE_HP[o.st]}}}
+    else if(T0.fruit&&T0.s==S.season&&(o.fr||0)<3)o.fr=(o.fr||0)+1;
+    else if(T0.fruit&&T0.s!=S.season)o.fr=0}
+  spawnDebris(rnd(3,5),rnd(1,3));
   if(S.season!=3)for(let k=0;k<8;k++){const x=rnd(3,24),y=rnd(9,26),t=S.t[y*FW+x];if(t.g==0&&!t.o)t.o={k:'weed'}}
   S.fd={eggs:0,fish:0,done:0};if(f&&f.type=='eggs')spawnEggs(12);
   S.energy=passOut?Math.round(S.maxE*.5):S.maxE;S.hp=S.maxHp;S.time=360;S.px=5.5;S.py=7.9;S.dir=0;F=null;
@@ -1084,6 +1146,8 @@ function openMenu(){
     <p><b>Werkzeuge:</b> Im Laden mit Gold und Erz verbessern. Dann gießen und hacken sie mehrere Felder auf einmal.</p>
     <p><b>Energie:</b> Werkzeuge kosten Energie. Essen bringt sie zurück: Knopf zweimal drücken, während du etwas Essbares hältst.</p>
     <p><b>Angeln:</b> Angel wählen, zum Wasser schauen, Knopf drücken. Beißt ein Fisch, zieh den Finger irgendwo auf dem Bildschirm hoch und runter, damit der grüne Balken dem Fisch folgt.</p>
+    <p><b>Bäume:</b> Es gibt Eiche, Ahorn und Kiefer. Schüttel sie einmal am Tag, dann fällt manchmal ein Samen herunter. Samen und Obstbaum-Setzlinge (Kirsche, Pfirsich, Apfel) pflanzt du auf Gras. Obstbäume tragen nach 28 Tagen in ihrer Jahreszeit jeden Tag Früchte.</p>
+    <p><b>Steine und Äste:</b> Jeden Morgen liegen neue auf den Wiesen. Stein und Holz gibt es auch im Laden.</p>
     <p><b>Rucksack:</b> Das Symbol rechts neben der Leiste öffnet ihn. Teile per Finger ziehen oder zwei Plätze antippen zum Tauschen.</p>
     <p><b>Speichern:</b> Automatisch alle paar Sekunden und beim Schließen. Beim nächsten Öffnen geht es genau dort weiter.</p>
     <p><b>Tastatur:</b> WASD/Pfeile laufen, Leertaste benutzen, 1–9 Werkzeug.</p>
@@ -1133,7 +1197,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden){saveNow();
 addEventListener('pagehide',()=>saveNow());
 
 /* ---------- update ---------- */
-function solid(x,y){const t=T(x,y);if(!t)return true;if(t.g==2||t.g==4||t.g==5||t.g==7)return true;const o=t.o;return!!(o&&o.k!='forage'&&o.k!='fegg')}
+function solid(x,y){const t=T(x,y);if(!t)return true;if(t.g==2||t.g==4||t.g==5||t.g==7)return true;const o=t.o;return!!(o&&o.k!='forage'&&o.k!='fegg'&&!(o.k=='tree'&&o.st<2))}
 function blocked(px,py){const a=.26;for(const[x,y]of[[px-a,py-.24],[px+a,py-.24],[px-a,py-.02],[px+a,py-.02]])if(solid(Math.floor(x),Math.floor(y)))return true;return false}
 let lastClock='',lastE=-1,lastH=-1,lastGold=-1,lastLab='',lastWx='',midnightWarned=-1,autoT=0;
 function update(dt){
@@ -1294,7 +1358,11 @@ function render(now){
     if(t.c)D.push([y+.55,()=>{const c=t.c,img=c.dead?SP.dead:SP.crop[c.id][isRipe(c)?4:Math.min(3,Math.floor(c.age/CROPS[c.id].days*4))];ctx.drawImage(img,x*TS-camX,y*TS-camY-3*p,TS,20*p)}]);
     if(t.o){const o=t.o;D.push([y+.8,()=>{const sh=shakes[y*MAP.w+x]?Math.sin(now/25)*p:0,sx=x*TS-camX+sh,sy=y*TS-camY;
       switch(o.k){
-        case'tree':ctx.drawImage(SP.tree,sx-8*p,sy-26*p,32*p,44*p);break;
+        case'tree':{const tt=o.t||'oak',st=o.st??4;
+          if(st<4){ctx.drawImage(SP.sap[tt][st],sx,sy-8*p,TS,24*p);break}
+          ctx.drawImage(SP.tree[tt],sx-8*p,sy-26*p,32*p,44*p);
+          if(o.fr){const c=TREES[tt].col;for(const[fx,fy]of[[9,13],[21,10],[15,20]].slice(0,o.fr)){ctx.fillStyle=dk(c,.3);ctx.fillRect(sx+(fx-8)*p,sy+(fy-26)*p,4*p,4*p);ctx.fillStyle=c;ctx.fillRect(sx+(fx-8)*p,sy+(fy-26)*p,3*p,3*p);ctx.fillStyle='#fff';ctx.fillRect(sx+(fx-8)*p,sy+(fy-26)*p,p,p)}}
+          break}
         case'forage':ctx.drawImage(icon(o.id),sx+2*p,sy+p+Math.sin(now/400+x)*p*.6,12*p,12*p);break;
         case'fegg':ctx.drawImage(icon(o.c?'fegg'+o.c:'fegg'),sx+3*p,sy+3*p+Math.sin(now/300+y)*p*.5,10*p,10*p);break;
         case'sprinkler':case'qsprinkler':ctx.drawImage(icon(o.k),sx+2*p,sy+2*p,12*p,12*p);break;
