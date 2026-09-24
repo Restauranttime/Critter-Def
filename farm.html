@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Hof Sonnental</title>
+<title>Sonnensplitter</title>
 <!--pwa-->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Sonnental">
+<meta name="apple-mobile-web-app-title" content="Sonnensplitter">
 <meta name="theme-color" content="#1f3319">
 <link rel="apple-touch-icon" href="farm-icon-180.png">
 <link rel="icon" type="image/png" href="farm-icon-192.png">
@@ -172,8 +172,8 @@ button,textarea{font-synthesis:none}
 
 <div id="title">
   <div class="card">
-    <h1>Hof Sonnental</h1>
-    <div class="sub">Opas alter Hof wartet auf dich.</div>
+    <h1>Sonnen&shy;splitter</h1>
+    <div class="sub">Ein alter Hof, ein stilles Tal und sieben Splitter Licht.</div>
     <div class="btns">
       <button class="btn" id="bCont" hidden>Weiterspielen</button>
       <button class="btn alt" id="bNew">Neues Spiel</button>
@@ -613,7 +613,7 @@ const festToday=()=>FESTS.find(f=>f.s==S.season&&f.d==S.day)||null;
 
 /* ---------- save: device + account ---------- */
 const KEY='hof-sonnental-1';
-const BUILD='2026-09-28-3';
+const BUILD='2026-09-28-4';
 let updating=false;
 async function checkUpdate(){
   if(updating||window.claude||!/^https?:$/.test(location.protocol))return;

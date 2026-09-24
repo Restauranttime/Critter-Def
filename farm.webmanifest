@@ -1,6 +1,6 @@
 {
-  "name": "Hof Sonnental",
-  "short_name": "Sonnental",
+  "name": "Sonnensplitter",
+  "short_name": "Sonnensplitter",
   "start_url": "farm.html",
   "scope": "./",
   "display": "standalone",
