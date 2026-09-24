@@ -214,6 +214,7 @@ const pick=a=>a[Math.floor(Math.random()*a.length)];
 const SEASONS=['Frühling','Sommer','Herbst','Winter'];
 const WD=['Mo','Di','Mi','Do','Fr','Sa','So'];
 const DX=[0,0,-1,1],DY=[1,-1,0,0];
+const inSeason=c=>c.ss?c.ss.includes(S.season):c.s==S.season;
 /* 8-way facing: 0 down, 1 down-right, 2 right, 3 up-right, 4 up, 5 up-left, 6 left, 7 down-left */
 const F8X=[0,1,1,1,0,-1,-1,-1],F8Y=[1,1,0,-1,-1,-1,0,1],CARD=[0,4,6,2];
 function face(){return S._fd===S.dir&&S.face!=null?S.face:CARD[S.dir]}
@@ -227,7 +228,8 @@ const CROPS={
   blue:{n:'Blaubeere',s:1,days:13,price:80,sell:50,col:'#4a64d8',shape:'berry',regrow:4,yld:3},
   pumpkin:{n:'Kürbis',s:2,days:13,price:100,sell:320,col:'#ef8a22',shape:'big'},
   eggplant:{n:'Aubergine',s:2,days:5,price:20,sell:60,col:'#6a3a8e',shape:'bush',regrow:5},
-  cran:{n:'Preiselbeere',s:2,days:7,price:240,sell:75,col:'#c8243a',shape:'berry',regrow:5,yld:2}
+  cran:{n:'Preiselbeere',s:2,days:7,price:240,sell:75,col:'#c8243a',shape:'berry',regrow:5,yld:2},
+  wheat:{n:'Weizen',s:1,ss:[1,2],days:4,price:10,sell:25,col:'#e8c45a',shape:'grain'}
 };
 const FORAGE={
   leek:{n:'Lauch',s:0,sell:60,eat:40},dand:{n:'Löwenzahn',s:0,sell:40,eat:25},
@@ -431,6 +433,7 @@ function cropSprite(id,st){const c=CROPS[id];return mk(16,20,g=>{
   if(c.shape=='root'){line(g,7,16,4,7,L);line(g,8,16,8,5,LL);line(g,9,16,12,7,L);line(g,7,16,5,9,LD);line(g,9,16,11,9,LD);if(st==4){ell(g,8,16.5,3.2,2.2,c.col);R(g,6,15,2,1,lt(c.col,.5))}}
   if(c.shape=='big'){circ(g,5,11,3.5,L);circ(g,11,11,3.5,LD);circ(g,8,8,3.5,LL);if(st==4)ball(g,8,13.5,5.2,c.col);else circ(g,8,14,2,LD)}
   if(c.shape=='bush'){R(g,7,6,2,11,LD);circ(g,8,9,4,L);circ(g,5,13,3,LD);circ(g,11,12,3,L);circ(g,8,5,2.5,LL);if(st==4){ball(g,5,11,2.2,c.col);ball(g,11,9,2.2,c.col);ball(g,9,14,2.2,c.col)}}
+  if(c.shape=='grain'){for(const x of[4,7,10,13]){line(g,x,17,x,st==4?6:8,st==4?'#c8a84a':L);if(st==4){ell(g,x,5,1.4,2.6,c.col);R(g,x-1,4,1,1,'#f6dc8a')}else R(g,x-1,9,1,2,LL)}}
   if(c.shape=='berry'){circ(g,5,13,3.5,L);circ(g,11,13,3.5,LD);circ(g,8,11,3.5,LL);if(st==4)[[4,12],[9,10],[12,14],[7,15],[10,12],[5,15]].forEach(([x,y])=>{R(g,x,y,2,2,c.col);R(g,x,y,1,1,lt(c.col,.5))})}
 })}
 function buildSprites(se){
@@ -604,7 +607,7 @@ const festToday=()=>FESTS.find(f=>f.s==S.season&&f.d==S.day)||null;
 
 /* ---------- save: device + account ---------- */
 const KEY='hof-sonnental-1';
-const BUILD='2026-09-26-4';
+const BUILD='2026-09-27-1';
 let updating=false;
 async function checkUpdate(){
   if(updating||window.claude||!/^https?:$/.test(location.protocol))return;
@@ -885,6 +888,7 @@ function plan(){
   if(t&&t.o&&t.o.k=='gate'&&id!='axe'&&id!='pick')return[t.o.open?'Schließen':'Öffnen',()=>{
     if(t.o.open){const a=.26;if([[S.px-a,S.py-.24],[S.px+a,S.py-.24],[S.px-a,S.py-.02],[S.px+a,S.py-.02]].some(([i,j])=>Math.floor(i)==x&&Math.floor(j)==y)){toast('Geh erst aus dem Tor heraus.',1.6);return}}
     t.o.open=t.o.open?0:1;sfx(t.o.open?'pop':'chop')}];
+  if(t&&t.o&&MACH[t.o.k]){const r=machineAct(t.o,id);if(r)return r}
   if(!it)return['—',null];
   const o=t&&t.o,lv=S.lv[id]||0;
   if(it.weapon)return['Angriff',attack];
@@ -914,7 +918,7 @@ function plan(){
     case'rod':if(t&&t.g==2)return['Angeln',()=>{if(!needE(5))return;swing(id);F={ph:'wait',t:1.2+Math.random()*3,x,y};sfx('cast')}];break;
   }
   if(it.kind=='seed'&&t&&t.g==3&&!t.c&&!o){const c=CROPS[it.crop];
-    return['Säen',()=>{if(S.season==3||c.s!=S.season){toast(c.n+' wächst nur im '+SEASONS[c.s]+'.');sfx('bad');return}t.c={id:it.crop,age:0};takeSel();dust(x+.5,y+.8,'#c9a26a',4);sfx('pop')}]}
+    return['Säen',()=>{if(S.season==3||!inSeason(c)){toast(c.n+' wächst nur im '+(c.ss?c.ss.map(i=>SEASONS[i]).join(' und '):SEASONS[c.s])+'.');sfx('bad');return}t.c={id:it.crop,age:0};takeSel();dust(x+.5,y+.8,'#c9a26a',4);sfx('pop')}]}
   if(it.kind=='tseed'&&MAP.id=='farm'&&t&&(t.g==0||t.g==3)&&!o&&!t.c)return['Pflanzen',()=>{
     const near=[[-1,0],[1,0],[0,-1],[0,1]].some(([i,j])=>{const c=T(x+i,y+j);return c&&c.o&&c.o.k=='tree'&&TREES[c.o.t].fruit});
     if(TREES[it.tree].fruit&&near){toast('Obstbäume brauchen Platz. Pflanze ihn nicht direkt neben einen anderen Obstbaum.');sfx('bad');return}
@@ -991,7 +995,7 @@ const hasReq=r=>r.every(([id,n])=>count(id)>=n);
 function openShop(){
   if(S.time<540||S.time>=1020){toast('Der Laden hat von 9:00 bis 17:00 Uhr geöffnet.');sfx('bad');return}
   const rows=[];
-  for(const k in CROPS){const c=CROPS[k];if(c.s!=S.season)continue;rows.push([k+'_s',c.price,`${c.days} Tage · Ernte ${c.sell} g${c.regrow?' · trägt immer wieder':''}${c.yld?' · '+c.yld+' pro Ernte':''}`])}
+  for(const k in CROPS){const c=CROPS[k];if(!inSeason(c))continue;rows.push([k+'_s',c.price,`${c.days} Tage · Ernte ${c.sell} g${c.regrow?' · trägt immer wieder':''}${c.yld?' · '+c.yld+' pro Ernte':''}`])}
   rows.push(['stone',20,'Baumaterial'],['wood',10,'Baumaterial'],['acorn',50,'Wächst zu einer Eiche'],['maples',50,'Wächst zu einem Ahorn'],['pinec',50,'Wächst zu einer Kiefer']);
   for(const tt of['cherry','peach','apple'])rows.push([tt+'_t',TREES[tt].price,`28 Tage bis zur Ernte · dann jeden Tag im ${SEASONS[TREES[tt].s]} bis zu 3 ${TREES[tt].pl}`]);
   rows.push(['fert',40,'Pflanzen wachsen schneller'],['sprinkler',400,'Gießt jeden Morgen die 4 Nachbarfelder'],['qsprinkler',1200,'Gießt jeden Morgen alle 8 Felder ringsum']);
@@ -1161,7 +1165,7 @@ function endDay(passOut){
   let fee=0;if(passOut){fee=Math.min(1000,Math.floor(S.gold*.1));S.gold-=fee}
   S.day++;let seasonMsg='';
   if(S.day>28){S.day=1;S.season=(S.season+1)%4;if(S.season==0)S.year++;buildSprites(S.season);
-    let died=0;for(const t of S.t)if(t.c&&!t.c.dead&&CROPS[t.c.id].s!=S.season){t.c.dead=1;died++}
+    let died=0;for(const t of S.t)if(t.c&&!t.c.dead&&!inSeason(CROPS[t.c.id])){t.c.dead=1;died++}
     seasonMsg=`Der ${SEASONS[S.season]} beginnt!`+(died?` ${died} Pflanzen aus dem letzten Monat sind verwelkt.`:'')}
   S.weather=S.tomorrow;
   const rain=[.25,.15,.25,.25][S.season];S.tomorrow=Math.random()<rain?(S.season==3?'snow':'rain'):'sun';
@@ -1215,7 +1219,7 @@ function openMenu(){
     <p><b>Anbau:</b> Mit der Hacke Gras umgraben, säen, jeden Tag gießen. Dünger macht Pflanzen schneller.</p>
     <p><b>Geld:</b> Alles Verkaufbare in die Versandkiste neben dem Haus legen. Bezahlt wird über Nacht.</p>
     <p><b>Tiere:</b> Hühner, Enten, Kaninchen, Kühe, Ziegen, Schafe und ein Pferd gibt es bei Ronja. Theo baut Scheune und größeren Stall. Heu ins Silo, jeden Tag streicheln, Erzeugnisse im Stall einsammeln.</p>
-    <p><b>Haus:</b> Tippe auf deine Haustür. Dort kannst du schlafen, in der Küche kochen, an der Werkbank Zäune, Sprinkler und Stoff herstellen und im Lager Sachen einlagern. Das Lager kannst du nach und nach vergrößern.</p><p><b>Energie:</b> Nur gekochtes Essen aus der Küche gibt Energie. Rohe Ernte, Eier oder Beeren kannst du nicht mehr essen.</p>
+    <p><b>Haus:</b> Tippe auf deine Haustür. Dort kannst du schlafen, in der Küche kochen, an der Werkbank Zäune, Sprinkler und Stoff herstellen und im Lager Sachen einlagern. Das Lager kannst du nach und nach vergrößern.</p><p><b>Maschinen:</b> An der Werkbank baust du Mühle (Weizen zu Mehl), Käsepresse, Einmachglas (Marmelade, Eingelegtes), Fass (Saft) und Räucherofen. Stell sie auf den Hof, nimm die Zutat in die Hand und tippe die Maschine an. Weizen wächst im Sommer und Herbst.</p><p><b>Energie:</b> Nur gekochtes Essen aus der Küche gibt Energie. Rohe Ernte, Eier oder Beeren kannst du nicht mehr essen.</p>
     <p><b>Höhle:</b> Rechts unterhalb des Ladens. Bosse auf Ebene 10, 20 und 30. Bruno schmiedet Waffen und schmilzt Erz zu Barren, Dr. Emil verkauft Heiltränke.</p>
     <p><b>Museum:</b> Edelsteine, Erze und Fundstücke spenden. Fundstücke gräbst du mit der Hacke aus kleinen Erdhaufen aus.</p><p><b>Felder entfernen:</b> Hacke auf ein leeres Feld: Zuschütten, dann wächst wieder Gras. Durch Grasbüschel kannst du einfach hindurchlaufen.</p>
     <p><b>Angeln:</b> Beißt ein Fisch, zieh den Finger hoch und runter, damit der grüne Balken dem Fisch folgt.</p>
@@ -1513,7 +1517,7 @@ function render(now){
         case'pbench':ctx.drawImage(SP.pbench,sx,sy,TS,TS);break;
         case'beehive':ctx.drawImage(SP.beehive,sx,sy-4*p,TS,20*p);if(o.ready){ctx.fillStyle='#f0a820';ctx.fillRect(sx+6*p,sy+10*p,4*p,3*p)}break;
         case'dig':ctx.drawImage(SP.dig,sx,sy,TS,TS);break;
-        default:if(SP[o.k])ctx.drawImage(SP[o.k],sx,sy,TS,TS);
+        default:if(MACH[o.k])drawMachine(o,sx,sy,p);else if(SP[o.k])ctx.drawImage(SP[o.k],sx,sy,TS,TS);
       }}])}
   }
   if(farm){
@@ -2040,7 +2044,7 @@ function openMuseum(){
 function dailyRequest(){
   const dk=dayKey();if(S.daily&&S.daily.dk==dk)return S.daily;
   const r=mul(dk*7+13),pool=[['wood',20],['stone',15],['fiber',10],['copper',5],['carp',2],['egg',3]];
-  for(const k in CROPS)if(CROPS[k].s==S.season)pool.push([k,3]);
+  for(const k in CROPS)if(inSeason(CROPS[k]))pool.push([k,3]);
   for(const k in FORAGE)if(FORAGE[k].s==S.season)pool.push([k,2]);
   if(S.mineMax>=6)pool.push(['iron',3]);if(S.unl.barn)pool.push(['milk',2]);
   const[item,n]=pool[Math.floor(r()*pool.length)],ppl=people().filter(k=>k!=S.spouse),npc=ppl[Math.floor(r()*ppl.length)];
@@ -2200,7 +2204,7 @@ const QUESTS=[
   {id:'bruno3',npc:'bruno',h:6,t:'Ein Meisterstück',ask:'Einmal im Leben will ich ein echtes Meisterstück schmieden. Ein Diamant und 3 Goldbarren.',need:[['diamond',1],['goldbar',3]],done:'Das beste Stück, das je aus meiner Esse kam. Nimm es. Du hast es verdient.',rw:{gold:2000,item:['gsword',1]}},
   {id:'ronja1',npc:'ronja',h:2,t:'Futter für die Herde',ask:'Der Winter war lang und mein Heu ist knapp. Hast du 20 Heu für mich?',need:[['hay',20]],done:'Die Kühe sagen danke. Und ich auch!',rw:{gold:500,item:['milk',3]}},
   {id:'ronja2',npc:'ronja',h:4,t:'Ein krankes Fohlen',ask:'Mein kleines Fohlen ist krank. Dr. Emil hat Heiltränke, kannst du mir einen bringen?',need:[['potion',1]],done:'Es steht wieder! Als Dank bekommst du ein Pferd von mir für den halben Preis.',rw:{gold:300,flag:'horseDisc'}},
-  {id:'ronja3',npc:'ronja',h:6,t:'Käse für den Markt',ask:'Ich will auf dem Markt in der Stadt Käse verkaufen. Machst du mir 3 Stück in deiner Küche?',need:[['cheese',3]],done:'Du bist die beste Person, die ich kenne. Hier, für jemand Besonderen.',rw:{gold:3000,item:['bouquet',1]}},
+  {id:'ronja3',npc:'ronja',h:6,t:'Käse für den Markt',ask:'Ich will auf dem Markt in der Stadt Käse verkaufen. Machst du mir 3 Stück mit einer Käsepresse?',need:[['cheese',3]],done:'Du bist die beste Person, die ich kenne. Hier, für jemand Besonderen.',rw:{gold:3000,item:['bouquet',1]}},
   {id:'theo1',npc:'theo',h:2,t:'Bretter',ask:'Ich brauche 50 Holz für ein Gartenhaus. Hilfst du mir?',need:[['wood',50]],done:'Perfekt. Das riecht nach Frühling.',rw:{gold:600}},
   {id:'theo2',npc:'theo',h:4,t:'Neue Beschläge',ask:'Meine Werkzeuge sind stumpf. Mit 3 Eisenbarren könnte ich alles erneuern.',need:[['ironbar',3]],done:'Danke! Dein nächster Bau bei mir kostet ein Viertel weniger.',rw:{gold:0,flag:'carpDisc'}},
   {id:'theo3',npc:'theo',h:6,t:'Theos Traumhaus',ask:'Ich baue ein Modell von meinem Traumhaus. 99 Holz, ein Goldbarren und ein Amethyst für das Fenster.',need:[['wood',99],['goldbar',1],['amethyst',1]],done:'Schau, das Fenster leuchtet lila. Weißt du, für wen ich es gebaut habe?',rw:{gold:4000}},
@@ -2433,13 +2437,76 @@ NPCS.konrad.sched=()=>{const k=S.story&&S.story.konrad;if(k==1)return S.time>=60
 /* ----- house: kitchen, workbench, storage; only cooked food gives energy ----- */
 for(const k in ITEMS){const it=ITEMS[k];if(it.eat&&it.kind!='food'&&k!='epotion')delete it.eat}
 for(let i=RECIPES.length-1;i>=0;i--)if(ITEMS[RECIPES[i][0]].kind=='food')RECIPES.splice(i,1);
+/* ----- processing machines; crafting also uses what is in the Lager ----- */
+const absMin=()=>(((S.year-1)*4+S.season)*28+S.day-1)*1440+S.time;
+const cnt2=id=>count(id)+(S.store||[]).reduce((a,s)=>a+(s&&s.id==id?s.n:0),0);
+const has2=r=>r.every(([id,n])=>cnt2(id)>=n);
+const reqText2=r=>r.map(([id,n])=>`${n}× ${ITEMS[id].n} (hast ${cnt2(id)})`).join(', ');
+function take2(id,n){const k=Math.min(n,count(id));removeItems(id,k);n-=k;
+  for(let i=0;i<S.store.length&&n>0;i++){const s=S.store[i];if(s&&s.id==id){const m=Math.min(n,s.n);s.n-=m;n-=m;if(s.n<=0)S.store[i]=null}}}
+const JAM={straw:'Erdbeer',blue:'Blaubeer',cran:'Preiselbeer',melon:'Melonen',grape:'Trauben',bberry:'Brombeer',cherry:'Kirsch',peach:'Pfirsich',apple:'Apfel'};
+const PICKLE={parsnip:'Eingelegte Pastinaken',cauli:'Eingelegter Blumenkohl',tomato:'Eingelegte Tomaten',pumpkin:'Eingelegter Kürbis',eggplant:'Eingelegte Auberginen',leek:'Eingelegter Lauch',mush:'Eingelegte Pilze',pea:'Eingelegte Erbsen'};
+const SRC_COL={grape:'#8a4ab8',bberry:'#3a2a5a',leek:'#9ad86a',mush:'#c8a070',pea:'#8ad05a',dand:'#f6d53a'};
+const srcCol=id=>CROPS[id]?CROPS[id].col:TREES[id]&&TREES[id].col?TREES[id].col:FISH[id]?FISH[id].col:SRC_COL[id]||'#c8844a';
+for(const k in JAM){ITEMS['jam_'+k]={n:JAM[k]+'marmelade',sell:ITEMS[k].sell*2+50,kind:'artisan',src:k};ITEMS['juice_'+k]={n:JAM[k]+'saft',sell:ITEMS[k].sell*3,kind:'artisan',src:k}}
+for(const k in PICKLE)ITEMS['pick_'+k]={n:PICKLE[k],sell:ITEMS[k].sell*2+50,kind:'artisan',src:k};
+for(const k in FISH)ITEMS['smk_'+k]={n:'Räucher'+FISH[k].n.toLowerCase(),sell:FISH[k].sell*2+20,kind:'artisan',src:k};
+Object.assign(ITEMS,{flour:{n:'Mehl',sell:40,kind:'artisan'},pancake:{n:'Pfannkuchen',sell:180,kind:'food'},pizza:{n:'Pizza',sell:300,kind:'food'},
+  mill:{n:'Mühle',sell:0,place:1},press:{n:'Käsepresse',sell:0,place:1},jar:{n:'Einmachglas',sell:0,place:1},keg:{n:'Fass',sell:0,place:1},smoker:{n:'Räucherofen',sell:0,place:1}});
+for(const k of['cheese','gcheese']){delete ITEMS[k].eat;ITEMS[k].kind='artisan'}
+/* machine: accepts(id) -> [output id, amount, minutes] or null */
+const MACH={
+  mill:{n:'Mühle',what:'Weizen zu Mehl',f:id=>id=='wheat'?['flour',1,120]:null},
+  press:{n:'Käsepresse',what:'Milch zu Käse, Ziegenmilch zu Ziegenkäse',f:id=>id=='milk'?['cheese',1,200]:id=='bmilk'?['cheese',2,200]:id=='gmilk'?['gcheese',1,200]:null},
+  jar:{n:'Einmachglas',what:'Obst und Beeren zu Marmelade, Gemüse zum Einlegen',f:id=>JAM[id]?['jam_'+id,1,1440]:PICKLE[id]?['pick_'+id,1,1440]:null},
+  keg:{n:'Fass',what:'Obst und Beeren zu Saft',f:id=>JAM[id]?['juice_'+id,1,2880]:null},
+  smoker:{n:'Räucherofen',what:'Fisch zu Räucherfisch',f:id=>FISH[id]?['smk_'+id,1,120]:null}};
+RECIPES.push(['mill',1,[['wood',50],['stone',30]],'Mahlt Weizen zu Mehl.'],['press',1,[['wood',40],['stone',20],['copper',5]],'Macht aus Milch Käse.'],
+  ['jar',1,[['wood',20],['copper',5],['fiber',10]],'Macht Marmelade und Eingelegtes.'],['keg',1,[['wood',40],['iron',3]],'Macht Saft aus Obst und Beeren.'],
+  ['smoker',1,[['stone',40],['wood',20],['copper',3]],'Räuchert Fisch.']);
+function machineAct(o,id){
+  const M=MACH[o.k];
+  if(o.p){if(absMin()>=o.p.t)return['Nehmen',()=>{if(addItem(o.p.id,o.p.n)){toast('Dein Rucksack ist voll.');return}pop(S.px,S.py-1.4,'+'+o.p.n+' '+ITEMS[o.p.id].n,'#ffe38a');o.p=null;sfx('pop')}];
+    return['Warten',()=>{const m=o.p.t-absMin();toast(`${ITEMS[o.p.id].n} ist in ${m>=1440?Math.ceil(m/1440)+(m>=2880?' Tagen':' Tag'):m>=60?Math.ceil(m/60)+' Std.':m+' Min.'} fertig.`,2.2)}]}
+  const r=id&&M.f(id);
+  if(r)return['Einlegen',()=>{takeSel();o.p={id:r[0],n:r[1],t:absMin()+r[2]};dust(S.px,S.py-.5,'#e8dcc0',4);sfx('pick')}];
+  if(id=='pick')return null;
+  return[M.n,()=>toast(M.n+': '+M.what+'. Nimm die Zutat in die Hand und tippe die Maschine an.',3.2)];
+}
+function drawMachine(o,sx,sy,p){
+  const now=performance.now();
+  ctx.fillStyle='rgba(0,0,0,.2)';ctx.beginPath();ctx.ellipse(sx+8*p,sy+14.5*p,6*p,2*p,0,0,7);ctx.fill();
+  ctx.drawImage(icon(o.k),sx,sy-3*p,TS,TS);
+  if(!o.p)return;
+  if(absMin()>=o.p.t){const b=Math.sin(now/250)*p;ctx.fillStyle='#fff8e8';ctx.fillRect(sx+3*p,sy-13*p+b,10*p,10*p);ctx.fillStyle='#5b3417';ctx.fillRect(sx+7*p,sy-3*p+b,2*p,2*p);ctx.drawImage(icon(o.p.id),sx+4*p,sy-12*p+b,8*p,8*p)}
+  else{const k=(now/400)%3;ctx.fillStyle='rgba(255,255,255,.55)';for(let i=0;i<3;i++)ctx.fillRect(sx+(6+i*2)*p,sy-(5+((k+i)%3)*2)*p,p,p)}
+}
+{const _d=drawIcon;drawIcon=function(g,id){const it=ITEMS[id];
+  const jar=(c,pickle)=>{R(g,4,4,8,11,'#d8eef2');R(g,4,4,1,11,'#b0cfd6');R(g,5,7,6,7,c);if(pickle){R(g,6,8,2,2,lt(c,.4));R(g,8,11,2,2,dk(c,.2))}R(g,5,7,6,1,lt(c,.35));R(g,4,2,8,3,'#c8a040');R(g,4,2,8,1,'#e8c860');R(g,5,10,6,2,'#f4ecd8')};
+  switch(id){
+    case'wheat':for(const x of[4,8,12]){line(g,x,15,x,6,'#b8963a');ell(g,x,5,1.6,3,'#e8c45a');R(g,x-1,4,1,1,'#f6dc8a')}return;
+    case'flour':R(g,3,5,10,10,'#f4f0e4');R(g,3,5,10,2,'#dcd4c0');R(g,5,2,6,4,'#e8e0cc');R(g,6,3,4,1,'#b8963a');R(g,6,9,4,3,'#e8c45a');return;
+    case'pancake':ell(g,8,11,7,3,'#e8e4dc');ell(g,8,9,5.5,2.2,'#d99a52');ell(g,8,7.5,5,2,'#e8b060');R(g,6,6,4,1,'#8a3a8a');R(g,7,5,2,1,'#fff3c0');return;
+    case'pizza':ell(g,8,9,7,6,'#d99a52');ell(g,8,9,5.8,4.8,'#e2442f');[[5,7],[10,8],[7,11],[9,6]].forEach(([x,y])=>R(g,x,y,2,2,'#f6e6a0'));R(g,6,9,1,1,'#3f8a2a');R(g,11,11,1,1,'#3f8a2a');return;
+    case'mill':R(g,3,9,10,6,'#8a8a96');R(g,3,9,10,1,'#a8a8b4');R(g,5,5,6,5,'#a86a34');R(g,4,4,8,2,'#7a4a24');R(g,7,11,2,4,'#3a2a1a');line(g,8,5,2,0,'#f0e8d0');line(g,8,5,14,0,'#f0e8d0');line(g,8,5,2,10,'#e0d8c0');line(g,8,5,14,10,'#e0d8c0');R(g,7,4,2,2,'#5b3417');return;
+    case'press':R(g,2,4,2,11,'#6a3e1e');R(g,12,4,2,11,'#6a3e1e');R(g,2,3,12,2,'#8a5a2b');R(g,7,5,2,4,'#9aa3ab');R(g,5,9,6,2,'#8a5a2b');ell(g,8,13,4,2,'#f6e6a0');R(g,2,14,12,1,'#5b3417');return;
+    case'jar':jar('#e2442f');return;
+    case'keg':ell(g,8,9,5.5,6.5,'#9a6230');R(g,3,5,11,1,'#5a5a66');R(g,3,12,11,1,'#5a5a66');R(g,6,3,1,12,dk('#9a6230',.2));R(g,10,3,1,12,dk('#9a6230',.2));R(g,7,9,2,1,'#c8a040');return;
+    case'smoker':R(g,2,6,12,9,'#7a7a86');R(g,2,6,12,1,'#9a9aa6');R(g,5,9,6,5,'#2a2228');R(g,6,12,4,1,'#e8742a');R(g,10,2,3,5,'#6a6a76');R(g,10,1,3,1,'#8a8a96');return;
+  }
+  if(it&&it.src){const c=srcCol(it.src);
+    if(id.startsWith('jam_'))return jar(c);
+    if(id.startsWith('pick_'))return jar(c,1);
+    if(id.startsWith('juice_')){R(g,6,1,4,3,'#d8eef2');R(g,6,1,4,1,'#8a5a2b');R(g,4,4,8,11,'#d8eef2');R(g,5,6,6,8,c);R(g,5,6,6,1,lt(c,.4));R(g,5,9,6,2,'#f4ecd8');return}
+    if(id.startsWith('smk_')){const s='#9a5a2a';R(g,1,5,1,6,dk(s,.2));R(g,2,6,1,4,dk(s,.2));ell(g,9,8,5.5,3.2,s);R(g,5,9,8,1,dk(c,.1));R(g,5,7,7,1,lt(s,.3));R(g,12,7,1,1,'#1d1d1d');line(g,6,4,6,1,'#c8c8c8');line(g,10,4,11,1,'#c8c8c8');return}}
+  return _d(g,id)}}
 Object.assign(ITEMS,{fpotato:{n:'Bratkartoffeln',sell:90,kind:'food'},grill:{n:'Lachs vom Grill',sell:320,kind:'food'},feast:{n:'Festmahl',sell:1500,kind:'food',full:1}});
 /* [id, ingredients, energy, recipe price (0 = known from the start)] */
 const KDEF=[['salad',[['leek',1],['dand',1]],15,0],['fpotato',[['potato',2]],35,0],
-  ['omelet',[['egg',2]],50,300],['cheese',[['milk',1]],45,400],['soup',[['potato',1],['parsnip',1],['leek',1]],70,700],
-  ['fmush',[['mush',2],['leek',1]],90,1000],['gcheese',[['gmilk',1]],90,1500],['fishsoup',[['carp',2],['potato',1],['tomato',1]],120,2000],
-  ['grill',[['salmon',1],['potato',1],['leek',1]],140,2500],['pie',[['pumpkin',1],['egg',2],['milk',1]],160,3000],
-  ['hcake',[['honey',1],['egg',2],['milk',1]],190,4000],['feast',[['pike',1],['pumpkin',1],['cauli',1],['gcheese',1],['hcake',1]],270,10000]];
+  ['omelet',[['egg',2]],50,300],['bread',[['flour',2]],55,500],['soup',[['potato',1],['parsnip',1],['leek',1]],70,700],
+  ['pancake',[['flour',1],['egg',1],['milk',1]],85,900],['fmush',[['mush',2],['leek',1]],90,1000],['fishsoup',[['carp',2],['potato',1],['tomato',1]],120,2000],
+  ['pizza',[['flour',2],['tomato',1],['cheese',1]],130,2200],['grill',[['salmon',1],['potato',1],['leek',1]],140,2500],
+  ['pie',[['pumpkin',1],['egg',2],['milk',1],['flour',1]],160,3000],['hcake',[['honey',1],['egg',2],['milk',1],['flour',1]],190,4000],['feast',[['pike',1],['pumpkin',1],['cauli',1],['gcheese',1],['hcake',1]],270,10000]];
 const KITCHEN=KDEF.map(([id,req,e,pr])=>{ITEMS[id].eat=e;return[id,1,req,pr?'buy':'']});
 const RECIPE_PRICE={};KDEF.forEach(d=>RECIPE_PRICE[d[0]]=d[3]);
 const eatTxt=it=>it.full?'Volle Energie':'+'+it.eat+' Energie';
@@ -2461,18 +2528,18 @@ function openHouse(){
 }
 function openRecipes(list,title,sub,self){
   const html=`<h2>${title}</h2><p>${sub}</p><div class="rows">
-    ${list.map((r,i)=>{const[id,n,req,d]=r,it=ITEMS[id],kn=knownRecipe(r),ok=kn&&hasReq(req);
-      const info=(it.eat?eatTxt(it):d||'')+'<br>'+(kn?reqText(req):`Rezept bei Kalle im Gasthaus: ${RECIPE_PRICE[id]} g`);
+    ${list.map((r,i)=>{const[id,n,req,d]=r,it=ITEMS[id],kn=knownRecipe(r),ok=kn&&has2(req);
+      const info=(it.eat?eatTxt(it):d||'')+'<br>'+(kn?reqText2(req):`Rezept bei Kalle im Gasthaus: ${RECIPE_PRICE[id]} g`);
       return`<div class="row${ok?'':' done'}">${ic(id)}<div><b>${it.n}${n>1?' ×'+n:''}</b><small>${info}</small></div><div class="buy"><button class="btn sm" data-c="${i}" ${ok?'':'disabled'}>${it.eat?'Kochen':'Herstellen'}</button></div></div>`}).join('')}
   </div><div class="btns"><button class="btn alt" id="crX">Zurück</button></div>`;
   reModal(html);
-  $('#modal').querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{const r=list[+b.dataset.c],[id,n,req]=r;if(!knownRecipe(r)||!hasReq(req))return;
+  $('#modal').querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{const r=list[+b.dataset.c],[id,n,req]=r;if(!knownRecipe(r)||!has2(req))return;
     if(S.inv.every(s=>s)&&!S.inv.some(s=>s&&s.id==id)){toast('Dein Rucksack ist voll.');return}
-    req.forEach(([q,m])=>removeItems(q,m));addItem(id,n);sfx('pop');toast((ITEMS[id].eat?'Gekocht: ':'Hergestellt: ')+ITEMS[id].n,1.4);self()});
+    req.forEach(([q,m])=>take2(q,m));addItem(id,n);sfx('pop');toast((ITEMS[id].eat?'Gekocht: ':'Hergestellt: ')+ITEMS[id].n,1.4);self()});
   $('#crX').onclick=openHouse;
 }
-openCraft=()=>openRecipes(RECIPES,'Werkbank','Stelle Dinge aus deinen Rohstoffen her.',openCraft);
-function openKitchen(){openRecipes(KITCHEN,'Küche','Nur gekochtes Essen gibt dir Energie. Zutaten aus dem Lager musst du erst in den Rucksack holen.',openKitchen)}
+openCraft=()=>openRecipes(RECIPES,'Werkbank','Stelle Dinge aus deinen Rohstoffen her. Material nimmst du aus Rucksack und Lager.',openCraft);
+function openKitchen(){openRecipes(KITCHEN,'Küche','Nur gekochtes Essen gibt dir Energie. Zutaten nimmst du aus Rucksack und Lager.',openKitchen)}
 /* storage */
 const STORE_UP=[{g:500,r:[['wood',100]]},{g:2000,r:[['wood',200],['stone',100]]},{g:5000,r:[['wood',300],['iron',15]]},{g:10000,r:[['wood',400],['gold',15]]}];
 function putInto(arr,s){
@@ -2488,7 +2555,7 @@ function drawStore(){
     <div class="lbl">Leiste</div><div class="inv hot">${S.inv.slice(0,HOT).map((s,i)=>cell(s,'data-b',i)).join('')}</div>
     <div class="lbl">Rucksack</div><div class="inv">${S.inv.slice(HOT).map((s,i)=>cell(s,'data-b',i+HOT)).join('')}</div>
     <p id="invInfo"><small>${storeInfo||'&nbsp;'}</small></p>
-    ${up?`<div class="rows"><div class="row">${ic('crate')}<div><b>Lager vergrößern</b><small>+12 Plätze<br>${up.g} g · ${reqText(up.r)}</small></div><div class="buy"><button class="btn sm" id="stUp" ${S.gold>=up.g&&hasReq(up.r)?'':'disabled'}>Ausbauen</button></div></div></div>`:''}
+    ${up?`<div class="rows"><div class="row">${ic('crate')}<div><b>Lager vergrößern</b><small>+12 Plätze<br>${up.g} g · ${reqText2(up.r)}</small></div><div class="buy"><button class="btn sm" id="stUp" ${S.gold>=up.g&&has2(up.r)?'':'disabled'}>Ausbauen</button></div></div></div>`:''}
     <div class="btns"><button class="btn" id="stAll">Rucksack einlagern</button><button class="btn alt" id="stX">Zurück</button></div>`;
   hydrate($('#stBody'));
   $('#stBody').querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{const i=+b.dataset.s,s=S.store[i];if(!s)return;
@@ -2497,7 +2564,7 @@ function drawStore(){
     if(!putInto(S.store,s)){storeInfo='Das Lager ist voll.';sfx('bad')}else{S.inv[i]=null;storeInfo='Eingelagert: '+s.n+'× '+ITEMS[s.id].n;sfx('pop')}barDirty=1;drawStore()});
   $('#stAll').onclick=()=>{let n=0,full=0;for(let i=HOT;i<S.inv.length;i++){const s=S.inv[i];if(!s||ITEMS[s.id].tool||ITEMS[s.id].weapon)continue;if(putInto(S.store,s)){S.inv[i]=null;n++}else full=1}
     storeInfo=n?n+' Stapel eingelagert.'+(full?' Das Lager ist jetzt voll.':''):full?'Das Lager ist voll.':'Im Rucksack ist nichts zum Einlagern. Werkzeuge und die Leiste bleiben bei dir.';sfx(n?'pop':'bad');barDirty=1;drawStore()};
-  const u=$('#stUp');if(u)u.onclick=()=>{if(S.gold<up.g||!hasReq(up.r))return;S.gold-=up.g;up.r.forEach(([q,m])=>removeItems(q,m));S.storeLv=lv+1;for(let k=0;k<12;k++)S.store.push(null);
+  const u=$('#stUp');if(u)u.onclick=()=>{if(S.gold<up.g||!has2(up.r))return;S.gold-=up.g;up.r.forEach(([q,m])=>take2(q,m));S.storeLv=lv+1;for(let k=0;k<12;k++)S.store.push(null);
     storeInfo='Das Lager hat jetzt '+S.store.length+' Plätze.';sfx('win');drawStore()};
   $('#stX').onclick=openHouse;
 }
