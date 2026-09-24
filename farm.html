@@ -24,10 +24,10 @@
   --bg:#1f3319; color-scheme:light;
 }
 *{box-sizing:border-box}
-html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none;background:var(--bg)}
+html,body{height:100%;min-height:calc(100% + var(--gap,0px));margin:0;overflow:hidden;overscroll-behavior:none;background:var(--bg)}
 body{font-family:"Pixelify Sans",ui-monospace,"Courier New",monospace;color:var(--ink);
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-#cv{position:fixed;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated;touch-action:none}
+#cv{position:fixed;top:0;left:0;width:100%;height:calc(100% + var(--gap,0px));display:block;image-rendering:pixelated;touch-action:none}
 .panel{background:var(--parch);border:3px solid var(--wood-d);border-radius:6px;
   box-shadow:inset 0 0 0 2px var(--parch-d),0 3px 0 rgba(0,0,0,.35)}
 #hud{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:10px;display:flex;flex-direction:column;gap:6px;pointer-events:none}
@@ -47,7 +47,7 @@ body{font-family:"Pixelify Sans",ui-monospace,"Courier New",monospace;color:var(
 #hFill{background:#e0453a}
 .bar .lab{position:absolute;top:-19px;left:0;right:0;text-align:center;font-weight:700;color:#fff3d6;text-shadow:0 2px 0 #000;font-size:15px}
 #menuBtn{position:fixed;right:10px;top:calc(env(safe-area-inset-top,0px) + 8px);width:42px;height:38px;font-family:inherit;font-size:20px;font-weight:700;color:var(--ink);cursor:pointer;display:grid;place-items:center;padding:0}
-#bar{position:fixed;left:0;right:0;bottom:0;padding:6px 8px calc(env(safe-area-inset-bottom,0px) + 8px);display:flex;gap:4px;justify-content:center;
+#bar{position:fixed;left:0;right:0;bottom:0;padding:6px 8px calc(var(--sab,env(safe-area-inset-bottom,0px)) + 8px);display:flex;gap:4px;justify-content:center;
   background:linear-gradient(to top,rgba(20,30,15,.55),rgba(20,30,15,0))}
 #bar::-webkit-scrollbar{display:none}
 .slot{flex:none;width:var(--slot,48px);height:var(--slot,48px);position:relative;padding:0;cursor:pointer;display:grid;place-items:center;font-family:inherit}
@@ -68,7 +68,7 @@ body{font-family:"Pixelify Sans",ui-monospace,"Courier New",monospace;color:var(
 #invInfo{min-height:48px;margin-top:10px;font-size:15px}
 #ghost{position:fixed;width:44px;height:44px;margin:-22px 0 0 -22px;pointer-events:none;z-index:50;image-rendering:pixelated}
 #fishPad{position:fixed;inset:0;touch-action:none}
-#aBtn{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);width:88px;height:88px;border-radius:50%;
+#aBtn{position:fixed;right:16px;bottom:calc(var(--sab,env(safe-area-inset-bottom,0px)) + 84px);width:88px;height:88px;border-radius:50%;
   background:radial-gradient(circle at 38% 32%,#ffe38a,#f0b43a 60%,#c9831f);border:4px solid var(--wood-d);box-shadow:0 4px 0 var(--wood-d);
   font-family:inherit;font-weight:700;font-size:15px;color:var(--ink);display:grid;place-items:center;text-align:center;line-height:1.05;padding:4px;cursor:pointer;touch-action:none}
 #aBtn:active,#aBtn.down{transform:translateY(3px);box-shadow:0 1px 0 var(--wood-d)}
@@ -117,6 +117,16 @@ button:focus-visible{outline:3px solid #2e7fd0;outline-offset:2px}
 #title .help{margin-top:16px;font-size:14px;line-height:1.4;text-align:left}
 #saveInfo{margin-top:10px;font-size:14px;color:#fff3d6;text-shadow:0 1px 0 #000}
 textarea{width:100%;font:12px ui-monospace,Menlo,monospace;border:2px solid var(--parch-d);border-radius:5px;padding:6px;background:#fff8e8;color:var(--ink);resize:vertical;-webkit-user-select:text;user-select:text}
+.mgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.tile{display:flex;align-items:center;gap:10px;text-align:left;padding:10px;background:#fbe9c4;border:3px solid var(--wood-d);border-radius:6px;box-shadow:0 3px 0 var(--wood-d);font-family:inherit;color:var(--ink);cursor:pointer;min-height:64px}
+.tile:active{transform:translateY(2px);box-shadow:0 1px 0 var(--wood-d)}
+.tile span{min-width:0}
+.tile canvas{width:32px;height:32px;image-rendering:pixelated;flex:none}
+.tile b{display:block;font-size:17px}.tile small{display:block;font-size:12px;opacity:.75}
+.saved{font-size:13px;opacity:.75;margin-top:10px!important}
+.btn.wide{width:100%}
+.btn.danger{background:#b8483a}
+.row.set{grid-template-columns:0 1fr auto}
 [hidden]{display:none!important}
 @media (prefers-reduced-motion:reduce){.bar .fill,#toast,#saveDot{transition:none}}
 </style>
@@ -171,7 +181,8 @@ textarea{width:100%;font:12px ui-monospace,Menlo,monospace;border:2px solid var(
 const $=s=>document.querySelector(s);
 const cv=$('#cv'),ctx=cv.getContext('2d');
 const FW=40,FH=30;
-let dpr=1,TS=32,camX=0,camY=0;
+let dpr=1,TS=32,camX=0,camY=0,GAP=0;
+const VH=()=>innerHeight+GAP;
 
 /* ---------- helpers ---------- */
 function mul(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
@@ -346,6 +357,9 @@ function drawIcon(g,id){
     case'fegg2':ell(g,8,9,4.5,5.5,'#5cc14a');R(g,4,10,9,1,'#f6d53a');R(g,4,7,9,1,'#f6d53a');return;
     case'fegg3':ell(g,8,9,4.5,5.5,'#f0b43a');R(g,5,7,2,2,'#e0453a');R(g,9,10,2,2,'#e0453a');return;
     case'chick':ell(g,8,10,5,4,'#fafafa');circ(g,11,6,2.5,'#fafafa');R(g,10,3,2,2,'#e0453a');R(g,13,6,2,1,'#f0b43a');R(g,11,5,1,1,'#222');R(g,6,14,1,2,'#f0b43a');R(g,9,14,1,2,'#f0b43a');R(g,4,9,3,2,'#e6e6e6');return;
+    case'heart':R(g,3,4,4,2,'#e0453a');R(g,9,4,4,2,'#e0453a');R(g,2,5,12,4,'#e0453a');R(g,3,9,10,2,'#e0453a');R(g,5,11,6,2,'#e0453a');R(g,7,13,2,1,'#e0453a');R(g,4,5,2,2,'#ffa89a');return;
+    case'gear':circ(g,8,8,6,'#8a9aa0');for(const[x,y]of[[7,1],[7,13],[1,7],[13,7],[3,3],[11,3],[3,11],[11,11]])R(g,x,y,2,2,'#8a9aa0');circ(g,8,8,2.5,'#f6dcaa');return;
+    case'book':R(g,2,3,12,11,'#5b3417');R(g,3,3,5,10,'#f6ecd8');R(g,8,3,5,10,'#efe0c0');R(g,4,5,3,1,'#9a8a7a');R(g,4,7,3,1,'#9a8a7a');R(g,9,5,3,1,'#9a8a7a');R(g,9,7,3,1,'#9a8a7a');R(g,7,3,1,11,'#8a5a2b');return;
     case'bag':R(g,3,5,10,10,'#a86a3a');R(g,3,5,10,2,'#c8844a');R(g,5,2,6,4,'#7a4a24');R(g,6,3,4,2,'#a86a3a');R(g,7,9,2,2,'#ffcf3f');return;
     case'sprinkler':case'qsprinkler':{const c=id=='sprinkler'?'#9aa3ab':'#e0b43a';R(g,6,2,4,11,c);R(g,2,6,12,4,c);R(g,6,6,4,4,'#4aa3df');R(g,7,7,1,1,'#bfe4ff');R(g,5,13,6,2,dk(c,.35));return}
     case'fence':R(g,3,3,3,12,'#9a6230');R(g,10,3,3,12,'#9a6230');R(g,1,6,14,2,'#b8783a');R(g,1,11,14,2,'#b8783a');R(g,3,3,3,1,'#c8904a');R(g,10,3,3,1,'#c8904a');return;
@@ -479,6 +493,9 @@ function buildSprites(se){
   SP.boulder=mk(48,56,g=>{ball(g,19,49,6.5,'#8a847c');ball(g,29,50,6,'#7a746c');ball(g,24,42,5.5,'#948e86')});
   SP.board=mk(20,28,g=>{R(g,2,8,3,20,'#7a4a24');R(g,15,8,3,20,'#7a4a24');R(g,0,2,20,14,'#9a6230');R(g,1,3,18,12,'#c8904a');
     R(g,3,5,5,6,'#f6ecd8');R(g,9,4,4,5,'#fff8e8');R(g,13,6,5,6,'#f2e4c8');R(g,4,6,3,1,'#9a8a7a');R(g,14,8,3,1,'#9a8a7a');R(g,10,11,5,3,'#e8d8b8');R(g,0,0,20,3,snow?'#f2f6f8':'#6a3e1e')});
+  SP.bench=mk(20,22,g=>{R(g,2,12,3,10,'#6a3e1e');R(g,15,12,3,10,'#6a3e1e');R(g,0,8,20,5,'#a86a34');R(g,0,8,20,1,'#c8884a');R(g,0,12,20,1,'#7a4a24');
+    R(g,3,4,6,4,'#9aa3ab');R(g,3,4,6,1,'#dfe5ea');R(g,5,6,2,3,'#6a4424');line(g,11,7,17,2,'#8a5a2b',2);R(g,15,1,4,2,'#9aa3ab');R(g,2,17,16,2,'#8a5a2b');
+    if(snow)R(g,0,7,20,1,'#f2f6f8')});
   SP.sign=mk(16,20,g=>{R(g,7,8,2,12,'#7a4a24');R(g,1,2,14,8,'#9a6230');R(g,2,3,12,6,'#c8904a');R(g,4,5,8,1,'#7a4a24');R(g,4,7,5,1,'#7a4a24')});
   SP.fence=mk(16,20,g=>{R(g,2,6,3,13,'#9a6230');R(g,11,6,3,13,'#9a6230');R(g,0,9,16,2,'#b8783a');R(g,0,14,16,2,'#b8783a');R(g,2,6,3,1,'#c8904a');R(g,11,6,3,1,'#c8904a');if(snow){R(g,2,5,3,1,'#fff');R(g,11,5,3,1,'#fff')}});
 }
@@ -503,7 +520,7 @@ function buildMineSprites(){
 /* ---------- state ---------- */
 let S=null,FARM=null,MAP=null,M=null;
 const T=(x,y)=>(x<0||y<0||x>=MAP.w||y>=MAP.h)?null:MAP.t[y*MAP.w+x];
-const HOUSE={x:3,y:2,w:6,h:5,door:[5,6]},SHOP={x:29,y:2,w:6,h:5,door:[31,6]},COOP={x:14,y:2,w:4,h:3,door:[15,4]},CAVE={x:35,y:10,w:3,h:3,door:[36,12]},BOARD=[27,6];
+const HOUSE={x:3,y:2,w:6,h:5,door:[5,6]},SHOP={x:29,y:2,w:6,h:5,door:[31,6]},COOP={x:14,y:2,w:4,h:3,door:[15,4]},CAVE={x:35,y:10,w:3,h:3,door:[36,12]},BOARD=[27,6],BENCH=[9,6];
 const inField=(x,y)=>x>=3&&x<=24&&y>=9&&y<=26;
 const isDoor=(x,y,b)=>x==b.door[0]&&y==b.door[1];
 function stampFarm(t,unl){
@@ -520,6 +537,7 @@ function stampFarm(t,unl){
   fill(HOUSE);fill(SHOP);fill(CAVE);
   at(10,6).g=5;at(11,6).g=5;
   at(BOARD[0],BOARD[1]).o={k:'board'};
+  {const b=at(BENCH[0],BENCH[1]);b.g=0;b.c=null;b.o={k:'bench'}}
   if(unl&&unl.coop)fill(COOP);else at(COOP.door[0],COOP.door[1]).o={k:'sign'};
 }
 function genMap(){
@@ -554,6 +572,7 @@ function migrate(s){
   s.coop=s.coop||{hay:0,ch:[],eggs:[]};s.mineMax=s.mineMax||0;s.mineChest=s.mineChest||0;s.fd=s.fd||{eggs:0,fish:0,done:0};
   if(!(s.sel>=0&&s.sel<8))s.sel=0;s.music=s.music!==false;s.sound=s.sound!==false;s.loc='farm';s.savedAt=s.savedAt||0;
   if(s.v!=2){stampFarm(s.t,s.unl);s.v=2}
+  {const b=s.t[BENCH[1]*FW+BENCH[0]];if(!b.o||b.o.k!='bench'){b.g=0;b.c=null;b.o={k:'bench'}}}
   s.t.forEach((c,i)=>{if(c.o&&c.o.k=='tree'&&!c.o.t){c.o.t=WILD[Math.floor(hash(i,17)*WILD.length)];c.o.st=4;c.o.age=0;c.o.fr=0}});
   return s;
 }
@@ -563,7 +582,7 @@ const festToday=()=>FESTS.find(f=>f.s==S.season&&f.d==S.day)||null;
 
 /* ---------- save: device + account ---------- */
 const KEY='hof-sonnental-1';
-const BUILD='2026-09-24-2';
+const BUILD='2026-09-24-3';
 let updating=false;
 async function checkUpdate(){
   if(updating||window.claude||!/^https?:$/.test(location.protocol))return;
@@ -664,7 +683,7 @@ function openTransfer(fromTitle){
     if(!sv){msg('Der Code ist unvollständig oder beschädigt. Kopiere ihn noch einmal ganz.');return}
     S=sv;setFarm();buildSprites(S.season);hasSave=true;barDirty=1;closeModal();
     if(!started)start(false);saveNow();toast(`Spielstand geladen: ${S.day}. ${SEASONS[S.season]}, Jahr ${S.year}`,3)};
-  $('#tfX').onclick=fromTitle?closeModal:openMenu;
+  $('#tfX').onclick=fromTitle?closeModal:openSettings;
 }
 
 /* ---------- inventory ---------- */
@@ -821,6 +840,7 @@ function plan(){
     if(isDoor(x,y,CAVE))return[S.unl.mine?'Höhle':'Verschüttet',openCave];
     if(S.unl.coop&&isDoor(x,y,COOP))return['Stall',openCoop];
     if(t&&t.o&&t.o.k=='board')return['Tafel',()=>openBoard(false)];
+    if(t&&t.o&&t.o.k=='bench')return['Werkbank',openCraft];
     if(t&&t.o&&t.o.k=='sign')return['Lesen',()=>toast('Bauplatz für einen Hühnerstall. Die Dorftafel am Laden verrät, wie er gebaut wird.',3.5)];
     if(t&&t.g==5)return it&&!it.tool&&it.sell?['Versenden',ship]:['Kiste',()=>toast('Wähle ein Erzeugnis und lege es hier hinein. Bezahlt wird über Nacht.')];
   }else{
@@ -1014,13 +1034,13 @@ function openCoop(){
 function openCraft(){
   const html=`<h2>Werkbank</h2><p>Stelle Dinge aus deinen Rohstoffen her.</p><div class="rows">
     ${RECIPES.map(([id,n,req,d],i)=>`<div class="row${hasReq(req)?'':' done'}">${ic(id)}<div><b>${ITEMS[id].n}${n>1?' ×'+n:''}</b><small>${d}<br>${reqText(req)}</small></div><div class="buy"><button class="btn sm" data-c="${i}" ${hasReq(req)?'':'disabled'}>Herstellen</button></div></div>`).join('')}
-  </div><div class="btns"><button class="btn alt" id="crX">Zurück</button></div>`;
+  </div><div class="btns"><button class="btn alt" id="crX">Fertig</button></div>`;
   const st=$('#modalWrap').hidden?0:$('#modal').scrollTop;
   openModal(html);$('#modal').scrollTop=st;
   $('#modal').querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{const[id,n,req]=RECIPES[+b.dataset.c];if(!hasReq(req))return;
     if(S.inv.every(s=>s)&&!S.inv.some(s=>s&&s.id==id)){toast('Dein Rucksack ist voll.');return}
     req.forEach(([r,m])=>removeItems(r,m));addItem(id,n);sfx('pop');toast('Hergestellt: '+ITEMS[id].n,1.4);openCraft()});
-  $('#crX').onclick=openMenu;
+  $('#crX').onclick=closeModal;
 }
 function openPeople(){
   const html=`<h2>Dorf</h2><div class="rows">${Object.keys(NPCS).map(k=>`<div class="row"><img alt="" src="${portrait(k)}"><div><b>${NPCS[k].n}</b><span class="hearts">${hearts(S.rel[k].pts)}</span><small style="display:block">${S.rel[k].met?'Liebt: '+NPCS[k].loves.slice(0,3).map(i=>ITEMS[i].n).join(', '):'Noch nicht kennengelernt'}</small></div><span></span></div>`).join('')}</div>
@@ -1144,14 +1164,12 @@ function endDay(passOut){
 function openMenu(){
   if(!started)return;
   const ago=S.savedAt?Math.max(0,Math.round((Date.now()-S.savedAt)/1000)):null;
-  openModal(`<h2>Pause</h2><p>${WD[(S.day-1)%7]}. ${S.day}. ${SEASONS[S.season]}, Jahr ${S.year}</p>
-    <p style="font-size:14px">${ago==null?'Noch nicht gespeichert.':`Zuletzt gespeichert vor ${ago<60?ago+' s':Math.round(ago/60)+' min'}.`} ${cloudState=='ok'?'Der Spielstand liegt auf dem Gerät und in deinem Konto.':'Der Spielstand liegt auf diesem Gerät.'} Du kannst das Spiel jederzeit schließen.</p>
-    <div class="btns"><button class="btn" id="mBack">Weiterspielen</button><button class="btn alt" id="mBag">Rucksack</button><button class="btn alt" id="mCraft">Werkbank</button><button class="btn alt" id="mBoard">Dorftafel</button><button class="btn alt" id="mPeople">Dorf</button>
-    <button class="btn alt" id="mSave">Jetzt speichern</button><button class="btn alt" id="mXfer">Spielstand übertragen</button><button class="btn alt" id="mHelp">Tipps</button><button class="btn alt" id="mSnd">Ton: ${S.sound?'an':'aus'}</button><button class="btn alt" id="mMus">Musik: ${S.music?'an':'aus'}</button><button class="btn alt" id="mNew">Neues Spiel</button></div>`);
-  $('#mBack').onclick=closeModal;$('#mXfer').onclick=()=>openTransfer(false);$('#mBag').onclick=openBag;$('#mCraft').onclick=openCraft;$('#mBoard').onclick=()=>openBoard(true);$('#mPeople').onclick=openPeople;
-  $('#mSave').onclick=()=>{saveNow();flashSaved();closeModal()};
-  $('#mSnd').onclick=()=>{S.sound=!S.sound;$('#mSnd').textContent='Ton: '+(S.sound?'an':'aus')};
-  $('#mMus').onclick=()=>{S.music=!S.music;$('#mMus').textContent='Musik: '+(S.music?'an':'aus')};
+  const tile=(id,ico,lab,sub)=>`<button class="tile" id="${id}">${ic(ico)}<span><b>${lab}</b><small>${sub}</small></span></button>`;
+  openModal(`<h2>Pause</h2><p>${WD[(S.day-1)%7]}. ${S.day}. ${SEASONS[S.season]}, Jahr ${S.year} · ${S.gold} g</p>
+    <div class="mgrid">${tile('mBag','bag','Rucksack','Sachen ordnen')}${tile('mPeople','heart','Dorf','Freunde und Feste')}${tile('mHelp','book','Tipps','So geht’s')}${tile('mSet','gear','Einstel&shy;lungen','Ton, Speichern')}</div>
+    <p class="saved">${ago==null?'Noch nicht gespeichert.':`Automatisch gespeichert vor ${ago<60?ago+' s':Math.round(ago/60)+' min'}.`}</p>
+    <div class="btns"><button class="btn wide" id="mBack">Weiterspielen</button></div>`);
+  $('#mBack').onclick=closeModal;$('#mBag').onclick=openBag;$('#mPeople').onclick=openPeople;$('#mSet').onclick=openSettings;
   $('#mHelp').onclick=()=>{openModal(`<h2>Tipps</h2>
     <p><b>Anbau:</b> Mit der Hacke Gras umgraben, Samen wählen und säen, jeden Tag gießen. Reife Pflanzen mit dem Knopf ernten. Dünger macht sie schneller.</p>
     <p><b>Geld:</b> Ernte, Fische, Eier und Erze in die Versandkiste neben dem Haus legen. Bezahlt wird über Nacht.</p>
@@ -1163,11 +1181,25 @@ function openMenu(){
     <p><b>Angeln:</b> Angel wählen, zum Wasser schauen, Knopf drücken. Beißt ein Fisch, zieh den Finger irgendwo auf dem Bildschirm hoch und runter, damit der grüne Balken dem Fisch folgt.</p>
     <p><b>Bäume:</b> Es gibt Eiche, Ahorn und Kiefer. Schüttel sie einmal am Tag, dann fällt manchmal ein Samen herunter. Samen und Obstbaum-Setzlinge (Kirsche, Pfirsich, Apfel) pflanzt du auf Gras. Obstbäume tragen nach 28 Tagen in ihrer Jahreszeit jeden Tag Früchte.</p>
     <p><b>Steine und Äste:</b> Jeden Morgen liegen neue auf den Wiesen. Stein und Holz gibt es auch im Laden.</p>
+    <p><b>Werkbank:</b> Steht rechts neben deinem Haus. Dort stellst du Zäune, Dünger, Sprinkler und Essen her.</p>
     <p><b>Rucksack:</b> Das Symbol rechts neben der Leiste öffnet ihn. Teile per Finger ziehen oder zwei Plätze antippen zum Tauschen.</p>
     <p><b>Speichern:</b> Automatisch alle paar Sekunden und beim Schließen. Beim nächsten Öffnen geht es genau dort weiter.</p>
     <p><b>Tastatur:</b> WASD/Pfeile laufen, Leertaste benutzen, 1–9 Werkzeug.</p>
     <div class="btns"><button class="btn" id="hOk">Zurück</button></div>`);$('#hOk').onclick=openMenu};
-  $('#mNew').onclick=()=>{const b=$('#mNew');if(b.dataset.c){newGame();buildSprites(S.season);saveNow();closeModal();barDirty=1;toast('Neues Spiel gestartet.')}else{b.dataset.c=1;b.textContent='Wirklich? Alles wird gelöscht'}};
+}
+function openSettings(){
+  const row=(id,lab,val)=>`<div class="row set"><span></span><b>${lab}</b><button class="btn sm" id="${id}">${val}</button></div>`;
+  openModal(`<h2>Einstellungen</h2><div class="rows">${row('sSnd','Töne',S.sound?'An':'Aus')}${row('sMus','Musik',S.music?'An':'Aus')}</div>
+    <h3>Spielstand</h3><p style="font-size:14px">${cloudState=='ok'?'Liegt auf dem Gerät und in deinem Konto.':'Liegt auf diesem Gerät.'} Das Spiel speichert automatisch.</p>
+    <div class="btns"><button class="btn alt sm" id="sSave">Jetzt speichern</button><button class="btn alt sm" id="sXfer">Spielstand übertragen</button></div>
+    <h3>Neu anfangen</h3><div class="btns"><button class="btn sm danger" id="sNew">Neues Spiel</button></div>
+    <div class="btns"><button class="btn" id="sBack">Zurück</button></div>`);
+  $('#sSnd').onclick=()=>{S.sound=!S.sound;$('#sSnd').textContent=S.sound?'An':'Aus'};
+  $('#sMus').onclick=()=>{S.music=!S.music;$('#sMus').textContent=S.music?'An':'Aus'};
+  $('#sSave').onclick=()=>{saveNow();flashSaved();$('#sSave').textContent='Gespeichert'};
+  $('#sXfer').onclick=()=>openTransfer(false);
+  $('#sNew').onclick=()=>{const b=$('#sNew');if(b.dataset.c){newGame();buildSprites(S.season);saveNow();closeModal();barDirty=1;toast('Neues Spiel gestartet.')}else{b.dataset.c=1;b.textContent='Wirklich? Dein Hof wird gelöscht'}};
+  $('#sBack').onclick=openMenu;
 }
 
 /* ---------- input ---------- */
@@ -1383,6 +1415,7 @@ function render(now){
         case'sprinkler':case'qsprinkler':ctx.drawImage(icon(o.k),sx+2*p,sy+2*p,12*p,12*p);break;
         case'rock':ctx.drawImage(farm?SP.rock:SP.mrock[o.ore||'none'],sx,sy,TS,TS);break;
         case'board':ctx.drawImage(SP.board,sx-2*p,sy-12*p,20*p,28*p);break;
+        case'bench':ctx.drawImage(SP.bench,sx-2*p,sy-6*p,20*p,22*p);break;
         case'sign':ctx.drawImage(SP.sign,sx,sy-4*p,TS,20*p);break;
         case'fence':ctx.drawImage(SP.fence,sx,sy-4*p,TS,20*p);break;
         case'ladder':ctx.drawImage(SP.ladder,sx,sy,TS,TS);break;
@@ -1459,8 +1492,12 @@ function hud(){
 
 /* ---------- boot ---------- */
 function resize(){
-  dpr=Math.min(3,window.devicePixelRatio||1);cv.width=Math.round(innerWidth*dpr);cv.height=Math.round(innerHeight*dpr);
-  const m=Math.min(innerWidth,innerHeight),across=m<520?10.5:m<800?13:15;TS=Math.max(24,Math.round(m*dpr/across));
+  // iOS home-screen apps with a translucent status bar report a viewport that is short by the status bar height
+  const portrait=innerHeight>=innerWidth,full=portrait?Math.max(screen.height,screen.width):Math.min(screen.height,screen.width);
+  const g=navigator.standalone&&full-innerHeight>0&&full-innerHeight<80?full-innerHeight:0;
+  GAP=g;const rs=document.documentElement.style;rs.setProperty('--gap',g+'px');if(g)rs.setProperty('--sab','0px');else rs.removeProperty('--sab');
+  dpr=Math.min(3,window.devicePixelRatio||1);cv.width=Math.round(innerWidth*dpr);cv.height=Math.round(VH()*dpr);
+  const m=Math.min(innerWidth,VH()),across=m<520?10.5:m<800?13:15;TS=Math.max(24,Math.round(m*dpr/across));
   const sz=Math.max(34,Math.min(48,Math.floor((innerWidth-16-8*4-4)/9)));document.documentElement.style.setProperty('--slot',sz+'px');
   if(joy.id==null)joyGhost();
 }
