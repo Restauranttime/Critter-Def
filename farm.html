@@ -214,6 +214,9 @@ const pick=a=>a[Math.floor(Math.random()*a.length)];
 const SEASONS=['Frühling','Sommer','Herbst','Winter'];
 const WD=['Mo','Di','Mi','Do','Fr','Sa','So'];
 const DX=[0,0,-1,1],DY=[1,-1,0,0];
+/* 8-way facing: 0 down, 1 down-right, 2 right, 3 up-right, 4 up, 5 up-left, 6 left, 7 down-left */
+const F8X=[0,1,1,1,0,-1,-1,-1],F8Y=[1,1,0,-1,-1,-1,0,1],CARD=[0,4,6,2];
+function face(){return S._fd===S.dir&&S.face!=null?S.face:CARD[S.dir]}
 const CROPS={
   parsnip:{n:'Pastinake',s:0,days:4,price:20,sell:35,col:'#efe1a2',shape:'root'},
   potato:{n:'Kartoffel',s:0,days:6,price:50,sell:80,col:'#c89a5c',shape:'root'},
@@ -601,7 +604,7 @@ const festToday=()=>FESTS.find(f=>f.s==S.season&&f.d==S.day)||null;
 
 /* ---------- save: device + account ---------- */
 const KEY='hof-sonnental-1';
-const BUILD='2026-09-26-3';
+const BUILD='2026-09-26-4';
 let updating=false;
 async function checkUpdate(){
   if(updating||window.claude||!/^https?:$/.test(location.protocol))return;
@@ -836,7 +839,7 @@ function invUp(e){if(!drag||e.pointerId!==drag.id)return;
 function hearts(pts,max=10,per=250){const h=Math.floor(pts/per);let s='';for(let i=0;i<max;i++)s+=i<h?'♥':'<span class="e">♥</span>';return s}
 
 /* ---------- actions ---------- */
-function target(){if(override)return override;const tx=Math.floor(S.px),ty=Math.floor(S.py-.2);return{x:tx+DX[S.dir],y:ty+DY[S.dir]}}
+function target(){if(override)return override;const tx=Math.floor(S.px),ty=Math.floor(S.py-.2);const f=face();return{x:tx+F8X[f],y:ty+F8Y[f]}}
 function needE(n){if(S.energy<n){toast('Du bist zu erschöpft. Iss etwas oder geh schlafen.');sfx('bad');return false}S.energy-=n;return true}
 function swing(id){anim=.28;animItem=id}
 function npcAt(x,y){if(S.loc!='farm')return null;for(const k in NR){const n=NR[k];if(n.vis&&Math.hypot(n.x-(x+.5),n.y-(y+.7))<.95)return k}return null}
@@ -1131,7 +1134,7 @@ function mineRock(x,y,t){
 function attack(){
   if(swingCd>0)return;swingCd=.35;swing('sword');sfx('hit');
   if(MAP.id!='mine')return;
-  const cx=S.px+DX[S.dir]*.7,cy=S.py-.3+DY[S.dir]*.7;
+  const f8=face(),fl=F8X[f8]&&F8Y[f8]?.72:1,cx=S.px+F8X[f8]*.7*fl,cy=S.py-.3+F8Y[f8]*.7*fl;
   for(const s of M.slimes){if(Math.hypot(s.x-cx,s.y-.3-cy)<1.05){s.hp-=3;const l=Math.hypot(s.x-S.px,s.y-S.py)||1;s.kx=(s.x-S.px)/l*6;s.ky=(s.y-S.py)/l*6;dust(s.x,s.y-.3,s.col,5);sfx('slime')}}
   const dead=M.slimes.filter(s=>s.hp<=0);M.slimes=M.slimes.filter(s=>s.hp>0);
   for(const s of dead){addItem('slime',1);pop(s.x,s.y-.8,'+1 Schleim','#9be07a');if(Math.random()<.3){const o=oreFor(M.floor)||'copper';addItem(o,1);pop(s.x,s.y-1.2,'+1 '+ITEMS[o].n)}}
@@ -1245,7 +1248,7 @@ cv.addEventListener('pointerdown',e=>{
   if(F&&F.ph=='game'){holdP=true;return}
   if(e.clientX<innerWidth*.5){joy.id=e.pointerId;joy.sx=e.clientX;joy.sy=e.clientY;joy.dx=joy.dy=0;joyEl.classList.remove('ghost');joyEl.style.left=e.clientX+'px';joyEl.style.top=e.clientY+'px';try{cv.setPointerCapture(e.pointerId)}catch(_){}return}
   const tx=Math.floor((e.clientX*dpr+camX)/TS),ty=Math.floor((e.clientY*dpr+camY)/TS),px=Math.floor(S.px),py=Math.floor(S.py-.2),ddx=tx-px,ddy=ty-py;
-  if(Math.abs(ddx)<=1&&Math.abs(ddy)<=1&&(ddx||ddy)){S.dir=ddx&&!ddy?(ddx<0?2:3):(ddy<0?1:0);if(ddx&&ddy)S.dir=ddx<0?2:3;override={x:tx,y:ty};doAction();override=null}
+  if(Math.abs(ddx)<=1&&Math.abs(ddy)<=1&&(ddx||ddy)){S.dir=ddx&&!ddy?(ddx<0?2:3):(ddy<0?1:0);if(ddx&&ddy)S.dir=ddx<0?2:3;S.face=F8X.findIndex((v,i)=>v==ddx&&F8Y[i]==ddy);S._fd=S.dir;override={x:tx,y:ty};doAction();override=null}
 });
 cv.addEventListener('pointermove',e=>{if(e.pointerId!==joy.id)return;let dx=e.clientX-joy.sx,dy=e.clientY-joy.sy;const l=Math.hypot(dx,dy),m=48;if(l>m){dx*=m/l;dy*=m/l}joy.dx=dx/m;joy.dy=dy/m;joyEl.firstElementChild.style.transform=`translate(${dx}px,${dy}px)`});
 function resetJoy(){joy.id=null;joy.dx=joy.dy=0;joyGhost()}
@@ -1299,7 +1302,7 @@ function update(dt){
     const sp=(S.energy<=0?2.4:4.4)*(S.riding?1.8:1)*dt;
     const nx=S.px+mx*sp,ny=S.py+my*sp;
     if(!blocked(nx,S.py))S.px=nx;if(!blocked(S.px,ny))S.py=ny;
-    S.dir=Math.abs(mx)>Math.abs(my)?(mx<0?2:3):(my<0?1:0);
+    S.dir=Math.abs(mx)>Math.abs(my)?(mx<0?2:3):(my<0?1:0);S.face=((2-Math.round(Math.atan2(my,mx)/(Math.PI/4)))%8+8)%8;S._fd=S.dir;
     moving=true;walkT+=dt;edgeTravel();
   }
   if(tickWorld(dt))return;
@@ -1379,7 +1382,8 @@ function updateFish(dt){
 }
 
 /* ---------- render ---------- */
-function person(x,y,dir,wt,pal,mv){
+function person(x,y,dir,wt,pal,mv,f8){
+  if(f8!=null&&f8%2){if(f8==5||f8==7){ctx.save();ctx.translate(x,0);ctx.scale(-1,1);ctx.translate(-x,0);personDiag(x,y,f8==7?1:3,wt,pal,mv);ctx.restore()}else personDiag(x,y,f8,wt,pal,mv);return}
   const p=TS/16,f=mv?Math.floor(wt*8)%4:0,bob=(f==1||f==3)?-p:0;
   const ox=Math.round(x-6*p),oy=Math.round(y-22*p+bob);
   const r=(a,b,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(ox+Math.round(a*p),oy+Math.round(b*p),Math.ceil(w*p),Math.ceil(h*p))};
@@ -1398,6 +1402,25 @@ function person(x,y,dir,wt,pal,mv){
   if(dir==2){r(2,1,8,3,pal.hair);r(6,3,3,5,pal.hair);r(3,6,1,2,eye);if(pal.long)r(7,6,3,7,pal.hair);if(pal.beard)r(3,8,3,2,pal.hair)}
   if(dir==3){r(2,1,8,3,pal.hair);r(3,3,3,5,pal.hair);r(8,6,1,2,eye);if(pal.long)r(2,6,3,7,pal.hair);if(pal.beard)r(6,8,3,2,pal.hair)}
   if(pal.tail){if(dir==1)r(4,8,4,6,pal.hair);else if(dir==2)r(8,5,2,6,pal.hair);else if(dir==3)r(2,5,2,6,pal.hair);else{r(1,4,1,4,pal.hair);r(10,4,1,4,pal.hair)}}
+}
+// three-quarter views, facing right (1 = down-right, 3 = up-right); left is mirrored
+function personDiag(x,y,f8,wt,pal,mv){
+  const p=TS/16,f=mv?Math.floor(wt*8)%4:0,bob=(f==1||f==3)?-p:0;
+  const ox=Math.round(x-6*p),oy=Math.round(y-22*p+bob);
+  const r=(a,b,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(ox+Math.round(a*p),oy+Math.round(b*p),Math.ceil(w*p),Math.ceil(h*p))};
+  ctx.fillStyle='rgba(0,0,0,.22)';ctx.beginPath();ctx.ellipse(x,y-p,5*p,2*p,0,0,7);ctx.fill();
+  const la=f==1?-1:0,lb=f==3?-1:0,down=f8==1;
+  r(3,17+la,3,4,dk(pal.pants,.12));r(6,17+lb,3,4,pal.pants);r(3,21+la,3,1,pal.shoe);r(6,21+lb,4,1,pal.shoe);
+  if(pal.long)r(2,15,8,4,pal.pants);
+  r(2,10,8,8,pal.shirt);r(2,17,8,1,dk(pal.shirt,.25));
+  const sw=mv?(f==1?-1:f==3?1:0):0;
+  r(1,11,2,6,dk(pal.shirt,.2));r(1,16,2,2,dk(pal.skin,.1));
+  r(8+sw,11,2,6,dk(pal.shirt,.08));r(8+sw,16,2,2,pal.skin);
+  r(3,3,6,7,pal.skin);
+  const eye='#2a1a10';
+  if(down){r(2,1,8,3,pal.hair);r(2,3,2,5,pal.hair);r(9,3,1,2,pal.hair);r(5,6,1,2,eye);r(8,6,1,2,eye);r(8,8,1,1,'#f0a08c');r(4,6,1,1,dk(pal.skin,.15));
+    if(pal.long){r(1,3,2,9,pal.hair);r(9,3,1,4,pal.hair)}if(pal.beard)r(4,8,5,2,pal.hair);if(pal.tail)r(1,4,2,7,pal.hair)}
+  else{r(2,1,8,8,pal.hair);r(8,4,1,4,pal.skin);r(8,6,1,1,dk(pal.skin,.2));if(pal.long)r(2,8,7,5,pal.hair);if(pal.tail)r(3,8,4,6,pal.hair)}
 }
 function drawTool(x,y){
   if(anim<=0||!animItem)return;const p=TS/16,k=1-anim/.28,d=S.dir;
@@ -1510,7 +1533,7 @@ function render(now){
     if(!NPCS[k].story&&S.rel[k]&&(questMark(k)||(!S.rel[k].met&&k!='mara'&&k!='jonas'&&k!='hilde'))){ctx.fillStyle='#ffe38a';ctx.strokeStyle='#5b3417';ctx.lineWidth=Math.max(1,p*.6);ctx.fillRect(X-2.5*p,Y-31*p,5*p,7*p);ctx.strokeRect(X-2.5*p,Y-31*p,5*p,7*p);ctx.fillStyle='#d9442f';ctx.fillRect(X-.8*p,Y-30*p,1.6*p,3.5*p);ctx.fillRect(X-.8*p,Y-26*p,1.6*p,1.2*p)}
     if(NPCS[k].story){ctx.fillStyle='#ffe38a';ctx.fillRect(X-.8*p,Y-30*p,1.6*p,3.5*p);ctx.fillRect(X-.8*p,Y-26*p,1.6*p,1.2*p)}}])}
   {const kd=drawKid(now,p);if(kd)D.push(kd)}
-  D.push([S.py,()=>{const sx=S.px*TS-camX,sy=S.py*TS-camY;if(invul>0&&Math.floor(now/80)%2)return;const ride=S.riding&&!!outdoor,py2=ride?sy-7*p:sy;if(ride)drawAnimalAt('horse',sx,sy,S.dir==2,0,p);if(S.dir==1)drawTool(sx,py2);person(sx,py2,S.dir,walkT,mePal(),moving&&!ride);if(S.dir!=1)drawTool(sx,py2)}]);
+  D.push([S.py,()=>{const sx=S.px*TS-camX,sy=S.py*TS-camY;if(invul>0&&Math.floor(now/80)%2)return;const ride=S.riding&&!!outdoor,py2=ride?sy-7*p:sy;if(ride)drawAnimalAt('horse',sx,sy,face()>=5||S.dir==2,0,p);if(S.dir==1)drawTool(sx,py2);person(sx,py2,S.dir,walkT,mePal(),moving&&!ride,face());if(S.dir!=1)drawTool(sx,py2)}]);
   D.sort((a,b)=>a[0]-b[0]);for(const d of D)d[1]();
   if(town&&festToday()&&S.time>=480){const cols=['#e0453a','#f6d53a','#4aa3df','#5cc14a','#f06aa8'];
     const yAt=x=>8.9*TS-camY+Math.sin((x-20)/14*Math.PI)*6*p;
@@ -2082,7 +2105,7 @@ attack=function(){
   const sel=S.inv[S.sel],wid=sel&&WEAPONS[sel.id]?sel.id:'sword',W=WEAPONS[wid];
   if(swingCd>0)return;swingCd=W.cd;swing(wid);sfx('hit');
   if(MAP.id!='mine')return;
-  const cx=S.px+DX[S.dir]*.7,cy=S.py-.3+DY[S.dir]*.7;
+  const f8=face(),fl=F8X[f8]&&F8Y[f8]?.72:1,cx=S.px+F8X[f8]*.7*fl,cy=S.py-.3+F8Y[f8]*.7*fl;
   for(const s of M.slimes){if(s.hid)continue;const r=W.rng+(s.size?s.size*.35:0);
     if(Math.hypot(s.x-cx,s.y-.3*(s.size||1)-cy)<r){s.hp-=W.dmg;const l=Math.hypot(s.x-S.px,s.y-S.py)||1,kb=s.size?W.kb*.2:W.kb;s.kx=(s.x-S.px)/l*kb;s.ky=(s.y-S.py)/l*kb;dust(s.x,s.y-.3,s.col,5);sfx('slime')}}
   const dead=M.slimes.filter(s=>s.hp<=0);M.slimes=M.slimes.filter(s=>s.hp>0);
