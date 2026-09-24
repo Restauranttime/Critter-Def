@@ -601,7 +601,7 @@ const festToday=()=>FESTS.find(f=>f.s==S.season&&f.d==S.day)||null;
 
 /* ---------- save: device + account ---------- */
 const KEY='hof-sonnental-1';
-const BUILD='2026-09-26-1';
+const BUILD='2026-09-26-2';
 let updating=false;
 async function checkUpdate(){
   if(updating||window.claude||!/^https?:$/.test(location.protocol))return;
@@ -803,7 +803,7 @@ function drawBag(){
   const idx=[...S.inv.keys()],p=invPick>=0?S.inv[invPick]:null,it=p&&ITEMS[p.id];
   $('#invBody').innerHTML=`<div class="lbl">Leiste</div><div class="inv hot">${idx.slice(0,HOT).map(cell).join('')}</div>
     <div class="lbl">Rucksack · ${S.inv.length-HOT} Plätze</div><div class="inv">${idx.slice(HOT).map(cell).join('')}<button class="islot trash" data-trash="1" aria-label="Wegwerfen">${ic('trash')}</button></div>
-    <div id="invInfo">${it?`<b>${it.n}</b>${p.n>1?' ×'+p.n:''}<br><small>${it.tool?'Werkzeug':it.sell?'Verkaufswert: '+it.sell+' g':'Nicht verkäuflich'}${it.eat?' · +'+it.eat+' Energie':''}. Tippe einen anderen Platz an, um zu tauschen, oder den Mülleimer, um es wegzuwerfen.</small>`
+    <div id="invInfo">${it?`<b>${it.n}</b>${p.n>1?' ×'+p.n:''}<br><small>${it.tool?'Werkzeug':it.sell?'Verkaufswert: '+it.sell+' g':'Nicht verkäuflich'}${it.eat?' · '+(it.full?'volle':'+'+it.eat)+' Energie':''}. Tippe einen anderen Platz an, um zu tauschen, oder den Mülleimer, um es wegzuwerfen.</small>`
       :lastTrash?`<small>Weggeworfen: ${lastTrash.s.n}× ${ITEMS[lastTrash.s.id].n}</small> <button class="btn sm" id="ivUndo">Zurückholen</button>`
       :'<small>Zieh ein Teil auf den Mülleimer, um es wegzuwerfen.</small>'}</div>`;
   hydrate($('#invBody'));
@@ -921,8 +921,8 @@ function plan(){
   if(id=='fert'&&t&&t.g==3&&!t.f&&!o)return['Düngen',()=>{t.f=1;takeSel();dust(x+.5,y+.7,'#e8e0b0',5);sfx('pop')}];
   if(it.heal)return['Trinken',()=>{if(S.hp>=S.maxHp){toast('Du bist schon ganz gesund.');return}S.hp=Math.min(S.maxHp,S.hp+it.heal);takeSel();pop(S.px,S.py-1.4,'+'+it.heal+' ♥','#ff9a8a');sfx('eat')}];
   if(it.eat){const armed=performance.now()-eatArm<2200;return[armed?'Essen!':'Essen',()=>{
-    if(!armed){eatArm=performance.now();toast('Nochmal drücken zum Essen: '+it.n+' (+'+it.eat+' Energie)');return}
-    eatArm=0;S.energy=Math.min(S.maxE,S.energy+it.eat);S.hp=Math.min(S.maxHp,S.hp+Math.round(it.eat/2));takeSel();pop(S.px,S.py-1.4,'+'+it.eat+' Energie','#9be07a');sfx('eat')}]}
+    if(!armed){eatArm=performance.now();toast('Nochmal drücken zum Essen: '+it.n+' ('+(it.full?'volle':'+'+it.eat)+' Energie)');return}
+    eatArm=0;const ee=it.full?S.maxE:it.eat;S.energy=Math.min(S.maxE,S.energy+ee);S.hp=it.full?S.maxHp:Math.min(S.maxHp,S.hp+Math.round(ee/2));takeSel();pop(S.px,S.py-1.4,it.full?'Volle Energie!':'+'+ee+' Energie','#9be07a');sfx('eat')}]}
   if(it.tool)return[it.n,()=>swing(id)];
   return['—',null];
 }
@@ -1941,7 +1941,7 @@ function applyBuild(){const k=S.pend;if(!k)return'';S.pend=null;
   if(k=='barn'){S.unl.barn=1;stampFarm(S.t,S.unl)}else if(k=='coop2')S.coopLv=2;else if(k=='house1')S.house=1;else if(k=='house2')S.house=2;
   return BUILDS[k].n+' ist fertig gebaut!'}
 function openInn(){
-  const rows=KITCHEN.filter(r=>r[3]=='buy').map(r=>{const k=knownRecipe(r);return{icon:r[0],name:'Rezept: '+ITEMS[r[0]].n,price:k?null:RECIPE_PRICE[r[0]],info:`+${ITEMS[r[0]].eat} Energie · Kochst du in deiner Küche aus ${reqText(r[2])}`,btn:k?'Gelernt':'Lernen',dis:k,act:()=>{if(S.gold<RECIPE_PRICE[r[0]]){toast('Nicht genug Gold.');sfx('bad');return}S.gold-=RECIPE_PRICE[r[0]];S.recipes.push(r[0]);sfx('coin');toast('Neues Rezept: '+ITEMS[r[0]].n,1.8);openInn()}}});
+  const rows=KITCHEN.filter(r=>r[3]=='buy').map(r=>{const k=knownRecipe(r);return{icon:r[0],name:'Rezept: '+ITEMS[r[0]].n,price:k?null:RECIPE_PRICE[r[0]],info:`${eatTxt(ITEMS[r[0]])} · Kochst du in deiner Küche aus ${reqText(r[2])}`,btn:k?'Gelernt':'Lernen',dis:k,act:()=>{if(S.gold<RECIPE_PRICE[r[0]]){toast('Nicht genug Gold.');sfx('bad');return}S.gold-=RECIPE_PRICE[r[0]];S.recipes.push(r[0]);sfx('coin');toast('Neues Rezept: '+ITEMS[r[0]].n,1.8);openInn()}}});
   if(!S.spouse)rows.push({id:'amulet',price:5000,info:'Ein Zeichen für die Ewigkeit. Für einen Antrag (10 Herzen, ausgebautes Haus).'});
   const here=people().filter(k=>NR[k].vis&&NR[k].z==ZN.inn&&k!='kalle').map(k=>NPCS[k].n);
   reModal(`${bHead('kalle','Gasthaus „Zum Goldenen Kürbis“','Kalle hat bis Mitternacht geöffnet')}${listHtml(rows,0)}<p style="font-size:14px">${here.length?'Heute Abend hier: '+here.join(', ')+'.':'Gerade ist es ruhig. Abends kommen viele Leute her.'}</p><div class="btns"><button class="btn alt" id="xB">Fertig</button></div>`);
@@ -2408,15 +2408,25 @@ NPCS.konrad.sched=()=>{const k=S.story&&S.story.konrad;if(k==1)return S.time>=60
 
 /* ----- house: kitchen, workbench, storage; only cooked food gives energy ----- */
 for(const k in ITEMS){const it=ITEMS[k];if(it.eat&&it.kind!='food'&&k!='epotion')delete it.eat}
-const KITCHEN=[['bread',1,[['potato',2]]]];
-KITCHEN.push(...RECIPES.filter(r=>ITEMS[r[0]].kind=='food'));for(let i=RECIPES.length-1;i>=0;i--)if(ITEMS[RECIPES[i][0]].kind=='food')RECIPES.splice(i,1);
-KITCHEN.push(['soup',1,[['potato',1],['tomato',1]],'buy'],['pie',1,[['pumpkin',1],['egg',1]],'buy']);
-const RECIPE_PRICE={soup:600,pie:1200};
+for(let i=RECIPES.length-1;i>=0;i--)if(ITEMS[RECIPES[i][0]].kind=='food')RECIPES.splice(i,1);
+Object.assign(ITEMS,{fpotato:{n:'Bratkartoffeln',sell:90,kind:'food'},grill:{n:'Lachs vom Grill',sell:320,kind:'food'},feast:{n:'Festmahl',sell:1500,kind:'food',full:1}});
+/* [id, ingredients, energy, recipe price (0 = known from the start)] */
+const KDEF=[['salad',[['leek',1],['dand',1]],15,0],['fpotato',[['potato',2]],35,0],
+  ['omelet',[['egg',2]],50,300],['cheese',[['milk',1]],45,400],['soup',[['potato',1],['parsnip',1],['leek',1]],70,700],
+  ['fmush',[['mush',2],['leek',1]],90,1000],['gcheese',[['gmilk',1]],90,1500],['fishsoup',[['carp',2],['potato',1],['tomato',1]],120,2000],
+  ['grill',[['salmon',1],['potato',1],['leek',1]],140,2500],['pie',[['pumpkin',1],['egg',2],['milk',1]],160,3000],
+  ['hcake',[['honey',1],['egg',2],['milk',1]],190,4000],['feast',[['pike',1],['pumpkin',1],['cauli',1],['gcheese',1],['hcake',1]],270,10000]];
+const KITCHEN=KDEF.map(([id,req,e,pr])=>{ITEMS[id].eat=e;return[id,1,req,pr?'buy':'']});
+const RECIPE_PRICE={};KDEF.forEach(d=>RECIPE_PRICE[d[0]]=d[3]);
+const eatTxt=it=>it.full?'Volle Energie':'+'+it.eat+' Energie';
 const knownRecipe=r=>r[3]!='buy'||(S.recipes||[]).includes(r[0]);
 {const _d=drawIcon;drawIcon=function(g,id){switch(id){
   case'bed':R(g,1,9,14,4,'#8a5a2b');R(g,1,6,3,8,'#6a3e1e');R(g,12,8,3,6,'#6a3e1e');R(g,4,7,8,3,'#4a7ad8');R(g,4,7,8,1,'#7aa0f0');R(g,3,6,3,3,'#f4f0e8');return;
   case'pot':R(g,3,7,10,7,'#5a5a66');R(g,2,6,12,2,'#7a7a88');R(g,1,8,2,2,'#3a3a44');R(g,13,8,2,2,'#3a3a44');R(g,4,6,8,1,'#e89a3a');line(g,6,2,6,4,'#d8d0c8');line(g,9,1,9,4,'#d8d0c8');return;
   case'wbench':R(g,1,6,14,3,'#a86a34');R(g,1,6,14,1,'#c8884a');R(g,2,9,2,6,'#6a3e1e');R(g,12,9,2,6,'#6a3e1e');R(g,4,3,5,2,'#8a8a96');R(g,8,2,2,4,'#6a3e1e');return;
+  case'fpotato':ell(g,8,10,7,4,'#3a3a44');ell(g,8,9,6,3,'#5a5a66');R(g,4,8,2,2,'#e8b43a');R(g,7,7,2,2,'#d99a3a');R(g,10,8,2,2,'#e8b43a');R(g,6,10,2,1,'#f0c85a');R(g,9,10,2,1,'#5eaa3c');R(g,14,9,2,1,'#2a2a30');return;
+  case'grill':ell(g,8,10,7,4,'#e8e4dc');ell(g,8,9,5,2.4,'#e07a6a');R(g,4,8,8,1,'#f0a090');R(g,5,10,6,1,'#b85a4a');R(g,11,7,2,2,'#5eaa3c');R(g,3,10,2,2,'#e8b43a');return;
+  case'feast':ell(g,8,11,7.5,3.5,'#e8e4dc');ell(g,8,8,5,3.5,'#b8622a');ell(g,7,7,3,1.8,'#d88a4a');R(g,11,3,2,4,'#f4f0e8');R(g,3,10,2,2,'#5eaa3c');R(g,12,10,2,2,'#e2442f');R(g,6,11,2,1,'#ffcf3f');return;
   case'crate':R(g,1,3,14,12,'#9a6230');R(g,1,3,14,3,'#b8783a');R(g,1,8,14,1,'#5b3417');R(g,1,3,1,12,'#5b3417');R(g,14,3,1,12,'#5b3417');R(g,7,6,2,3,'#ffcf3f');return}
   return _d(g,id)}}
 function houseTile(id,ico,lab,sub){return`<button class="tile" id="${id}">${ic(ico)}<span><b>${lab}</b><small>${sub}</small></span></button>`}
@@ -2428,7 +2438,7 @@ function openHouse(){
 function openRecipes(list,title,sub,self){
   const html=`<h2>${title}</h2><p>${sub}</p><div class="rows">
     ${list.map((r,i)=>{const[id,n,req,d]=r,it=ITEMS[id],kn=knownRecipe(r),ok=kn&&hasReq(req);
-      const info=(it.eat?'+'+it.eat+' Energie':d||'')+'<br>'+(kn?reqText(req):'Rezept gibt es bei Kalle im Gasthaus.');
+      const info=(it.eat?eatTxt(it):d||'')+'<br>'+(kn?reqText(req):`Rezept bei Kalle im Gasthaus: ${RECIPE_PRICE[id]} g`);
       return`<div class="row${ok?'':' done'}">${ic(id)}<div><b>${it.n}${n>1?' ×'+n:''}</b><small>${info}</small></div><div class="buy"><button class="btn sm" data-c="${i}" ${ok?'':'disabled'}>${it.eat?'Kochen':'Herstellen'}</button></div></div>`}).join('')}
   </div><div class="btns"><button class="btn alt" id="crX">Zurück</button></div>`;
   reModal(html);
