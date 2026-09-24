@@ -613,7 +613,7 @@ const festToday=()=>FESTS.find(f=>f.s==S.season&&f.d==S.day)||null;
 
 /* ---------- save: device + account ---------- */
 const KEY='hof-sonnental-1';
-const BUILD='2026-09-28-1';
+const BUILD='2026-09-28-3';
 let updating=false;
 async function checkUpdate(){
   if(updating||window.claude||!/^https?:$/.test(location.protocol))return;
@@ -1491,14 +1491,15 @@ function render(now){
   const wf=Math.floor(now/450)%4;
   for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
     const t=MAP.t[y*MAP.w+x],sx=x*TS-camX,sy=y*TS-camY;let img;
-    if(t.g==1)img=t.pp?SP.ppath:SP.path;else if(t.g==2||t.g==12)img=SP.water[(wf+x)%4];else if(t.g==3)img=t.w?SP.wet:SP.soil;
+    if(t.g==1)img=t.pp?SP.ppath:SP.path;else if((t.g==2||t.g==12)&&farm)img=SP.grass[Math.floor(hash(x,y)*4)];else if(t.g==2||t.g==12)img=SP.water[(wf+x)%4];else if(t.g==3)img=t.w?SP.wet:SP.soil;
     else if(t.g==9||(town&&t.g==4))img=SP.plaza;else if(t.g==11)img=SP.flowerbed;
     else if(t.g>=13&&t.g<=16)img=drawHouseTile(t,x,y,sx,sy,p);else if(t.g==7)img=SP.wallZ[MAP.zone||0];else if(t.g==8)img=SP.floorZ[MAP.zone||0][hash(x,y)<.5?0:1];else img=SP.grass[Math.floor(hash(x,y)*4)];
     ctx.drawImage(img,sx,sy,TS,TS);
     if(t.g==3&&t.f){ctx.fillStyle='rgba(232,224,176,.7)';ctx.fillRect(sx+3*p,sy+4*p,p,p);ctx.fillRect(sx+10*p,sy+7*p,p,p);ctx.fillRect(sx+6*p,sy+11*p,p,p)}
-    if(t.g==2)drawShore(x,y,sx,sy,p);else if(t.g==12)drawDock(x,y,sx,sy,p);else if(t.win)drawWindow(sx,sy,p);
+    if(t.g==2&&!farm)drawShore(x,y,sx,sy,p);else if(t.g==12&&!farm)drawDock(x,y,sx,sy,p);else if(t.win)drawWindow(sx,sy,p);
   }
   if(MAP.id=='house')drawRugs(p);
+  if(farm){drawPond(p);pondOverlay(x0,y0,x1,y1,p)}
   if(started&&!paused&&!F){const{x,y}=target(),s=S.inv[S.sel],lv=s?S.lv[s.id]||0:0;
     const area=s&&(s.id=='hoe'||s.id=='can')&&lv?toolArea(x,y,lv):[[x,y]];
     ctx.strokeStyle='rgba(255,250,220,.75)';ctx.lineWidth=Math.max(2,Math.round(p));
@@ -2668,7 +2669,11 @@ function noise(d,v,f,type,t0){const a=ac();if(!a)return;if(!NOISE){NOISE=a.creat
 function rockSound(o){if(!o||!o.ore)return'stone';return ITEMS[o.ore].kind=='gem'?'gem':'metal'}
 /* ----- pond: dock and shore ----- */
 const DOCK=[[30,18],[30,19],[30,20]];
-function addDock(t){for(const[x,y]of DOCK){const c=t[y*FW+x];if(c.g==2){c.g=12;c.o=null;c.c=null}}}
+function smoothPond(t){
+  const W=i=>t[i]&&(t[i].g==2||t[i].g==12);
+  for(let pass=0;pass<2;pass++)for(let y=12;y<FH-1;y++)for(let x=18;x<FW-1;x++){const i=y*FW+x,c=t[i],nb=[i-1,i+1,i-FW,i+FW].filter(W).length;
+    if(c.g==2&&nb<=1)c.g=0}}
+function addDock(t){for(const[x,y]of DOCK){const c=t[y*FW+x];if(c.g==2){c.g=12;c.o=null;c.c=null}}smoothPond(t)}
 const isWet=(x,y)=>{const t=T(x,y);return!t||t.g==2||t.g==12};
 function drawShore(x,y,sx,sy,p){
   const land=(i,j)=>{const t=T(x+i,y+j);return t&&t.g!=2&&t.g!=12},sand='#d9c28c',bank='#8a6a3a',foam='rgba(255,255,255,.5)',P=Math.ceil(p);
@@ -2678,13 +2683,19 @@ function drawShore(x,y,sx,sy,p){
   if(w){ctx.fillRect(sx,sy,3*p,TS);ctx.fillStyle=foam;ctx.fillRect(sx+3*p,sy+(n?3*p:0),P,TS-(n?3*p:0));ctx.fillStyle=sand}
   if(e){ctx.fillRect(sx+TS-3*p,sy,3*p,TS);ctx.fillStyle=foam;ctx.fillRect(sx+TS-4*p,sy+(n?3*p:0),P,TS-(n?3*p:0));ctx.fillStyle=sand}
   if(s){ctx.fillStyle=bank;ctx.fillRect(sx,sy+TS-3*p,TS,3*p);ctx.fillStyle='#6a4e2a';ctx.fillRect(sx,sy+TS-p,TS,P);ctx.fillStyle=foam;ctx.fillRect(sx,sy+TS-4*p,TS,P);ctx.fillStyle=sand}
-  /* rounded outer corners */
-  const round=(cx,cy,fx,fy,col)=>{ctx.fillStyle=col;for(let i=0;i<4;i++){const wdt=(4-i)*p;ctx.fillRect(fx?sx+TS-3*p-wdt:sx+3*p,fy?sy+TS-4*p-i*p:sy+3*p+i*p,wdt,P)}};
-  if(n&&w)round(0,0,0,0,sand);if(n&&e)round(0,0,1,0,sand);if(s&&w)round(0,0,0,1,bank);if(s&&e)round(0,0,1,1,bank);
-  /* inner corners */
-  ctx.fillStyle=sand;
-  if(!n&&!w&&land(-1,-1))ctx.fillRect(sx,sy,3*p,3*p);if(!n&&!e&&land(1,-1))ctx.fillRect(sx+TS-3*p,sy,3*p,3*p);
-  if(!s&&!w&&land(-1,1)){ctx.fillStyle=bank;ctx.fillRect(sx,sy+TS-3*p,3*p,3*p)}if(!s&&!e&&land(1,1)){ctx.fillStyle=bank;ctx.fillRect(sx+TS-3*p,sy+TS-3*p,3*p,3*p)}
+  /* rounded corners: grass, then a sand or earth rim, then water, drawn row by row */
+  const gimg=SP.grass[Math.floor(hash(x,y)*4)],wimg=SP.water[(Math.floor(performance.now()/450)+x)%4];
+  const put=(img,col,cx,row,len)=>{if(len<=0)return;if(img)ctx.drawImage(img,cx,row,len,1,sx+cx*p,sy+row*p,len*p,P);else{ctx.fillStyle=col;ctx.fillRect(sx+cx*p,sy+row*p,len*p,P)}};
+  const outer=(fx,fy,col)=>{const Rr=10,B=3;for(let j=0;j<Rr;j++){const dy=Rr-j-.5,o=r=>dy>=r?Rr:Rr-Math.sqrt(r*r-dy*dy),g=Math.round(o(Rr)),b=Math.round(o(Rr-B)),row=fy?15-j:j;
+    const seg=(img,c,a,len)=>put(img,c,fx?16-a-len:a,row,len);seg(gimg,0,0,g);seg(null,col,g,b-g);seg(wimg,0,b,Rr-b)}};
+  if(n&&w)outer(0,0,sand);if(n&&e)outer(1,0,sand);if(s&&w)outer(0,1,bank);if(s&&e)outer(1,1,bank);
+  /* inner corners: a small rounded bit of shore */
+  const inner=(fx,fy,col)=>{const Ri=6,B=3;for(let j=0;j<Ri;j++){const dy=j+.5,wf_=r=>dy>=r?0:Math.round(Math.sqrt(r*r-dy*dy)),a=wf_(Ri-B),b=wf_(Ri),row=fy?15-j:j;
+    const seg=(img,c,st,len)=>put(img,c,fx?16-st-len:st,row,len);seg(gimg,0,0,a);seg(null,col,a,b-a)}};
+  if(!n&&!w&&land(-1,-1))inner(0,0,sand);if(!n&&!e&&land(1,-1))inner(1,0,sand);
+  if(!s&&!w&&land(-1,1))inner(0,1,bank);if(!s&&!e&&land(1,1))inner(1,1,bank);
+  drawPondDecor(x,y,sx,sy,p,n,s,w,e)}
+function drawPondDecor(x,y,sx,sy,p,n,s,w,e){const P=Math.ceil(p);
   /* reeds and lily pads */
   const h=hash(x*7+1,y*13+5),nearDock=DOCK.some(([i,j])=>Math.abs(i-x)+Math.abs(j-y)<=1)&&MAP.id=='farm';
   if(!nearDock&&(n||w||e)&&h<.35){ctx.fillStyle='#4f8a3a';const bx=w?sx+3*p:e?sx+TS-7*p:sx+(3+Math.floor(h*20))*p,by=sy+(n?3:5)*p;
@@ -2701,6 +2712,41 @@ function drawDock(x,y,sx,sy,p){
   if(end){ctx.fillStyle='#4a3218';ctx.fillRect(sx+2*p,sy+TS,2*p,3*p);ctx.fillRect(sx+12*p,sy+TS,2*p,3*p);ctx.fillStyle='rgba(255,255,255,.45)';ctx.fillRect(sx+p,sy+TS+3*p,4*p,P);ctx.fillRect(sx+11*p,sy+TS+3*p,4*p,P)}
   if(start){ctx.fillStyle='#d9c28c';ctx.fillRect(sx,sy,2*p,3*p);ctx.fillRect(sx+14*p,sy,2*p,3*p)}
 }
+
+/* the farm pond is drawn as one soft shape: a smooth field over the water tiles decides water, foam, sand and bank */
+let PONDC=null;
+function pondKey(){let n=0;for(let i=0;i<S.t.length;i++){const g=S.t[i].g;if(g==2)n+=i;else if(g==12)n+=i*3}return S.season+':'+n}
+function buildPond(){
+  const t=S.t,isW=(x,y)=>x>=0&&y>=0&&x<FW&&y<FH&&(t[y*FW+x].g==2||t[y*FW+x].g==12);
+  let x0=FW,y0=FH,x1=0,y1=0;for(let y=0;y<FH;y++)for(let x=0;x<FW;x++)if(isW(x,y)&&x>=18&&y>=12){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}
+  if(x0>x1)return{key:pondKey(),fr:[]};
+  x0-=1;y0-=1;x1+=1;y1+=1;const W=(x1-x0+1)*16,H=(y1-y0+1)*16,Rk=2.2;
+  const k=d=>{if(d>=Rk)return 0;const q=1-(d/Rk)*(d/Rk);return q*q};
+  const field=(fx,fy)=>{let f=0;for(let ty=Math.floor(fy-Rk);ty<=Math.ceil(fy+Rk);ty++)for(let tx=Math.floor(fx-Rk);tx<=Math.ceil(fx+Rk);tx++)if(isW(tx,ty))f+=k(Math.hypot(fx-tx-.5,fy-ty-.5));return f};
+  /* reference values along a straight shore: offset in pixels, negative = inside the water tile */
+  const ref=off=>{let f=0;for(let ty=-5;ty<0;ty++)for(let tx=-4;tx<=4;tx++)f+=k(Math.hypot(.3-tx-.5,off/16-ty-.5));return f};
+  const Fw=ref(-4.5),Ff=ref(-3.5),Fs=ref(0);
+  const cls=new Uint8Array(W*H),F=new Float32Array(W*H);
+  for(let py=0;py<H;py++)for(let px=0;px<W;px++)F[py*W+px]=field(x0+(px+.5)/16,y0+(py+.5)/16);
+  for(let i=0;i<W*H;i++){const f=F[i];cls[i]=f>=Fw?4:f>=Ff?3:f>=Fs?1:0}
+  for(let py=0;py<H;py++)for(let px=0;px<W;px++){const i=py*W+px;if(cls[i]!=1)continue;
+    const up=py>2?F[i-2*W]:0,dn=py<H-3?F[i+2*W]:0;if(up>dn*1.05)cls[i]=2}
+  const fr=[0,1,2,3].map(f=>{const c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d'),id=g.createImageData(W,H),d=id.data;
+    const wd=SP.water[f].getContext('2d').getImageData(0,0,16,16).data;
+    for(let py=0;py<H;py++)for(let px=0;px<W;px++){const i=py*W+px,o=i*4,c_=cls[i];if(!c_)continue;let r,gg,b;
+      if(c_>=3){const q=((py%16)*16+((px+f*0)%16))*4;r=wd[q];gg=wd[q+1];b=wd[q+2];if(c_==3){r=r+(255-r)*.5;gg=gg+(255-gg)*.5;b=b+(255-b)*.5}}
+      else if(c_==1){const n=hash(px,py)<.12?-18:0;r=217+n;gg=194+n;b=140+n}
+      else{const below=py<H-1?cls[i+W]:0,dark=!below||below==1&&false;r=dark?106:138;gg=dark?78:106;b=dark?42:58}
+      d[o]=r;d[o+1]=gg;d[o+2]=b;d[o+3]=255}
+    g.putImageData(id,0,0);return c});
+  return{key:pondKey(),fr,x0,y0,W,H}}
+function drawPond(p){
+  if(!PONDC||PONDC.key!=pondKey())PONDC=buildPond();if(!PONDC.fr.length)return;
+  const c=PONDC.fr[Math.floor(performance.now()/450)%4];ctx.drawImage(c,PONDC.x0*TS-camX,PONDC.y0*TS-camY,PONDC.W*p,PONDC.H*p)}
+function pondOverlay(x0,y0,x1,y1,p){
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const t=MAP.t[y*MAP.w+x];if(!t)continue;const sx=x*TS-camX,sy=y*TS-camY;
+    if(t.g==12)drawDock(x,y,sx,sy,p);
+    else if(t.g==2){const land=(i,j)=>{const q=T(x+i,y+j);return q&&q.g!=2&&q.g!=12};drawPondDecor(x,y,sx,sy,p,land(0,-1),land(0,1),land(-1,0),land(1,0))}}}
 const isDockAt=(x,y)=>{const t=T(x,y);return t&&t.g==12};
 /* ----- quick-eat slot and button for fights ----- */
 function eatFood(){const s=S.food;if(!s)return;const it=ITEMS[s.id];
