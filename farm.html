@@ -563,6 +563,21 @@ const festToday=()=>FESTS.find(f=>f.s==S.season&&f.d==S.day)||null;
 
 /* ---------- save: device + account ---------- */
 const KEY='hof-sonnental-1';
+const BUILD='2026-09-24-2';
+let updating=false;
+async function checkUpdate(){
+  if(updating||window.claude||!/^https?:$/.test(location.protocol))return;
+  if(started&&(paused||F))return;
+  try{
+    const r=await fetch('farm.html?check='+Date.now(),{cache:'no-store'});if(!r.ok)return;
+    const m=(await r.text()).match(/const BUILD='([^']+)'/);if(!m||m[1]===BUILD)return;
+    let tried=null;try{tried=sessionStorage.getItem('hs-upd')}catch(e){}
+    if(tried===m[1])return;
+    try{sessionStorage.setItem('hs-upd',m[1])}catch(e){}
+    updating=true;if(started)saveNow(false);toast('Neue Version wird geladen…',3);
+    setTimeout(()=>location.replace('farm.html?v='+encodeURIComponent(m[1])),700);
+  }catch(e){}
+}
 let DB=null,UID=null,cloudBusy=false,cloudAgain=false,cloudState='none',lastCloudSave=0;
 function snapshot(){
   const o=Object.assign({},S);
@@ -1467,6 +1482,9 @@ function start(fresh){
   $('#bCode').onclick=()=>openTransfer(true);
   $('#bNew').onclick=()=>{if(hasSave&&!$('#bNew').dataset.c){$('#bNew').dataset.c=1;$('#bNew').textContent='Sicher? Alter Spielstand wird ersetzt';return}start(true)};
   connectCloud();
+  checkUpdate();setInterval(checkUpdate,4*60*1000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkUpdate()});
+  if(sv&&/[?&]v=/.test(location.search))start(false);
   requestAnimationFrame(loop);
 })();
 </script>
