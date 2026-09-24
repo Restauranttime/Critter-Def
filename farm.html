@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Hof Sonnental</title>
+<!--pwa-->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sonnental">
+<meta name="theme-color" content="#1f3319">
+<link rel="apple-touch-icon" href="farm-icon-180.png">
+<link rel="icon" type="image/png" href="farm-icon-192.png">
+<link rel="manifest" href="farm.webmanifest">
+<!--/pwa-->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&display=swap">
@@ -69,6 +79,7 @@ body{font-family:"Pixelify Sans",ui-monospace,"Courier New",monospace;color:var(
 #toast.off{opacity:0}
 #saveDot{position:fixed;right:58px;top:calc(env(safe-area-inset-top,0px) + 18px);font-size:12px;color:#fff3d6;text-shadow:0 1px 0 #000;pointer-events:none;transition:opacity .4s}
 #saveDot.off{opacity:0}
+#modalWrap{z-index:10}
 #modalWrap,#title{position:fixed;inset:0;display:grid;place-items:center;padding:16px;background:rgba(15,25,12,.55);touch-action:auto}
 #modal{width:min(100%,440px);max-height:calc(100% - 20px);overflow:auto;padding:16px 16px 18px;touch-action:pan-y}
 #modal h2{margin:0 0 8px;font-size:24px;text-wrap:balance}
@@ -105,6 +116,7 @@ button:focus-visible{outline:3px solid #2e7fd0;outline-offset:2px}
 #title .btns{justify-content:center;flex-direction:column;align-items:stretch}
 #title .help{margin-top:16px;font-size:14px;line-height:1.4;text-align:left}
 #saveInfo{margin-top:10px;font-size:14px;color:#fff3d6;text-shadow:0 1px 0 #000}
+textarea{width:100%;font:12px ui-monospace,Menlo,monospace;border:2px solid var(--parch-d);border-radius:5px;padding:6px;background:#fff8e8;color:var(--ink);resize:vertical;-webkit-user-select:text;user-select:text}
 [hidden]{display:none!important}
 @media (prefers-reduced-motion:reduce){.bar .fill,#toast,#saveDot{transition:none}}
 </style>
@@ -139,6 +151,7 @@ button:focus-visible{outline:3px solid #2e7fd0;outline-offset:2px}
     <div class="btns">
       <button class="btn" id="bCont" hidden>Weiterspielen</button>
       <button class="btn alt" id="bNew">Neues Spiel</button>
+      <button class="btn alt" id="bCode">Spielstand mit Code laden</button>
     </div>
     <div id="saveInfo">Spielstand wird gesucht…</div>
     <div class="help panel" style="padding:10px 12px">
@@ -567,6 +580,40 @@ function offerCloud(sv,js){
     <div class="btns"><button class="btn" id="cY">Laden</button><button class="btn alt" id="cN">Aktuellen behalten</button></div>`);
   $('#cY').onclick=()=>{S=sv;setFarm();buildSprites(S.season);barDirty=1;try{localStorage.setItem(KEY,js)}catch(e){}closeModal();toast('Spielstand geladen.')};
   $('#cN').onclick=()=>{closeModal();saveNow()};
+}
+
+/* ---------- transfer code ---------- */
+async function packSave(){
+  let bytes=new TextEncoder().encode(JSON.stringify(snapshot())),tag='HS0:';
+  if(window.CompressionStream){try{bytes=new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());tag='HS1:'}catch(e){}}
+  let bin='';for(let i=0;i<bytes.length;i+=8192)bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+8192));
+  return tag+btoa(bin);
+}
+async function unpackSave(code){
+  code=code.replace(/\s+/g,'');const tag=code.slice(0,4);
+  let bytes=Uint8Array.from(atob(code.slice(4)),c=>c.charCodeAt(0));
+  if(tag=='HS1:')bytes=new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+  else if(tag!='HS0:')throw new Error('tag');
+  return migrate(JSON.parse(new TextDecoder().decode(bytes)));
+}
+function openTransfer(fromTitle){
+  const canOut=!fromTitle&&started;
+  openModal(`<h2>Spielstand übertragen</h2><p>So nimmst du deinen Hof in eine andere Version des Spiels mit, zum Beispiel vom Claude-Link in die App auf dem Home-Bildschirm.</p>
+    ${canOut?`<h3>1. Von hier mitnehmen</h3><p>Kopiere diesen Code.</p><textarea id="tfOut" readonly rows="3">Code wird erstellt…</textarea><div class="btns"><button class="btn sm" id="tfCopy">Code kopieren</button></div>`:''}
+    <h3>${canOut?'2. ':''}Hierher holen</h3><p>Füge einen Code aus der anderen Version ein. Der Spielstand hier wird dabei ersetzt.</p>
+    <textarea id="tfIn" rows="3" placeholder="HS1:…"></textarea><p id="tfMsg" role="status"></p>
+    <div class="btns"><button class="btn" id="tfLoad">Spielstand laden</button><button class="btn alt" id="tfX">Zurück</button></div>`);
+  const msg=t=>{$('#tfMsg').textContent=t};
+  if(canOut)packSave().then(c=>{const o=$('#tfOut');if(o)o.value=c}).catch(()=>{const o=$('#tfOut');if(o)o.value='Der Code konnte nicht erstellt werden.'});
+  const cp=$('#tfCopy');if(cp)cp.onclick=()=>{const o=$('#tfOut');if(!o.value.startsWith('HS'))return;
+    const sel=()=>{o.focus();o.select();o.setSelectionRange(0,o.value.length);msg('Code markiert. Tippe jetzt auf „Kopieren“.')};
+    try{navigator.clipboard.writeText(o.value).then(()=>msg('Kopiert! Öffne jetzt die andere Version und füge den Code dort ein.'),sel)}catch(e){sel()}};
+  $('#tfLoad').onclick=async()=>{const v=$('#tfIn').value.trim();if(!v){msg('Füge zuerst einen Code ein.');return}
+    let sv=null;try{sv=await unpackSave(v)}catch(e){}
+    if(!sv){msg('Der Code ist unvollständig oder beschädigt. Kopiere ihn noch einmal ganz.');return}
+    S=sv;setFarm();buildSprites(S.season);hasSave=true;barDirty=1;closeModal();
+    if(!started)start(false);saveNow();toast(`Spielstand geladen: ${S.day}. ${SEASONS[S.season]}, Jahr ${S.year}`,3)};
+  $('#tfX').onclick=fromTitle?closeModal:openMenu;
 }
 
 /* ---------- inventory ---------- */
@@ -1023,8 +1070,8 @@ function openMenu(){
   openModal(`<h2>Pause</h2><p>${WD[(S.day-1)%7]}. ${S.day}. ${SEASONS[S.season]}, Jahr ${S.year}</p>
     <p style="font-size:14px">${ago==null?'Noch nicht gespeichert.':`Zuletzt gespeichert vor ${ago<60?ago+' s':Math.round(ago/60)+' min'}.`} ${cloudState=='ok'?'Der Spielstand liegt auf dem Gerät und in deinem Konto.':'Der Spielstand liegt auf diesem Gerät.'} Du kannst das Spiel jederzeit schließen.</p>
     <div class="btns"><button class="btn" id="mBack">Weiterspielen</button><button class="btn alt" id="mBag">Rucksack</button><button class="btn alt" id="mCraft">Werkbank</button><button class="btn alt" id="mBoard">Dorftafel</button><button class="btn alt" id="mPeople">Dorf</button>
-    <button class="btn alt" id="mSave">Jetzt speichern</button><button class="btn alt" id="mHelp">Tipps</button><button class="btn alt" id="mSnd">Ton: ${S.sound?'an':'aus'}</button><button class="btn alt" id="mMus">Musik: ${S.music?'an':'aus'}</button><button class="btn alt" id="mNew">Neues Spiel</button></div>`);
-  $('#mBack').onclick=closeModal;$('#mBag').onclick=openBag;$('#mCraft').onclick=openCraft;$('#mBoard').onclick=()=>openBoard(true);$('#mPeople').onclick=openPeople;
+    <button class="btn alt" id="mSave">Jetzt speichern</button><button class="btn alt" id="mXfer">Spielstand übertragen</button><button class="btn alt" id="mHelp">Tipps</button><button class="btn alt" id="mSnd">Ton: ${S.sound?'an':'aus'}</button><button class="btn alt" id="mMus">Musik: ${S.music?'an':'aus'}</button><button class="btn alt" id="mNew">Neues Spiel</button></div>`);
+  $('#mBack').onclick=closeModal;$('#mXfer').onclick=()=>openTransfer(false);$('#mBag').onclick=openBag;$('#mCraft').onclick=openCraft;$('#mBoard').onclick=()=>openBoard(true);$('#mPeople').onclick=openPeople;
   $('#mSave').onclick=()=>{saveNow();flashSaved();closeModal()};
   $('#mSnd').onclick=()=>{S.sound=!S.sound;$('#mSnd').textContent='Ton: '+(S.sound?'an':'aus')};
   $('#mMus').onclick=()=>{S.music=!S.music;$('#mMus').textContent='Musik: '+(S.music?'an':'aus')};
@@ -1349,6 +1396,7 @@ function start(fresh){
   if(sv){S=sv;hasSave=true;setFarm()}else newGame();
   buildSprites(S.season);setSaveInfo();
   $('#bCont').onclick=()=>start(false);
+  $('#bCode').onclick=()=>openTransfer(true);
   $('#bNew').onclick=()=>{if(hasSave&&!$('#bNew').dataset.c){$('#bNew').dataset.c=1;$('#bNew').textContent='Sicher? Alter Spielstand wird ersetzt';return}start(true)};
   connectCloud();
   requestAnimationFrame(loop);
