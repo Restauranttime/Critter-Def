@@ -18,6 +18,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&display=swap">
 <style>
+@font-face{font-family:"Ziffern";src:url(https://fonts.gstatic.com/s/pressstart2p/v16/e3t4euO8T-267oIAQAu6jDQyK3nVivNm4I81.woff2) format("woff2");unicode-range:U+30-39;size-adjust:70%;font-display:swap}
 :root{
   --wood:#b8743a; --wood-d:#5b3417; --parch:#f6dcaa; --parch-d:#e0b574;
   --ink:#3b2210; --gold:#ffcf3f; --leaf:#5cc14a; --water:#4aa3df; --red:#d9442f;
@@ -25,7 +26,7 @@
 }
 *{box-sizing:border-box}
 html,body{height:100%;min-height:calc(100% + var(--gap,0px));margin:0;overflow:hidden;overscroll-behavior:none;background:var(--bg)}
-body{font-family:"Pixelify Sans",ui-monospace,"Courier New",monospace;color:var(--ink);
+body{font-synthesis:none;font-family:"Ziffern","Pixelify Sans",ui-monospace,"Courier New",monospace;color:var(--ink);
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 #cv{position:fixed;top:0;left:0;width:100%;height:calc(100% + var(--gap,0px));display:block;image-rendering:pixelated;touch-action:none}
 .panel{background:var(--parch);border:3px solid var(--wood-d);border-radius:6px;
@@ -127,6 +128,7 @@ textarea{width:100%;font:12px ui-monospace,Menlo,monospace;border:2px solid var(
 .btn.wide{width:100%}
 .btn.danger{background:#b8483a}
 .row.set{grid-template-columns:0 1fr auto}
+button,textarea{font-synthesis:none}
 [hidden]{display:none!important}
 @media (prefers-reduced-motion:reduce){.bar .fill,#toast,#saveDot{transition:none}}
 </style>
@@ -582,7 +584,7 @@ const festToday=()=>FESTS.find(f=>f.s==S.season&&f.d==S.day)||null;
 
 /* ---------- save: device + account ---------- */
 const KEY='hof-sonnental-1';
-const BUILD='2026-09-24-3';
+const BUILD='2026-09-24-4';
 let updating=false;
 async function checkUpdate(){
   if(updating||window.claude||!/^https?:$/.test(location.protocol))return;
@@ -647,7 +649,7 @@ function setSaveInfo(){
 }
 function offerCloud(sv,js){
   openModal(`<h2>Neuerer Spielstand gefunden</h2><p>In deinem Konto liegt ein neuerer Spielstand: ${WD[(sv.day-1)%7]}. ${sv.day}. ${SEASONS[sv.season]}, Jahr ${sv.year}, ${sv.gold} g. Möchtest du damit weiterspielen?</p>
-    <div class="btns"><button class="btn" id="cY">Laden</button><button class="btn alt" id="cN">Aktuellen behalten</button></div>`);
+    <div class="btns"><button class="btn" id="cY">Laden</button><button class="btn alt" id="cN">Aktuellen behalten</button></div>`,true);
   $('#cY').onclick=()=>{S=sv;setFarm();buildSprites(S.season);barDirty=1;try{localStorage.setItem(KEY,js)}catch(e){}closeModal();toast('Spielstand geladen.')};
   $('#cN').onclick=()=>{closeModal();saveNow()};
 }
@@ -672,7 +674,7 @@ function openTransfer(fromTitle){
     ${canOut?`<h3>1. Von hier mitnehmen</h3><p>Kopiere diesen Code.</p><textarea id="tfOut" readonly rows="3">Code wird erstellt…</textarea><div class="btns"><button class="btn sm" id="tfCopy">Code kopieren</button></div>`:''}
     <h3>${canOut?'2. ':''}Hierher holen</h3><p>Füge einen Code aus der anderen Version ein. Der Spielstand hier wird dabei ersetzt.</p>
     <textarea id="tfIn" rows="3" placeholder="HS1:…"></textarea><p id="tfMsg" role="status"></p>
-    <div class="btns"><button class="btn" id="tfLoad">Spielstand laden</button><button class="btn alt" id="tfX">Zurück</button></div>`);
+    <div class="btns"><button class="btn" id="tfLoad">Spielstand laden</button><button class="btn alt" id="tfX">Zurück</button></div>`,true);
   const msg=t=>{$('#tfMsg').textContent=t};
   if(canOut)packSave().then(c=>{const o=$('#tfOut');if(o)o.value=c}).catch(()=>{const o=$('#tfOut');if(o)o.value='Der Code konnte nicht erstellt werden.'});
   const cp=$('#tfCopy');if(cp)cp.onclick=()=>{const o=$('#tfOut');if(!o.value.startsWith('HS'))return;
@@ -711,7 +713,7 @@ function spawnEggs(n){
 }
 
 /* ---------- transient ---------- */
-let barDirty=1,started=false,paused=false,hasSave=false,F=null,anim=0,animItem=null,eatArm=0,override=null,moving=false,walkT=0,invul=0,swingCd=0;
+let freeze=false,barDirty=1,started=false,paused=false,hasSave=false,F=null,anim=0,animItem=null,eatArm=0,override=null,moving=false,walkT=0,invul=0,swingCd=0;
 const pops=[],parts=[],shakes={};
 const NR={};for(const k in NPCS){const z=NPCS[k].zone;NR[k]={x:z.x0,y:z.y0,tx:z.x0,ty:z.y0,dir:0,wait:1,walk:0,vis:false}}
 const CHV=[];
@@ -751,8 +753,8 @@ setInterval(musicTick,120);
 /* ---------- UI ---------- */
 let toastT=0;
 function toast(m,sec=2.6){const e=$('#toast');e.textContent=m;e.classList.remove('off');toastT=sec}
-function openModal(html){if(joy.id!=null)resetJoy();holdA=holdP=false;for(const k in keys)keys[k]=false;$('#aBtn').classList.remove('down');$('#modal').innerHTML=html;$('#modalWrap').hidden=false;paused=true;hydrate($('#modal'));$('#modal').scrollTop=0}
-function closeModal(){$('#modalWrap').hidden=true;paused=false}
+function openModal(html,fr=false){freeze=!!fr;if(joy.id!=null)resetJoy();holdA=holdP=false;for(const k in keys)keys[k]=false;$('#aBtn').classList.remove('down');$('#modal').innerHTML=html;$('#modalWrap').hidden=false;paused=true;hydrate($('#modal'));$('#modal').scrollTop=0}
+function closeModal(){$('#modalWrap').hidden=true;paused=false;freeze=false}
 function hydrate(root){root.querySelectorAll('canvas[data-icon]').forEach(c=>{c.width=16;c.height=16;c.getContext('2d').drawImage(icon(c.dataset.icon),0,0)})}
 const ic=id=>`<canvas data-icon="${id}"></canvas>`;
 const HOT=8;
@@ -772,10 +774,10 @@ function renderBar(){
   barDirty=0;
 }
 let invPick=-1,lastTrash=null,drag=null;
-function openBag(){
+function openBag(fr){
   invPick=-1;lastTrash=null;
   openModal(`<h2>Rucksack</h2><p style="font-size:14px">Zieh ein Teil mit dem Finger auf einen anderen Platz, oder tippe zwei Plätze nacheinander an, um sie zu tauschen. Die obere Reihe ist deine Leiste.</p><div id="invBody"></div>
-    <div class="btns"><button class="btn" id="ivX">Fertig</button><button class="btn alt" id="ivSort">Rucksack sortieren</button></div>`);
+    <div class="btns"><button class="btn" id="ivX">Fertig</button><button class="btn alt" id="ivSort">Rucksack sortieren</button></div>`,fr===true);
   $('#ivX').onclick=closeModal;$('#ivSort').onclick=()=>{sortBag();invPick=-1;drawBag()};drawBag();
 }
 function drawBag(){
@@ -1046,7 +1048,7 @@ function openPeople(){
   const html=`<h2>Dorf</h2><div class="rows">${Object.keys(NPCS).map(k=>`<div class="row"><img alt="" src="${portrait(k)}"><div><b>${NPCS[k].n}</b><span class="hearts">${hearts(S.rel[k].pts)}</span><small style="display:block">${S.rel[k].met?'Liebt: '+NPCS[k].loves.slice(0,3).map(i=>ITEMS[i].n).join(', '):'Noch nicht kennengelernt'}</small></div><span></span></div>`).join('')}</div>
   <h3>Feste</h3><div class="rows">${FESTS.map(f=>`<div class="row"><span></span><div><b>${f.n}</b><small>${f.d}. ${SEASONS[f.s]} · ${f.desc}</small></div><span></span></div>`).join('')}</div>
   <div class="btns"><button class="btn alt" id="pX">Zurück</button></div>`;
-  openModal(html);$('#pX').onclick=openMenu;
+  openModal(html,true);$('#pX').onclick=openMenu;
 }
 
 /* ---------- mine ---------- */
@@ -1156,7 +1158,7 @@ function endDay(passOut){
     ${seasonMsg?`<p><b>${seasonMsg}</b></p>`:''}
     ${f?`<p class="note"><b>Heute: ${f.n}!</b> ${f.desc}</p>`:''}
     <p>Wetter heute: ${wx[S.weather]} · Gespeichert.</p>
-    <div class="btns"><button class="btn" id="dOk">Neuer Tag</button></div>`);
+    <div class="btns"><button class="btn" id="dOk">Neuer Tag</button></div>`,true);
   $('#dOk').onclick=closeModal;
 }
 
@@ -1168,8 +1170,8 @@ function openMenu(){
   openModal(`<h2>Pause</h2><p>${WD[(S.day-1)%7]}. ${S.day}. ${SEASONS[S.season]}, Jahr ${S.year} · ${S.gold} g</p>
     <div class="mgrid">${tile('mBag','bag','Rucksack','Sachen ordnen')}${tile('mPeople','heart','Dorf','Freunde und Feste')}${tile('mHelp','book','Tipps','So geht’s')}${tile('mSet','gear','Einstel&shy;lungen','Ton, Speichern')}</div>
     <p class="saved">${ago==null?'Noch nicht gespeichert.':`Automatisch gespeichert vor ${ago<60?ago+' s':Math.round(ago/60)+' min'}.`}</p>
-    <div class="btns"><button class="btn wide" id="mBack">Weiterspielen</button></div>`);
-  $('#mBack').onclick=closeModal;$('#mBag').onclick=openBag;$('#mPeople').onclick=openPeople;$('#mSet').onclick=openSettings;
+    <div class="btns"><button class="btn wide" id="mBack">Weiterspielen</button></div>`,true);
+  $('#mBack').onclick=closeModal;$('#mBag').onclick=()=>openBag(true);$('#mPeople').onclick=openPeople;$('#mSet').onclick=openSettings;
   $('#mHelp').onclick=()=>{openModal(`<h2>Tipps</h2>
     <p><b>Anbau:</b> Mit der Hacke Gras umgraben, Samen wählen und säen, jeden Tag gießen. Reife Pflanzen mit dem Knopf ernten. Dünger macht sie schneller.</p>
     <p><b>Geld:</b> Ernte, Fische, Eier und Erze in die Versandkiste neben dem Haus legen. Bezahlt wird über Nacht.</p>
@@ -1185,7 +1187,7 @@ function openMenu(){
     <p><b>Rucksack:</b> Das Symbol rechts neben der Leiste öffnet ihn. Teile per Finger ziehen oder zwei Plätze antippen zum Tauschen.</p>
     <p><b>Speichern:</b> Automatisch alle paar Sekunden und beim Schließen. Beim nächsten Öffnen geht es genau dort weiter.</p>
     <p><b>Tastatur:</b> WASD/Pfeile laufen, Leertaste benutzen, 1–9 Werkzeug.</p>
-    <div class="btns"><button class="btn" id="hOk">Zurück</button></div>`);$('#hOk').onclick=openMenu};
+    <div class="btns"><button class="btn" id="hOk">Zurück</button></div>`,true);$('#hOk').onclick=openMenu};
 }
 function openSettings(){
   const row=(id,lab,val)=>`<div class="row set"><span></span><b>${lab}</b><button class="btn sm" id="${id}">${val}</button></div>`;
@@ -1193,7 +1195,7 @@ function openSettings(){
     <h3>Spielstand</h3><p style="font-size:14px">${cloudState=='ok'?'Liegt auf dem Gerät und in deinem Konto.':'Liegt auf diesem Gerät.'} Das Spiel speichert automatisch.</p>
     <div class="btns"><button class="btn alt sm" id="sSave">Jetzt speichern</button><button class="btn alt sm" id="sXfer">Spielstand übertragen</button></div>
     <h3>Neu anfangen</h3><div class="btns"><button class="btn sm danger" id="sNew">Neues Spiel</button></div>
-    <div class="btns"><button class="btn" id="sBack">Zurück</button></div>`);
+    <div class="btns"><button class="btn" id="sBack">Zurück</button></div>`,true);
   $('#sSnd').onclick=()=>{S.sound=!S.sound;$('#sSnd').textContent=S.sound?'An':'Aus'};
   $('#sMus').onclick=()=>{S.music=!S.music;$('#sMus').textContent=S.music?'An':'Aus'};
   $('#sSave').onclick=()=>{saveNow();flashSaved();$('#sSave').textContent='Gespeichert'};
@@ -1253,9 +1255,8 @@ function update(dt){
   for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.t-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=9*dt;if(p.t<=0)parts.splice(i,1)}
   for(const k in shakes)if((shakes[k]-=dt)<=0)delete shakes[k];
   if(anim>0)anim-=dt;if(swingCd>0)swingCd-=dt;if(invul>0)invul-=dt;
-  if(!started||paused){moving=false;return}
-  autoT+=dt;
-  if(autoT>=8){autoT=0;saveNow(performance.now()-lastCloudSave>45000)}
+  if(!started){moving=false;return}
+  if(paused){moving=false;if(!freeze)tickWorld(dt);return}
   let mx=joy.dx,my=joy.dy;
   if(keys.arrowleft||keys.a)mx=-1;if(keys.arrowright||keys.d)mx=1;if(keys.arrowup||keys.w)my=-1;if(keys.arrowdown||keys.s)my=1;
   const l=Math.hypot(mx,my);
@@ -1269,11 +1270,19 @@ function update(dt){
     S.dir=Math.abs(mx)>Math.abs(my)?(mx<0?2:3):(my<0?1:0);
     moving=true;walkT+=dt;
   }
-  if(!(F&&F.ph=='game')){S.time+=dt*2;
-    if(S.time>=1440&&midnightWarned!=dayKey()){midnightWarned=dayKey();toast('Mitternacht! Ab ins Bett, sonst fällst du um 2 Uhr um.',3.5)}
-    if(S.time>=1560){endDay(true);return}}
-  if(S.loc=='farm'){updateNpcs(dt);updateChickens(dt)}else updateSlimes(dt);
+  if(tickWorld(dt))return;
+  if(S.loc!='farm')updateSlimes(dt);
   updateFish(dt);
+}
+// clock, villagers, animals and autosave: run everywhere except in the pause menu
+function tickWorld(dt){
+  autoT+=dt;
+  if(autoT>=8){autoT=0;saveNow(performance.now()-lastCloudSave>45000)}
+  S.time+=dt*2;
+  if(S.time>=1440&&midnightWarned!=dayKey()){midnightWarned=dayKey();toast('Mitternacht! Ab ins Bett, sonst fällst du um 2 Uhr um.',3.5)}
+  if(S.time>=1560){endDay(true);return true}
+  if(S.loc=='farm'){updateNpcs(dt);updateChickens(dt)}
+  return false;
 }
 function npcVisible(k){
   const N=NPCS[k],f=festToday();
@@ -1427,7 +1436,7 @@ function render(now){
   if(farm){
     D.push([7,()=>ctx.drawImage(SP.house,HOUSE.x*TS-camX,(HOUSE.y-1)*TS-camY,6*TS,6*TS)]);
     D.push([7,()=>{ctx.drawImage(SP.shop,SHOP.x*TS-camX,(SHOP.y-1)*TS-camY,6*TS,6*TS);
-      ctx.fillStyle='#5b3417';ctx.font=`700 ${Math.round(6.5*p)}px "Pixelify Sans",monospace`;ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillStyle='#5b3417';ctx.font=`700 ${Math.round(6.5*p)}px "Ziffern","Pixelify Sans",monospace`;ctx.textAlign='center';ctx.textBaseline='middle';
       ctx.fillText('LADEN',SHOP.x*TS-camX+48*p,(SHOP.y-1)*TS-camY+47.5*p)}]);
     if(S.unl.coop)D.push([5,()=>ctx.drawImage(SP.coop,COOP.x*TS-camX,(COOP.y-1)*TS-camY,4*TS,4*TS)]);
     D.push([13,()=>{const X=CAVE.x*TS-camX,Y=(CAVE.y+3)*TS-camY-56*p;ctx.drawImage(SP.cave,X,Y,48*p,56*p);if(!S.unl.mine)ctx.drawImage(SP.boulder,X,Y,48*p,56*p)}]);
@@ -1444,7 +1453,7 @@ function render(now){
   if(F){const bx=(F.x+.5)*TS-camX,by=(F.y+.55)*TS-camY+Math.sin(now/300)*p;const hx=S.px*TS-camX,hy=S.py*TS-camY-18*p;
     ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=Math.max(1,p*.5);ctx.beginPath();ctx.moveTo(hx,hy);ctx.quadraticCurveTo((hx+bx)/2,Math.min(hy,by)-6*p,bx,by);ctx.stroke();
     ctx.fillStyle='#e04a3a';ctx.fillRect(bx-2*p,by-2*p,4*p,3*p);ctx.fillStyle='#fff';ctx.fillRect(bx-2*p,by-2*p,4*p,p);
-    if(F.ph=='bite'){ctx.fillStyle='#ffe38a';ctx.strokeStyle='#5b3417';ctx.lineWidth=p;ctx.font=`700 ${Math.round(14*p)}px "Pixelify Sans",monospace`;ctx.textAlign='center';ctx.strokeText('!',hx,hy-8*p);ctx.fillText('!',hx,hy-8*p)}}
+    if(F.ph=='bite'){ctx.fillStyle='#ffe38a';ctx.strokeStyle='#5b3417';ctx.lineWidth=p;ctx.font=`700 ${Math.round(14*p)}px "Ziffern","Pixelify Sans",monospace`;ctx.textAlign='center';ctx.strokeText('!',hx,hy-8*p);ctx.fillText('!',hx,hy-8*p)}}
   for(const q of parts){ctx.fillStyle=q.col;ctx.fillRect(q.x*TS-camX,q.y*TS-camY,1.5*p,1.5*p)}
   if(farm){
     const dk_=darkness();
@@ -1457,7 +1466,7 @@ function render(now){
     const px=S.px*TS-camX,py=(S.py-.6)*TS-camY,g=ctx.createRadialGradient(px,py,TS*1.5,px,py,TS*6);
     g.addColorStop(0,'rgba(10,6,4,0)');g.addColorStop(1,'rgba(10,6,4,.82)');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
   }
-  ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`700 ${Math.round(7*p)}px "Pixelify Sans",monospace`;ctx.lineWidth=Math.max(2,p*1.2);ctx.strokeStyle='#3b2210';
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`700 ${Math.round(7*p)}px "Ziffern","Pixelify Sans",monospace`;ctx.lineWidth=Math.max(2,p*1.2);ctx.strokeStyle='#3b2210';
   for(const q of pops){ctx.globalAlpha=Math.min(1,q.t*2);const x=q.x*TS-camX,y=q.y*TS-camY;ctx.strokeText(q.text,x,y);ctx.fillStyle=q.col;ctx.fillText(q.text,x,y)}ctx.globalAlpha=1;
   if(F&&F.ph=='game')drawFishing();
 }
@@ -1470,10 +1479,10 @@ function drawFishing(){
   const by=y+th-(F.by+F.bh)*th;ctx.fillStyle='rgba(120,220,90,.8)';ctx.fillRect(x+2,by,tw-4,F.bh*th);ctx.fillStyle='#b8f090';ctx.fillRect(x+2,by,tw-4,3);
   const fy=y+th-F.fy*th;ctx.imageSmoothingEnabled=false;ctx.drawImage(icon(F.id),x+tw/2-15,fy-15,30,30);
   const px=x+tw+14;ctx.fillStyle='#4a2b14';ctx.fillRect(px,y,14,th);const ph=F.prog*th;ctx.fillStyle=F.prog>.6?'#5cc14a':F.prog>.3?'#e8c43a':'#d9442f';ctx.fillRect(px+2,y+th-ph,10,ph);
-  ctx.font='700 16px "Pixelify Sans",monospace';ctx.textAlign='center';ctx.fillStyle='#fff3d6';ctx.strokeStyle='#3b2210';ctx.lineWidth=4;
+  ctx.font='700 16px "Ziffern","Pixelify Sans",monospace';ctx.textAlign='center';ctx.fillStyle='#fff3d6';ctx.strokeStyle='#3b2210';ctx.lineWidth=4;
   const sx=px+24,ky=y+th-(F.by+F.bh/2)*th;ctx.fillStyle='#8a5a2b';ctx.fillRect(sx+13,y,6,th);
   ctx.fillStyle='#5b3417';ctx.fillRect(sx-2,ky-16,36,32);ctx.fillStyle='#ffe38a';ctx.fillRect(sx+1,ky-13,30,26);ctx.fillStyle='#5b3417';for(const o of[-5,-1,3])ctx.fillRect(sx+9,ky+o,14,2);
-  ctx.font='700 16px "Pixelify Sans",monospace';ctx.textAlign='center';ctx.fillStyle='#fff3d6';ctx.strokeStyle='#3b2210';ctx.lineWidth=4;
+  ctx.font='700 16px "Ziffern","Pixelify Sans",monospace';ctx.textAlign='center';ctx.fillStyle='#fff3d6';ctx.strokeStyle='#3b2210';ctx.lineWidth=4;
   const msg='Finger hoch und runter ziehen';ctx.strokeText(msg,vw/2,y+th+34);ctx.fillText(msg,vw/2,y+th+34);
 }
 function hud(){
