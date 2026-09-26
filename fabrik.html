@@ -1370,6 +1370,8 @@ function drawIcon(c,id,d){
 let tool=null,curDir=1,delMode=false,lastBelt=null;
 const PT=new Map();
 let gest=null;
+/* Bildschirmposition relativ zur Zeichenfläche (nicht zum Fenster) */
+function loc(e){const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*(VW/(r.width||VW)),(e.clientY-r.top)*(VH/(r.height||VH))]}
 function toTile(sx,sy){return[Math.floor((sx-VW/2)/cam.z+cam.x),Math.floor((sy-VH/2)/cam.z+cam.y)]}
 function clampCam(){cam.z=clamp(cam.z,ZMIN,ZMAX);cam.x=clamp(cam.x,0,W);cam.y=clamp(cam.y,0,H)}
 
@@ -1377,10 +1379,11 @@ cv.addEventListener('pointerdown',e=>{
   audioUnlock();
   if(e.button===2)return;
   try{cv.setPointerCapture(e.pointerId)}catch(_){}
-  PT.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  const[ex,ey]=loc(e);
+  PT.set(e.pointerId,{x:ex,y:ey});
   cam.vx=cam.vy=0;
   if(PT.size===1){
-    gest={m:'tap',sx:e.clientX,sy:e.clientY,lx:e.clientX,ly:e.clientY,lt:performance.now(),vx:0,vy:0,
+    gest={m:'tap',sx:ex,sy:ey,lx:ex,ly:ey,lt:performance.now(),vx:0,vy:0,
       lp:setTimeout(()=>{if(gest&&gest.m==='tap'){gest.m='done';longPress(gest.sx,gest.sy)}},450)};
   }else if(PT.size===2){
     if(gest)clearTimeout(gest.lp);
@@ -1390,10 +1393,10 @@ cv.addEventListener('pointerdown',e=>{
 });
 cv.addEventListener('pointermove',e=>{
   if(e.pointerType==='mouse'&&!PT.size){
-    const[x,y]=toTile(e.clientX,e.clientY);HOVER=x>=0&&y>=0&&x<W&&y<H?{x,y}:null;return;
+    const[x,y]=toTile(...loc(e));HOVER=x>=0&&y>=0&&x<W&&y<H?{x,y}:null;return;
   }
   const p=PT.get(e.pointerId);if(!p||!gest)return;
-  p.x=e.clientX;p.y=e.clientY;
+  [p.x,p.y]=loc(e);
   if(gest.m==='tap'&&Math.hypot(p.x-gest.sx,p.y-gest.sy)>9){clearTimeout(gest.lp);gest.m='pan';gest.lx=gest.sx;gest.ly=gest.sy}
   if(gest.m==='pan'){
     const dx=p.x-gest.lx,dy=p.y-gest.ly,now=performance.now(),dts=Math.max(.008,(now-gest.lt)/1000);
@@ -1421,12 +1424,12 @@ function endPtr(e){
 cv.addEventListener('pointerup',endPtr);
 cv.addEventListener('pointercancel',endPtr);
 cv.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')HOVER=null});
-cv.addEventListener('contextmenu',e=>{e.preventDefault();longPress(e.clientX,e.clientY)});
+cv.addEventListener('contextmenu',e=>{e.preventDefault();longPress(...loc(e))});
 cv.addEventListener('wheel',e=>{
   e.preventDefault();
-  const wx=(e.clientX-VW/2)/cam.z+cam.x,wy=(e.clientY-VH/2)/cam.z+cam.y;
+  const[ex,ey]=loc(e),wx=(ex-VW/2)/cam.z+cam.x,wy=(ey-VH/2)/cam.z+cam.y;
   cam.z=clamp(cam.z*Math.exp(-e.deltaY*.0015),ZMIN,ZMAX);
-  cam.x=wx-(e.clientX-VW/2)/cam.z;cam.y=wy-(e.clientY-VH/2)/cam.z;clampCam();
+  cam.x=wx-(ex-VW/2)/cam.z;cam.y=wy-(ey-VH/2)/cam.z;clampCam();
 },{passive:false});
 document.addEventListener('gesturestart',e=>e.preventDefault());
 document.addEventListener('dblclick',e=>e.preventDefault());
@@ -2058,6 +2061,7 @@ function uiTick(dt){
     const c=S.cq[0],bar=$('#craftBar div');bar.style.width=c?(clamp(c.a/(REC[c.r].t/HAND_SPEED),0,1)*100)+'%':'0'}
   if(uiT>0&&!uiDirty)return;
   uiT=.5;uiDirty=false;
+  {const r=cv.getBoundingClientRect();if(Math.abs(r.width-VW)>1||Math.abs(r.height-VH)>1)resize()}   // Größe hat sich still geändert (iOS-Leisten)
   TOT=totals();
   // neu freigeschaltete Gebäude markieren
   const un=PAL_ORDER.filter(t=>unlocked(t)).join();
@@ -2076,7 +2080,7 @@ function uiTick(dt){
    8. SPEICHERN, EXPORT/IMPORT, OFFLINE-FORTSCHRITT, SELBST-UPDATE
    ===================================================================== */
 const KEY='funkenwerk-1';
-const BUILD='2026-09-26-1';
+const BUILD='2026-09-26-2';
 
 function newGame(){
   S={v:1,seed:(Math.random()*1e9)|0,time:0,savedAt:Date.now(),cam:null,inv:Object.assign({},START_INV),prod:{},
@@ -2275,11 +2279,14 @@ function resize(){
   const portrait=innerHeight>=innerWidth,full=portrait?Math.max(screen.height,screen.width):Math.min(screen.height,screen.width);
   const g=navigator.standalone&&full-innerHeight>0&&full-innerHeight<80?full-innerHeight:0;
   GAPPX=g;const rs=document.documentElement.style;rs.setProperty('--gap',g+'px');if(g)rs.setProperty('--sab','0px');else rs.removeProperty('--sab');
-  DPR=Math.min(2,devicePixelRatio||1);VW=innerWidth;VH=innerHeight+g;
+  // echte Größe der Zeichenfläche messen (auf iOS weicht sie von innerHeight ab)
+  const r=cv.getBoundingClientRect();
+  DPR=Math.min(2,devicePixelRatio||1);VW=r.width||innerWidth;VH=r.height||innerHeight+g;
   cv.width=Math.round(VW*DPR);cv.height=Math.round(VH*DPR);
   if(S)updBanner();
 }
 addEventListener('resize',resize);
+if(window.visualViewport)visualViewport.addEventListener('resize',resize);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)saveNow();else checkUpdate()});
 addEventListener('pagehide',()=>saveNow());
 
