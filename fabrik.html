@@ -2408,7 +2408,7 @@ function openMenu(tab){
       <div class="btns"><button class="btn" data-a="tut">Tutorial neu starten</button></div>
       <h4>Installieren</h4><p>Auf dem iPhone in Safari: Teilen → „Zum Home-Bildschirm“. Auf Android im Browser-Menü „App installieren“. Das Spiel lädt neue Versionen automatisch.</p>
       <h4>Steuerung</h4><p>Ein Finger ziehen: Karte verschieben · Zwei Finger: Zoom · Tippen: bauen oder öffnen · Lange drücken: Info und Abreißen · Im Zeiger-Modus auf Erz tippen: per Hand abbauen.</p>
-      <h4>Welt</h4><p>Deine Welt: ${W}×${H} Felder${W<128?' (ältere, kleinere Welt – mit „Spielstand zurücksetzen“ bekommst du die große Welt mit 128×128 Feldern)':''}.</p>
+      <h4>Welt</h4><p>Deine Welt: ${W}×${H} Felder${W<128?' – das ist die ältere, kleine Welt. Mit „Spielstand zurücksetzen“ startest du die große Welt mit 128×128 Feldern.':'.'}</p>
       <h4>Neu anfangen</h4><div class="btns"><button class="btn red" data-a="reset">Spielstand zurücksetzen</button></div>
       <p style="font-size:12px">Funkenwerk · Version ${BUILD}<br>Anzeige: Fenster ${innerHeight} · Bildschirm ${screen.height} · Fläche ${Math.round(VH)} · Ausgleich ${GAPPX} · App ${navigator.standalone||matchMedia('(display-mode: standalone)').matches?'ja':'nein'}</p>`;
   }else{
@@ -2460,7 +2460,7 @@ function uiTick(dt){
     const c=S.cq[0],bar=$('#craftBar div');bar.style.width=c?(clamp(c.a/(REC[c.r].t/HAND_SPEED),0,1)*100)+'%':'0'}
   if(uiT>0&&!uiDirty)return;
   uiT=.5;uiDirty=false;
-  fitCanvas();   // falls sich die Größe ohne resize-Ereignis geändert hat (iOS-Leisten)
+  applyGap();fitCanvas();   // iOS ändert die Fensterhöhe der App teils ohne resize-Ereignis
   TOT=totals();
   // neu freigeschaltete Gebäude markieren
   const un=PAL_ORDER.filter(t=>unlocked(t)).join();
@@ -2479,7 +2479,7 @@ function uiTick(dt){
    8. SPEICHERN, EXPORT/IMPORT, OFFLINE-FORTSCHRITT, SELBST-UPDATE
    ===================================================================== */
 const KEY='funkenwerk-1';
-const BUILD='2026-09-26-10';
+const BUILD='2026-09-26-11';
 
 function newGame(){
   S={v:1,ws:128,gen:2,seed:(Math.random()*1e9)|0,time:0,savedAt:Date.now(),cam:null,inv:Object.assign({},START_INV),prod:{},
@@ -2707,6 +2707,9 @@ function applyGap(){
 }
 function resize(){applyGap();fitCanvas()}
 addEventListener('resize',resize);
+if(window.visualViewport)visualViewport.addEventListener('resize',resize);
+addEventListener('orientationchange',()=>setTimeout(resize,300));
+addEventListener('pageshow',()=>setTimeout(resize,100));
 // Die Seite darf nie verrutschen: iOS darf Wischbewegungen nicht zum Scrollen nutzen (außer in Listen und Textfeldern)
 addEventListener('scroll',()=>{if(scrollX||scrollY)scrollTo(0,0)});
 document.addEventListener('touchmove',e=>{if(!e.target.closest('#sheetBody,#pal,textarea'))e.preventDefault()},{passive:false});
