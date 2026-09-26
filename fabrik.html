@@ -219,7 +219,7 @@ textarea{width:100%;min-height:90px;border-radius:10px;border:1px solid var(--li
    1. GRUNDLAGEN
    ===================================================================== */
 const $=s=>document.querySelector(s);
-const W=64,H=64;                       // Weltgröße in Kacheln
+let W=128,H=128;                       // Weltgröße in Kacheln (alte Spielstände: 64)
 const TICK=1/60;                       // Simulationsschritt in Sekunden
 const DX=[0,1,0,-1],DY=[-1,0,1,0];     // Richtungen: 0 Nord, 1 Ost, 2 Süd, 3 West
 const DIRN=['Norden','Osten','Süden','Westen'];
@@ -392,11 +392,11 @@ const TUT=[
    3. WELT
    ===================================================================== */
 /* Rohstoffe pro Kachel: 0 nichts, 1 Eisen, 2 Kupfer, 3 Kohle, 4 Stein, 9 Wasser */
-const RES=new Uint8Array(W*H);
+let RES=new Uint8Array(W*H);
 const RES_ITEM=[null,'eisenerz','kupfererz','kohle','stein'];
 const RES_NAME=['Wiese','Eisenerz','Kupfererz','Kohle','Stein'];
 const WATER=9;
-const G=new Array(W*H).fill(null);    // Gitter: Kachel -> Gebäude
+let G=new Array(W*H).fill(null);      // Gitter: Kachel -> Gebäude
 const L={belt:[],split:[],merge:[],drill:[],furn:[],asm:[],chest:[],lab:[],steam:[],pole:[],solar:[],silo:[]}; // Gebäude nach Art
 let S=null;                            // gesamter Spielstand (wird gespeichert)
 let DONE=new Set();                    // erforschte Technologien (schneller Zugriff)
@@ -411,7 +411,54 @@ const prod=id=>S.prod[id]||0;
 function syncDone(){DONE=new Set(S.res.done);DRILL_BONUS=DONE.has('bergbau2')?1.25:1}
 
 /* Karte erzeugen: Startfelder rund um die Mitte, weitere Felder weiter draußen, dazu ein paar Seen */
+/* Weltgröße setzen und alle Gitter neu anlegen */
+function setWorldSize(n){W=H=n;RES=new Uint8Array(n*n);G=new Array(n*n).fill(null);COVER=new Int16Array(n*n)}
+
+/* Karte erzeugen. Version 2 (neue Spiele): große Welt, kleinere Felder mit viel Platz dazwischen */
 function genWorld(seed){
+  if((S.gen||1)>=2)return genWorld2(seed);
+  genWorld1(seed);
+}
+function blobFill(blobs,seed){
+  for(const[t,bx,by,br]of blobs){
+    for(let y=Math.floor(by-br-3);y<=by+br+3;y++)for(let x=Math.floor(bx-br-3);x<=bx+br+3;x++){
+      if(x<1||y<1||x>=W-1||y>=H-1)continue;
+      const d=Math.hypot(x+.5-bx,y+.5-by)/(br*(.72+.56*vnoise(x*.4,y*.4,seed+t*17)));
+      if(d<1&&!RES[y*W+x])RES[y*W+x]=t;
+    }
+  }
+}
+function genWorld2(seed){
+  RES.fill(0);
+  const r=rng(seed),c=W/2,blobs=[];
+  // Startfelder: klein, im Ring 11–14 Felder um die Mitte
+  const a0=r()*Math.PI*2;
+  [1,2,3,4].forEach((t,i)=>{
+    const a=a0+i*Math.PI/2+(r()-.5)*.4,dist=11+r()*3;
+    blobs.push([t,c+Math.cos(a)*dist,c+Math.sin(a)*dist,t===4?2.4:2.9+r()*.6]);
+  });
+  // weitere Felder über die ganze Karte, mindestens 16 Felder voneinander entfernt, weiter draußen etwas größer
+  const types=[1,1,1,2,2,2,3,3,4];
+  for(let tries=0;blobs.length<34&&tries<4000;tries++){
+    const x=6+r()*(W-12),y=6+r()*(H-12),dc=Math.hypot(x-c,y-c);
+    if(dc<24||blobs.some(b=>Math.hypot(b[1]-x,b[2]-y)<16))continue;
+    blobs.push([types[(r()*types.length)|0],x,y,2.3+r()*1.3+Math.min(1,dc/60)*1.4]);
+  }
+  blobFill(blobs,seed);
+  // Seen: weit weg von der Mitte und von Rohstofffeldern
+  for(let k=0,tries=0;k<9&&tries<2000;tries++){
+    const x=8+r()*(W-16),y=8+r()*(H-16);
+    if(Math.hypot(x-c,y-c)<26||blobs.some(b=>Math.hypot(b[1]-x,b[2]-y)<10))continue;
+    k++;const br=2.5+r()*2.5;
+    for(let yy=Math.floor(y-br-2);yy<=y+br+2;yy++)for(let xx=Math.floor(x-br-2);xx<=x+br+2;xx++){
+      if(xx<1||yy<1||xx>=W-1||yy>=H-1)continue;
+      const d=Math.hypot(xx+.5-x,yy+.5-y)/(br*(.75+.5*vnoise(xx*.5,yy*.5,seed+99)));
+      if(d<1&&!RES[yy*W+xx])RES[yy*W+xx]=WATER;
+    }
+  }
+}
+/* ursprünglicher Generator (64×64) für ältere Spielstände */
+function genWorld1(seed){
   RES.fill(0);
   const r=rng(seed),c=W/2,blobs=[];
   const a0=r()*Math.PI*2;
@@ -513,7 +560,7 @@ function beltShape(b){
 /* ---------- Stromnetze ---------- */
 const REACH2=7.5*7.5;                  // Reichweite der Leitungen zwischen Masten
 let NETS=[],WIRES=[];
-const COVER=new Int16Array(W*H);       // Kachel -> Netz-Nummer (oder -1)
+let COVER=new Int16Array(W*H);         // Kachel -> Netz-Nummer (oder -1)
 function buildPower(){
   const P=L.pole,n=P.length,par=P.map((_,i)=>i);
   const find=i=>{while(par[i]!==i){par[i]=par[par[i]];i=par[i]}return i};
@@ -872,7 +919,7 @@ function simTick(dt){
 const cv=$('#cv'),ctx=cv.getContext('2d',{alpha:false});
 let DPR=1,VW=0,VH=0,GAPPX=0,TIME=0;
 const cam={x:W/2,y:H/2,z:44,vx:0,vy:0};
-const ZMIN=14,ZMAX=110;
+const ZMIN=10,ZMAX=110;
 
 function mk(w,h,fn){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);return c}
 function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
@@ -1167,7 +1214,7 @@ function beltPos(turn,p){
 }
 
 /* ---------- Gelände (vorgerendert in 16×16-Blöcken) ---------- */
-const CH=16,TPX=32;
+const CH=16,TPX=16;                    // Gelände weich vorgerendert; Raster und Erz werden scharf live gezeichnet
 let CHUNKS=[];
 function buildTerrain(){
   CHUNKS=[];
@@ -1211,10 +1258,6 @@ function drawChunk(g,cx,cy){
       g.beginPath();g.arc(x+.08+hash2(x,y*3+k,sd)*.84,y+.08+hash2(x+k,y+7,sd)*.84,.03+h*.025,0,Math.PI*2);g.fill();
     }
   }
-  // feines Raster, damit man Kacheln gut erkennt (Wasser liegt darüber)
-  g.strokeStyle='rgba(0,0,0,.14)';g.lineWidth=.03;g.beginPath();
-  for(let k=0;k<=CH;k++){g.moveTo(cx*CH+k,cy*CH);g.lineTo(cx*CH+k,(cy+1)*CH);g.moveTo(cx*CH,cy*CH+k);g.lineTo((cx+1)*CH,cy*CH+k)}
-  g.stroke();
   for(let y=cy*CH;y<(cy+1)*CH;y++)for(let x=cx*CH;x<(cx+1)*CH;x++)if(RES[y*W+x]===WATER)drawWater(g,x,y);
 }
 function drawWater(g,x,y){
@@ -1273,6 +1316,13 @@ function render(dt){
   for(let cy=Math.floor(y0/CH);cy<=Math.floor(y1/CH);cy++)for(let cx=Math.floor(x0/CH);cx<=Math.floor(x1/CH);cx++){
     const a=Math.round(TX(cx*CH)),b=Math.round(TY(cy*CH)),a2=Math.round(TX((cx+1)*CH)),b2=Math.round(TY((cy+1)*CH));
     ctx.drawImage(CHUNKS[cy*nc+cx],a,b,a2-a,b2-b);
+  }
+  // feines Raster, damit man Kacheln gut erkennt
+  if(ts>=14){
+    ctx.strokeStyle='rgba(0,0,0,.16)';ctx.lineWidth=Math.max(1,ts*.025);ctx.beginPath();
+    for(let x=x0;x<=x1+1;x++){const px=Math.round(TX(x))+.5;ctx.moveTo(px,TY(y0));ctx.lineTo(px,TY(y1+1))}
+    for(let y=y0;y<=y1+1;y++){const py=Math.round(TY(y))+.5;ctx.moveTo(TX(x0),py);ctx.lineTo(TX(x1+1),py)}
+    ctx.stroke();
   }
   // Erz: pro sichtbarer Kachel ein scharfes Sprite
   for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
@@ -1636,7 +1686,7 @@ function findPath(sx,sy,sd,goals){
   const s0=(sy*W+sx)*5+(sd===null?4:sd);
   cost[s0]=0;push(h(sx,sy),s0);
   let guard=0;
-  while(heap.length&&guard++<60000){
+  while(heap.length&&guard++<300000){
     const[,s]=pop(),c=cost[s],cell=(s/5)|0,dir=s%5,x=cell%W,y=(cell/W)|0;
     const g=gi.get(cell);
     if(g){                                               // Ziel erreicht: Weg zurückverfolgen
@@ -2358,6 +2408,7 @@ function openMenu(tab){
       <div class="btns"><button class="btn" data-a="tut">Tutorial neu starten</button></div>
       <h4>Installieren</h4><p>Auf dem iPhone in Safari: Teilen → „Zum Home-Bildschirm“. Auf Android im Browser-Menü „App installieren“. Das Spiel lädt neue Versionen automatisch.</p>
       <h4>Steuerung</h4><p>Ein Finger ziehen: Karte verschieben · Zwei Finger: Zoom · Tippen: bauen oder öffnen · Lange drücken: Info und Abreißen · Im Zeiger-Modus auf Erz tippen: per Hand abbauen.</p>
+      <h4>Welt</h4><p>Deine Welt: ${W}×${H} Felder${W<128?' (ältere, kleinere Welt – mit „Spielstand zurücksetzen“ bekommst du die große Welt mit 128×128 Feldern)':''}.</p>
       <h4>Neu anfangen</h4><div class="btns"><button class="btn red" data-a="reset">Spielstand zurücksetzen</button></div>
       <p style="font-size:12px">Funkenwerk · Version ${BUILD}<br>Anzeige: Fenster ${innerHeight} · Bildschirm ${screen.height} · Fläche ${Math.round(VH)} · Ausgleich ${GAPPX} · App ${navigator.standalone||matchMedia('(display-mode: standalone)').matches?'ja':'nein'}</p>`;
   }else{
@@ -2428,20 +2479,20 @@ function uiTick(dt){
    8. SPEICHERN, EXPORT/IMPORT, OFFLINE-FORTSCHRITT, SELBST-UPDATE
    ===================================================================== */
 const KEY='funkenwerk-1';
-const BUILD='2026-09-26-9';
+const BUILD='2026-09-26-10';
 
 function newGame(){
-  S={v:1,seed:(Math.random()*1e9)|0,time:0,savedAt:Date.now(),cam:null,inv:Object.assign({},START_INV),prod:{},
+  S={v:1,ws:128,gen:2,seed:(Math.random()*1e9)|0,time:0,savedAt:Date.now(),cam:null,inv:Object.assign({},START_INV),prod:{},
     res:{cur:null,prog:0,done:[]},flags:{},goals:[],tut:0,rockets:0,sound:true,cq:[],dir:1,ents:[],newB:[],fav:FAV_DEFAULT.slice(),showGoal:false};
   initWorld();
   // Kamera auf das Eisenfeld nahe der Mitte
   let sx=0,sy=0,n=0;
-  for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(RES[y*W+x]===1&&Math.hypot(x-W/2,y-H/2)<15){sx+=x;sy+=y;n++}
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(RES[y*W+x]===1&&Math.hypot(x-W/2,y-H/2)<18){sx+=x;sy+=y;n++}
   cam.x=n?sx/n+.5:W/2;cam.y=n?sy/n+.5:H/2;cam.z=clamp(Math.min(VW,560)/9,ZMIN,ZMAX);
   curDir=1;tool=null;delMode=false;
 }
 function initWorld(){
-  G.fill(null);
+  setWorldSize(S.ws||64);
   for(const e of S.ents)G[e.y*W+e.x]=e;
   genWorld(S.seed);syncDone();reindex();buildTerrain();statReset();
   SPR.clear();palKey='';lastUnlock='';
@@ -2449,8 +2500,10 @@ function initWorld(){
 function validSave(o){return o&&o.v===1&&typeof o.seed==='number'&&Array.isArray(o.ents)}
 /* ergänzt fehlende Felder und verwirft kaputte Einträge */
 function migrate(o){
-  const d={time:0,inv:{},prod:{},res:{cur:null,prog:0,done:[]},flags:{},goals:[],tut:-1,rockets:0,sound:true,cq:[],dir:1,newB:[],fav:FAV_DEFAULT.slice(),showGoal:false};
+  const d={ws:64,gen:1,time:0,inv:{},prod:{},res:{cur:null,prog:0,done:[]},flags:{},goals:[],tut:-1,rockets:0,sound:true,cq:[],dir:1,newB:[],fav:FAV_DEFAULT.slice(),showGoal:false};
   for(const k in d)if(o[k]===undefined)o[k]=d[k];
+  if(o.ws!==64&&o.ws!==128)o.ws=64;
+  setWorldSize(o.ws);
   // Greifarme gibt es nicht mehr: jeder wird zu 2 Förderbändern
   const oldIns=k=>k==='greifer'||k==='schnellgreifer';
   let comp=0;for(const k in o.inv)if(oldIns(k))comp+=o.inv[k];
