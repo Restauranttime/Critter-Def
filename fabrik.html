@@ -1,0 +1,2327 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Funkenwerk</title>
+<!--pwa-->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Funkenwerk">
+<meta name="theme-color" content="#161b21">
+<link rel="apple-touch-icon" href="fabrik-icon-180.png">
+<link rel="icon" type="image/png" href="fabrik-icon-192.png">
+<link rel="manifest" href="fabrik.webmanifest">
+<!--/pwa-->
+<style>
+:root{
+  --bg:#12161b; --panel:rgba(22,27,34,.94); --panel2:#222a33; --panel3:#2b3540; --line:#3a4653;
+  --text:#e9eef3; --dim:#98a5b3; --acc:#f2a33a; --acc2:#ffd27a; --ok:#63d17f; --bad:#ff6b5b; --blue:#5aa8ff;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;min-height:calc(100% + var(--gap,0px));margin:0;overflow:hidden;overscroll-behavior:none;background:var(--bg)}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--text);font-size:15px;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;touch-action:none;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+#cv{position:fixed;top:0;left:0;width:100%;height:calc(100% + var(--gap,0px));display:block;touch-action:none}
+
+/* ---------- obere Leiste: Ressourcen ---------- */
+#top{position:fixed;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top,0px) + 6px) 8px 6px;display:flex;gap:6px;align-items:stretch;
+  background:linear-gradient(var(--panel),rgba(22,27,34,.86));border-bottom:1px solid var(--line);z-index:5}
+#res{flex:1;display:flex;gap:4px;min-width:0}
+.chip{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:3px;padding:3px 3px;border-radius:9px;background:var(--panel2);border:0}
+.chip canvas{width:18px;height:18px;flex:none}
+.chip .cv{display:flex;flex-direction:column;min-width:0;line-height:1.1;text-align:left}
+.chip b{font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip i{font-style:normal;font-size:9.5px;color:var(--ok);white-space:nowrap;font-variant-numeric:tabular-nums}
+.chip i.z{color:var(--dim)}
+.ib{width:44px;min-height:44px;border-radius:10px;border:0;background:var(--panel2);display:grid;place-items:center;flex:none;padding:0}
+.ib svg{width:24px;height:24px}
+#pow{position:fixed;right:8px;top:calc(env(safe-area-inset-top,0px) + 62px);z-index:4;font-size:12px;padding:3px 8px;border-radius:8px;
+  background:var(--panel);border:1px solid var(--line);display:none;font-variant-numeric:tabular-nums}
+#pow.low{color:var(--bad);border-color:var(--bad)}
+
+/* ---------- Hinweis-Banner (Tutorial / Ziel) ---------- */
+#banner{position:fixed;left:8px;right:8px;bottom:calc(var(--sab,env(safe-area-inset-bottom,0px)) + 140px);z-index:4;display:none;
+  background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:10px;padding:8px 10px;gap:8px;align-items:center;
+  font-size:14px;line-height:1.35;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+#banner.on{display:flex}
+#banner .bt{flex:1}
+#banner small{display:block;color:var(--acc2);font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;margin-bottom:2px}
+#banner button{border:0;background:var(--panel3);border-radius:8px;padding:8px 10px;font-size:13px;min-height:36px}
+#banner.goal{border-left-color:var(--blue);padding:6px 10px;font-size:13px}
+#banner.goal .bx{display:none}
+
+/* ---------- untere Leiste ---------- */
+#bottom{position:fixed;left:0;right:0;bottom:0;z-index:5;background:linear-gradient(rgba(22,27,34,.88),var(--panel));border-top:1px solid var(--line);
+  padding:6px 0 calc(var(--sab,env(safe-area-inset-bottom,0px)) + 6px)}
+#craftBar{position:absolute;left:0;right:0;top:-3px;height:3px;background:transparent}
+#craftBar div{height:100%;width:0;background:var(--acc)}
+#pal{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;padding:0 8px 6px;scrollbar-width:none;touch-action:pan-x;-webkit-overflow-scrolling:touch}
+#pal::-webkit-scrollbar{display:none}
+.pb{position:relative;flex:none;width:58px;height:62px;border-radius:11px;border:2px solid transparent;background:var(--panel2);padding:2px 0 0;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
+.pb canvas{width:38px;height:38px}
+.pb span{font-size:9.5px;color:var(--dim);white-space:nowrap;max-width:54px;overflow:hidden;text-overflow:ellipsis}
+.pb em{position:absolute;right:2px;top:1px;font-style:normal;font-size:11px;font-weight:700;background:rgba(0,0,0,.55);border-radius:6px;padding:0 4px;font-variant-numeric:tabular-nums}
+.pb em.no{color:var(--bad)}
+.pb.sel{border-color:var(--acc);background:var(--panel3)}
+.pb.new::after{content:"";position:absolute;left:4px;top:4px;width:8px;height:8px;border-radius:50%;background:var(--acc)}
+#acts{display:flex;gap:6px;padding:0 8px}
+.ab{flex:1 1 0;min-width:0;height:52px;border-radius:11px;border:2px solid transparent;background:var(--panel2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:0}
+.ab svg{width:24px;height:24px}
+.ab span{font-size:10px;color:var(--dim)}
+.ab.sel{border-color:var(--acc);background:var(--panel3)}
+.ab.del.sel{border-color:var(--bad)}
+.ab .dot{position:absolute}
+#bRot svg{transition:transform .15s}
+
+/* ---------- Bottom-Sheet (Info, Menüs) ---------- */
+#sheetBg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:8;display:none}
+#sheet{position:fixed;left:0;right:0;bottom:0;max-height:78%;z-index:9;display:none;flex-direction:column;background:#1a2028;border-top:1px solid var(--line);
+  border-radius:16px 16px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.5);padding-bottom:var(--sab,env(safe-area-inset-bottom,0px))}
+#sheet.on,#sheetBg.on{display:flex}
+#sheetHead{display:flex;align-items:center;gap:10px;padding:10px 12px 8px;border-bottom:1px solid var(--line)}
+#sheetHead canvas{width:34px;height:34px}
+#sheetTitle{flex:1;font-size:17px;font-weight:700}
+#sheetX{width:44px;height:44px;border:0;border-radius:10px;background:var(--panel2);font-size:20px}
+#sheetTabs{display:flex;gap:6px;padding:8px 12px 0}
+#sheetTabs:empty{display:none}
+#sheetTabs button{flex:1;border:0;border-radius:9px;background:var(--panel2);padding:9px 0;font-weight:600;color:var(--dim)}
+#sheetTabs button.on{background:var(--panel3);color:var(--text);box-shadow:inset 0 -2px 0 var(--acc)}
+#sheetBody{overflow-y:auto;padding:10px 12px 14px;touch-action:pan-y;-webkit-overflow-scrolling:touch;user-select:text;-webkit-user-select:text}
+#sheetBody p{margin:6px 0;line-height:1.4;color:var(--dim)}
+#sheetBody h4{margin:14px 0 6px;font-size:13px;color:var(--acc2);text-transform:uppercase;letter-spacing:.04em}
+#sheetBody h4:first-child{margin-top:2px}
+.btn{border:0;border-radius:10px;background:var(--panel3);padding:10px 14px;min-height:44px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.btn.acc{background:var(--acc);color:#241705}
+.btn.red{background:#5a2626;color:#ffd6d0}
+.btn:disabled{opacity:.4}
+.btn canvas{width:22px;height:22px;flex:none}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.st{font-size:14px;margin:2px 0 8px}
+.st.bad{color:var(--bad)} .st.ok{color:var(--ok)} .st.warn{color:var(--acc2)}
+.slots{display:flex;flex-wrap:wrap;gap:8px}
+.slot{background:var(--panel2);border-radius:10px;padding:6px 8px;display:flex;align-items:center;gap:6px;min-width:0}
+.slot canvas{width:26px;height:26px}
+.slot small{display:block;color:var(--dim);font-size:11px}
+.slot b{font-variant-numeric:tabular-nums}
+.bar{height:8px;border-radius:4px;background:var(--panel2);overflow:hidden;margin:6px 0}
+.bar div{height:100%;background:var(--acc);width:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
+.cell{background:var(--panel2);border-radius:10px;padding:6px 2px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;border:2px solid transparent;font-size:11px;text-align:center}
+.cell canvas{width:32px;height:32px}
+.cell b{font-size:12px;font-variant-numeric:tabular-nums}
+.cell.sel{border-color:var(--acc)}
+button.cell{min-height:64px}
+.row{display:flex;align-items:center;gap:8px;background:var(--panel2);border-radius:11px;padding:7px 8px;margin-bottom:6px}
+.row>canvas{width:36px;height:36px;flex:none}
+.row .rt{flex:1;min-width:0}
+.row .rt b{display:block;font-size:14px}
+.ing{display:flex;flex-wrap:wrap;gap:2px 8px;font-size:12px;color:var(--dim);margin-top:2px}
+.ing span{display:inline-flex;align-items:center;gap:2px;font-variant-numeric:tabular-nums}
+.ing canvas{width:16px;height:16px}
+.ing .no{color:var(--bad)}
+.row .rb{display:flex;gap:4px;flex:none}
+.row .rb .btn{padding:0 10px;min-width:44px;justify-content:center}
+.row.done{opacity:.55}
+.row.lock{opacity:.5}
+.row.cur{box-shadow:inset 0 0 0 2px var(--acc)}
+.chk{width:26px;height:26px;border-radius:50%;background:var(--panel3);display:grid;place-items:center;flex:none;font-weight:700}
+.chk.ok{background:var(--ok);color:#10301a}
+textarea{width:100%;min-height:90px;border-radius:10px;border:1px solid var(--line);background:#11161c;color:var(--text);padding:8px;font:12px ui-monospace,monospace;resize:vertical;user-select:text;-webkit-user-select:text}
+.tog{display:flex;align-items:center;justify-content:space-between;background:var(--panel2);border-radius:11px;padding:8px 10px;margin-bottom:6px}
+.sw{width:52px;height:30px;border-radius:15px;background:var(--panel3);border:0;position:relative;padding:0}
+.sw::after{content:"";position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;background:#cfd6dd;transition:left .15s}
+.sw.on{background:var(--ok)} .sw.on::after{left:25px}
+.q{display:flex;gap:6px;align-items:center;overflow-x:auto;padding-bottom:4px}
+.q canvas{width:30px;height:30px;background:var(--panel2);border-radius:8px;padding:2px;flex:none}
+
+/* ---------- Toast ---------- */
+#toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 96px);transform:translateX(-50%);z-index:20;pointer-events:none;
+  display:flex;flex-direction:column;align-items:center;gap:6px;width:max-content;max-width:92vw}
+#toast div{background:rgba(15,19,24,.95);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14px;text-align:center;
+  animation:tin .2s ease-out;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+#toast div.good{border-color:var(--ok)}
+#toast div.bad{border-color:var(--bad)}
+@keyframes tin{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+#boot{position:fixed;inset:0;display:grid;place-items:center;background:var(--bg);z-index:30;font-size:18px;color:var(--dim)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="top">
+  <div id="res"></div>
+  <button class="ib" id="bMenu" aria-label="Menü"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</div>
+<div id="pow"></div>
+
+<div id="banner"><div class="bt"><small id="bSmall"></small><span id="bText"></span></div><button id="bBtn"></button><button id="bSkip" class="bx">Überspringen</button></div>
+
+<div id="bottom">
+  <div id="craftBar"><div></div></div>
+  <div id="pal"></div>
+  <div id="acts">
+    <button class="ab" id="bHand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 3l13 8-6 1.4L15 20l-3 1.3-3-7.5L5 17z"/></svg><span>Zeiger</span></button>
+    <button class="ab" id="bRot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V5M6 11l6-6 6 6"/></svg><span>Drehen</span></button>
+    <button class="ab del" id="bDel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg><span>Abriss</span></button>
+    <button class="ab" id="bCraft"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4l6 6-3 3-6-6zM11 7L3 15v0l3 3 8-8"/><path d="M3 21h8"/></svg><span>Handwerk</span></button>
+    <button class="ab" id="bRes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6L4.5 18.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7 15h10"/></svg><span>Forschung</span></button>
+    <button class="ab" id="bGoal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c3 2.5 4.5 6 4.5 10.5L12 17l-4.5-4.5C7.5 8 9 4.5 12 2z"/><circle cx="12" cy="9" r="1.6"/><path d="M8 14l-3 3 1 3 3-2M16 14l3 3-1 3-3-2"/></svg><span>Ziele</span></button>
+  </div>
+</div>
+
+<div id="sheetBg"></div>
+<div id="sheet">
+  <div id="sheetHead"><canvas id="sheetIcon" width="68" height="68"></canvas><div id="sheetTitle"></div><button id="sheetX" aria-label="Schließen">✕</button></div>
+  <div id="sheetTabs"></div>
+  <div id="sheetBody"></div>
+</div>
+<div id="toast"></div>
+<div id="boot">Fabrik wird hochgefahren …</div>
+
+<script>
+'use strict';
+/* =====================================================================
+   FUNKENWERK – ein Fabrik-Aufbauspiel fürs Handy
+   ---------------------------------------------------------------------
+   Aufbau dieser Datei:
+    1. Grundlagen & Hilfsfunktionen
+    2. Spieldaten (Items, Gebäude, Rezepte, Forschung, Ziele, Tutorial)
+    3. Welt (Generierung, Gitter, Bauen & Abreißen)
+    4. Simulation (fester Takt, unabhängig vom Zeichnen)
+    5. Grafik (Canvas, Sprite-Caches, nur sichtbare Kacheln)
+    6. Eingabe (Touch, Maus, Tastatur)
+    7. Oberfläche (Leisten, Sheets, Menüs)
+    8. Speichern, Export/Import, Offline-Fortschritt, Selbst-Update
+    9. Hauptschleife & Start
+   ===================================================================== */
+
+/* =====================================================================
+   1. GRUNDLAGEN
+   ===================================================================== */
+const $=s=>document.querySelector(s);
+const W=64,H=64;                       // Weltgröße in Kacheln
+const TICK=1/60;                       // Simulationsschritt in Sekunden
+const DX=[0,1,0,-1],DY=[-1,0,1,0];     // Richtungen: 0 Nord, 1 Ost, 2 Süd, 3 West
+const DIRN=['Norden','Osten','Süden','Westen'];
+const COAL=4000;                       // Energie einer Kohle in kJ
+const HAND_SPEED=1.5;                  // Handwerk-Tempo
+const OFFLINE_MAX=8*3600;              // Offline-Fortschritt höchstens 8 Stunden
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function fmt(n){n=Math.floor(n);if(n>=1e6)return(n/1e6).toFixed(1).replace('.',',')+' M';if(n>=1e4)return Math.round(n/1e3)+'k';return n.toLocaleString('de-DE')}
+function fmtRate(r){return r>=100?Math.round(r).toLocaleString('de-DE'):r>=10?r.toFixed(0):r>=.05?r.toFixed(1).replace('.',','):'0'}
+function fmtKW(k){return k>=1000?(k/1000).toFixed(1).replace('.',',')+' MW':Math.round(k)+' kW'}
+function fmtDur(s){s=Math.round(s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h} Std. ${m} Min.`:m?`${m} Min.`:`${s} Sek.`}
+/* deterministischer Zufall (mulberry32) */
+function rng(seed){let s=seed>>>0;return()=>{s=(s+0x6D2B79F5)|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function hash2(x,y,s){let h=(x*374761393+y*668265263+s*1442695041)|0;h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967296}
+/* weiches Wertrauschen für Gelände und Rohstofffelder */
+function vnoise(x,y,s){
+  const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi,u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf);
+  const a=hash2(xi,yi,s),b=hash2(xi+1,yi,s),c=hash2(xi,yi+1,s),d=hash2(xi+1,yi+1,s);
+  return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v;
+}
+
+/* =====================================================================
+   2. SPIELDATEN
+   ===================================================================== */
+/* Items: n = Name, c = Grundfarbe fürs Symbol */
+const ITEMS={
+  eisenerz:{n:'Eisenerz',c:'#8ea4ba'},
+  kupfererz:{n:'Kupfererz',c:'#d97f45'},
+  kohle:{n:'Kohle',c:'#3b3f46'},
+  stein:{n:'Stein',c:'#c8b58c'},
+  eisenplatte:{n:'Eisenplatte',c:'#c5ced8'},
+  kupferplatte:{n:'Kupferplatte',c:'#e4935b'},
+  stahl:{n:'Stahl',c:'#8595ad'},
+  ziegel:{n:'Ziegel',c:'#b7573f'},
+  zahnrad:{n:'Zahnrad',c:'#aeb8c3'},
+  kabel:{n:'Kupferkabel',c:'#eaa36b'},
+  schaltkreis:{n:'Schaltkreis',c:'#3fae5a'},
+  fschaltkreis:{n:'Fortschr. Schaltkreis',c:'#d24a4a'},
+  motor:{n:'Motor',c:'#7f8a97'},
+  rot:{n:'Rotes Forschungspaket',c:'#e2474d'},
+  gruen:{n:'Grünes Forschungspaket',c:'#4cc35a'},
+  blau:{n:'Blaues Forschungspaket',c:'#4a8ef0'},
+  raketenteil:{n:'Raketenteil',c:'#e9edf1'},
+};
+/* Gebäude (sind zugleich Items). kind bestimmt das Verhalten in der Simulation. */
+const BLD={
+  band:{n:'Förderband',kind:'belt',speed:1.6,rot:1,d:'Transportiert Items in Pfeilrichtung. Tipp: Richtung wählen, dann Anfang und Ende einer Linie antippen.'},
+  schnellband:{n:'Schnellband',kind:'belt',speed:3.2,rot:1,d:'Doppelt so schnell wie das normale Förderband.'},
+  greifer:{n:'Greifarm',kind:'ins',cycle:1.1,rot:1,d:'Nimmt Items vom Feld hinter sich und legt sie auf das Feld vor sich (Pfeilrichtung).'},
+  schnellgreifer:{n:'Schnellgreifer',kind:'ins',cycle:.46,rot:1,d:'Ein deutlich schnellerer Greifarm.'},
+  bohrer:{n:'Bohrer',kind:'drill',rate:.4,kw:150,burner:1,rot:1,d:'Fördert Rohstoffe und gibt sie in Pfeilrichtung aus. Verbrennt Kohle.'},
+  ebohrer:{n:'Elektrobohrer',kind:'drill',rate:.75,kw:90,rot:1,d:'Schneller Bohrer, der Strom statt Kohle braucht.'},
+  ofen:{n:'Schmelzofen',kind:'furn',speed:1,kw:90,burner:1,d:'Schmilzt Erz zu Platten, Stein zu Ziegeln und später Eisen zu Stahl. Verbrennt Kohle.'},
+  eofen:{n:'Elektroofen',kind:'furn',speed:2,kw:180,d:'Doppelt so schnell wie der Schmelzofen und braucht nur Strom.'},
+  montage:{n:'Montagemaschine',kind:'asm',speed:.75,kw:75,d:'Stellt ein wählbares Rezept automatisch her. Braucht Strom.'},
+  montage2:{n:'Montagemaschine 2',kind:'asm',speed:1.25,kw:150,d:'Schnellere Montagemaschine.'},
+  kiste:{n:'Kiste',kind:'chest',cap:800,d:'Lager für bis zu 800 Items. Der Inhalt aller Kisten zählt zu deinem Vorrat.'},
+  labor:{n:'Labor',kind:'lab',d:'Verbraucht Forschungspakete für die aktuelle Forschung.'},
+  dampf:{n:'Dampfmaschine',kind:'steam',kw:900,d:'Verbrennt Kohle und erzeugt bis zu 900 kW Strom.'},
+  mast:{n:'Strommast',kind:'pole',d:'Versorgt Gebäude im 5×5-Bereich und verbindet sich mit Masten bis 7 Felder entfernt.'},
+  solar:{n:'Solarpanel',kind:'solar',kw:60,d:'Liefert dauerhaft 60 kW ohne Brennstoff.'},
+  silo:{n:'Raketensilo',kind:'silo',d:'Mit 10 Raketenteilen kannst du die Rakete starten.'},
+};
+for(const k in BLD)ITEMS[k]={n:BLD[k].n,b:1};
+const PAL_ORDER=['band','schnellband','greifer','schnellgreifer','bohrer','ebohrer','ofen','eofen','kiste','montage','montage2','labor','dampf','mast','solar','silo'];
+const ELECTRIC=t=>{const b=BLD[t];return(b.kind==='drill'||b.kind==='furn'||b.kind==='asm')&&!b.burner};
+
+/* Schmelzrezepte (Ofen erkennt das Rezept am eingelegten Item) */
+const SMELT={
+  eisenerz:{o:'eisenplatte',n:1,t:2.5},
+  kupfererz:{o:'kupferplatte',n:1,t:2.5},
+  stein:{o:'ziegel',n:2,t:2.5},
+  eisenplatte:{o:'stahl',n:5,t:12.5,tech:'stahl'},
+};
+/* Rezepte (Schlüssel = Ergebnis). i = Zutaten, n = Menge, t = Zeit in s, tech = Freischaltung, mach = nur Maschine */
+const REC={
+  zahnrad:{i:{eisenplatte:2},n:1,t:.5,g:'Zwischenprodukte'},
+  kabel:{i:{kupferplatte:1},n:2,t:.5,g:'Zwischenprodukte'},
+  schaltkreis:{i:{eisenplatte:1,kabel:3},n:1,t:.5,g:'Zwischenprodukte'},
+  fschaltkreis:{i:{schaltkreis:2,kabel:4,stahl:1},n:1,t:6,tech:'elektronik',g:'Zwischenprodukte'},
+  motor:{i:{stahl:1,zahnrad:1,eisenplatte:2},n:1,t:10,tech:'motoren',g:'Zwischenprodukte'},
+  raketenteil:{i:{stahl:10,fschaltkreis:10,motor:5},n:1,t:30,tech:'rakete',mach:1,g:'Zwischenprodukte'},
+  rot:{i:{kupferplatte:1,zahnrad:1},n:1,t:5,g:'Forschung'},
+  gruen:{i:{greifer:1,band:1},n:1,t:6,tech:'gruenpaket',g:'Forschung'},
+  blau:{i:{fschaltkreis:2,motor:1},n:2,t:12,tech:'blaupaket',g:'Forschung'},
+  band:{i:{zahnrad:1,eisenplatte:1},n:2,t:.5,g:'Logistik'},
+  schnellband:{i:{band:1,zahnrad:5},n:1,t:.5,tech:'schnellband',g:'Logistik'},
+  greifer:{i:{schaltkreis:1,zahnrad:1,eisenplatte:1},n:1,t:.5,g:'Logistik'},
+  schnellgreifer:{i:{greifer:1,schaltkreis:2,eisenplatte:2},n:1,t:.5,tech:'logistik',g:'Logistik'},
+  kiste:{i:{eisenplatte:4},n:1,t:.5,g:'Logistik'},
+  bohrer:{i:{zahnrad:3,eisenplatte:3,ofen:1},n:1,t:2,g:'Produktion'},
+  ebohrer:{i:{schaltkreis:3,zahnrad:5,eisenplatte:10},n:1,t:2,tech:'bergbau',g:'Produktion'},
+  ofen:{i:{stein:5},n:1,t:.5,g:'Produktion'},
+  eofen:{i:{stahl:10,fschaltkreis:5,ziegel:10},n:1,t:5,tech:'eofen',g:'Produktion'},
+  montage:{i:{schaltkreis:3,zahnrad:5,eisenplatte:9},n:1,t:.5,tech:'automatisierung',g:'Produktion'},
+  montage2:{i:{montage:1,schaltkreis:5,zahnrad:10,stahl:2},n:1,t:.5,tech:'montage2',g:'Produktion'},
+  labor:{i:{schaltkreis:10,zahnrad:10,band:4},n:1,t:2,g:'Produktion'},
+  dampf:{i:{zahnrad:8,eisenplatte:10,stein:5},n:1,t:1,tech:'elektrizitaet',g:'Energie'},
+  mast:{i:{eisenplatte:1,kabel:2},n:2,t:.5,tech:'elektrizitaet',g:'Energie'},
+  solar:{i:{stahl:5,schaltkreis:15,kupferplatte:5},n:1,t:10,tech:'solar',g:'Energie'},
+  silo:{i:{stahl:100,ziegel:100,motor:50,schaltkreis:50},n:1,t:30,tech:'rakete',g:'Produktion'},
+};
+const REC_GROUPS=['Zwischenprodukte','Forschung','Logistik','Produktion','Energie'];
+
+/* Forschungsbaum. c = Pakete pro Einheit (Wert = Anzahl Einheiten), t = Sekunden pro Einheit */
+const TECH={
+  elektrizitaet:{n:'Elektrizität',c:{rot:10},t:5,u:['dampf','mast'],d:'Dampfmaschinen erzeugen Strom aus Kohle, Strommasten verteilen ihn.'},
+  automatisierung:{n:'Automatisierung',c:{rot:10},t:5,req:['elektrizitaet'],u:['montage'],d:'Montagemaschinen stellen Rezepte selbstständig her.'},
+  bergbau:{n:'Elektrischer Bergbau',c:{rot:20},t:5,req:['elektrizitaet'],u:['ebohrer'],d:'Schnellere Bohrer, die Strom statt Kohle brauchen.'},
+  logistik:{n:'Logistik',c:{rot:30},t:5,req:['automatisierung'],u:['schnellgreifer'],d:'Schnellgreifer bewegen Items mehr als doppelt so schnell.'},
+  gruenpaket:{n:'Grüne Forschung',c:{rot:30},t:5,req:['automatisierung'],u:['gruen'],d:'Grüne Forschungspakete für fortgeschrittene Technik.'},
+  stahl:{n:'Stahlverarbeitung',c:{rot:40},t:5,req:['automatisierung'],u:['stahl'],d:'Öfen schmelzen je 5 Eisenplatten zu Stahl.'},
+  schnellband:{n:'Schnelle Bänder',c:{rot:40,gruen:40},t:8,req:['gruenpaket','logistik'],u:['schnellband'],d:'Förderbänder mit doppeltem Tempo.'},
+  montage2:{n:'Automatisierung 2',c:{rot:50,gruen:50},t:8,req:['gruenpaket','stahl'],u:['montage2'],d:'Montagemaschinen, die deutlich schneller arbeiten.'},
+  elektronik:{n:'Fortgeschrittene Elektronik',c:{rot:60,gruen:60},t:8,req:['gruenpaket','stahl'],u:['fschaltkreis'],d:'Fortgeschrittene Schaltkreise für Hightech.'},
+  motoren:{n:'Motoren',c:{rot:60,gruen:60},t:8,req:['gruenpaket','stahl'],u:['motor'],d:'Motoren aus Stahl und Zahnrädern.'},
+  bergbau2:{n:'Bergbau-Produktivität',c:{rot:80,gruen:80},t:10,req:['bergbau','gruenpaket'],u:[],d:'Alle Bohrer fördern 25 % schneller.'},
+  solar:{n:'Solarenergie',c:{rot:80,gruen:80},t:10,req:['elektronik'],u:['solar'],d:'Solarpanels liefern Strom ohne Brennstoff.'},
+  eofen:{n:'Elektroöfen',c:{rot:100,gruen:100},t:10,req:['elektronik'],u:['eofen'],d:'Doppelt so schnelle Öfen ohne Kohle.'},
+  blaupaket:{n:'Blaue Forschung',c:{rot:100,gruen:100},t:10,req:['elektronik','motoren'],u:['blau'],d:'Blaue Forschungspakete für die Raumfahrt.'},
+  rakete:{n:'Raketenbau',c:{rot:150,gruen:150,blau:150},t:12,req:['blaupaket'],u:['silo','raketenteil'],d:'Das Endziel: Raketensilo und Raketenteile.'},
+};
+const techCount=id=>{const c=TECH[id].c;let m=0;for(const k in c)m=Math.max(m,c[k]);return m};
+
+/* Meilensteine bis zur Rakete */
+const GOALS=[
+  {n:'Erste Platten',d:'Stelle 20 Eisenplatten her.',p:()=>[prod('eisenplatte'),20]},
+  {n:'Wissenschaft',d:'Erforsche Elektrizität.',ok:()=>isDone('elektrizitaet')},
+  {n:'Unter Strom',d:'Lass eine Dampfmaschine Strom liefern.',ok:()=>!!S.flags.power},
+  {n:'Zahnrad-Fabrik',d:'Stelle 100 Zahnräder her.',p:()=>[prod('zahnrad'),100]},
+  {n:'Elektronik',d:'Stelle 200 Schaltkreise her.',p:()=>[prod('schaltkreis'),200]},
+  {n:'Grüne Wissenschaft',d:'Stelle 100 grüne Forschungspakete her.',p:()=>[prod('gruen'),100]},
+  {n:'Stahlwerk',d:'Stelle 100 Stahl her.',p:()=>[prod('stahl'),100]},
+  {n:'Blaue Wissenschaft',d:'Stelle 50 blaue Forschungspakete her.',p:()=>[prod('blau'),50]},
+  {n:'Startrampe',d:'Baue ein Raketensilo.',ok:()=>!!S.flags.silo},
+  {n:'Abheben!',d:'Starte eine Rakete mit 10 Raketenteilen.',ok:()=>S.rockets>0},
+];
+const goalDone=g=>g.p?(()=>{const[a,b]=g.p();return a>=b})():g.ok();
+
+/* Startinventar, damit man sofort loslegen kann */
+const START_INV={bohrer:6,ofen:6,band:60,greifer:12,kiste:4,labor:1,kohle:40,eisenplatte:60,kupferplatte:30,stein:20};
+
+/* Tutorial für die ersten Minuten */
+const TUT=[
+  {t:'Willkommen! Wähle unten den <b>Bohrer</b> und tippe auf ein blaugraues <b>Eisenerz</b>-Feld.',
+   ok:()=>L.drill.some(e=>RES[e.y*W+e.x]===1)},
+  {t:'Der Bohrer fördert in Pfeilrichtung. Wähle den <b>Schmelzofen</b> und setze ihn direkt vor den Bohrer. Mit <b>Drehen</b> änderst du die Richtung.',
+   ok:()=>L.drill.some(e=>{const f=entAt(e.x+DX[e.d],e.y+DY[e.d]);return f&&BLD[f.t].kind==='furn'})},
+  {t:'Bohrer und Öfen bekommen beim Bauen etwas Kohle. Setze einen <b>Greifarm</b> an den Ofen (Pfeil vom Ofen weg) und dahinter eine <b>Kiste</b>.',
+   ok:()=>L.chest.some(c=>c.inv.eisenplatte>0)},
+  {t:'Die Platten landen in der Kiste und zählen zu deinem Vorrat. Baue genauso eine Linie für <b>Kupfererz</b> (orange).',
+   ok:()=>prod('kupferplatte')>=3},
+  {t:'Kohle geht irgendwann aus. Setze einen Bohrer auf <b>Kohle</b> (schwarz) und bring sie per <b>Förderband</b> und Greifarm zu den Öfen. Band-Tipp: Richtung wählen, dann Anfang und Ende antippen.',
+   ok:()=>prod('kohle')>=15},
+  {t:'Öffne <b>Handwerk</b> und stelle 10 <b>rote Forschungspakete</b> her. Fehlende Zahnräder werden automatisch mitgebaut.',
+   ok:()=>prod('rot')>=10},
+  {t:'Baue das <b>Labor</b>, halte den Finger lange darauf und lege die Pakete ein. Starte dann unter <b>Forschung</b> „Elektrizität“.',
+   ok:()=>isDone('elektrizitaet')||(S.res.cur==='elektrizitaet'&&L.lab.some(l=>l.w||l.inv.rot>0))},
+  {t:'Stark! Du kennst die Grundlagen. Dein großes Ziel: <b>Schieß eine Rakete ins All.</b> Die Meilensteine findest du unter Ziele.',end:1},
+];
+
+/* =====================================================================
+   3. WELT
+   ===================================================================== */
+/* Rohstoffe pro Kachel: 0 nichts, 1 Eisen, 2 Kupfer, 3 Kohle, 4 Stein, 9 Wasser */
+const RES=new Uint8Array(W*H);
+const RES_ITEM=[null,'eisenerz','kupfererz','kohle','stein'];
+const RES_NAME=['Wiese','Eisenerz','Kupfererz','Kohle','Stein'];
+const WATER=9;
+const G=new Array(W*H).fill(null);    // Gitter: Kachel -> Gebäude
+const L={belt:[],ins:[],drill:[],furn:[],asm:[],chest:[],lab:[],steam:[],pole:[],solar:[],silo:[]}; // Gebäude nach Art
+let S=null;                            // gesamter Spielstand (wird gespeichert)
+let DONE=new Set();                    // erforschte Technologien (schneller Zugriff)
+let DRILL_BONUS=1;
+let dirty=true;                        // Listen, Bandformen und Stromnetze neu aufbauen
+let NOTE=null;                         // sammelt Meldungen während des Offline-Fortschritts
+
+const entAt=(x,y)=>x<0||y<0||x>=W||y>=H?null:G[y*W+x];
+const isDone=id=>DONE.has(id);
+const unlocked=id=>!REC[id]||!REC[id].tech||DONE.has(REC[id].tech);
+const prod=id=>S.prod[id]||0;
+function syncDone(){DONE=new Set(S.res.done);DRILL_BONUS=DONE.has('bergbau2')?1.25:1}
+
+/* Karte erzeugen: Startfelder rund um die Mitte, weitere Felder weiter draußen, dazu ein paar Seen */
+function genWorld(seed){
+  RES.fill(0);
+  const r=rng(seed),c=W/2,blobs=[];
+  const a0=r()*Math.PI*2;
+  [1,2,3,4].forEach((t,i)=>{
+    const a=a0+i*Math.PI/2+(r()-.5)*.5,dist=8.5+r()*1.5;
+    blobs.push([t,c+Math.cos(a)*dist,c+Math.sin(a)*dist,t===4?3.4:4.4+r()*.8]);
+  });
+  for(let k=0;k<12;k++){
+    let x,y,tries=0;
+    do{x=5+r()*(W-10);y=5+r()*(H-10);tries++}while(Math.hypot(x-c,y-c)<17&&tries<50);
+    blobs.push([1+k%4,x,y,3.5+r()*3]);
+  }
+  for(const[t,bx,by,br]of blobs){
+    for(let y=Math.floor(by-br-3);y<=by+br+3;y++)for(let x=Math.floor(bx-br-3);x<=bx+br+3;x++){
+      if(x<1||y<1||x>=W-1||y>=H-1)continue;
+      const d=Math.hypot(x+.5-bx,y+.5-by)/(br*(.72+.56*vnoise(x*.4,y*.4,seed+t*17)));
+      if(d<1&&!RES[y*W+x])RES[y*W+x]=t;
+    }
+  }
+  // Seen: nur weit weg von der Mitte und nicht auf Rohstoffen
+  for(let k=0;k<4;k++){
+    let x,y,tries=0;
+    do{x=6+r()*(W-12);y=6+r()*(H-12);tries++}while(Math.hypot(x-c,y-c)<18&&tries<50);
+    const br=2.5+r()*2.5;
+    for(let yy=Math.floor(y-br-2);yy<=y+br+2;yy++)for(let xx=Math.floor(x-br-2);xx<=x+br+2;xx++){
+      if(xx<1||yy<1||xx>=W-1||yy>=H-1)continue;
+      const d=Math.hypot(xx+.5-x,yy+.5-y)/(br*(.75+.5*vnoise(xx*.5,yy*.5,seed+99)));
+      if(d<1&&!RES[yy*W+xx])RES[yy*W+xx]=WATER;
+    }
+  }
+}
+
+/* Neues Gebäude-Objekt. Felder mit "_" am Anfang sind Laufzeitdaten und werden nicht gespeichert. */
+function mkEnt(t,x,y,d){
+  const e={t,x,y,d:BLD[t].rot?d:0};
+  switch(BLD[t].kind){
+    case 'belt':e.it=[];break;                                       // Items: [item, Position 0..1]
+    case 'ins':e.h=null;e.ph=0;e.a=0;break;                          // gehaltenes Item, Phase, Fortschritt
+    case 'drill':e.f=0;e.e=0;e.p=0;e.o=null;break;                   // Kohle, Energie, Fortschritt, wartendes Item
+    case 'furn':e.f=0;e.e=0;e.in=null;e.inN=0;e.out=null;e.outN=0;e.w=null;e.p=0;break;
+    case 'asm':e.r=null;e.inv={};e.outN=0;e.w=0;e.p=0;break;
+    case 'chest':e.inv={};break;
+    case 'lab':e.inv={};e.w=null;e.p=0;break;
+    case 'steam':e.f=0;e.e=0;break;
+    case 'silo':e.parts=0;break;
+  }
+  return e;
+}
+function addEnt(e){S.ents.push(e);G[e.y*W+e.x]=e;dirty=true}
+function removeEnt(e){G[e.y*W+e.x]=null;const i=S.ents.indexOf(e);if(i>=0)S.ents.splice(i,1);dirty=true}
+
+/* Beim Abreißen alles Enthaltene ins Inventar zurückgeben */
+function refund(e){
+  const add=(k,n)=>{if(k&&n>0)give(k,n)};
+  add(e.t,1);
+  switch(BLD[e.t].kind){
+    case 'belt':for(const[i]of e.it)add(i,1);break;
+    case 'ins':add(e.h,1);break;
+    case 'drill':add('kohle',e.f);add(e.o,1);break;
+    case 'furn':add('kohle',e.f);add(e.in,e.inN);add(e.out,e.outN);if(e.w)add(e.w,SMELT[e.w].n);break;
+    case 'asm':for(const k in e.inv)add(k,e.inv[k]);if(e.r){add(e.r,e.outN);if(e.w)for(const k in REC[e.r].i)add(k,REC[e.r].i[k])}break;
+    case 'chest':for(const k in e.inv)add(k,e.inv[k]);break;
+    case 'lab':for(const k in e.inv)add(k,e.inv[k]);if(e.w&&TECH[e.w])for(const k in TECH[e.w].c)add(k,1);break;
+    case 'steam':add('kohle',e.f);break;
+    case 'silo':add('raketenteil',e.parts);break;
+  }
+}
+
+/* ---------- Vorrat: Inventar + Inhalt aller Kisten ---------- */
+function give(k,n){S.inv[k]=(S.inv[k]||0)+n}
+function total(k){let n=S.inv[k]||0;for(const c of L.chest)n+=c.inv[k]||0;return n}
+function totals(){const o=Object.assign({},S.inv);for(const c of L.chest)for(const k in c.inv)o[k]=(o[k]||0)+c.inv[k];return o}
+/* nimmt zuerst aus dem Inventar, dann aus den Kisten */
+function takeItems(k,n){
+  const a=Math.min(n,S.inv[k]||0);
+  if(a){S.inv[k]-=a;n-=a;if(!S.inv[k])delete S.inv[k]}
+  for(const c of L.chest){
+    if(n<=0)break;
+    const h=c.inv[k]||0;
+    if(h){const m=Math.min(h,n);c.inv[k]=h-m;if(!c.inv[k])delete c.inv[k];n-=m}
+  }
+  return n<=0;
+}
+
+/* Form eines Bandes: gerade oder Kurve (wenn nur von einer Seite beliefert) */
+function beltShape(b){
+  const d=b.d,back=entAt(b.x-DX[d],b.y-DY[d]);
+  if(back&&BLD[back.t].kind==='belt'&&back.d===d){b._in=d;return}
+  let n=0,fd=d;
+  for(const s of[(d+1)%4,(d+3)%4]){
+    const e=entAt(b.x+DX[s],b.y+DY[s]);
+    if(e&&BLD[e.t].kind==='belt'&&e.d===(s+2)%4){n++;fd=e.d}
+  }
+  b._in=n===1?fd:d;
+}
+
+/* ---------- Stromnetze ---------- */
+const REACH2=7.5*7.5;                  // Reichweite der Leitungen zwischen Masten
+let NETS=[],WIRES=[];
+const COVER=new Int16Array(W*H);       // Kachel -> Netz-Nummer (oder -1)
+function buildPower(){
+  const P=L.pole,n=P.length,par=P.map((_,i)=>i);
+  const find=i=>{while(par[i]!==i){par[i]=par[par[i]];i=par[i]}return i};
+  const pairs=[];
+  for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){
+    const dx=P[i].x-P[j].x,dy=P[i].y-P[j].y,d2=dx*dx+dy*dy;
+    if(d2<=REACH2)pairs.push([d2,i,j]);
+  }
+  pairs.sort((a,b)=>a[0]-b[0]);
+  WIRES=[];                            // nur die Kanten eines Spannbaums zeichnen: übersichtlich und korrekt
+  for(const[,i,j]of pairs){const a=find(i),b=find(j);if(a!==b){par[a]=b;WIRES.push([P[i],P[j]])}}
+  COVER.fill(-1);NETS=[];
+  const roots={};
+  for(let i=0;i<n;i++){
+    const r=find(i);
+    if(roots[r]===undefined){roots[r]=NETS.length;NETS.push({cons:[],steam:[],sol:[],dem:0,cap:0,use:0,poles:0})}
+    const ni=roots[r],p=P[i];NETS[ni].poles++;p._net=ni;
+    for(let y=p.y-2;y<=p.y+2;y++)for(let x=p.x-2;x<=p.x+2;x++)
+      if(x>=0&&y>=0&&x<W&&y<H&&COVER[y*W+x]<0)COVER[y*W+x]=ni;
+  }
+  for(const e of S.ents){
+    const k=BLD[e.t].kind,isC=ELECTRIC(e.t),isG=k==='steam'||k==='solar';
+    if(!isC&&!isG)continue;
+    const ni=COVER[e.y*W+e.x];e._net=ni;
+    if(ni<0){e._pw=0;e._out=0;continue}
+    if(isC)NETS[ni].cons.push(e);else if(k==='steam')NETS[ni].steam.push(e);else NETS[ni].sol.push(e);
+  }
+}
+
+function reindex(){
+  for(const k in L)L[k].length=0;
+  for(const e of S.ents)L[BLD[e.t].kind].push(e);
+  for(const b of L.belt)beltShape(b);
+  buildPower();
+  dirty=false;
+}
+
+/* =====================================================================
+   4. SIMULATION  (läuft im festen Takt, getrennt vom Zeichnen)
+   ===================================================================== */
+const GAP=.26;                         // Mindestabstand von Items auf dem Band (≈ 4 pro Kachel)
+let labFly=0;                          // Forschungseinheiten, die gerade in Laboren laufen
+
+/* Produktionsstatistik: Ring aus 12 × 5 s für die Rate pro Minute */
+const STAT={b:[{}],t:0};
+STAT.cur=STAT.b[0];
+function addProd(k,n){S.prod[k]=(S.prod[k]||0)+n;STAT.cur[k]=(STAT.cur[k]||0)+n}
+function statTick(dt){
+  STAT.t+=dt;
+  if(STAT.t>=5){STAT.t-=5;STAT.cur={};STAT.b.push(STAT.cur);if(STAT.b.length>13)STAT.b.shift()}
+}
+function rate(k){
+  let s=0;for(const b of STAT.b)s+=b[k]||0;
+  const span=Math.max(15,(STAT.b.length-1)*5+STAT.t);
+  return s*60/span;
+}
+function statReset(){STAT.b=[{}];STAT.cur=STAT.b[0];STAT.t=0}
+
+/* Brennstoff: verbraucht kw·dt, legt bei Bedarf Kohle nach. false = kein Brennstoff */
+function burn(e,kw,dt){
+  if(e.e<=0){if(e.f>0){e.f--;e.e+=COAL}else return false}
+  e.e-=kw*dt;return true;
+}
+
+/* Item auf ein Band legen (Position p), wenn genug Platz ist */
+function beltPut(b,item,p,test){
+  const it=b.it;
+  for(let i=0;i<it.length;i++)if(Math.abs(it[i][1]-p)<GAP)return false;
+  if(!test){let i=0;while(i<it.length&&it[i][1]>p)i++;it.splice(i,0,[item,p])}
+  return true;
+}
+
+/* Kann Gebäude t das Item aufnehmen? test=true prüft nur. */
+function put(t,item,test){
+  switch(BLD[t.t].kind){
+    case 'belt':return beltPut(t,item,.5,test);
+    case 'chest':{
+      let n=0;for(const k in t.inv)n+=t.inv[k];
+      if(n>=BLD.kiste.cap)return false;
+      if(!test)t.inv[item]=(t.inv[item]||0)+1;return true;
+    }
+    case 'drill':
+      if(item!=='kohle'||!BLD[t.t].burner||t.f>=10)return false;
+      if(!test)t.f++;return true;
+    case 'steam':
+      if(item!=='kohle'||t.f>=10)return false;
+      if(!test)t.f++;return true;
+    case 'furn':{
+      if(item==='kohle'&&BLD[t.t].burner){if(t.f>=10)return false;if(!test)t.f++;return true}
+      const r=SMELT[item];
+      if(!r||(r.tech&&!DONE.has(r.tech)))return false;
+      if(t.inN>0&&t.in!==item)return false;
+      if(t.inN>=Math.max(10,r.n*2))return false;
+      if(!test){t.in=item;t.inN++}return true;
+    }
+    case 'asm':{
+      const r=t.r&&REC[t.r];
+      if(!r||!r.i[item]||(t.inv[item]||0)>=r.i[item]*2+2)return false;
+      if(!test)t.inv[item]=(t.inv[item]||0)+1;return true;
+    }
+    case 'lab':
+      if(item!=='rot'&&item!=='gruen'&&item!=='blau')return false;
+      if((t.inv[item]||0)>=10)return false;
+      if(!test)t.inv[item]=(t.inv[item]||0)+1;return true;
+    case 'silo':
+      if(item!=='raketenteil'||t.parts>=10||t._launch)return false;
+      if(!test)t.parts++;return true;
+  }
+  return false;
+}
+/* Greifarm nimmt aus Gebäude src ein Item, das dst annimmt */
+function take(src,dst){
+  switch(BLD[src.t].kind){
+    case 'belt':{
+      const it=src.it;
+      for(let i=0;i<it.length;i++)if(put(dst,it[i][0],true))return it.splice(i,1)[0][0];
+      return null;
+    }
+    case 'chest':
+      for(const k in src.inv)if(put(dst,k,true)){if(!--src.inv[k])delete src.inv[k];return k}
+      return null;
+    case 'furn':
+      if(src.outN>0&&put(dst,src.out,true)){const k=src.out;if(!--src.outN)src.out=null;return k}
+      return null;
+    case 'asm':
+      if(src.outN>0&&src.r&&put(dst,src.r,true)){src.outN--;return src.r}
+      return null;
+  }
+  return null;
+}
+/* Ausgabe eines Bohrers auf das Feld in Pfeilrichtung */
+function output(e,item){
+  const t=entAt(e.x+DX[e.d],e.y+DY[e.d]);
+  return t?put(t,item,false):false;
+}
+
+function drillUpd(e,dt){
+  const B=BLD[e.t];
+  if(e.o){if(!output(e,e.o)){e._st='voll';e._on=0;e._want=0;return}e.o=null}
+  const res=RES_ITEM[RES[e.y*W+e.x]];
+  if(!res){e._st='leer';e._on=0;return}
+  let sp=1;
+  if(B.burner){if(!burn(e,B.kw,dt)){e._st='kohle';e._on=0;return}}
+  else{e._want=1;sp=e._pw||0;if(!sp){e._st='strom';e._on=0;return}}
+  e._st=sp<1?'wenig':null;e._on=1;
+  e.p+=B.rate*DRILL_BONUS*sp*dt;
+  if(e.p>=1){e.p-=1;addProd(res,1);if(!output(e,res))e.o=res}
+}
+
+function furnUpd(e,dt){
+  const B=BLD[e.t];
+  if(!e.w){
+    const r=e.in&&SMELT[e.in];
+    if(!r||e.inN<r.n||(r.tech&&!DONE.has(r.tech))){e._st=e.in?'zutaten':'leer';e._on=0;e._want=0;return}
+    if((e.outN>0&&e.out!==r.o)||e.outN>=50){e._st='voll';e._on=0;e._want=0;return}
+    e.w=e.in;e.p=0;e.inN-=r.n;if(!e.inN)e.in=null;
+  }
+  const r=SMELT[e.w];let sp=1;
+  if(B.burner){if(!burn(e,B.kw,dt)){e._st='kohle';e._on=0;return}}
+  else{e._want=1;sp=e._pw||0;if(!sp){e._st='strom';e._on=0;return}}
+  e._st=sp<1?'wenig':null;e._on=1;
+  e.p+=dt*B.speed*sp/r.t;
+  if(e.p>=1){e.out=r.o;e.outN++;e.w=null;e.p=0;addProd(r.o,1)}
+}
+
+function asmUpd(e,dt){
+  const B=BLD[e.t],r=e.r&&REC[e.r];
+  if(!r){e._st='rezept';e._on=0;e._want=0;return}
+  if(!e.w){
+    if(e.outN>=Math.max(10,r.n*4)){e._st='voll';e._on=0;e._want=0;return}
+    for(const k in r.i)if((e.inv[k]||0)<r.i[k]){e._st='zutaten';e._on=0;e._want=0;return}
+    for(const k in r.i)e.inv[k]-=r.i[k];
+    e.w=1;e.p=0;
+  }
+  e._want=1;const sp=e._pw||0;
+  if(!sp){e._st='strom';e._on=0;return}
+  e._st=sp<1?'wenig':null;e._on=1;
+  e.p+=dt*B.speed*sp/r.t;
+  if(e.p>=1){e.outN+=r.n;e.w=0;e.p=0;addProd(e.r,r.n)}
+}
+
+function labUpd(e,dt){
+  const R=S.res,T=R.cur&&TECH[R.cur];
+  if(e.w&&e.w!==R.cur){                 // Forschung gewechselt: laufende Einheit zurückgeben
+    if(TECH[e.w])for(const k in TECH[e.w].c)e.inv[k]=(e.inv[k]||0)+1;
+    e.w=null;e.p=0;
+  }
+  if(!T){e._st='keine';e._on=0;return}
+  if(!e.w){
+    if(R.prog+labFly>=techCount(R.cur)){e._st='wartet';e._on=0;return}
+    for(const k in T.c)if(!(e.inv[k]>0)){e._st='pakete';e._on=0;return}
+    for(const k in T.c)e.inv[k]--;
+    e.w=R.cur;e.p=0;labFly++;
+  }
+  e._st=null;e._on=1;
+  e.p+=dt/T.t;
+  if(e.p>=1){e.w=null;e.p=0;labFly--;R.prog++;if(R.prog>=techCount(R.cur))finishTech()}
+}
+function finishTech(){
+  const id=S.res.cur;
+  S.res.done.push(id);S.res.cur=null;S.res.prog=0;syncDone();
+  for(const l of L.lab)if(l.w===id){l.w=null;l.p=0}
+  labFly=0;
+  notify('Forschung abgeschlossen: '+TECH[id].n,'good');
+  sfx('res');uiDirty=true;
+}
+
+/* Greifarm-Phasen: 0 wartet an der Quelle, 1 schwenkt hin, 2 wartet am Ziel, 3 schwenkt zurück */
+function insUpd(e,dt){
+  const half=BLD[e.t].cycle/2;
+  switch(e.ph){
+    case 0:{
+      if(e.h){e.ph=1;e.a=0;return}
+      if(e._cd>0){e._cd--;return}       // wenig Arbeit, solange nichts da ist
+      const dst=entAt(e.x+DX[e.d],e.y+DY[e.d]),src=dst&&entAt(e.x-DX[e.d],e.y-DY[e.d]);
+      const it=src&&take(src,dst);
+      if(it){e.h=it;e.ph=1;e.a=0}else e._cd=5;
+      return;
+    }
+    case 1:e.a+=dt/half;if(e.a>=1){e.a=1;e.ph=2}return;
+    case 2:{
+      const dst=entAt(e.x+DX[e.d],e.y+DY[e.d]);
+      if(dst&&put(dst,e.h,false)){e.h=null;e.ph=3;e.a=0}
+      return;
+    }
+    case 3:e.a+=dt/half;if(e.a>=1){e.a=0;e.ph=0}return;
+  }
+}
+
+/* Band: vorderstes Item ggf. weiterreichen, dann alle Items aufrücken lassen */
+function beltUpd(b,dt){
+  const it=b.it;if(!it.length)return;
+  const v=BLD[b.t].speed*dt;
+  const f=it[0];
+  if(f[1]+v>=1){
+    const nb=entAt(b.x+DX[b.d],b.y+DY[b.d]);
+    if(nb&&BLD[nb.t].kind==='belt'&&nb.d!==(b.d+2)%4){
+      const entry=b.d===nb._in?Math.max(0,f[1]+v-1):.5;   // von hinten: am Anfang, von der Seite: in der Mitte
+      if(beltPut(nb,f[0],entry,false))it.shift();
+    }
+  }
+  let lim=1;
+  for(let i=0;i<it.length;i++){
+    let np=it[i][1]+v;if(np>lim)np=lim;
+    if(np>it[i][1])it[i][1]=np;
+    lim=it[i][1]-GAP;
+  }
+}
+
+/* Strom verteilen: Solar zuerst, Dampfmaschinen teilen sich den Rest */
+function powerStep(dt){
+  for(const N of NETS){
+    let dem=0,sol=0,scap=0;
+    for(const e of N.cons)if(e._want)dem+=BLD[e.t].kw;
+    for(const e of N.sol)sol+=BLD[e.t].kw;
+    for(const e of N.steam)if(e.f>0||e.e>0)scap+=BLD.dampf.kw;
+    const cap=sol+scap,s=dem<=0?1:Math.min(1,cap/dem);
+    for(const e of N.cons)e._pw=s;
+    const use=Math.min(dem,cap),load=scap>0?Math.max(0,use-sol)/scap:0;
+    for(const e of N.steam){
+      if(!(e.f>0||e.e>0)){e._out=0;continue}
+      const out=BLD.dampf.kw*load;e._out=out;
+      if(out>0){
+        e.e-=out*dt;
+        while(e.e<=0&&e.f>0){e.f--;e.e+=COAL}
+        if(e.e<0)e.e=0;
+        if(!S.flags.power){S.flags.power=1;uiDirty=true}
+      }
+    }
+    N.dem=dem;N.cap=cap;N.use=use;
+  }
+}
+
+/* Handwerk: Zutaten werden erst beim Start eines Schritts genommen */
+function craftUpd(dt){
+  let guard=0;
+  while(S.cq.length&&dt>0&&guard++<2000){
+    const c=S.cq[0],r=REC[c.r];
+    if(!c.s){
+      for(const k in r.i)if(total(k)<r.i[k]){
+        S.cq.length=0;notify('Handwerk abgebrochen: '+ITEMS[k].n+' fehlt.','bad');uiDirty=true;return;
+      }
+      for(const k in r.i)takeItems(k,r.i[k]);
+      c.s=1;c.a=0;
+    }
+    const need=r.t/HAND_SPEED-c.a;
+    if(dt<need){c.a+=dt;return}
+    dt-=need;S.cq.shift();give(c.r,r.n);addProd(c.r,r.n);uiDirty=true;
+    if(!S.cq.length)sfx('craft');
+  }
+}
+
+/* Raketenstart-Animation (7 s), danach zählt die Rakete */
+function siloUpd(e,dt){
+  if(!e._launch)return;
+  e._launch+=dt;
+  if(e._launch>=7){
+    e._launch=0;e.parts=0;S.rockets=(S.rockets||0)+1;uiDirty=true;
+    if(S.rockets===1)winPending=true;
+    else notify('Rakete Nr. '+S.rockets+' ist im All!','good');
+  }
+}
+
+function simTick(dt){
+  if(dirty)reindex();
+  S.time+=dt;
+  labFly=0;for(const l of L.lab)if(l.w&&l.w===S.res.cur)labFly++;
+  powerStep(dt);
+  for(const e of L.drill)drillUpd(e,dt);
+  for(const e of L.furn)furnUpd(e,dt);
+  for(const e of L.asm)asmUpd(e,dt);
+  for(const e of L.lab)labUpd(e,dt);
+  for(const e of L.ins)insUpd(e,dt);
+  for(const e of L.belt)beltUpd(e,dt);
+  for(const e of L.silo)siloUpd(e,dt);
+  craftUpd(dt);
+  statTick(dt);
+}
+
+/* =====================================================================
+   5. GRAFIK
+   Eigener, flacher Stil aus Canvas-Formen. Statische Teile werden einmal
+   pro Größenstufe in kleine Canvases gezeichnet (Sprite-Cache), bewegte
+   Teile (Greifarme, Items, Bohrköpfe) jedes Bild direkt.
+   ===================================================================== */
+const cv=$('#cv'),ctx=cv.getContext('2d',{alpha:false});
+let DPR=1,VW=0,VH=0,GAPPX=0,TIME=0;
+const cam={x:W/2,y:H/2,z:44,vx:0,vy:0};
+const ZMIN=14,ZMAX=110;
+
+function mk(w,h,fn){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);return c}
+function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
+function circ(g,x,y,r){g.beginPath();g.arc(x,y,r,0,Math.PI*2)}
+/* Farbe aufhellen (t>0) oder abdunkeln (t<0) */
+function shade(hex,t){
+  const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;
+  if(t>0){r+=(255-r)*t;g+=(255-g)*t;b+=(255-b)*t}else{r*=1+t;g*=1+t;b*=1+t}
+  return`rgb(${r|0},${g|0},${b|0})`;
+}
+/* kanonische Kachelkoordinate (Ausrichtung Nord) um die Kachelmitte drehen */
+function rotPt(u,v,d){let x=u-.5,y=v-.5;for(let i=0;i<d;i++){const t=x;x=-y;y=t}return[x+.5,y+.5]}
+
+/* ---------- Sprite-Cache nach Größenstufen ---------- */
+const BK=[16,24,32,48,64,96,128,192];
+const bucket=px=>{for(const b of BK)if(b>=px)return b;return BK[BK.length-1]};
+const SPR=new Map();
+function sprite(key,size,fn){
+  const k=key+'@'+size;let c=SPR.get(k);
+  if(!c){if(SPR.size>2500)SPR.clear();c=mk(size,size,g=>{g.scale(size,size);g.lineJoin='round';g.lineCap='round';fn(g)});SPR.set(k,c)}
+  return c;
+}
+const itemSpr=(id,px)=>sprite('i'+id,bucket(px),g=>itemArt(g,id));
+const bldSpr=(t,d,px)=>sprite('B'+t+d,bucket(px),g=>bldArt(g,t,d));
+
+/* ---------- Formen für Items ---------- */
+function rock(g,cx,cy,r,col,seed){
+  g.beginPath();
+  for(let i=0;i<7;i++){
+    const a=i/7*Math.PI*2+seed,q=r*(.78+.32*hash2(i,seed,3));
+    const x=cx+Math.cos(a)*q,y=cy+Math.sin(a)*q*.86;i?g.lineTo(x,y):g.moveTo(x,y);
+  }
+  g.closePath();g.fillStyle=col;g.fill();
+  g.strokeStyle='rgba(0,0,0,.4)';g.lineWidth=r*.14;g.stroke();
+  g.fillStyle='rgba(255,255,255,.3)';g.beginPath();g.ellipse(cx-r*.25,cy-r*.3,r*.36,r*.2,-.5,0,Math.PI*2);g.fill();
+}
+function plate(g,c,steel){
+  g.fillStyle='rgba(0,0,0,.35)';rr(g,.14,.32,.76,.46,.07);g.fill();
+  g.fillStyle=shade(c,-.3);rr(g,.12,.28,.76,.44,.07);g.fill();
+  g.fillStyle=c;rr(g,.12,.22,.76,.42,.07);g.fill();
+  g.fillStyle='rgba(255,255,255,.4)';rr(g,.17,.26,.66,.09,.04);g.fill();
+  if(steel){g.strokeStyle='rgba(20,30,50,.55)';g.lineWidth=.045;g.beginPath();g.moveTo(.22,.5);g.lineTo(.78,.5);g.stroke()}
+}
+function brick(g,x,y,c){
+  g.fillStyle=shade(c,-.35);rr(g,x,y+.05,.62,.24,.04);g.fill();
+  g.fillStyle=c;rr(g,x,y,.62,.24,.04);g.fill();
+  g.fillStyle='rgba(255,255,255,.25)';g.fillRect(x+.04,y+.03,.54,.04);
+}
+function gearPath(g,cx,cy,r,teeth,depth){
+  const n=teeth*4;g.beginPath();
+  for(let i=0;i<n;i++){
+    const a=(i+.5)/n*Math.PI*2,q=(i%4<2)?r:r*(1-depth);
+    const x=cx+Math.cos(a)*q,y=cy+Math.sin(a)*q;i?g.lineTo(x,y):g.moveTo(x,y);
+  }
+  g.closePath();
+}
+function gear(g,cx,cy,r,c){
+  gearPath(g,cx,cy,r,8,.24);g.fillStyle=c;g.fill();g.strokeStyle=shade(c,-.5);g.lineWidth=r*.09;g.stroke();
+  circ(g,cx,cy,r*.34);g.fillStyle=shade(c,-.6);g.fill();
+  g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=r*.1;g.beginPath();g.arc(cx,cy,r*.6,3.6,5.2);g.stroke();
+}
+function board(g,c,adv){
+  g.fillStyle='rgba(0,0,0,.35)';rr(g,.14,.18,.74,.7,.08);g.fill();
+  g.fillStyle=c;rr(g,.12,.14,.74,.7,.08);g.fill();
+  g.strokeStyle='#f2c65a';g.lineWidth=.04;g.beginPath();
+  g.moveTo(.2,.28);g.lineTo(.34,.28);g.lineTo(.4,.36);g.moveTo(.2,.72);g.lineTo(.36,.72);
+  g.moveTo(.78,.26);g.lineTo(.64,.26);g.moveTo(.78,.72);g.lineTo(.66,.64);g.stroke();
+  g.fillStyle='#22262b';rr(g,.34,.34,.34,.32,.04);g.fill();
+  g.fillStyle='#aab3bd';for(let i=0;i<3;i++){g.fillRect(.29,.38+i*.09,.05,.04);g.fillRect(.68,.38+i*.09,.05,.04)}
+  if(adv){g.fillStyle='#f2c65a';rr(g,.43,.43,.16,.14,.02);g.fill()}
+}
+function flask(g,c){
+  const p=()=>{g.beginPath();g.moveTo(.42,.16);g.lineTo(.58,.16);g.lineTo(.58,.38);g.lineTo(.8,.77);
+    g.quadraticCurveTo(.85,.88,.72,.88);g.lineTo(.28,.88);g.quadraticCurveTo(.15,.88,.2,.77);g.lineTo(.42,.38);g.closePath()};
+  p();g.fillStyle='rgba(215,232,245,.3)';g.fill();
+  g.save();p();g.clip();g.fillStyle=c;g.fillRect(0,.53,1,.5);g.fillStyle='rgba(255,255,255,.3)';g.fillRect(.3,.56,.4,.04);g.restore();
+  p();g.strokeStyle='#e6edf3';g.lineWidth=.045;g.stroke();
+  g.fillStyle='#9a7448';rr(g,.39,.08,.22,.1,.03);g.fill();
+}
+
+function itemArt(g,id){
+  if(BLD[id]){bldArt(g,id,0);return}
+  const c=ITEMS[id].c;
+  switch(id){
+    case 'eisenerz':case 'kupfererz':case 'kohle':
+      rock(g,.33,.62,.19,c,1);rock(g,.65,.62,.2,c,2);rock(g,.5,.38,.21,c,3);
+      if(id==='kohle'){g.fillStyle='rgba(255,255,255,.6)';for(const[x,y]of[[.47,.32],[.62,.6],[.3,.6]])g.fillRect(x,y,.045,.045)}
+      if(id==='kupfererz'){g.fillStyle='#5fcaa6';g.fillRect(.55,.35,.05,.05);g.fillRect(.36,.64,.045,.045)}
+      break;
+    case 'stein':rock(g,.4,.58,.26,c,4);rock(g,.66,.44,.19,shade(c,-.12),5);break;
+    case 'eisenplatte':case 'kupferplatte':case 'stahl':plate(g,c,id==='stahl');break;
+    case 'ziegel':brick(g,.2,.56,c);brick(g,.2,.26,shade(c,.1));break;
+    case 'zahnrad':gear(g,.5,.5,.4,c);break;
+    case 'kabel':
+      for(const[w,col]of[[.12,shade(c,-.4)],[.06,c]]){g.strokeStyle=col;g.lineWidth=w;
+        for(let k=0;k<4;k++){g.beginPath();g.ellipse(.3+k*.12,.52,.1,.25,0,0,Math.PI*2);g.stroke()}}
+      g.strokeStyle=c;g.lineWidth=.06;g.beginPath();g.moveTo(.68,.3);g.quadraticCurveTo(.8,.2,.88,.26);g.stroke();
+      break;
+    case 'schaltkreis':case 'fschaltkreis':board(g,c,id==='fschaltkreis');break;
+    case 'motor':{
+      g.fillStyle='rgba(0,0,0,.35)';rr(g,.14,.33,.64,.46,.1);g.fill();
+      const gr=g.createLinearGradient(0,.28,0,.72);gr.addColorStop(0,shade(c,.35));gr.addColorStop(1,shade(c,-.35));
+      g.fillStyle=gr;rr(g,.12,.28,.62,.44,.1);g.fill();
+      g.strokeStyle=shade(c,-.5);g.lineWidth=.035;for(let x=.24;x<.7;x+=.09){g.beginPath();g.moveTo(x,.31);g.lineTo(x,.69);g.stroke()}
+      g.fillStyle='#d5dbe1';g.fillRect(.74,.45,.14,.1);
+      g.fillStyle='#e0474c';g.fillRect(.14,.42,.05,.16);
+      break;
+    }
+    case 'rot':case 'gruen':case 'blau':flask(g,c);break;
+    case 'raketenteil':{
+      g.fillStyle='rgba(0,0,0,.3)';rr(g,.33,.17,.4,.74,.12);g.fill();
+      const gr=g.createLinearGradient(.3,0,.7,0);gr.addColorStop(0,'#bfc7cf');gr.addColorStop(.5,'#ffffff');gr.addColorStop(1,'#aab3bc');
+      g.fillStyle=gr;rr(g,.3,.12,.4,.74,.12);g.fill();
+      g.fillStyle='#d24a4a';g.fillRect(.3,.3,.4,.09);g.fillRect(.3,.7,.4,.06);
+      circ(g,.5,.52,.08);g.fillStyle='#3d7ad6';g.fill();g.strokeStyle='#7d8894';g.lineWidth=.03;g.stroke();
+      break;
+    }
+  }
+}
+
+/* ---------- Gebäude ---------- */
+/* Gebäudekörper mit Schatten, Verlauf und Kante (nicht gedreht, damit der Schatten immer nach unten fällt) */
+function body(g,x,y,w,h,r,c){
+  g.fillStyle='rgba(0,0,0,.38)';rr(g,x+.02,y+.05,w,h,r);g.fill();
+  const gr=g.createLinearGradient(0,y,0,y+h);gr.addColorStop(0,shade(c,.2));gr.addColorStop(1,shade(c,-.2));
+  g.fillStyle=gr;rr(g,x,y,w,h,r);g.fill();
+  g.strokeStyle=shade(c,-.5);g.lineWidth=.03;g.stroke();
+  g.strokeStyle='rgba(255,255,255,.2)';g.lineWidth=.02;rr(g,x+.035,y+.035,w-.07,h-.07,Math.max(.01,r*.8));g.stroke();
+}
+const INS_COL={greifer:'#e8b53a',schnellgreifer:'#4a8ef0'};
+function insBase(g,t){
+  g.fillStyle='rgba(0,0,0,.3)';g.beginPath();g.ellipse(.52,.55,.22,.2,0,0,Math.PI*2);g.fill();
+  g.fillStyle='#3b434c';rr(g,.3,.3,.4,.4,.09);g.fill();g.strokeStyle='#1f242a';g.lineWidth=.03;g.stroke();
+  circ(g,.5,.5,.12);g.fillStyle=INS_COL[t];g.fill();
+}
+function armArt(g,th,col){
+  const hx=.5+Math.sin(th)*.6,hy=.5+Math.cos(th)*.6;
+  for(const[w,c]of[[.14,'#1f242a'],[.08,col]]){g.strokeStyle=c;g.lineWidth=w;g.beginPath();g.moveTo(.5,.5);g.lineTo(hx,hy);g.stroke()}
+  circ(g,hx,hy,.07);g.fillStyle='#1f242a';g.fill();
+}
+function bldArt(g,t,d){
+  const R=()=>{g.translate(.5,.5);g.rotate(d*Math.PI/2);g.translate(-.5,-.5)};
+  switch(t){
+    case 'band':case 'schnellband':R();beltArt(g,t==='schnellband'?1:0,0,0);break;
+    case 'greifer':case 'schnellgreifer':insBase(g,t);R();armArt(g,Math.PI*.8,INS_COL[t]);break;
+    case 'bohrer':case 'ebohrer':{
+      const c=t==='bohrer'?'#8a735c':'#5f7590';
+      body(g,.1,.1,.8,.8,.14,c);
+      g.save();R();
+      g.fillStyle=shade(c,-.55);g.beginPath();g.moveTo(.34,.16);g.lineTo(.66,.16);g.lineTo(.6,.01);g.lineTo(.4,.01);g.closePath();g.fill();
+      g.fillStyle='#ffd27a';g.beginPath();g.moveTo(.43,.23);g.lineTo(.5,.15);g.lineTo(.57,.23);g.closePath();g.fill();
+      circ(g,.5,.54,.24);g.fillStyle='#1b1e22';g.fill();g.strokeStyle=shade(c,-.35);g.lineWidth=.05;g.stroke();
+      if(t==='bohrer'){g.fillStyle='#2e241d';rr(g,.15,.74,.15,.1,.02);g.fill();g.fillStyle='#e5793a';g.fillRect(.18,.78,.09,.025)}
+      else{g.strokeStyle='#5aa8ff';g.lineWidth=.04;g.beginPath();g.moveTo(.68,.8);g.lineTo(.82,.8);g.stroke()}
+      g.restore();break;
+    }
+    case 'ofen':{
+      const c='#8e857a';body(g,.08,.08,.84,.84,.24,c);
+      for(let i=0;i<9;i++){const a=i/9*Math.PI*2,x=.5+Math.cos(a)*.3,y=.5+Math.sin(a)*.3;
+        g.fillStyle=shade(c,hash2(i,7,1)>.5?.14:-.12);g.beginPath();g.ellipse(x,y,.07,.05,a,0,Math.PI*2);g.fill()}
+      // Blick von oben in die Brennkammer
+      circ(g,.5,.5,.2);g.fillStyle='#1c1714';g.fill();g.strokeStyle='#5b534b';g.lineWidth=.04;g.stroke();
+      g.strokeStyle='#3a322c';g.lineWidth=.035;g.beginPath();
+      for(const d of[-.08,0,.08]){g.moveTo(.36,.5+d);g.lineTo(.64,.5+d)}g.stroke();
+      break;
+    }
+    case 'eofen':{
+      body(g,.08,.08,.84,.84,.1,'#6c7782');
+      g.fillStyle='#1c1f23';rr(g,.22,.44,.56,.34,.05);g.fill();
+      g.strokeStyle='#454b52';g.lineWidth=.03;for(let y=.52;y<.76;y+=.08){g.beginPath();g.moveTo(.25,y);g.lineTo(.75,y);g.stroke()}
+      g.fillStyle='#4a525a';for(let i=0;i<3;i++)rr(g,.24+i*.19,.18,.14,.06,.02),g.fill();
+      circ(g,.8,.2,.035);g.fillStyle='#5aa8ff';g.fill();
+      break;
+    }
+    case 'montage':case 'montage2':{
+      const c=t==='montage'?'#6c8096':'#4f80b6';
+      body(g,.06,.06,.88,.88,.12,c);
+      g.fillStyle=shade(c,-.5);rr(g,.2,.2,.6,.6,.08);g.fill();g.strokeStyle=shade(c,.25);g.lineWidth=.03;g.stroke();
+      g.fillStyle=shade(c,.35);for(const[x,y]of[[.13,.13],[.87,.13],[.13,.87],[.87,.87]]){circ(g,x,y,.03);g.fill()}
+      g.globalAlpha=.55;gear(g,.5,.5,.24,'#9aa6b2');g.globalAlpha=1;
+      if(t==='montage2'){g.fillStyle='#ffd27a';g.fillRect(.3,.09,.4,.04)}
+      break;
+    }
+    case 'kiste':{
+      body(g,.12,.14,.76,.74,.08,'#9b7547');
+      g.strokeStyle='#5a3f22';g.lineWidth=.035;g.beginPath();g.moveTo(.14,.38);g.lineTo(.86,.38);g.stroke();
+      g.fillStyle='#c9cfd6';for(const[x,y]of[[.12,.14],[.78,.14],[.12,.78],[.78,.78]])g.fillRect(x,y,.1,.1);
+      g.fillStyle='#e0c77e';rr(g,.43,.32,.14,.15,.03);g.fill();
+      break;
+    }
+    case 'labor':{
+      body(g,.08,.08,.84,.84,.28,'#c3cdd6');
+      const gr=g.createRadialGradient(.44,.42,.02,.5,.5,.28);gr.addColorStop(0,'#bfe0ff');gr.addColorStop(1,'#2d69b3');
+      circ(g,.5,.5,.26);g.fillStyle=gr;g.fill();g.strokeStyle='#7f8b96';g.lineWidth=.04;g.stroke();
+      g.fillStyle='rgba(255,255,255,.55)';g.beginPath();g.ellipse(.42,.4,.08,.045,-.6,0,Math.PI*2);g.fill();
+      [['#e2474d',.3],['#4cc35a',.5],['#4a8ef0',.7]].forEach(([c,x])=>{circ(g,x,.86,.035);g.fillStyle=c;g.fill()});
+      break;
+    }
+    case 'dampf':{
+      body(g,.06,.1,.88,.8,.14,'#5f7c66');
+      const gr=g.createLinearGradient(0,.22,0,.78);gr.addColorStop(0,'#8fb198');gr.addColorStop(.5,'#6c8d74');gr.addColorStop(1,'#3e5544');
+      g.fillStyle=gr;rr(g,.12,.22,.52,.56,.22);g.fill();
+      g.fillStyle='rgba(0,0,0,.3)';for(let x=.2;x<.62;x+=.08){circ(g,x,.26,.012);g.fill();circ(g,x,.74,.012);g.fill()}
+      circ(g,.3,.4,.07);g.fillStyle='#262b2f';g.fill();
+      circ(g,.78,.5,.15);g.fillStyle='#2e3438';g.fill();g.strokeStyle='#9aa4ad';g.lineWidth=.035;g.stroke();
+      break;
+    }
+    case 'mast':{
+      g.fillStyle='rgba(0,0,0,.3)';g.beginPath();g.ellipse(.53,.56,.12,.08,0,0,Math.PI*2);g.fill();
+      g.fillStyle='#6b5642';rr(g,.42,.42,.16,.16,.03);g.fill();
+      g.fillStyle='#7d654b';rr(g,.18,.42,.64,.1,.03);g.fill();g.strokeStyle='#3e3024';g.lineWidth=.025;g.stroke();
+      g.fillStyle='#cfe0ec';circ(g,.23,.47,.045);g.fill();circ(g,.77,.47,.045);g.fill();
+      circ(g,.5,.47,.07);g.fillStyle='#977b5c';g.fill();
+      break;
+    }
+    case 'solar':{
+      body(g,.05,.05,.9,.9,.05,'#b8c2cc');
+      const gr=g.createLinearGradient(0,.1,0,.9);gr.addColorStop(0,'#2d5591');gr.addColorStop(1,'#172a4d');
+      g.fillStyle=gr;g.fillRect(.1,.1,.8,.8);
+      g.strokeStyle='rgba(180,210,255,.3)';g.lineWidth=.02;g.beginPath();
+      for(let k=1;k<4;k++){g.moveTo(.1+k*.2,.1);g.lineTo(.1+k*.2,.9);g.moveTo(.1,.1+k*.2);g.lineTo(.9,.1+k*.2)}g.stroke();
+      g.fillStyle='rgba(255,255,255,.12)';g.beginPath();g.moveTo(.1,.5);g.lineTo(.5,.1);g.lineTo(.62,.1);g.lineTo(.1,.62);g.closePath();g.fill();
+      break;
+    }
+    case 'silo':{
+      body(g,.03,.03,.94,.94,.16,'#8d9399');
+      circ(g,.5,.5,.39);g.fillStyle='#e8b53a';g.fill();
+      g.setLineDash([.07,.07]);g.strokeStyle='#202428';g.lineWidth=.05;circ(g,.5,.5,.36);g.stroke();g.setLineDash([]);
+      circ(g,.5,.5,.31);g.fillStyle='#3d4349';g.fill();
+      g.strokeStyle='#23272c';g.lineWidth=.03;g.beginPath();g.moveTo(.19,.5);g.lineTo(.81,.5);g.moveTo(.5,.19);g.lineTo(.5,.81);g.stroke();
+      g.strokeStyle='rgba(255,255,255,.18)';g.lineWidth=.03;g.beginPath();g.arc(.5,.5,.26,3.5,5);g.stroke();
+      break;
+    }
+  }
+}
+
+/* ---------- Förderband ---------- */
+/* kanonisch: Ausgang nach Norden. turn 0 gerade, 1 Rechtskurve (Eingang Ost), 3 Linkskurve (Eingang West) */
+const BELT_COL=[['#6f5a24','#e8b53a'],['#7a2f2f','#ef5b4f']];
+function beltArt(g,tier,turn,frame){
+  const [edge,chev]=BELT_COL[tier];
+  if(!turn){
+    g.fillStyle='#24282e';g.fillRect(.14,0,.72,1);
+    g.fillStyle=edge;g.fillRect(.06,0,.1,1);g.fillRect(.84,0,.1,1);
+    g.fillStyle='rgba(255,255,255,.15)';g.fillRect(.07,0,.03,1);g.fillRect(.85,0,.03,1);
+    g.save();g.beginPath();g.rect(.16,0,.68,1);g.clip();
+    g.strokeStyle=chev;g.globalAlpha=.75;g.lineWidth=.06;
+    const off=frame/8*.25;
+    for(let k=-1;k<5;k++){const y=1-(k*.25+off);g.beginPath();g.moveTo(.3,y+.07);g.lineTo(.5,y-.03);g.lineTo(.7,y+.07);g.stroke()}
+    g.restore();
+    return;
+  }
+  const cx=turn===1?1:0,a0=Math.PI/2,a1=turn===1?Math.PI:0,ccw=turn!==1;
+  const ring=(r1,r2,col)=>{g.beginPath();g.arc(cx,0,r2,a0,a1,ccw);g.arc(cx,0,r1,a1,a0,!ccw);g.closePath();g.fillStyle=col;g.fill()};
+  ring(.14,.86,'#24282e');ring(.06,.16,edge);ring(.84,.94,edge);
+  g.save();g.beginPath();g.arc(cx,0,.84,a0,a1,ccw);g.arc(cx,0,.16,a1,a0,!ccw);g.closePath();g.clip();
+  g.strokeStyle=chev;g.globalAlpha=.75;g.lineWidth=.06;
+  const sgn=turn===1?1:-1,off=frame/8/3;
+  for(let k=-1;k<4;k++){
+    const s=k/3+off,a=a0+sgn*s*Math.PI/2,tip=a+sgn*.2;
+    g.beginPath();g.moveTo(cx+Math.cos(a)*.3,Math.sin(a)*.3);g.lineTo(cx+Math.cos(tip)*.5,Math.sin(tip)*.5);g.lineTo(cx+Math.cos(a)*.7,Math.sin(a)*.7);g.stroke();
+  }
+  g.restore();
+}
+/* Position eines Items auf einem Band (kanonisch), p = 0..1 */
+function beltPos(turn,p){
+  if(!turn)return[.5,1-p];
+  if(turn===1){const a=Math.PI/2+p*Math.PI/2;return[1+.5*Math.cos(a),.5*Math.sin(a)]}
+  const a=Math.PI/2-p*Math.PI/2;return[.5*Math.cos(a),.5*Math.sin(a)];
+}
+
+/* ---------- Gelände (vorgerendert in 16×16-Blöcken) ---------- */
+const CH=16,TPX=32;
+let CHUNKS=[];
+function buildTerrain(){
+  CHUNKS=[];
+  for(let cy=0;cy<H/CH;cy++)for(let cx=0;cx<W/CH;cx++)
+    CHUNKS.push(mk(CH*TPX,CH*TPX,g=>{g.scale(TPX,TPX);g.translate(-cx*CH,-cy*CH);drawChunk(g,cx,cy)}));
+}
+const ORE_COL=[null,['#7f95ad','#c3d1df'],['#c46f3a','#f3a672'],['#1f2226','#565c66'],['#b8a47a','#e2d6b6']];
+/* Erz-Kachel in 6 Varianten */
+function oreArt(g,r,v){
+  const[c1,c2]=ORE_COL[r];
+  for(let k=0;k<5;k++){
+    const px=.16+hash2(v*5+k,r,11)*.68,py=.16+hash2(v,r*5+k,13)*.68,s=.09+hash2(v+k,k,17)*.09;
+    g.fillStyle='rgba(0,0,0,.35)';g.beginPath();g.ellipse(px+.02,py+.035,s,s*.8,0,0,Math.PI*2);g.fill();
+    g.fillStyle=c1;g.beginPath();g.ellipse(px,py,s,s*.8,k,0,Math.PI*2);g.fill();
+    g.fillStyle=c2;g.beginPath();g.ellipse(px-s*.3,py-s*.3,s*.38,s*.22,-.5,0,Math.PI*2);g.fill();
+  }
+}
+const oreSpr=(r,v,px)=>sprite('o'+r+v,bucket(px),g=>oreArt(g,r,v));
+/* Gelände-Blöcke enthalten nur Boden und Wasser (weich, darf beim Zoomen etwas unscharf sein).
+   Erz wird pro Kachel als Sprite gezeichnet und bleibt dadurch in jeder Zoomstufe scharf. */
+function drawChunk(g,cx,cy){
+  const sd=S.seed;
+  g.fillStyle='#374630';g.fillRect(cx*CH,cy*CH,CH,CH);
+  // weiche Flecken aus Rauschen (auch knapp außerhalb des Blocks, damit keine Kanten entstehen)
+  for(let y=cy*CH-2;y<(cy+1)*CH+2;y++)for(let x=cx*CH-2;x<(cx+1)*CH+2;x++){
+    const n=vnoise(x*.13,y*.13,sd)*.65+vnoise(x*.45,y*.45,sd+5)*.35,dirt=vnoise(x*.2,y*.2,sd+9);
+    let col=null,a=0;
+    if(dirt>.62){col='96,86,58';a=Math.min(.55,(dirt-.62)*2.2)}
+    else if(n>.52){col='88,112,66';a=Math.min(.45,(n-.52)*1.8)}
+    else if(n<.4){col='30,42,27';a=Math.min(.5,(.4-n)*2)}
+    const r=x>=0&&y>=0&&x<W&&y<H?RES[y*W+x]:0;
+    if(r&&r!==WATER){col='28,32,26';a=.35}                       // Rohstofffeld leicht abdunkeln
+    if(!col)continue;
+    const gr=g.createRadialGradient(x+.5,y+.5,0,x+.5,y+.5,1.25);
+    gr.addColorStop(0,`rgba(${col},${a})`);gr.addColorStop(1,`rgba(${col},0)`);
+    g.fillStyle=gr;g.fillRect(x-.75,y-.75,2.5,2.5);
+  }
+  for(let y=cy*CH;y<(cy+1)*CH;y++)for(let x=cx*CH;x<(cx+1)*CH;x++){
+    for(let k=0;k<3;k++){                                           // Grashalme und Steinchen
+      const h=hash2(x*3+k,y,sd);g.fillStyle=h>.5?'rgba(130,160,95,.25)':'rgba(0,0,0,.14)';
+      g.beginPath();g.arc(x+.08+hash2(x,y*3+k,sd)*.84,y+.08+hash2(x+k,y+7,sd)*.84,.03+h*.025,0,Math.PI*2);g.fill();
+    }
+  }
+  // feines Raster, damit man Kacheln gut erkennt (Wasser liegt darüber)
+  g.strokeStyle='rgba(0,0,0,.14)';g.lineWidth=.03;g.beginPath();
+  for(let k=0;k<=CH;k++){g.moveTo(cx*CH+k,cy*CH);g.lineTo(cx*CH+k,(cy+1)*CH);g.moveTo(cx*CH,cy*CH+k);g.lineTo((cx+1)*CH,cy*CH+k)}
+  g.stroke();
+  for(let y=cy*CH;y<(cy+1)*CH;y++)for(let x=cx*CH;x<(cx+1)*CH;x++)if(RES[y*W+x]===WATER)drawWater(g,x,y);
+}
+function drawWater(g,x,y){
+  const w=(a,b)=>RES[b*W+a]===WATER||a<0||b<0||a>=W||b>=H;
+  const n=w(x,y-1),s=w(x,y+1),e=w(x+1,y),o=w(x-1,y),R=.42;
+  const rTL=!n&&!o?R:0,rTR=!n&&!e?R:0,rBR=!s&&!e?R:0,rBL=!s&&!o?R:0;
+  // Ufer nur an Seiten zu Land einrücken, damit zwischen Wasserkacheln keine Nähte entstehen
+  const path=(i)=>{
+    const l=x+(o?0:i),t=y+(n?0:i),r=x+1-(e?0:i),b=y+1-(s?0:i),k=q=>q?Math.max(0,q-i):0;
+    g.beginPath();g.moveTo(l+k(rTL),t);g.arcTo(r,t,r,b,k(rTR));g.arcTo(r,b,l,b,k(rBR));g.arcTo(l,b,l,t,k(rBL));g.arcTo(l,t,r,t,k(rTL));g.closePath();
+  };
+  path(0);g.fillStyle='#4d8ea3';g.fill();
+  path(.07);g.fillStyle='#2a5f7d';g.fill();
+  g.strokeStyle='rgba(190,230,255,.25)';g.lineWidth=.04;
+  for(let k=0;k<2;k++){const px=x+.2+hash2(x,y+k,4)*.5,py=y+.3+k*.35;g.beginPath();g.moveTo(px,py);g.quadraticCurveTo(px+.1,py-.06,px+.2,py);g.stroke()}
+}
+
+/* ---------- Partikel (Rauch, "+1", Staub) ---------- */
+const PARTS=[];
+function puff(x,y,col,n,sp){for(let i=0;i<n;i++)PARTS.push({x,y,vx:(Math.random()-.5)*(sp||1),vy:(Math.random()-.5)*(sp||1)-.3,l:.6+Math.random()*.5,m:1,col,r:.1+Math.random()*.1})}
+function floatText(x,y,txt,col){PARTS.push({x,y,vx:0,vy:-.9,l:1.1,m:1.1,txt,col})}
+
+/* ---------- Rakete ---------- */
+function drawRocket(X,Y,ts,t){
+  const s=ts*.9;
+  ctx.save();ctx.translate(X,Y);
+  if(t>0){ // Flamme
+    const fl=.35+Math.random()*.25;
+    const gr=ctx.createLinearGradient(0,s*.35,0,s*(.35+fl*1.6));gr.addColorStop(0,'#fff6c2');gr.addColorStop(.4,'#ffb13b');gr.addColorStop(1,'rgba(255,80,30,0)');
+    ctx.fillStyle=gr;ctx.beginPath();ctx.moveTo(-s*.12,s*.35);ctx.lineTo(s*.12,s*.35);ctx.lineTo(0,s*(.35+fl*1.6));ctx.closePath();ctx.fill();
+  }
+  ctx.fillStyle='#d24a4a';ctx.beginPath();ctx.moveTo(-s*.14,s*.1);ctx.lineTo(-s*.28,s*.4);ctx.lineTo(-s*.14,s*.36);ctx.fill();
+  ctx.beginPath();ctx.moveTo(s*.14,s*.1);ctx.lineTo(s*.28,s*.4);ctx.lineTo(s*.14,s*.36);ctx.fill();
+  const gr=ctx.createLinearGradient(-s*.15,0,s*.15,0);gr.addColorStop(0,'#aeb7c0');gr.addColorStop(.5,'#ffffff');gr.addColorStop(1,'#9aa4ad');
+  ctx.fillStyle=gr;ctx.beginPath();ctx.moveTo(0,-s*.55);ctx.quadraticCurveTo(s*.16,-s*.3,s*.15,s*.36);ctx.lineTo(-s*.15,s*.36);ctx.quadraticCurveTo(-s*.16,-s*.3,0,-s*.55);ctx.fill();
+  ctx.fillStyle='#d24a4a';ctx.beginPath();ctx.moveTo(0,-s*.55);ctx.quadraticCurveTo(s*.1,-s*.42,s*.12,-s*.3);ctx.lineTo(-s*.12,-s*.3);ctx.quadraticCurveTo(-s*.1,-s*.42,0,-s*.55);ctx.fill();
+  ctx.fillStyle='#3d7ad6';ctx.beginPath();ctx.arc(0,-s*.1,s*.06,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+}
+
+/* ---------- Bild zeichnen ---------- */
+let SEL=null,HOVER=null,FLASH=null;
+function render(dt){
+  TIME+=dt;
+  const ts=cam.z*DPR,ox=(VW/2-cam.x*cam.z)*DPR,oy=(VH/2-cam.y*cam.z)*DPR,CW=cv.width,CHh=cv.height;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.fillStyle='#0d1115';ctx.fillRect(0,0,CW,CHh);
+  const x0=Math.max(0,Math.floor(-ox/ts)),y0=Math.max(0,Math.floor(-oy/ts));
+  const x1=Math.min(W-1,Math.floor((CW-ox)/ts)),y1=Math.min(H-1,Math.floor((CHh-oy)/ts));
+  if(x1<x0||y1<y0)return;
+  const TX=x=>ox+x*ts,TY=y=>oy+y*ts;
+
+  // Gelände: nur sichtbare Blöcke
+  ctx.imageSmoothingEnabled=true;
+  const nc=W/CH;
+  for(let cy=Math.floor(y0/CH);cy<=Math.floor(y1/CH);cy++)for(let cx=Math.floor(x0/CH);cx<=Math.floor(x1/CH);cx++){
+    const a=Math.round(TX(cx*CH)),b=Math.round(TY(cy*CH)),a2=Math.round(TX((cx+1)*CH)),b2=Math.round(TY((cy+1)*CH));
+    ctx.drawImage(CHUNKS[cy*nc+cx],a,b,a2-a,b2-b);
+  }
+  // Erz: pro sichtbarer Kachel ein scharfes Sprite
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
+    const r=RES[y*W+x];if(!r||r===WATER||G[y*W+x])continue;   // unter Gebäuden nicht nötig
+    ctx.drawImage(oreSpr(r,(hash2(x,y,S.seed)*6)|0,ts),TX(x),TY(y),ts,ts);
+  }
+  // Kartenrand
+  ctx.strokeStyle='rgba(0,0,0,.6)';ctx.lineWidth=Math.max(2,ts*.08);ctx.strokeRect(TX(0),TY(0),W*ts,H*ts);
+
+  // sichtbare Gebäude einsammeln
+  const belts=[],blds=[],ins=[],poles=[];
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
+    const e=G[y*W+x];if(!e)continue;
+    const k=BLD[e.t].kind;
+    if(k==='belt')belts.push(e);else if(k==='ins')ins.push(e);else if(k==='pole')poles.push(e);else blds.push(e);
+  }
+
+  // Stromabdeckung zeigen, wenn Masten oder Strom-Gebäude gewählt sind
+  const showCover=(tool&&(tool==='mast'||ELECTRIC(tool)||BLD[tool].kind==='steam'||BLD[tool].kind==='solar'))||(SEL&&BLD[SEL.t].kind==='pole');
+  if(showCover){
+    ctx.fillStyle='rgba(90,168,255,.1)';ctx.strokeStyle='rgba(90,168,255,.35)';ctx.lineWidth=Math.max(1,ts*.03);
+    for(const p of L.pole){if(p.x<x0-3||p.x>x1+3||p.y<y0-3||p.y>y1+3)continue;ctx.fillRect(TX(p.x-2),TY(p.y-2),ts*5,ts*5);ctx.strokeRect(TX(p.x-2),TY(p.y-2),ts*5,ts*5)}
+  }
+
+  // Bänder
+  // Sprites werden pro Bild nur einmal nachgeschlagen (spart bei großen Fabriken viel Zeit)
+  const bs=bucket(ts),beltC=[],itemC={},bldC={};
+  const iSpr=(id,px)=>itemC[id]||(itemC[id]=itemSpr(id,px));
+  for(const b of belts){
+    const tier=b.t==='schnellband'?1:0,turn=(b.d-b._in+4)%4,key=tier*16+turn*4+b.d;
+    let s=beltC[key];
+    if(!s){
+      const sp=BLD[b.t].speed,per=turn?1/3:.25,fr=Math.floor(((TIME*sp)%per)/per*8)%8;
+      s=beltC[key]=sprite('L'+tier+turn+fr+b.d,bs,g=>{g.translate(.5,.5);g.rotate(b.d*Math.PI/2);g.translate(-.5,-.5);beltArt(g,tier,turn,fr)});
+    }
+    ctx.drawImage(s,TX(b.x),TY(b.y),ts,ts);
+  }
+  // Items auf Bändern
+  const is=ts*.36,lod=ts<26;                  // weit herausgezoomt: Items als einfache Farbpunkte
+  for(const b of belts){
+    if(!b.it.length)continue;
+    const turn=(b.d-b._in+4)%4;
+    for(const[item,p]of b.it){
+      const[u,v]=beltPos(turn,p),[rx,ry]=rotPt(u,v,b.d),x=TX(b.x+rx),y=TY(b.y+ry);
+      if(lod){ctx.fillStyle=ITEMS[item].c||'#ddd';ctx.fillRect(x-is*.35,y-is*.35,is*.7,is*.7)}
+      else ctx.drawImage(iSpr(item,is),x-is/2,y-is/2,is,is);
+    }
+  }
+
+  // Gebäude + bewegte Details
+  for(const e of blds){
+    const X=TX(e.x),Y=TY(e.y),k=BLD[e.t].kind;
+    const bk=e.t+e.d;ctx.drawImage(bldC[bk]||(bldC[bk]=bldSpr(e.t,e.d,ts)),X,Y,ts,ts);
+    if(k==='drill'){
+      const[u,v]=rotPt(.5,.54,e.d),cx=X+u*ts,cy=Y+v*ts,a=e._on?TIME*7:0;
+      ctx.strokeStyle='#aeb6bf';ctx.lineWidth=ts*.05;ctx.beginPath();
+      for(let i=0;i<4;i++){const q=a+i*Math.PI/2;ctx.moveTo(cx+Math.cos(q)*ts*.06,cy+Math.sin(q)*ts*.06);ctx.lineTo(cx+Math.cos(q)*ts*.18,cy+Math.sin(q)*ts*.18)}
+      ctx.stroke();
+      ctx.fillStyle='#d5dbe1';ctx.beginPath();ctx.arc(cx,cy,ts*.055,0,Math.PI*2);ctx.fill();
+      if(e._on&&BLD[e.t].burner&&Math.random()<dt*1.2)puff(e.x+.25,e.y+.3,'rgba(90,90,90,.5)',1,.3);
+    }else if(k==='furn'){
+      if(e._on){
+        const f=.55+.25*Math.sin(TIME*9+e.x);
+        ctx.fillStyle=e.t==='ofen'?`rgba(255,140,40,${f})`:`rgba(255,90,60,${f*.8})`;
+        if(e.t==='ofen'){ctx.beginPath();ctx.arc(X+ts*.5,Y+ts*.5,ts*.17,0,Math.PI*2);ctx.fill()}
+        else ctx.fillRect(X+ts*.25,Y+ts*.47,ts*.5,ts*.28);
+        if(e.t==='ofen'&&Math.random()<dt*1.5)puff(e.x+.5,e.y+.3,'rgba(110,110,110,.45)',1,.3);
+      }
+    }else if(k==='asm'){
+      const g=sprite('gear',bucket(ts*.5),q=>gear(q,.5,.5,.46,'#9aa6b2'));
+      ctx.fillStyle=e.t==='montage'?'rgb(54,64,75)':'rgb(39,64,91)';ctx.fillRect(X+ts*.23,Y+ts*.23,ts*.54,ts*.54);   // statisches Zahnrad aus dem Sprite überdecken
+      ctx.save();ctx.translate(X+ts*.5,Y+ts*.5);if(e._on)ctx.rotate(TIME*2.5);ctx.globalAlpha=.55;ctx.drawImage(g,-ts*.26,-ts*.26,ts*.52,ts*.52);ctx.restore();
+      if(e.r){const q=ts*.36;ctx.drawImage(itemSpr(e.r,q),X+ts*.5-q/2,Y+ts*.5-q/2,q,q)}
+      if(e.w){ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(X+ts*.2,Y+ts*.84,ts*.6,ts*.06);ctx.fillStyle='#63d17f';ctx.fillRect(X+ts*.2,Y+ts*.84,ts*.6*e.p,ts*.06)}
+    }else if(k==='lab'){
+      if(e._on){ctx.fillStyle=`rgba(160,220,255,${.25+.2*Math.sin(TIME*5+e.y)})`;ctx.beginPath();ctx.arc(X+ts*.5,Y+ts*.5,ts*.26,0,Math.PI*2);ctx.fill()}
+    }else if(k==='steam'){
+      const cx=X+ts*.78,cy=Y+ts*.5,a=e._out>0?TIME*8:0;
+      ctx.strokeStyle='#9aa4ad';ctx.lineWidth=ts*.035;ctx.beginPath();
+      for(let i=0;i<3;i++){const q=a+i*2.094;ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(q)*ts*.13,cy+Math.sin(q)*ts*.13)}ctx.stroke();
+      if(e._out>0&&Math.random()<dt*3)puff(e.x+.3,e.y+.35,'rgba(225,230,235,.5)',1,.4);
+    }else if(k==='silo'){
+      if(!e._launch&&e.parts>0){
+        ctx.strokeStyle='#63d17f';ctx.lineWidth=ts*.05;ctx.beginPath();ctx.arc(X+ts*.5,Y+ts*.5,ts*.44,-Math.PI/2,-Math.PI/2+Math.PI*2*e.parts/10);ctx.stroke();
+      }
+    }
+  }
+
+  // Greifarme
+  for(const e of ins){
+    const X=TX(e.x),Y=TY(e.y);
+    const ik='I'+e.t;ctx.drawImage(bldC[ik]||(bldC[ik]=sprite(ik,bs,g=>insBase(g,e.t))),X,Y,ts,ts);
+    const pos=e.ph===0?0:e.ph===1?e.a:e.ph===2?1:1-e.a,th=pos*Math.PI;
+    const[hx,hy]=rotPt(.5+Math.sin(th)*.6,.5+Math.cos(th)*.6,e.d);
+    const cx=X+ts*.5,cy=Y+ts*.5,px=X+hx*ts,py=Y+hy*ts;
+    ctx.strokeStyle='#1f242a';ctx.lineWidth=ts*.14;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(px,py);ctx.stroke();
+    ctx.strokeStyle=INS_COL[e.t];ctx.lineWidth=ts*.08;ctx.stroke();
+    ctx.fillStyle='#1f242a';ctx.beginPath();ctx.arc(px,py,ts*.07,0,Math.PI*2);ctx.fill();
+    if(e.h){const q=ts*.32;ctx.drawImage(itemSpr(e.h,q),px-q/2,py-q/2,q,q)}
+  }
+
+  // Strommasten und Leitungen
+  for(const p of poles)ctx.drawImage(bldSpr('mast',0,ts),TX(p.x),TY(p.y),ts,ts);
+  if(WIRES.length){
+    ctx.strokeStyle='rgba(40,30,22,.9)';ctx.lineWidth=Math.max(1,ts*.03);ctx.beginPath();
+    for(const[a,b]of WIRES){
+      if(Math.max(a.x,b.x)<x0-1||Math.min(a.x,b.x)>x1+1||Math.max(a.y,b.y)<y0-1||Math.min(a.y,b.y)>y1+1)continue;
+      const ax=TX(a.x+.5),ay=TY(a.y+.47),bx=TX(b.x+.5),by=TY(b.y+.47);
+      ctx.moveTo(ax,ay);ctx.quadraticCurveTo((ax+bx)/2,(ay+by)/2+ts*.3,bx,by);
+    }
+    ctx.stroke();
+  }
+
+  // Warnsymbole (blinken): keine Kohle, kein Strom, kein Rezept
+  const blink=Math.sin(TIME*5)>-.3;
+  if(blink)for(const e of blds){
+    const st=e._st;if(st!=='kohle'&&st!=='strom'&&st!=='rezept'&&st!=='wenig')continue;
+    const X=TX(e.x),Y=TY(e.y),r=Math.max(6,ts*.16),cx=X+ts*.82,cy=Y+ts*.18;
+    ctx.fillStyle=st==='kohle'?'#ff6b5b':st==='rezept'?'#5aa8ff':st==='wenig'?'#f2a33a':'#ffcf3f';
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,.5)';ctx.lineWidth=Math.max(1,r*.15);ctx.stroke();
+    if(st==='kohle'){const q=r*1.5;ctx.drawImage(itemSpr('kohle',q),cx-q/2,cy-q/2,q,q)}
+    else if(st==='rezept'){ctx.fillStyle='#10202f';ctx.font=`bold ${Math.round(r*1.4)}px system-ui,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('?',cx,cy+r*.08)}
+    else{ctx.fillStyle='#2a2006';ctx.beginPath();ctx.moveTo(cx+r*.15,cy-r*.75);ctx.lineTo(cx-r*.45,cy+r*.12);ctx.lineTo(cx,cy+r*.12);ctx.lineTo(cx-r*.15,cy+r*.75);ctx.lineTo(cx+r*.45,cy-r*.12);ctx.lineTo(cx,cy-r*.12);ctx.closePath();ctx.fill()}
+  }
+
+  // Raketenstart
+  for(const s of L.silo){
+    if(!s._launch)continue;
+    const t=s._launch,rise=t<2?0:(t-2)*(t-2)*1.4;
+    drawRocket(TX(s.x+.5),TY(s.y+.5-rise)-(t<2?(t/2)*ts*.2:ts*.2),ts,t);
+    if(t>1.5&&Math.random()<.8)puff(s.x+.5+(Math.random()-.5)*.6,s.y+.8-rise*.2,'rgba(230,230,230,.6)',2,1.4);
+  }
+
+  // Auswahl, Tipp-Rückmeldung, Maus-Vorschau
+  if(SEL&&G[SEL.y*W+SEL.x]===SEL){ctx.strokeStyle='#f2a33a';ctx.lineWidth=Math.max(2,ts*.06);ctx.strokeRect(TX(SEL.x)+1,TY(SEL.y)+1,ts-2,ts-2)}
+  if(FLASH){FLASH.t-=dt;if(FLASH.t<=0)FLASH=null;else{ctx.strokeStyle=`rgba(${FLASH.bad?'255,107,91':'255,255,255'},${FLASH.t*2})`;ctx.lineWidth=Math.max(2,ts*.05);ctx.strokeRect(TX(FLASH.x),TY(FLASH.y),ts,ts)}}
+  if(HOVER&&tool&&!G[HOVER.y*W+HOVER.x]){
+    ctx.globalAlpha=.5;ctx.drawImage(bldSpr(tool,BLD[tool].rot?curDir:0,ts),TX(HOVER.x),TY(HOVER.y),ts,ts);ctx.globalAlpha=1;
+  }
+
+  // Partikel
+  for(let i=PARTS.length-1;i>=0;i--){
+    const p=PARTS[i];p.l-=dt;if(p.l<=0){PARTS.splice(i,1);continue}
+    p.x+=p.vx*dt;p.y+=p.vy*dt;const a=Math.min(1,p.l/p.m*1.5);
+    if(p.txt){ctx.globalAlpha=a;ctx.fillStyle=p.col||'#fff';ctx.font=`bold ${Math.round(Math.max(12*DPR,ts*.32))}px system-ui,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.strokeStyle='rgba(0,0,0,.6)';ctx.lineWidth=3*DPR;ctx.strokeText(p.txt,TX(p.x),TY(p.y));ctx.fillText(p.txt,TX(p.x),TY(p.y))}
+    else{ctx.globalAlpha=a*.8;ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(TX(p.x),TY(p.y),ts*p.r*(1.6-a*.6),0,Math.PI*2);ctx.fill()}
+  }
+  ctx.globalAlpha=1;
+}
+
+/* Symbol eines Items/Gebäudes als eigener Canvas für die Oberfläche */
+function iconCanvas(id,px,d){
+  const c=document.createElement('canvas'),s=Math.round(px*Math.min(3,devicePixelRatio||1));
+  c.width=c.height=s;drawIcon(c,id,d);return c;
+}
+function drawIcon(c,id,d){
+  const g=c.getContext('2d'),s=c.width;g.clearRect(0,0,s,s);
+  g.save();g.scale(s,s);g.lineJoin='round';g.lineCap='round';
+  if(BLD[id])bldArt(g,id,d||0);else itemArt(g,id);
+  g.restore();
+}
+
+/* =====================================================================
+   6. EINGABE
+   Ein Finger ziehen = Karte verschieben, zwei Finger = Zoom,
+   Tippen = bauen / öffnen, lange drücken = Info mit Abreißen.
+   ===================================================================== */
+let tool=null,curDir=1,delMode=false,lastBelt=null;
+const PT=new Map();
+let gest=null;
+function toTile(sx,sy){return[Math.floor((sx-VW/2)/cam.z+cam.x),Math.floor((sy-VH/2)/cam.z+cam.y)]}
+function clampCam(){cam.z=clamp(cam.z,ZMIN,ZMAX);cam.x=clamp(cam.x,0,W);cam.y=clamp(cam.y,0,H)}
+
+cv.addEventListener('pointerdown',e=>{
+  audioUnlock();
+  if(e.button===2)return;
+  try{cv.setPointerCapture(e.pointerId)}catch(_){}
+  PT.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  cam.vx=cam.vy=0;
+  if(PT.size===1){
+    gest={m:'tap',sx:e.clientX,sy:e.clientY,lx:e.clientX,ly:e.clientY,lt:performance.now(),vx:0,vy:0,
+      lp:setTimeout(()=>{if(gest&&gest.m==='tap'){gest.m='done';longPress(gest.sx,gest.sy)}},450)};
+  }else if(PT.size===2){
+    if(gest)clearTimeout(gest.lp);
+    const[a,b]=[...PT.values()],mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+    gest={m:'pinch',d0:Math.hypot(a.x-b.x,a.y-b.y)||1,z0:cam.z,wx:(mx-VW/2)/cam.z+cam.x,wy:(my-VH/2)/cam.z+cam.y};
+  }
+});
+cv.addEventListener('pointermove',e=>{
+  if(e.pointerType==='mouse'&&!PT.size){
+    const[x,y]=toTile(e.clientX,e.clientY);HOVER=x>=0&&y>=0&&x<W&&y<H?{x,y}:null;return;
+  }
+  const p=PT.get(e.pointerId);if(!p||!gest)return;
+  p.x=e.clientX;p.y=e.clientY;
+  if(gest.m==='tap'&&Math.hypot(p.x-gest.sx,p.y-gest.sy)>9){clearTimeout(gest.lp);gest.m='pan';gest.lx=gest.sx;gest.ly=gest.sy}
+  if(gest.m==='pan'){
+    const dx=p.x-gest.lx,dy=p.y-gest.ly,now=performance.now(),dts=Math.max(.008,(now-gest.lt)/1000);
+    cam.x-=dx/cam.z;cam.y-=dy/cam.z;
+    gest.vx=gest.vx*.5+(-dx/cam.z/dts)*.5;gest.vy=gest.vy*.5+(-dy/cam.z/dts)*.5;
+    gest.lx=p.x;gest.ly=p.y;gest.lt=now;clampCam();
+  }else if(gest.m==='pinch'&&PT.size>=2){
+    const[a,b]=[...PT.values()],d=Math.hypot(a.x-b.x,a.y-b.y),mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+    cam.z=clamp(gest.z0*d/gest.d0,ZMIN,ZMAX);
+    cam.x=gest.wx-(mx-VW/2)/cam.z;cam.y=gest.wy-(my-VH/2)/cam.z;clampCam();
+  }
+});
+function endPtr(e){
+  if(!PT.has(e.pointerId))return;
+  PT.delete(e.pointerId);
+  if(!gest)return;
+  if(gest.m==='tap'){clearTimeout(gest.lp);if(e.type==='pointerup')tap(gest.sx,gest.sy);gest=null}
+  else if(gest.m==='pinch'){
+    if(PT.size===1){const p=[...PT.values()][0];gest={m:'pan',lx:p.x,ly:p.y,lt:performance.now(),vx:0,vy:0}}
+    else if(!PT.size)gest=null;
+  }else if(gest.m==='pan'){
+    if(!PT.size){if(performance.now()-gest.lt<90){cam.vx=clamp(gest.vx,-60,60);cam.vy=clamp(gest.vy,-60,60)}gest=null}
+  }else if(!PT.size)gest=null;
+}
+cv.addEventListener('pointerup',endPtr);
+cv.addEventListener('pointercancel',endPtr);
+cv.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')HOVER=null});
+cv.addEventListener('contextmenu',e=>{e.preventDefault();longPress(e.clientX,e.clientY)});
+cv.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const wx=(e.clientX-VW/2)/cam.z+cam.x,wy=(e.clientY-VH/2)/cam.z+cam.y;
+  cam.z=clamp(cam.z*Math.exp(-e.deltaY*.0015),ZMIN,ZMAX);
+  cam.x=wx-(e.clientX-VW/2)/cam.z;cam.y=wy-(e.clientY-VH/2)/cam.z;clampCam();
+},{passive:false});
+document.addEventListener('gesturestart',e=>e.preventDefault());
+document.addEventListener('dblclick',e=>e.preventDefault());
+addEventListener('keydown',e=>{
+  if(e.target.tagName==='TEXTAREA')return;
+  if(e.key==='r'||e.key==='R')rotateAct();
+  else if(e.key==='Escape'){if(sheetOpen())closeSheet();else selectTool(null)}
+  else if(e.key==='q')selectTool(null);
+});
+
+/* Kamera gleitet nach dem Wischen kurz nach */
+function camInertia(dt){
+  if(!cam.vx&&!cam.vy)return;
+  cam.x+=cam.vx*dt;cam.y+=cam.vy*dt;clampCam();
+  const k=Math.pow(.005,dt);cam.vx*=k;cam.vy*=k;
+  if(Math.abs(cam.vx)<.05&&Math.abs(cam.vy)<.05)cam.vx=cam.vy=0;
+}
+
+function tap(sx,sy){
+  const[x,y]=toTile(sx,sy);
+  if(x<0||y<0||x>=W||y>=H)return;
+  const e=G[y*W+x];
+  if(delMode){if(e)demolish(e);return}
+  if(tool){
+    if(e){
+      if(e.t===tool&&BLD[tool].rot){
+        if(e.d!==curDir){e.d=curDir;dirty=true;sfx('click')}
+        FLASH={x,y,t:.4};if(BLD[tool].kind==='belt')lastBelt={x,y,t:tool,time:performance.now()};
+        return;
+      }
+      openInfo(e);return;
+    }
+    tryPlace(tool,x,y,curDir);return;
+  }
+  if(e){openInfo(e);return}
+  const r=RES[y*W+x];
+  if(r&&r!==WATER)handMine(x,y,r);
+}
+function longPress(sx,sy){
+  const[x,y]=toTile(sx,sy);
+  if(x<0||y<0||x>=W||y>=H)return;
+  try{navigator.vibrate&&navigator.vibrate(12)}catch(_){}
+  const e=G[y*W+x];
+  if(e)openInfo(e);else openTileInfo(x,y);
+}
+
+/* ---------- Bauen, Abreißen, Abbauen ---------- */
+function fail(x,y,msg){FLASH={x,y,t:.5,bad:1};toast(msg,'bad');sfx('err')}
+function tryPlace(t,x,y,d){
+  const r=RES[y*W+x],B=BLD[t];
+  if(r===WATER)return fail(x,y,'Auf Wasser kann man nicht bauen.');
+  if(B.kind==='drill'&&!r)return fail(x,y,'Bohrer müssen auf einem Rohstofffeld stehen.');
+  // Band-Linie: Anfang und Ende in Pfeilrichtung antippen, die Lücke wird gefüllt
+  if(B.kind==='belt'&&lastBelt&&lastBelt.t===t&&performance.now()-lastBelt.time<20000){
+    const lb=lastBelt,dx=x-lb.x,dy=y-lb.y;
+    const dir=dx>0?1:dx<0?3:dy>0?2:0,dist=Math.abs(dx)+Math.abs(dy),start=G[lb.y*W+lb.x];
+    if((dx===0)!==(dy===0)&&dist>1&&dist<=40&&dir===d&&start&&start.t===t){
+      const cells=[];
+      for(let i=1;i<=dist;i++){
+        const cx=lb.x+DX[dir]*i,cy=lb.y+DY[dir]*i;
+        if(G[cy*W+cx]||RES[cy*W+cx]===WATER){cells.length=0;break}
+        cells.push([cx,cy]);
+      }
+      if(cells.length===dist){
+        if(total(t)<dist)return fail(x,y,`Für die Linie fehlen ${dist-total(t)} × ${B.n}.`);
+        takeItems(t,dist);
+        start.d=dir;
+        for(const[cx,cy]of cells)addEnt(mkEnt(t,cx,cy,dir));
+        lastBelt={x,y,t,time:performance.now()};
+        sfx('place');FLASH={x,y,t:.35};uiDirty=true;return;
+      }
+    }
+  }
+  if(total(t)<1){
+    // fehlt das Gebäude, wird es (wenn möglich) gleich per Hand hergestellt
+    if(REC[t]&&unlocked(t)&&canCraft(t,1)){craft(t,1);toast(B.n+' wird hergestellt …');return}
+    return fail(x,y,`Kein ${B.n} im Vorrat. Stelle es im Handwerk her.`);
+  }
+  takeItems(t,1);
+  const e=mkEnt(t,x,y,d);addEnt(e);autoFuel(e);
+  if(B.kind==='silo'){S.flags.silo=1}
+  sfx('place');FLASH={x,y,t:.35};puff(x+.5,y+.6,'rgba(200,200,200,.35)',4,1.2);
+  lastBelt=B.kind==='belt'?{x,y,t,time:performance.now()}:null;
+  uiDirty=true;
+}
+/* Neu gebaute Brenner bekommen etwas Kohle aus dem Vorrat */
+function autoFuel(e){
+  const B=BLD[e.t];if(!(B.burner||B.kind==='steam'))return;
+  const n=Math.min(5,total('kohle'));
+  if(n>0){takeItems('kohle',n);e.f+=n}
+}
+function demolish(e){
+  refund(e);removeEnt(e);
+  if(SEL===e)closeSheet();
+  sfx('del');puff(e.x+.5,e.y+.5,'rgba(180,170,150,.5)',7,2);
+  lastBelt=null;uiDirty=true;
+}
+function handMine(x,y,r){
+  const k=RES_ITEM[r];give(k,1);addProd(k,1);
+  floatText(x+.5,y+.35,'+1',ITEMS[k].c);sfx('mine');uiDirty=true;
+}
+
+/* =====================================================================
+   7. OBERFLÄCHE
+   ===================================================================== */
+let uiDirty=true,winPending=false,TOT={};
+const TOPITEMS=['eisenplatte','kupferplatte','kohle','stein','schaltkreis'];
+
+/* ---------- Ton (Web Audio, synthetisch) ---------- */
+let AC=null;
+function audioUnlock(){try{if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume()}catch(_){}}
+function tone(f,d,type,vol,slide,delay){
+  if(!AC)return;
+  try{
+    const t=AC.currentTime+(delay||0),o=AC.createOscillator(),g=AC.createGain();
+    o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(30,f+slide),t+d);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d+.02);
+  }catch(_){}
+}
+function sfx(k){
+  if(!S||!S.sound||!AC||NOTE)return;
+  switch(k){
+    case 'place':tone(330,.07,'triangle',.08,120);tone(520,.05,'sine',.04,0,.04);break;
+    case 'del':tone(260,.14,'sawtooth',.04,-150);break;
+    case 'click':tone(700,.03,'sine',.04);break;
+    case 'mine':tone(180+Math.random()*60,.06,'triangle',.07,-40);break;
+    case 'craft':tone(620,.06,'triangle',.05);tone(930,.08,'triangle',.04,0,.06);break;
+    case 'err':tone(160,.16,'square',.035,-30);break;
+    case 'res':[523,659,784,1047].forEach((f,i)=>tone(f,.22,'triangle',.06,0,i*.09));break;
+    case 'goal':[392,523,659].forEach((f,i)=>tone(f,.2,'sine',.07,0,i*.1));break;
+    case 'rocket':tone(90,2.5,'sawtooth',.05,400);tone(60,3,'triangle',.07,200,.3);break;
+  }
+}
+
+/* ---------- Meldungen ---------- */
+function toast(msg,cls,dur){
+  const box=$('#toast');while(box.children.length>2)box.firstChild.remove();
+  const d=document.createElement('div');d.textContent=msg;if(cls)d.className=cls;box.appendChild(d);
+  setTimeout(()=>d.remove(),dur||2800);
+}
+function notify(msg,cls){if(NOTE)NOTE.push(msg);else toast(msg,cls)}
+
+/* Canvas-Platzhalter <canvas data-ic="id"> mit Symbolen füllen (aus dem Sprite-Cache) */
+function fillIcons(root){
+  root.querySelectorAll('canvas[data-ic]').forEach(c=>{
+    const id=c.dataset.ic;if(!ITEMS[id])return;
+    const px=Math.round((parseFloat(getComputedStyle(c).width)||32)*Math.min(3,devicePixelRatio||1));
+    c.width=c.height=px;
+    const d=+c.dataset.d||0,s=BLD[id]?bldSpr(id,d,px):itemSpr(id,px);
+    const g=c.getContext('2d');g.clearRect(0,0,px,px);g.drawImage(s,0,0,px,px);
+  });
+}
+const ic=(id,d)=>`<canvas data-ic="${id}"${d?` data-d="${d}"`:''}></canvas>`;
+
+/* ---------- obere Leiste ---------- */
+function buildTop(){
+  $('#res').innerHTML=TOPITEMS.map(k=>`<button class="chip" data-k="${k}" title="${ITEMS[k].n}">${ic(k)}<div class="cv"><b id="c_${k}">0</b><i id="r_${k}" class="z">0/min</i></div></button>`).join('');
+  fillIcons($('#res'));
+  $('#res').onclick=()=>openMenu('stats');
+}
+function updTop(){
+  for(const k of TOPITEMS){
+    $('#c_'+k).textContent=fmt(TOT[k]||0);
+    const r=rate(k),el=$('#r_'+k);el.textContent=fmtRate(r)+'/min';el.className=r>0?'':'z';
+  }
+  let cap=0,use=0,dem=0;for(const N of NETS){cap+=N.cap;use+=N.use;dem+=N.dem}
+  const pw=$('#pow');
+  if(L.steam.length||L.solar.length||NETS.some(N=>N.cons.length)){
+    pw.style.display='block';pw.textContent=`⚡ ${fmtKW(use)} / ${fmtKW(cap)}`;pw.classList.toggle('low',dem>cap+.1);
+  }else pw.style.display='none';
+}
+
+/* ---------- Bau-Leiste ---------- */
+let palKey='';
+function palItems(){return PAL_ORDER.filter(t=>unlocked(t)||(TOT[t]||0)>0||tool===t)}
+function buildPalette(){
+  const items=palItems(),key=items.join(',')+'|'+curDir;
+  if(key!==palKey){
+    palKey=key;
+    $('#pal').innerHTML=items.map(t=>`<button class="pb${tool===t?' sel':''}${S.newB.includes(t)?' new':''}" data-t="${t}">${ic(t,BLD[t].rot?curDir:0)}<em id="p_${t}"></em><span>${BLD[t].n}</span></button>`).join('');
+    fillIcons($('#pal'));
+  }
+  for(const t of items){const n=TOT[t]||0,el=$('#p_'+t);el.textContent=fmt(n);el.className=n?'':'no'}
+  document.querySelectorAll('.pb').forEach(b=>b.classList.toggle('sel',b.dataset.t===tool));
+}
+$('#pal').addEventListener('click',e=>{
+  const b=e.target.closest('.pb');if(!b)return;
+  const t=b.dataset.t;
+  if(S.newB.includes(t)){S.newB=S.newB.filter(x=>x!==t);b.classList.remove('new')}
+  selectTool(tool===t?null:t);
+});
+function selectTool(t){
+  tool=t;if(t)delMode=false;
+  if(t)toast(BLD[t].n+(BLD[t].rot?' · Richtung: '+DIRN[curDir]:''),'',1400);
+  updToolUI();sfx('click');
+}
+function updToolUI(){
+  document.querySelectorAll('.pb').forEach(b=>b.classList.toggle('sel',b.dataset.t===tool));
+  $('#bHand').classList.toggle('sel',!tool&&!delMode);
+  $('#bDel').classList.toggle('sel',delMode);
+  $('#bRot').querySelector('svg').style.transform=`rotate(${curDir*90}deg)`;
+}
+function rotateAct(){
+  if(SEL&&BLD[SEL.t].rot&&sheetOpen()){SEL.d=(SEL.d+1)%4;dirty=true;sfx('click');return}
+  curDir=(curDir+1)%4;palKey='';buildPalette();updToolUI();sfx('click');
+  toast('Richtung: '+DIRN[curDir],'',1000);
+}
+$('#bHand').onclick=()=>{delMode=false;selectTool(null)};
+$('#bRot').onclick=rotateAct;
+$('#bDel').onclick=()=>{delMode=!delMode;if(delMode){tool=null;toast('Abriss: Tippe auf ein Gebäude.','',1600)}updToolUI();sfx('click')};
+$('#bCraft').onclick=()=>openCraft();
+$('#bRes').onclick=()=>openResearch();
+$('#bGoal').onclick=()=>openGoals();
+$('#bMenu').onclick=()=>openMenu();
+
+/* ---------- Banner: Tutorial oder nächstes Ziel ---------- */
+function updBanner(){
+  const b=$('#banner');
+  $('#banner').style.bottom=($('#bottom').offsetHeight+8)+'px';
+  if(S.tut>=0&&S.tut<TUT.length){
+    const s=TUT[S.tut];
+    b.className='on';$('#bSmall').textContent=`Tutorial ${Math.min(S.tut+1,TUT.length-1)}/${TUT.length-1}`;$('#bText').innerHTML=s.t;
+    $('#bBtn').style.display=s.end?'':'none';$('#bBtn').textContent='Los geht’s';
+    $('#bSkip').style.display=s.end?'none':'';
+    return;
+  }
+  const g=GOALS.find(g=>!goalDone(g));
+  if(!g){b.className='';return}
+  b.className='on goal';$('#bSmall').textContent='Nächstes Ziel';
+  let t=esc(g.d);if(g.p){const[a,m]=g.p();t+=` <b>(${fmt(Math.min(a,m))}/${m})</b>`}
+  $('#bText').innerHTML=t;$('#bBtn').style.display='none';$('#bSkip').style.display='none';
+}
+$('#bBtn').onclick=e=>{e.stopPropagation();S.tut=-1;updBanner()};
+$('#bSkip').onclick=e=>{e.stopPropagation();S.tut=-1;updBanner();toast('Tutorial übersprungen. Du findest es im Menü.')};
+$('#banner').onclick=()=>{if(S.tut<0)openGoals()};
+
+/* ---------- Bottom-Sheet ---------- */
+let SH={kind:null,live:null,tab:null};
+const sheetOpen=()=>!!SH.kind;
+function openSheet(kind,title,iconId,html,opt){
+  opt=opt||{};
+  SH={kind,live:opt.live||null,tab:opt.tab||null,ent:opt.ent||null};
+  SEL=opt.ent||null;
+  $('#sheetTitle').textContent=title;
+  const icn=$('#sheetIcon');icn.style.display=iconId?'':'none';
+  if(iconId)drawIcon(icn,iconId,opt.d||0);
+  $('#sheetTabs').innerHTML=(opt.tabs||[]).map(([v,n])=>`<button data-a="tab" data-v="${v}" class="${v===opt.tab?'on':''}">${n}</button>`).join('');
+  const body=$('#sheetBody');body.innerHTML=html;fillIcons(body);
+  if(!opt.keepScroll)body.scrollTop=0;
+  $('#sheet').classList.add('on');$('#sheetBg').classList.add('on');
+  if(SH.live)SH.live();
+}
+function closeSheet(){SH={kind:null,live:null};SEL=null;$('#sheet').classList.remove('on');$('#sheetBg').classList.remove('on')}
+$('#sheetX').onclick=closeSheet;
+$('#sheetBg').onclick=closeSheet;
+const ACT={};
+function onSheetClick(e){const b=e.target.closest('[data-a]');if(!b||b.disabled)return;const f=ACT[b.dataset.a];if(f){f(b.dataset.v,b);uiDirty=true}}
+$('#sheetBody').addEventListener('click',onSheetClick);
+$('#sheetTabs').addEventListener('click',onSheetClick);
+ACT.tab=v=>{if(SH.kind==='craft')openCraft(v);else if(SH.kind==='menu')openMenu(v)};
+const setTxt=(id,t)=>{const el=document.getElementById(id);if(el&&el.textContent!==t)el.textContent=t};
+const setBar=(id,f)=>{const el=document.getElementById(id);if(el)el.style.width=(clamp(f,0,1)*100).toFixed(1)+'%'};
+/* Slot mit wechselndem Item (z. B. Ofen-Eingang) */
+function setSlot(id,item,n){
+  const el=document.getElementById(id);if(!el)return;
+  const c=el.querySelector('canvas');
+  if((c.dataset.ic||'')!==(item||'')){if(item){c.dataset.ic=item;fillIcons(el)}else{c.dataset.ic='';c.getContext('2d').clearRect(0,0,c.width,c.height)}}
+  const b=el.querySelector('b'),t=item?fmt(n):'–';if(b.textContent!==t)b.textContent=t;
+}
+const slot=(id,label,item)=>`<div class="slot" id="${id}">${ic(item||'')}<div><small>${label}</small><b>–</b></div></div>`;
+
+/* ---------- Gebäude-Info ---------- */
+const ST_TXT={kohle:['Kein Brennstoff – bitte Kohle einlegen','bad'],strom:['Kein Strom','bad'],wenig:['Zu wenig Strom – arbeitet langsamer','warn'],
+  voll:['Ausgang voll','warn'],zutaten:['Wartet auf Zutaten','warn'],leer:['Wartet auf Material','warn'],rezept:['Kein Rezept gewählt','bad'],
+  keine:['Keine Forschung ausgewählt','warn'],pakete:['Wartet auf Forschungspakete','warn'],wartet:['Forschung wird gerade abgeschlossen','ok']};
+function statusOf(e){
+  if(ELECTRIC(e.t)&&e._net<0)return['Kein Strommast in der Nähe','bad'];
+  if(e._st)return ST_TXT[e._st]||['Bereit','ok'];
+  return e._on?['Arbeitet','ok']:['Bereit','ok'];
+}
+function openInfo(e){
+  const B=BLD[e.t],k=B.kind;
+  let h=`<div class="st" id="iSt"></div>`,live;
+  const btns=[];
+  const setSt=(t,c)=>{const el=$('#iSt');if(el){el.textContent=t;el.className='st '+(c||'')}};
+  switch(k){
+    case 'drill':{
+      const res=RES_ITEM[RES[e.y*W+e.x]];
+      h+=`<div class="slots">${B.burner?slot('sF','Brennstoff','kohle'):''}${slot('sR','Fördert',res)}</div><div class="bar"><div id="iBar"></div></div>`;
+      h+=`<p>Tempo: ${fmtRate(B.rate*DRILL_BONUS*60)} ${esc(ITEMS[res].n)}/min · Ausgabe nach ${DIRN[e.d]}</p>`;
+      if(B.burner)btns.push(['fuel','Kohle einlegen']);
+      if(e.o)btns.push(['takeout','Item nehmen']);
+      live=()=>{const[s,c]=statusOf(e);setSt(s,c);if(B.burner)setSlot('sF','kohle',e.f);setSlot('sR',res,prod(res));$('#sR small').textContent='Fördert (gesamt)';setBar('iBar',e.p)};
+      break;
+    }
+    case 'furn':{
+      h+=`<div class="slots">${B.burner?slot('sF','Brennstoff','kohle'):''}${slot('sI','Eingang')}${slot('sO','Ausgang')}</div><div class="bar"><div id="iBar"></div></div>`;
+      const feeds=Object.keys(SMELT).filter(i=>(TOT[i]||0)>0&&(!SMELT[i].tech||isDone(SMELT[i].tech)));
+      h+=`<p>Eisenerz → Eisenplatte, Kupfererz → Kupferplatte, 2 Stein → Ziegel${isDone('stahl')?', 5 Eisenplatten → Stahl':''}.</p>`;
+      if(feeds.length)h+=`<h4>Einlegen</h4><div class="btns">${feeds.map(i=>`<button class="btn" data-a="feed" data-v="${i}">${ic(i)} ${esc(ITEMS[i].n)} (${fmt(TOT[i])})</button>`).join('')}</div>`;
+      if(B.burner)btns.push(['fuel','Kohle einlegen']);
+      btns.push(['takeout','Ausgang nehmen']);
+      live=()=>{const[s,c]=statusOf(e);setSt(s,c);if(B.burner)setSlot('sF','kohle',e.f);setSlot('sI',e.in||e.w,e.inN);setSlot('sO',e.out,e.outN);setBar('iBar',e.p)};
+      break;
+    }
+    case 'asm':{
+      const r=e.r&&REC[e.r];
+      h+=`<div class="row">${e.r?ic(e.r):'<div class="chk">?</div>'}<div class="rt"><b>${r?esc(ITEMS[e.r].n)+(r.n>1?' ×'+r.n:''):'Kein Rezept'}</b>${r?ingHtml(r.i,1):''}</div><div class="rb"><button class="btn acc" data-a="recipes">Rezept</button></div></div>`;
+      h+=`<div class="slots" id="aIn"></div><div class="bar"><div id="iBar"></div></div>`;
+      if(r)h+=`<p>Dauer: ${(r.t/B.speed).toLocaleString('de-DE',{maximumFractionDigits:1})} s · ${B.kw} kW</p>`;
+      if(r){btns.push(['feedall','Zutaten einlegen']);btns.push(['takeout','Ausgang nehmen'])}
+      live=()=>{const[s,c]=statusOf(e);setSt(s,c);setBar('iBar',e.p);
+        const box=$('#aIn');if(!box||!r)return;
+        const sig=Object.keys(r.i).map(i=>i+(e.inv[i]||0)).join()+'|'+e.outN;
+        if(box.dataset.sig!==sig){box.dataset.sig=sig;
+          box.innerHTML=Object.keys(r.i).map(i=>`<div class="slot">${ic(i)}<div><small>${esc(ITEMS[i].n)}</small><b>${e.inv[i]||0}</b></div></div>`).join('')+`<div class="slot">${ic(e.r)}<div><small>Ausgang</small><b>${e.outN}</b></div></div>`;
+          fillIcons(box)}};
+      break;
+    }
+    case 'chest':{
+      h+=`<div class="grid" id="cInv"></div>`;
+      btns.push(['takeout','Alles ins Inventar']);
+      live=()=>{let n=0;for(const i in e.inv)n+=e.inv[i];setSt(`${fmt(n)} / ${B.cap} Items · zählt zu deinem Vorrat`,'');invGrid('cInv',e.inv)};
+      break;
+    }
+    case 'lab':{
+      h+=`<div class="slots">${['rot','gruen','blau'].map(i=>slot('L'+i,ITEMS[i].n.split(' ')[0],i)).join('')}</div><div class="bar"><div id="iBar"></div></div><p id="lRes"></p>`;
+      btns.push(['feedall','Pakete einlegen']);btns.push(['openres','Forschung']);
+      live=()=>{const[s,c]=statusOf(e);setSt(s,c);for(const i of['rot','gruen','blau'])setSlot('L'+i,i,e.inv[i]||0);setBar('iBar',e.p);
+        setTxt('lRes',S.res.cur?`Forscht: ${TECH[S.res.cur].n} (${S.res.prog}/${techCount(S.res.cur)})`:'Wähle unter „Forschung“ ein Thema.')};
+      break;
+    }
+    case 'belt':
+      h+=`<p>${esc(B.d)}</p>`;btns.push(['takeout','Items aufnehmen']);
+      live=()=>setSt(`${e.it.length} Items auf dem Band · Richtung ${DIRN[e.d]} · ${fmtRate(B.speed/GAP*60)}/min max.`,'');
+      break;
+    case 'ins':
+      h+=`<p>${esc(B.d)}</p>`;
+      live=()=>setSt(e.h?`Hält: ${ITEMS[e.h].n}`:'Wartet auf Items',e.h?'ok':'');
+      break;
+    case 'steam':
+      h+=`<div class="slots">${slot('sF','Brennstoff','kohle')}</div><p>${esc(B.d)}</p>`;
+      btns.push(['fuel','Kohle einlegen']);
+      live=()=>{setSlot('sF','kohle',e.f);
+        if(e._net<0)setSt('Nicht mit einem Strommast verbunden','bad');
+        else if(!(e.f>0||e.e>0))setSt('Kein Brennstoff','bad');
+        else setSt(`Liefert ${fmtKW(e._out||0)} von ${fmtKW(B.kw)}`,'ok')};
+      break;
+    case 'solar':
+      h+=`<p>${esc(B.d)}</p>`;
+      live=()=>setSt(e._net<0?'Nicht mit einem Strommast verbunden':'Liefert 60 kW',e._net<0?'bad':'ok');
+      break;
+    case 'pole':
+      h+=`<p>${esc(B.d)}</p><p id="pNet"></p>`;
+      live=()=>{const N=NETS[e._net];if(!N)return;
+        setSt(`Netz: ${fmtKW(N.use)} genutzt · ${fmtKW(N.cap)} verfügbar`,N.dem>N.cap?'bad':'ok');
+        setTxt('pNet',`${N.poles} Masten, ${N.steam.length} Dampfmaschinen, ${N.sol.length} Solarpanels, ${N.cons.length} Verbraucher. Bedarf: ${fmtKW(N.dem)}.`)};
+      break;
+    case 'silo':
+      h+=`<div class="slots">${slot('sP','Raketenteile','raketenteil')}</div><div class="bar"><div id="iBar"></div></div><p>${esc(B.d)} Gestartete Raketen: ${S.rockets||0}</p>`;
+      btns.push(['feedall','Teile einlegen']);
+      live=()=>{setSlot('sP','raketenteil',e.parts);setBar('iBar',e.parts/10);
+        setSt(e._launch?'Start läuft …':e.parts>=10?'Bereit zum Start!':`Noch ${10-e.parts} Raketenteile`,e.parts>=10?'ok':'warn');
+        const lb=$('#launchBtn');if(lb)lb.disabled=e.parts<10||!!e._launch};
+      h+=`<div class="btns"><button class="btn acc" id="launchBtn" data-a="launch">Rakete starten</button></div>`;
+      break;
+  }
+  if(B.rot)btns.push(['rot','Drehen']);
+  btns.push(['del','Abreißen','red']);
+  h+=`<div class="btns">${btns.map(([a,n,c])=>`<button class="btn ${c||''}" data-a="${a}">${n}</button>`).join('')}</div>`;
+  if(k!=='belt'&&k!=='ins'&&B.d)h+=`<p>${esc(B.d)}</p>`;
+  openSheet('info',B.n,e.t,h,{ent:e,live,d:e.d,keepScroll:SH.ent===e});
+}
+function invGrid(id,inv){
+  const el=document.getElementById(id);if(!el)return;
+  const keys=Object.keys(ITEMS).filter(k=>inv[k]>0),sig=keys.map(k=>k+inv[k]).join();
+  if(el.dataset.sig===sig)return;el.dataset.sig=sig;
+  el.innerHTML=keys.length?keys.map(k=>`<div class="cell">${ic(k)}<b>${fmt(inv[k])}</b><span>${esc(ITEMS[k].n)}</span></div>`).join(''):'<p>Leer.</p>';
+  fillIcons(el);
+}
+function openTileInfo(x,y){
+  const r=RES[y*W+x];
+  if(r===WATER){openSheet('tile','Wasser',null,'<p>Hier kann nicht gebaut werden.</p>');return}
+  if(!r){openSheet('tile','Wiese',null,'<p>Freie Fläche zum Bauen.</p>');return}
+  const k=RES_ITEM[r];
+  openSheet('tile',RES_NAME[r]+'-Feld',k,`<p>Unerschöpfliches Rohstofffeld. Setze einen Bohrer darauf oder tippe im Zeiger-Modus darauf, um per Hand abzubauen.</p>
+    <div class="btns"><button class="btn acc" data-a="mine" data-v="${x},${y}">Per Hand abbauen</button></div>`);
+}
+ACT.mine=v=>{const[x,y]=v.split(',').map(Number);handMine(x,y,RES[y*W+x])};
+
+/* Aktionen im Info-Sheet */
+const selE=()=>SH.ent&&G[SH.ent.y*W+SH.ent.x]===SH.ent?SH.ent:null;
+function feed(e,item,max){
+  let n=0;
+  while(n<(max||200)&&total(item)>0&&put(e,item,true)){put(e,item,false);takeItems(item,1);n++}
+  return n;
+}
+ACT.fuel=()=>{const e=selE();if(!e)return;const n=feed(e,'kohle',10);toast(n?`${n} Kohle eingelegt.`:'Keine Kohle im Vorrat oder Platz voll.',n?'':'bad');refreshInfo()};
+ACT.feed=v=>{const e=selE();if(!e)return;const n=feed(e,v);toast(n?`${n} × ${ITEMS[v].n} eingelegt.`:'Kein Platz.',n?'':'bad');refreshInfo()};
+ACT.feedall=()=>{
+  const e=selE();if(!e)return;const k=BLD[e.t].kind;let n=0;
+  const list=k==='lab'?['rot','gruen','blau']:k==='silo'?['raketenteil']:e.r?Object.keys(REC[e.r].i):[];
+  for(const i of list)n+=feed(e,i);
+  toast(n?`${n} Items eingelegt.`:'Nichts Passendes im Vorrat.',n?'':'bad');refreshInfo();
+};
+ACT.takeout=()=>{
+  const e=selE();if(!e)return;let n=0;
+  switch(BLD[e.t].kind){
+    case 'furn':if(e.outN){give(e.out,e.outN);n=e.outN;e.outN=0;e.out=null}break;
+    case 'asm':if(e.outN){give(e.r,e.outN);n=e.outN;e.outN=0}break;
+    case 'chest':for(const i in e.inv){give(i,e.inv[i]);n+=e.inv[i]}e.inv={};break;
+    case 'belt':for(const[i]of e.it){give(i,1);n++}e.it.length=0;break;
+    case 'drill':if(e.o){give(e.o,1);e.o=null;n=1}break;
+  }
+  toast(n?`${n} Items ins Inventar genommen.`:'Nichts zu nehmen.');refreshInfo();
+};
+ACT.rot=()=>{const e=selE();if(!e)return;e.d=(e.d+1)%4;dirty=true;sfx('click');refreshInfo()};
+ACT.del=()=>{const e=selE();if(e)demolish(e)};
+ACT.openres=()=>openResearch();
+ACT.recipes=()=>{
+  const e=selE();if(!e)return;
+  let h='<p>Wähle, was die Maschine herstellen soll. Zutaten und Ausgang gehen beim Wechsel ins Inventar.</p>';
+  for(const grp of REC_GROUPS){
+    const ids=Object.keys(REC).filter(r=>REC[r].g===grp&&unlocked(r));
+    if(!ids.length)continue;
+    h+=`<h4>${grp}</h4><div class="grid">${ids.map(r=>`<button class="cell${e.r===r?' sel':''}" data-a="setrec" data-v="${r}">${ic(r)}<span>${esc(ITEMS[r].n)}</span></button>`).join('')}</div>`;
+  }
+  openSheet('recipes','Rezept wählen',e.t,h,{ent:e});
+};
+ACT.setrec=v=>{
+  const e=selE();if(!e)return;
+  for(const i in e.inv)give(i,e.inv[i]);
+  if(e.r){give(e.r,e.outN);if(e.w)for(const i in REC[e.r].i)give(i,REC[e.r].i[i])}
+  e.r=v;e.inv={};e.outN=0;e.w=0;e.p=0;
+  sfx('click');openInfo(e);
+};
+ACT.launch=()=>{
+  const e=selE();if(!e||e.parts<10||e._launch)return;
+  e._launch=.001;closeSheet();sfx('rocket');cam.x=e.x+.5;cam.y=e.y-1;toast('3 … 2 … 1 … Start!','good');
+};
+function refreshInfo(){const e=selE();if(e&&SH.kind==='info')openInfo(e)}
+
+/* ---------- Handwerk ---------- */
+function queueAvail(){
+  const av=totals();
+  for(const c of S.cq){const r=REC[c.r];if(!c.s)for(const k in r.i)av[k]=(av[k]||0)-r.i[k];av[c.r]=(av[c.r]||0)+r.n}
+  return av;
+}
+/* plant n Stück von id; fehlende Zwischenprodukte werden rekursiv mitgeplant */
+function planCraft(id,n,av,steps,depth,miss){
+  const r=REC[id],times=Math.ceil(n/r.n);
+  for(const k in r.i){
+    const need=r.i[k]*times,have=Math.max(0,av[k]||0);
+    if(have<need){
+      if(depth<8&&REC[k]&&unlocked(k)&&!REC[k].mach){if(!planCraft(k,need-have,av,steps,depth+1,miss))return false}
+      else{if(miss){miss.k=k;miss.n=need-have}return false}
+    }
+    av[k]=(av[k]||0)-need;
+  }
+  for(let i=0;i<times;i++)steps.push(id);
+  av[id]=(av[id]||0)+times*r.n;
+  return true;
+}
+function canCraft(id,n){return planCraft(id,n,queueAvail(),[],0,null)}
+function craft(id,n){
+  const steps=[],miss={};
+  if(!planCraft(id,n,queueAvail(),steps,0,miss)){toast(`Es fehlen ${fmt(miss.n)} × ${ITEMS[miss.k].n}.`,'bad');sfx('err');return false}
+  if(S.cq.length+steps.length>500){toast('Die Warteschlange ist voll.','bad');return false}
+  for(const s of steps)S.cq.push({r:s,s:0,a:0});
+  sfx('click');return true;
+}
+function ingHtml(ing,times){
+  return `<div class="ing">${Object.keys(ing).map(k=>`<span data-k="${k}" data-n="${ing[k]*times}">${ic(k)}${ing[k]*times}</span>`).join('')}</div>`;
+}
+function openCraft(tab){
+  tab=tab||(SH.kind==='craft'&&SH.tab)||'make';
+  let h='',live;
+  if(tab==='make'){
+    h+=`<div id="cq"></div>`;
+    for(const grp of REC_GROUPS){
+      const ids=Object.keys(REC).filter(r=>REC[r].g===grp&&unlocked(r)&&!REC[r].mach);
+      if(!ids.length)continue;
+      h+=`<h4>${grp}</h4>`;
+      for(const r of ids){
+        const R=REC[r];
+        h+=`<div class="row" data-r="${r}">${ic(r)}<div class="rt"><b>${esc(ITEMS[r].n)}${R.n>1?' ×'+R.n:''} <small style="color:var(--dim);font-weight:400">· ${fmt(TOT[r]||0)}</small></b>${ingHtml(R.i,1)}</div>
+          <div class="rb"><button class="btn" data-a="craft" data-v="${r}:1">1</button><button class="btn" data-a="craft" data-v="${r}:5">5</button></div></div>`;
+      }
+    }
+    h+=`<p>Fehlende Zwischenprodukte (z. B. Zahnräder) werden automatisch mitgebaut. Zutaten kommen aus dem Inventar und allen Kisten.</p>`;
+    live=()=>{
+      const q=$('#cq');if(!q)return;
+      const sig=S.cq.length+'|'+(S.cq[0]?S.cq[0].r:'');
+      if(q.dataset.sig!==sig){
+        q.dataset.sig=sig;
+        q.innerHTML=S.cq.length?`<h4>In Arbeit (${S.cq.length})</h4><div class="q">${S.cq.slice(0,14).map(c=>ic(c.r)).join('')}${S.cq.length>14?'<span>…</span>':''}</div><div class="bar"><div id="cqBar"></div></div><div class="btns"><button class="btn red" data-a="cancelq">Abbrechen</button></div>`:'';
+        fillIcons(q);
+      }
+      if(S.cq[0])setBar('cqBar',S.cq[0].a/(REC[S.cq[0].r].t/HAND_SPEED));
+      const av=queueAvail();
+      document.querySelectorAll('#sheetBody .row[data-r]').forEach(row=>{
+        const r=row.dataset.r;
+        row.querySelectorAll('.ing span').forEach(s=>s.classList.toggle('no',(av[s.dataset.k]||0)<+s.dataset.n));
+        const[b1,b5]=row.querySelectorAll('.rb .btn');
+        b1.disabled=!planCraft(r,1,Object.assign({},av),[],0,null);
+        b5.disabled=b1.disabled||!planCraft(r,5,Object.assign({},av),[],0,null);
+      });
+    };
+  }else{
+    h+=`<p>Inventar und Inhalt aller Kisten zusammen.</p><div class="grid" id="vInv"></div>`;
+    live=()=>invGrid('vInv',totals());
+  }
+  openSheet('craft','Handwerk',null,h,{live,tab,tabs:[['make','Herstellen'],['inv','Vorrat']]});
+}
+ACT.craft=v=>{const[r,n]=v.split(':');craft(r,+n);if(SH.live)SH.live()};
+ACT.cancelq=()=>{
+  const c=S.cq[0];
+  if(c&&c.s)for(const k in REC[c.r].i)give(k,REC[c.r].i[k]);
+  S.cq.length=0;toast('Handwerk abgebrochen.');if(SH.live)SH.live();
+};
+
+/* ---------- Forschung ---------- */
+const costHtml=c=>`<div class="ing">${Object.keys(c).map(k=>`<span>${ic(k)}${c[k]}</span>`).join('')}</div>`;
+function openResearch(){
+  const R=S.res;let h='';
+  if(R.cur){
+    const T=TECH[R.cur];
+    h+=`<h4>Aktuelle Forschung</h4><div class="row cur"><div class="rt"><b>${esc(T.n)}</b>${costHtml(T.c)}<div class="bar"><div id="rBar"></div></div><small id="rTxt" style="color:var(--dim)"></small></div></div>`;
+  }else h+=`<h4>Aktuelle Forschung</h4><p>Keine. Wähle unten ein Thema.</p>`;
+  h+=`<p>Labore verbrauchen pro Einheit ein Paket jeder Farbe. Labore: ${L.lab.length}.</p>`;
+  const avail=[],locked=[],done=[];
+  for(const id in TECH){
+    if(DONE.has(id))done.push(id);
+    else if((TECH[id].req||[]).every(q=>DONE.has(q)))avail.push(id);
+    else locked.push(id);
+  }
+  const unl=T=>T.u.length?`<div class="ing">Schaltet frei: ${T.u.map(u=>`<span>${ic(u)}${esc(ITEMS[u].n)}</span>`).join('')}</div>`:'';
+  if(avail.length){h+='<h4>Verfügbar</h4>';for(const id of avail){const T=TECH[id];
+    h+=`<div class="row${R.cur===id?' cur':''}"><div class="rt"><b>${esc(T.n)}</b><div class="ing" style="margin-bottom:2px">${esc(T.d)}</div>${costHtml(T.c)}${unl(T)}</div><div class="rb">${R.cur===id?'':`<button class="btn acc" data-a="research" data-v="${id}">Erforschen</button>`}</div></div>`}}
+  if(locked.length){h+='<h4>Gesperrt</h4>';for(const id of locked){const T=TECH[id];
+    h+=`<div class="row lock"><div class="rt"><b>${esc(T.n)}</b><div class="ing">Benötigt: ${T.req.filter(q=>!DONE.has(q)).map(q=>esc(TECH[q].n)).join(', ')}</div>${costHtml(T.c)}</div></div>`}}
+  if(done.length)h+=`<h4>Erforscht (${done.length})</h4><div class="ing">${done.map(id=>`<span>✓ ${esc(TECH[id].n)}</span>`).join('')}</div>`;
+  openSheet('research','Forschung',null,h,{live:()=>{if(!R.cur)return;const n=techCount(R.cur);
+    let part=0;for(const l of L.lab)if(l.w===R.cur)part+=l.p;
+    setBar('rBar',(R.prog+part)/n);setTxt('rTxt',`${R.prog} / ${n} Einheiten`)}});
+}
+ACT.research=v=>{S.res.cur=v;S.res.prog=S.res.prog&&S.res.cur===v?S.res.prog:0;sfx('click');openResearch();toast('Forschung gestartet: '+TECH[v].n)};
+
+/* ---------- Ziele ---------- */
+function openGoals(){
+  let h=`<div class="row cur"><div class="chk${S.rockets?' ok':''}">🚀</div><div class="rt"><b>Endziel: Schieß eine Rakete ins All</b><div class="ing">Erforsche den Raketenbau, baue ein Raketensilo und fülle es mit 10 Raketenteilen.</div></div></div><h4>Meilensteine</h4>`;
+  GOALS.forEach((g,i)=>{
+    const ok=goalDone(g);let pr='';
+    if(g.p&&!ok){const[a,m]=g.p();pr=`<div class="bar"><div style="width:${(Math.min(1,a/m)*100).toFixed(1)}%"></div></div>`}
+    h+=`<div class="row${ok?' done':''}"><div class="chk${ok?' ok':''}">${ok?'✓':i+1}</div><div class="rt"><b>${esc(g.n)}</b><div class="ing">${esc(g.d)}</div>${pr}</div></div>`;
+  });
+  h+=`<p>Spielzeit: ${fmtDur(S.time)} · Raketen gestartet: ${S.rockets||0}</p>`;
+  openSheet('goals','Ziele',null,h);
+}
+
+/* ---------- Menü: Statistik, Einstellungen, Spielstand ---------- */
+function openMenu(tab){
+  tab=tab||(SH.kind==='menu'&&SH.tab)||'stats';
+  let h='',live;
+  if(tab==='stats'){
+    h+=`<p>Produktion der letzten Minute und insgesamt.</p><div id="stTab"></div>`;
+    live=()=>{
+      const el=$('#stTab');if(!el)return;
+      const keys=Object.keys(ITEMS).filter(k=>prod(k)>0);
+      const sig=keys.map(k=>k+fmtRate(rate(k))+fmt(prod(k))).join();
+      if(el.dataset.sig===sig)return;el.dataset.sig=sig;
+      el.innerHTML=keys.length?keys.map(k=>`<div class="row">${ic(k)}<div class="rt"><b>${esc(ITEMS[k].n)}</b><div class="ing">gesamt ${fmt(prod(k))} · Vorrat ${fmt(TOT[k]||0)}</div></div><b style="color:${rate(k)>0?'var(--ok)':'var(--dim)'}">${fmtRate(rate(k))}/min</b></div>`).join(''):'<p>Noch nichts produziert.</p>';
+      fillIcons(el);
+    };
+  }else if(tab==='set'){
+    h+=`<div class="tog"><span>Ton</span><button class="sw${S.sound?' on':''}" data-a="sound" aria-label="Ton"></button></div>
+      <div class="btns"><button class="btn" data-a="tut">Tutorial neu starten</button></div>
+      <h4>Installieren</h4><p>Auf dem iPhone in Safari: Teilen → „Zum Home-Bildschirm“. Auf Android im Browser-Menü „App installieren“. Das Spiel lädt neue Versionen automatisch.</p>
+      <h4>Steuerung</h4><p>Ein Finger ziehen: Karte verschieben · Zwei Finger: Zoom · Tippen: bauen oder öffnen · Lange drücken: Info und Abreißen · Im Zeiger-Modus auf Erz tippen: per Hand abbauen.</p>
+      <h4>Neu anfangen</h4><div class="btns"><button class="btn red" data-a="reset">Spielstand zurücksetzen</button></div>
+      <p style="font-size:12px">Funkenwerk · Version ${BUILD}</p>`;
+  }else{
+    h+=`<p>Der Spielstand wird alle 10 Sekunden auf diesem Gerät gespeichert. Mit dem Code kannst du ihn auf ein anderes Gerät mitnehmen.</p>
+      <h4>Exportieren</h4><div class="btns"><button class="btn acc" data-a="export">Code erzeugen</button><button class="btn" data-a="copy">Kopieren</button></div><textarea id="exTxt" readonly placeholder="Hier erscheint dein Code."></textarea>
+      <h4>Importieren</h4><textarea id="imTxt" placeholder="Code hier einfügen"></textarea><div class="btns"><button class="btn" data-a="import">Spielstand laden</button></div>`;
+  }
+  openSheet('menu','Menü',null,h,{live,tab,tabs:[['stats','Statistik'],['set','Einstellungen'],['save','Spielstand']]});
+}
+ACT.sound=(v,b)=>{S.sound=!S.sound;b.classList.toggle('on',S.sound);if(S.sound){audioUnlock();sfx('click')}};
+ACT.tut=()=>{S.tut=0;updBanner();closeSheet();toast('Tutorial gestartet.')};
+ACT.reset=(v,b)=>{
+  if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='Wirklich? Alles geht verloren!';return}
+  try{localStorage.removeItem(KEY)}catch(_){}
+  newGame();afterLoad();closeSheet();saveNow();toast('Neues Spiel gestartet.','good');
+};
+ACT.export=async()=>{const t=$('#exTxt');t.value='Wird erzeugt …';t.value=await exportCode();t.select&&t.select()};
+ACT.copy=async()=>{
+  const t=$('#exTxt');if(!t.value||t.value.startsWith('Wird'))t.value=await exportCode();
+  try{await navigator.clipboard.writeText(t.value);toast('Code kopiert.','good')}catch(_){t.select();toast('Bitte den markierten Code kopieren.')}
+};
+ACT.import=async()=>{
+  const v=$('#imTxt').value;if(!v.trim())return toast('Bitte zuerst einen Code einfügen.','bad');
+  try{await importCode(v);closeSheet();toast('Spielstand geladen.','good')}catch(err){toast('Der Code ist ungültig.','bad')}
+};
+
+/* Rückkehr- und Sieg-Fenster */
+function openWelcome(sec,gain,msgs){
+  const keys=Object.keys(gain).filter(k=>gain[k]>0).sort((a,b)=>gain[b]-gain[a]).slice(0,12);
+  let h=`<p>Du warst ${fmtDur(sec)} weg${sec>=OFFLINE_MAX?' (angerechnet werden höchstens 8 Stunden)':''}. Deine Fabrik hat weitergearbeitet:</p>`;
+  h+=keys.length?`<div class="grid">${keys.map(k=>`<div class="cell">${ic(k)}<b>+${fmt(gain[k])}</b><span>${esc(ITEMS[k].n)}</span></div>`).join('')}</div>`:'<p>Leider nichts – vielleicht fehlte Kohle oder Strom?</p>';
+  if(msgs.length)h+=`<h4>Außerdem</h4>${msgs.map(m=>`<p>${esc(m)}</p>`).join('')}`;
+  h+=`<p style="font-size:12px">Hochgerechnet aus einer Messung deiner Fabrik. Sie läuft, bis der erste Vorrat (z. B. Kohle von Hand) leer wäre.</p><div class="btns"><button class="btn acc" data-a="close">Weiter</button></div>`;
+  openSheet('welcome','Willkommen zurück!',null,h);
+}
+ACT.close=()=>closeSheet();
+function openWin(){
+  openSheet('win','Geschafft!','raketenteil',`<p style="color:var(--text);font-size:16px">Deine Rakete ist im All! Du hast Funkenwerk durchgespielt.</p>
+    <p>Gespielt: ${fmtDur(S.time)} · Du kannst weiterbauen, die Fabrik vergrößern und weitere Raketen starten.</p>
+    <div class="btns"><button class="btn acc" data-a="close">Weiterbauen</button></div>`);
+  sfx('goal');
+}
+
+/* ---------- regelmäßige Aktualisierung ---------- */
+let uiT=0,liveT=0,lastUnlock='';
+function uiTick(dt){
+  uiT-=dt;liveT-=dt;
+  if(liveT<=0){liveT=.25;if(SH.live)SH.live();
+    const c=S.cq[0],bar=$('#craftBar div');bar.style.width=c?(clamp(c.a/(REC[c.r].t/HAND_SPEED),0,1)*100)+'%':'0'}
+  if(uiT>0&&!uiDirty)return;
+  uiT=.5;uiDirty=false;
+  TOT=totals();
+  // neu freigeschaltete Gebäude markieren
+  const un=PAL_ORDER.filter(t=>unlocked(t)).join();
+  if(lastUnlock&&un!==lastUnlock)for(const t of PAL_ORDER)if(unlocked(t)&&!lastUnlock.split(',').includes(t)&&!S.newB.includes(t))S.newB.push(t);
+  lastUnlock=un;
+  updTop();buildPalette();
+  // Tutorial
+  if(S.tut>=0&&S.tut<TUT.length){const s=TUT[S.tut];if(!s.end&&s.ok()){S.tut++;sfx('goal')}}
+  // Meilensteine
+  GOALS.forEach((g,i)=>{if(!S.goals.includes(i)&&goalDone(g)){S.goals.push(i);toast('Meilenstein erreicht: '+g.n,'good',3500);sfx('goal')}});
+  updBanner();
+  if(winPending&&!sheetOpen()){winPending=false;openWin()}
+}
+
+/* =====================================================================
+   8. SPEICHERN, EXPORT/IMPORT, OFFLINE-FORTSCHRITT, SELBST-UPDATE
+   ===================================================================== */
+const KEY='funkenwerk-1';
+const BUILD='2026-09-26-1';
+
+function newGame(){
+  S={v:1,seed:(Math.random()*1e9)|0,time:0,savedAt:Date.now(),cam:null,inv:Object.assign({},START_INV),prod:{},
+    res:{cur:null,prog:0,done:[]},flags:{},goals:[],tut:0,rockets:0,sound:true,cq:[],dir:1,ents:[],newB:[]};
+  initWorld();
+  // Kamera auf das Eisenfeld nahe der Mitte
+  let sx=0,sy=0,n=0;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(RES[y*W+x]===1&&Math.hypot(x-W/2,y-H/2)<15){sx+=x;sy+=y;n++}
+  cam.x=n?sx/n+.5:W/2;cam.y=n?sy/n+.5:H/2;cam.z=clamp(Math.min(VW,560)/9,ZMIN,ZMAX);
+  curDir=1;tool=null;delMode=false;
+}
+function initWorld(){
+  G.fill(null);
+  for(const e of S.ents)G[e.y*W+e.x]=e;
+  genWorld(S.seed);syncDone();reindex();buildTerrain();statReset();
+  SPR.clear();palKey='';lastUnlock='';
+}
+function validSave(o){return o&&o.v===1&&typeof o.seed==='number'&&Array.isArray(o.ents)}
+/* ergänzt fehlende Felder und verwirft kaputte Einträge */
+function migrate(o){
+  const d={time:0,inv:{},prod:{},res:{cur:null,prog:0,done:[]},flags:{},goals:[],tut:-1,rockets:0,sound:true,cq:[],dir:1,newB:[]};
+  for(const k in d)if(o[k]===undefined)o[k]=d[k];
+  const seen=new Set();
+  o.ents=o.ents.filter(e=>{
+    if(!e||!BLD[e.t]||!(e.x>=0&&e.y>=0&&e.x<W&&e.y<H))return false;
+    const k=e.y*W+e.x;if(seen.has(k))return false;seen.add(k);
+    const f=mkEnt(e.t,e.x,e.y,e.d||0);for(const q in f)if(e[q]===undefined)e[q]=f[q];
+    return true;
+  });
+  o.res.done=o.res.done.filter(id=>TECH[id]);
+  if(o.res.cur&&!TECH[o.res.cur])o.res.cur=null;
+  o.cq=o.cq.filter(c=>REC[c.r]);
+  return o;
+}
+function loadState(o){
+  S=migrate(o);initWorld();
+  if(S.cam){cam.x=S.cam.x;cam.y=S.cam.y;cam.z=S.cam.z}
+  curDir=S.dir||1;tool=null;delMode=false;clampCam();
+}
+function saveNow(){
+  if(!S)return;
+  S.cam={x:+cam.x.toFixed(2),y:+cam.y.toFixed(2),z:+cam.z.toFixed(1)};S.dir=curDir;S.savedAt=Date.now();
+  const js=JSON.stringify(S,(k,v)=>k[0]==='_'?undefined:v);   // Laufzeitfelder (_…) weglassen
+  try{localStorage.setItem(KEY,js)}catch(_){}
+  pushCloud(js);
+  return js;
+}
+
+/* Export-Code: komprimiert (deflate) und Base64, sonst nur Base64 */
+function b64(bytes){let s='';for(let i=0;i<bytes.length;i+=0x8000)s+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));return btoa(s)}
+function unb64(str){const s=atob(str),b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return b}
+async function exportCode(){
+  const js=saveNow();
+  try{
+    if(window.CompressionStream){
+      const st=new Blob([js]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+      return 'FW1:'+b64(new Uint8Array(await new Response(st).arrayBuffer()));
+    }
+  }catch(_){}
+  return 'FW0:'+b64(new TextEncoder().encode(js));
+}
+async function importCode(code){
+  code=code.trim().replace(/\s+/g,'');
+  let js;
+  if(code.startsWith('FW1:')){
+    const st=new Blob([unb64(code.slice(4))]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    js=await new Response(st).text();
+  }else if(code.startsWith('FW0:'))js=new TextDecoder().decode(unb64(code.slice(4)));
+  else throw new Error('format');
+  const o=JSON.parse(js);
+  if(!validSave(o))throw new Error('invalid');
+  closeSheet();loadState(o);afterLoad();saveNow();
+}
+
+/* Offline-Fortschritt:
+   Handwerk läuft einfach weiter. Die Fabrik wird kurz echt simuliert (Aufwärmen + Messung),
+   danach werden Kisten, Forschung und Statistik auf die restliche Zeit hochgerechnet –
+   aber nur so lange, bis der erste Vorrat leer wäre, der während der Messung schrumpfte. */
+function offlineProgress(sec,show){
+  sec=Math.min(sec,OFFLINE_MAX);
+  if(!S||sec<2)return;
+  NOTE=[];
+  const prod0=Object.assign({},S.prod);
+  craftUpd(sec);
+  if(dirty)reindex();
+  const dt=1/30,sim=s=>{for(let i=Math.ceil(s/dt);i>0;i--)simTick(dt)};
+  const warm=Math.min(sec,20);sim(warm);
+  const meas=Math.min(sec-warm,60);
+  if(meas>0){
+    const snap=offSnap();sim(meas);
+    const rest=sec-warm-meas;
+    if(rest>0)extrapolate(snap,meas,rest);
+  }
+  const gain={};for(const k in S.prod){const d=S.prod[k]-(prod0[k]||0);if(d>0)gain[k]=d}
+  const msgs=NOTE;NOTE=null;
+  statReset();uiDirty=true;
+  if(show&&sec>=60)openWelcome(sec,gain,msgs);
+}
+function offSnap(){
+  const s={chest:new Map(),stock:[],prod:Object.assign({},S.prod),rcur:S.res.cur,rprog:S.res.prog,silo:new Map()};
+  for(const c of L.chest)s.chest.set(c,Object.assign({},c.inv));
+  for(const e of S.ents){
+    const k=BLD[e.t].kind;
+    if(e.f!==undefined)s.stock.push([e,'f',e.f]);                           // Brennstoff
+    if(k==='furn')s.stock.push([e,'inN',e.inN]);                             // Ofen-Eingang
+    if(k==='lab')for(const i in e.inv)s.stock.push([e,'L'+i,e.inv[i]]);      // Pakete im Labor
+    if(k==='silo')s.silo.set(e,e.parts);
+  }
+  return s;
+}
+function extrapolate(s,meas,rest){
+  const val=(e,f)=>f[0]==='L'?(e.inv[f.slice(1)]||0):e[f];
+  // Wie lange reichen schrumpfende Vorräte noch?
+  let T=rest;
+  for(const[e,f,v0]of s.stock){const v=val(e,f),d=v-v0;if(d<0)T=Math.min(T,v/(-d/meas))}
+  for(const c of L.chest){const b=s.chest.get(c)||{};for(const k in b){const d=(c.inv[k]||0)-b[k];if(d<0)T=Math.min(T,(c.inv[k]||0)/(-d/meas))}}
+  const f=Math.max(0,T)/meas;
+  if(f<=0)return;
+  // Kisten (Platz begrenzt)
+  for(const c of L.chest){
+    const b=s.chest.get(c)||{},keys=new Set([...Object.keys(b),...Object.keys(c.inv)]);
+    let now=0,plus=0;for(const k in c.inv)now+=c.inv[k];
+    const d={};for(const k of keys){d[k]=(c.inv[k]||0)-(b[k]||0);if(d[k]>0)plus+=d[k]*f}
+    const sc=plus>0?Math.min(1,Math.max(0,BLD.kiste.cap-now)/plus):1;
+    for(const k of keys){
+      if(!d[k])continue;
+      const v=Math.max(0,Math.floor((c.inv[k]||0)+d[k]*f*(d[k]>0?sc:1)));
+      if(v)c.inv[k]=v;else delete c.inv[k];
+    }
+  }
+  // schrumpfende Vorräte in Maschinen
+  for(const[e,fl,v0]of s.stock){
+    const d=val(e,fl)-v0;if(d>=0)continue;
+    const v=Math.max(0,Math.floor(val(e,fl)+d*f));
+    if(fl[0]==='L')e.inv[fl.slice(1)]=v;else{e[fl]=v;if(fl==='inN'&&!v)e.in=null}
+  }
+  for(const[e,p0]of s.silo){const d=e.parts-p0;if(d>0)e.parts=Math.min(10,e.parts+Math.floor(d*f))}
+  // Forschung
+  if(S.res.cur&&S.res.cur===s.rcur){
+    const d=S.res.prog-s.rprog;
+    if(d>0){S.res.prog+=Math.floor(d*f);if(S.res.prog>=techCount(S.res.cur))finishTech()}
+  }
+  // Statistik
+  for(const k in S.prod){const d=S.prod[k]-(s.prod[k]||0);if(d>0)S.prod[k]+=Math.floor(d*f)}
+}
+
+/* Selbst-Update: vergleicht BUILD mit der Datei auf dem Server und lädt neu, wenn es eine neue Version gibt */
+let updating=false;
+async function checkUpdate(){
+  if(updating||window.claude||!/^https?:$/.test(location.protocol))return;
+  if(sheetOpen())return;
+  try{
+    const r=await fetch('fabrik.html?check='+Date.now(),{cache:'no-store'});if(!r.ok)return;
+    const m=(await r.text()).match(/const BUILD='([^']+)'/);if(!m||m[1]===BUILD)return;
+    let tried=null;try{tried=sessionStorage.getItem('fw-upd')}catch(_){}
+    if(tried===m[1])return;
+    try{sessionStorage.setItem('fw-upd',m[1])}catch(_){}
+    updating=true;saveNow();toast('Neue Version wird geladen …','',3000);
+    setTimeout(()=>location.replace('fabrik.html?v='+encodeURIComponent(m[1])),700);
+  }catch(_){}
+}
+
+/* Speichern im Konto, wenn das Spiel als Claude-Artifact läuft */
+let DB=null,UID=null,cloudBusy=false,cloudAgain=null;
+async function pushCloud(js){
+  if(!DB||!UID)return;
+  if(cloudBusy){cloudAgain=js;return}
+  cloudBusy=true;
+  try{await DB.doc('data/users/'+UID+'/fabrik').set({v:1,savedAt:S.savedAt,json:js})}catch(_){}
+  cloudBusy=false;
+  if(cloudAgain){const j=cloudAgain;cloudAgain=null;pushCloud(j)}
+}
+async function connectCloud(){
+  try{
+    if(!window.claude||typeof window.claude.use!=='function')return;
+    const[db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')]);
+    if(!db||!user)return;
+    const uid=await user.id();if(!uid)return;
+    DB=db;UID=uid;
+    const snap=await db.doc('data/users/'+uid+'/fabrik').get();
+    if(snap.exists){
+      const d=snap.data();
+      if(d&&d.json&&(d.savedAt||0)>(S.savedAt||0)+1500){
+        const o=JSON.parse(d.json);
+        if(validSave(o)){loadState(o);afterLoad();toast('Spielstand aus deinem Konto geladen.','good')}
+      }
+    }
+  }catch(_){}
+}
+
+/* =====================================================================
+   9. HAUPTSCHLEIFE & START
+   ===================================================================== */
+function resize(){
+  // iOS-Home-Bildschirm-App: Lücke unter der Statusleiste ausgleichen
+  const portrait=innerHeight>=innerWidth,full=portrait?Math.max(screen.height,screen.width):Math.min(screen.height,screen.width);
+  const g=navigator.standalone&&full-innerHeight>0&&full-innerHeight<80?full-innerHeight:0;
+  GAPPX=g;const rs=document.documentElement.style;rs.setProperty('--gap',g+'px');if(g)rs.setProperty('--sab','0px');else rs.removeProperty('--sab');
+  DPR=Math.min(2,devicePixelRatio||1);VW=innerWidth;VH=innerHeight+g;
+  cv.width=Math.round(VW*DPR);cv.height=Math.round(VH*DPR);
+  if(S)updBanner();
+}
+addEventListener('resize',resize);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)saveNow();else checkUpdate()});
+addEventListener('pagehide',()=>saveNow());
+
+function afterLoad(){
+  TOT=totals();buildTop();palKey='';buildPalette();updToolUI();updBanner();uiDirty=true;
+}
+
+let acc=0,last=performance.now(),lastWall=Date.now(),saveT=10;
+function frame(now){
+  requestAnimationFrame(frame);
+  // lange Pause (App im Hintergrund): verpasste Zeit als Offline-Fortschritt nachholen
+  const wall=Date.now();
+  if(wall-lastWall>5000){offlineProgress((wall-lastWall)/1000,true);acc=0;last=now}
+  lastWall=wall;
+  let dt=(now-last)/1000;last=now;
+  if(dt>.25)dt=.25;if(dt<0)dt=0;
+  // Simulation mit festem Takt, maximal 8 Schritte pro Bild
+  acc+=dt;let n=0;
+  while(acc>=TICK&&n<8){simTick(TICK);acc-=TICK;n++}
+  if(n===8)acc=0;
+  camInertia(dt);
+  render(dt);
+  uiTick(dt);
+  saveT-=dt;if(saveT<=0){saveT=10;saveNow()}
+}
+
+function boot(){
+  resize();
+  let o=null;
+  try{const s=localStorage.getItem(KEY);if(s)o=JSON.parse(s)}catch(_){o=null}
+  let gone=0;
+  if(validSave(o)){loadState(o);gone=(Date.now()-(o.savedAt||Date.now()))/1000}
+  else newGame();
+  afterLoad();
+  if(gone>2)offlineProgress(gone,true);
+  $('#boot').remove();
+  last=performance.now();lastWall=Date.now();
+  requestAnimationFrame(frame);
+  connectCloud();
+  setTimeout(checkUpdate,4000);setInterval(checkUpdate,5*60*1000);
+}
+boot();
+</script>
+</body>
+</html>
