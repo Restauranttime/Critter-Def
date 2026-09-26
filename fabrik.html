@@ -2061,7 +2061,7 @@ function uiTick(dt){
     const c=S.cq[0],bar=$('#craftBar div');bar.style.width=c?(clamp(c.a/(REC[c.r].t/HAND_SPEED),0,1)*100)+'%':'0'}
   if(uiT>0&&!uiDirty)return;
   uiT=.5;uiDirty=false;
-  {const r=cv.getBoundingClientRect();if(Math.abs(r.width-VW)>1||Math.abs(r.height-VH)>1)resize()}   // Größe hat sich still geändert (iOS-Leisten)
+  fitCanvas();   // falls sich die Größe ohne resize-Ereignis geändert hat (iOS-Leisten)
   TOT=totals();
   // neu freigeschaltete Gebäude markieren
   const un=PAL_ORDER.filter(t=>unlocked(t)).join();
@@ -2080,7 +2080,7 @@ function uiTick(dt){
    8. SPEICHERN, EXPORT/IMPORT, OFFLINE-FORTSCHRITT, SELBST-UPDATE
    ===================================================================== */
 const KEY='funkenwerk-1';
-const BUILD='2026-09-26-2';
+const BUILD='2026-09-26-3';
 
 function newGame(){
   S={v:1,seed:(Math.random()*1e9)|0,time:0,savedAt:Date.now(),cam:null,inv:Object.assign({},START_INV),prod:{},
@@ -2274,19 +2274,26 @@ async function connectCloud(){
 /* =====================================================================
    9. HAUPTSCHLEIFE & START
    ===================================================================== */
-function resize(){
-  // iOS-Home-Bildschirm-App: Lücke unter der Statusleiste ausgleichen
+/* iOS-Home-Bildschirm-App: Lücke unter der Statusleiste ausgleichen (nur bei echten Größenänderungen) */
+function applyGap(){
   const portrait=innerHeight>=innerWidth,full=portrait?Math.max(screen.height,screen.width):Math.min(screen.height,screen.width);
   const g=navigator.standalone&&full-innerHeight>0&&full-innerHeight<80?full-innerHeight:0;
+  if(g===GAPPX&&VW)return;
   GAPPX=g;const rs=document.documentElement.style;rs.setProperty('--gap',g+'px');if(g)rs.setProperty('--sab','0px');else rs.removeProperty('--sab');
-  // echte Größe der Zeichenfläche messen (auf iOS weicht sie von innerHeight ab)
-  const r=cv.getBoundingClientRect();
-  DPR=Math.min(2,devicePixelRatio||1);VW=r.width||innerWidth;VH=r.height||innerHeight+g;
-  cv.width=Math.round(VW*DPR);cv.height=Math.round(VH*DPR);
+}
+/* Zeichenfläche an ihre echte Größe anpassen – nur wenn sie sich wirklich geändert hat,
+   denn jedes Neusetzen der Canvas-Größe leert das Bild */
+function fitCanvas(){
+  const r=cv.getBoundingClientRect(),w=Math.round(r.width)||innerWidth,h=Math.round(r.height)||innerHeight,d=Math.min(2,devicePixelRatio||1);
+  if(w===VW&&h===VH&&d===DPR)return;
+  VW=w;VH=h;DPR=d;
+  const cw=Math.round(VW*DPR),ch=Math.round(VH*DPR);
+  if(cv.width!==cw)cv.width=cw;
+  if(cv.height!==ch)cv.height=ch;
   if(S)updBanner();
 }
+function resize(){applyGap();fitCanvas()}
 addEventListener('resize',resize);
-if(window.visualViewport)visualViewport.addEventListener('resize',resize);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)saveNow();else checkUpdate()});
 addEventListener('pagehide',()=>saveNow());
 
