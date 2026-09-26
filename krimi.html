@@ -1023,7 +1023,7 @@ const T={
   kurt:{
     intro:[['kurt','Moin moin! Kurt Wurstbauer. Beste Leberkäs-Semmel im ganzen Landkreis.'],['kurt','Die Torte von der Marlene, ne? Traurig. Aber gut für meine Wette. Ähm. Vergessen Sie das.']],
     topics:[
-      ['wette','Was für eine Wette?',null,[['kurt','Ach, nur so eine Stammtischsache mit Toni. Worum es geht, sag ich nicht. Ehrensache.'],['kurt','Wenn Sie den Wettzettel finden, reden wir weiter. Den hat Toni.']]]
+      ['wette','Was für eine Wette?',null,[['kurt','Ach, nur so eine Stammtischsache mit Toni. Worum es geht, sag ich nicht. Ehrensache.'],['kurt','Den Wettzettel hat Toni gestern Abend am Stammtisch zerrissen, weil er sich über Marlenes Anmeldung geärgert hat. Die Fetzen liegen bestimmt noch im Papierkorb im Ochsen.'],['kurt','Wenn Sie den Zettel finden, reden wir weiter.']]]
     ],
     present:{
       wette:[[['kurt','Na gut. Ja. Toni hat gewettet, dass Frieda zum zehnten Mal gewinnt. Ich hab auf Marlene gesetzt.'],['kurt','Wer verliert, rasiert sich den Schnurrbart ab. Heute früh war Toni ganz komisch. Meinte, ich soll mir keine Hoffnungen machen.']],()=>gain('kurt_wette')],
@@ -1327,7 +1327,7 @@ function openBoard(){
   if(!S.g.caseOn&&!S.c.solved){say([[null,'Die Pinnwand ist noch leer. Nur ein Zettel: „Kaffee nachkaufen!“']]);return}
   if(S.c.solved){openNotebook('fall');return}
   const C=CUR(),sus=C.suspects.filter(i=>S.met[i]);
-  const mot=C.motives.filter(m=>!m[2]||has(m[2]));
+  const mot=C.motives.filter(m=>!m[2]||has(m[2])||(m[0]=='wette'&&S.c.ask.kurt_wette));
   const sel={who:null,mot:null,pr:null};
   const cs=C.clues;
   openModal(`<h2>Den Fall lösen</h2><p>Wer hat die Torte genommen, warum, und was beweist es?</p>
@@ -1482,7 +1482,7 @@ function goMap(map,x,y,dir,cb){lock=true;sfx('door');fadeTo(1,.18,()=>{goMapNow(
 
 /* ---------- save: device + account ---------- */
 const KEY='tatort-kleckersdorf-1';
-const BUILD='2026-09-26-1';
+const BUILD='2026-09-26-2';
 let updating=false,saveT=0;
 async function checkUpdate(){
   if(updating||window.claude||!/^https?:$/.test(location.protocol))return;
