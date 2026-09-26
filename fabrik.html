@@ -32,20 +32,13 @@ button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
    Nur feste Elemente reichen in diese Lücke – die Seite selbst wird nicht länger (sonst wackelt sie). */
 #cv{position:fixed;top:0;left:0;width:100%;height:calc(100% + var(--gap,0px));display:block;touch-action:none}
 
-/* ---------- obere Leiste: Ressourcen ---------- */
-#top{position:fixed;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top,0px) + 6px) 8px 6px;display:flex;gap:6px;align-items:stretch;
-  background:linear-gradient(var(--panel),rgba(22,27,34,.86));border-bottom:1px solid var(--line);z-index:5}
-#res{flex:1;display:flex;gap:4px;min-width:0}
-.chip{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:3px;padding:3px 3px;border-radius:9px;background:var(--panel2);border:0}
-.chip canvas{width:18px;height:18px;flex:none}
-.chip .cv{display:flex;flex-direction:column;min-width:0;line-height:1.1;text-align:left}
-.chip b{font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.chip i{font-style:normal;font-size:9.5px;color:var(--ok);white-space:nowrap;font-variant-numeric:tabular-nums}
-.chip i.z{color:var(--dim)}
-.ib{width:44px;min-height:44px;border-radius:10px;border:0;background:var(--panel2);display:grid;place-items:center;flex:none;padding:0}
+/* ---------- oben: nur Stromanzeige und Menü-Knopf ---------- */
+#top{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:8px;right:8px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;z-index:5;pointer-events:none}
+#top>*{pointer-events:auto}
+.ib{width:44px;min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--panel);display:grid;place-items:center;flex:none;padding:0;box-shadow:0 3px 10px rgba(0,0,0,.35)}
 .ib svg{width:24px;height:24px}
-#pow{position:fixed;right:8px;top:calc(env(safe-area-inset-top,0px) + 62px);z-index:4;font-size:12px;padding:3px 8px;border-radius:8px;
-  background:var(--panel);border:1px solid var(--line);display:none;font-variant-numeric:tabular-nums}
+#pow{font-size:13px;padding:0 12px;min-height:44px;align-items:center;border-radius:12px;background:var(--panel);border:1px solid var(--line);display:none;font-variant-numeric:tabular-nums;box-shadow:0 3px 10px rgba(0,0,0,.35)}
+#pow.on{display:flex}
 #pow.low{color:var(--bad);border-color:var(--bad)}
 
 /* ---------- Hinweis-Banner (Tutorial / Ziel) ---------- */
@@ -73,15 +66,15 @@ button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
   padding:6px 0 calc(max(env(safe-area-inset-bottom,0px),var(--gap,0px)) + 6px)}
 #craftBar{position:absolute;left:0;right:0;top:-3px;height:3px;background:transparent}
 #craftBar div{height:100%;width:0;background:var(--acc)}
-#pal{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;padding:0 8px 6px;scrollbar-width:none;touch-action:pan-x;-webkit-overflow-scrolling:touch}
-#pal::-webkit-scrollbar{display:none}
-.pb{position:relative;flex:none;width:58px;height:62px;border-radius:11px;border:2px solid transparent;background:var(--panel2);padding:2px 0 0;
+#pal{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;padding:0 8px 6px}
+.pb{position:relative;min-width:0;height:62px;border-radius:11px;border:2px solid transparent;background:var(--panel2);padding:2px 0 0;
   display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
 .pb canvas{width:38px;height:38px}
-.pb span{font-size:9.5px;color:var(--dim);white-space:nowrap;max-width:54px;overflow:hidden;text-overflow:ellipsis}
+.pb span{font-size:9.5px;color:var(--dim);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .pb em{position:absolute;right:2px;top:1px;font-style:normal;font-size:11px;font-weight:700;background:rgba(0,0,0,.55);border-radius:6px;padding:0 4px;font-variant-numeric:tabular-nums}
 .pb em.no{color:var(--bad)}
 .pb.sel{border-color:var(--acc);background:var(--panel3)}
+.pb.empty{border:2px dashed var(--line);background:transparent;justify-content:center;font-size:22px;color:var(--dim)}
 .pb.new::after{content:"";position:absolute;left:4px;top:4px;width:8px;height:8px;border-radius:50%;background:var(--acc)}
 #acts{display:flex;gap:6px;padding:0 8px}
 .ab{flex:1 1 0;min-width:0;height:52px;border-radius:11px;border:2px solid transparent;background:var(--panel2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:0}
@@ -103,7 +96,7 @@ button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
 #sheetX{width:44px;height:44px;border:0;border-radius:10px;background:var(--panel2);font-size:20px}
 #sheetTabs{display:flex;gap:6px;padding:8px 12px 0}
 #sheetTabs:empty{display:none}
-#sheetTabs button{flex:1;border:0;border-radius:9px;background:var(--panel2);padding:9px 0;font-weight:600;color:var(--dim)}
+#sheetTabs button{flex:1;min-width:0;font-size:14px;border:0;border-radius:9px;background:var(--panel2);padding:9px 0;font-weight:600;color:var(--dim)}
 #sheetTabs button.on{background:var(--panel3);color:var(--text);box-shadow:inset 0 -2px 0 var(--acc)}
 #sheetBody{overflow-y:auto;padding:10px 12px 14px;touch-action:pan-y;-webkit-overflow-scrolling:touch;user-select:text;-webkit-user-select:text}
 #sheetBody p{margin:6px 0;line-height:1.4;color:var(--dim)}
@@ -143,6 +136,8 @@ button.cell{min-height:64px}
 .row.done{opacity:.55}
 .row.lock{opacity:.5}
 .row.cur{box-shadow:inset 0 0 0 2px var(--acc)}
+.btn.star{font-size:20px;color:var(--dim);padding:0 10px}
+.btn.star.on{color:var(--acc2)}
 .rates{background:var(--panel2);border-radius:11px;padding:6px 10px;margin:8px 0;display:flex;flex-direction:column;gap:4px}
 .rrow{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;font-size:14px}
 .rrow small{color:var(--dim);width:92px;flex:none}
@@ -159,7 +154,7 @@ textarea{width:100%;min-height:90px;border-radius:10px;border:1px solid var(--li
 .q canvas{width:30px;height:30px;background:var(--panel2);border-radius:8px;padding:2px;flex:none}
 
 /* ---------- Toast ---------- */
-#toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 96px);transform:translateX(-50%);z-index:20;pointer-events:none;
+#toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 62px);transform:translateX(-50%);z-index:20;pointer-events:none;
   display:flex;flex-direction:column;align-items:center;gap:6px;width:max-content;max-width:92vw}
 #toast div{background:rgba(15,19,24,.95);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14px;text-align:center;
   animation:tin .2s ease-out;box-shadow:0 4px 14px rgba(0,0,0,.4)}
@@ -173,10 +168,9 @@ textarea{width:100%;min-height:90px;border-radius:10px;border:1px solid var(--li
 <canvas id="cv"></canvas>
 
 <div id="top">
-  <div id="res"></div>
+  <div id="pow"></div><span></span>
   <button class="ib" id="bMenu" aria-label="Menü"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
 </div>
-<div id="pow"></div>
 
 <div id="banner"><div class="bt"><small id="bSmall"></small><span id="bText"></span></div><button id="bBtn"></button><button id="bSkip" class="bx">Überspringen</button></div>
 
@@ -189,9 +183,9 @@ textarea{width:100%;min-height:90px;border-radius:10px;border:1px solid var(--li
     <button class="ab" id="bHand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 3l13 8-6 1.4L15 20l-3 1.3-3-7.5L5 17z"/></svg><span>Zeiger</span></button>
     <button class="ab" id="bRot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V5M6 11l6-6 6 6"/></svg><span>Drehen</span></button>
     <button class="ab del" id="bDel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg><span>Abriss</span></button>
+    <button class="ab" id="bBuild"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 21V10l6-4v4l6-4v4l6-4v15z"/><path d="M7 17h2M11 17h2M15 17h2"/></svg><span>Gebäude</span></button>
     <button class="ab" id="bCraft"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4l6 6-3 3-6-6zM11 7L3 15v0l3 3 8-8"/><path d="M3 21h8"/></svg><span>Handwerk</span></button>
     <button class="ab" id="bRes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6L4.5 18.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7 15h10"/></svg><span>Forschung</span></button>
-    <button class="ab" id="bGoal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c3 2.5 4.5 6 4.5 10.5L12 17l-4.5-4.5C7.5 8 9 4.5 12 2z"/><circle cx="12" cy="9" r="1.6"/><path d="M8 14l-3 3 1 3 3-2M16 14l3 3-1 3-3-2"/></svg><span>Ziele</span></button>
   </div>
 </div>
 
@@ -279,13 +273,14 @@ const BLD={
   schnellband:{n:'Schnellband',kind:'belt',speed:2/3,tier:1,rot:1,d:'Transportiert bis zu 120 Items/min.'},
   expressband:{n:'Expressband',kind:'belt',speed:4/3,tier:2,rot:1,d:'Transportiert bis zu 240 Items/min.'},
   verteiler:{n:'Verteiler',kind:'split',rot:1,out:1,d:'Nimmt Items von hinten an und verteilt sie abwechselnd nach vorn, links und rechts. Mit Filter geht das gewählte Item nur nach vorn, alles andere zur Seite.'},
+  zusammen:{n:'Zusammenführer',kind:'merge',rot:1,out:1,d:'Fasst bis zu drei Bänder (hinten, links, rechts) zu einem zusammen und gibt sie vorn aus. Alle Eingänge kommen reihum dran.'},
   bohrer:{n:'Bohrer',kind:'drill',rate:1/3,kw:150,burner:1,rot:1,out:1,d:'Fördert Rohstoffe und gibt sie am orangen Ausgang aus. Verbrennt Kohle.'},
   ebohrer:{n:'Elektrobohrer',kind:'drill',rate:.5,kw:90,rot:1,out:1,d:'Schneller Bohrer, der Strom statt Kohle braucht.'},
   ofen:{n:'Schmelzofen',kind:'furn',speed:1,kw:90,burner:1,rot:1,out:1,d:'Schmilzt Erz zu Platten, Stein zu Ziegeln und später Eisen zu Stahl. Verbrennt Kohle. Eingang: Bänder von den grauen Seiten.'},
   eofen:{n:'Elektroofen',kind:'furn',speed:2,kw:180,rot:1,out:1,d:'Doppelt so schnell wie der Schmelzofen und braucht nur Strom.'},
   montage:{n:'Montagemaschine',kind:'asm',speed:.75,kw:75,rot:1,out:1,d:'Stellt ein wählbares Rezept automatisch her. Braucht Strom. Zutaten kommen per Band.'},
   montage2:{n:'Montagemaschine 2',kind:'asm',speed:1.25,kw:150,rot:1,out:1,d:'Schnellere Montagemaschine.'},
-  kiste:{n:'Kiste',kind:'chest',cap:800,rot:1,d:'Lager für 800 Items, nimmt von Bändern an. Der Inhalt zählt zu deinem Vorrat. Mit „Ausgang an“ gibt sie Items wieder aufs Band.'},
+  kiste:{n:'Kiste',kind:'chest',cap:800,rot:1,out:1,d:'Lager für 800 Items, nimmt von Bändern an. Der Inhalt zählt zu deinem Vorrat. Am orangen Ausgang gibt sie ein gewähltes Item mit einstellbarer Menge pro Minute aufs Band.'},
   labor:{n:'Labor',kind:'lab',d:'Verbraucht Forschungspakete für die aktuelle Forschung. Pakete kommen per Band oder von Hand.'},
   dampf:{n:'Dampfmaschine',kind:'steam',kw:900,d:'Verbrennt Kohle (per Band) und erzeugt bis zu 900 kW Strom.'},
   mast:{n:'Strommast',kind:'pole',d:'Versorgt Gebäude im 5×5-Bereich und verbindet sich mit Masten bis 7 Felder entfernt.'},
@@ -294,7 +289,7 @@ const BLD={
 };
 for(const k in BLD)ITEMS[k]={n:BLD[k].n,b:1};
 const BELTS=['band','schnellband','expressband'];
-const PAL_ORDER=['band','schnellband','expressband','verteiler','bohrer','ebohrer','ofen','eofen','kiste','montage','montage2','labor','dampf','mast','solar','silo'];
+const PAL_ORDER=['band','schnellband','expressband','verteiler','zusammen','bohrer','ebohrer','ofen','eofen','kiste','montage','montage2','labor','dampf','mast','solar','silo'];
 const ELECTRIC=t=>{const b=BLD[t];return(b.kind==='drill'||b.kind==='furn'||b.kind==='asm')&&!b.burner};
 const beltRate=t=>Math.round(BLD[t].speed*3*60);   // Items pro Minute
 
@@ -320,6 +315,7 @@ const REC={
   schnellband:{i:{band:1,zahnrad:3},n:1,t:.5,tech:'logistik',g:'Logistik'},
   expressband:{i:{schnellband:1,zahnrad:5,schaltkreis:1},n:1,t:.5,tech:'expressband',g:'Logistik'},
   verteiler:{i:{band:2,zahnrad:2,schaltkreis:1},n:1,t:1,g:'Logistik'},
+  zusammen:{i:{band:2,zahnrad:2,schaltkreis:1},n:1,t:1,g:'Logistik'},
   kiste:{i:{eisenplatte:4},n:1,t:.5,g:'Logistik'},
   bohrer:{i:{zahnrad:3,eisenplatte:3,ofen:1},n:1,t:2,g:'Produktion'},
   ebohrer:{i:{schaltkreis:3,zahnrad:5,eisenplatte:10},n:1,t:2,tech:'bergbau',g:'Produktion'},
@@ -401,7 +397,7 @@ const RES_ITEM=[null,'eisenerz','kupfererz','kohle','stein'];
 const RES_NAME=['Wiese','Eisenerz','Kupfererz','Kohle','Stein'];
 const WATER=9;
 const G=new Array(W*H).fill(null);    // Gitter: Kachel -> Gebäude
-const L={belt:[],split:[],drill:[],furn:[],asm:[],chest:[],lab:[],steam:[],pole:[],solar:[],silo:[]}; // Gebäude nach Art
+const L={belt:[],split:[],merge:[],drill:[],furn:[],asm:[],chest:[],lab:[],steam:[],pole:[],solar:[],silo:[]}; // Gebäude nach Art
 let S=null;                            // gesamter Spielstand (wird gespeichert)
 let DONE=new Set();                    // erforschte Technologien (schneller Zugriff)
 let DRILL_BONUS=1;
@@ -457,7 +453,8 @@ function mkEnt(t,x,y,d){
     case 'drill':e.f=0;e.e=0;e.p=0;e.o=null;break;                   // Kohle, Energie, Fortschritt, wartendes Item
     case 'furn':e.f=0;e.e=0;e.in=null;e.inN=0;e.out=null;e.outN=0;e.w=null;e.p=0;break;
     case 'asm':e.r=null;e.inv={};e.outN=0;e.w=0;e.p=0;break;
-    case 'chest':e.inv={};e.ou=0;break;                              // ou = Ausgang aufs Band an/aus
+    case 'chest':e.inv={};e.oi=null;e.orate=60;break;                // Ausgabe-Item und Menge pro Minute
+    case 'merge':e.q=[null,null,null,null];e.rr=0;break;             // ein Platz pro Eingangsseite
     case 'lab':e.inv={};e.w=null;e.p=0;break;
     case 'steam':e.f=0;e.e=0;break;
     case 'silo':e.parts=0;break;
@@ -474,6 +471,7 @@ function refund(e){
   switch(BLD[e.t].kind){
     case 'belt':for(const[i]of e.it)add(i,1);break;
     case 'split':add(e.h,1);break;
+    case 'merge':for(const i of e.q)add(i,1);break;
     case 'drill':add('kohle',e.f);add(e.o,1);break;
     case 'furn':add('kohle',e.f);add(e.in,e.inN);add(e.out,e.outN);if(e.w)add(e.w,SMELT[e.w].n);break;
     case 'asm':for(const k in e.inv)add(k,e.inv[k]);if(e.r){add(e.r,e.outN);if(e.w)for(const k in REC[e.r].i)add(k,REC[e.r].i[k])}break;
@@ -598,7 +596,7 @@ function beltPut(b,item,p,test){
 
 /* ---------- Ein- und Ausgänge ---------- */
 /* Hat das Gebäude einen Ausgang (orange Seite in Blickrichtung)? */
-const hasOut=e=>!!(BLD[e.t].out||(BLD[e.t].kind==='chest'&&e.ou));
+const hasOut=e=>!!BLD[e.t].out;
 /* Darf Gebäude t ein Item von der Nachbarkachel (sx,sy) annehmen? Nie über den eigenen Ausgang. */
 function inputOk(t,sx,sy){
   if(BLD[t.t].kind==='split')return sx===t.x-DX[t.d]&&sy===t.y-DY[t.d];   // Verteiler: nur von hinten
@@ -612,13 +610,20 @@ function pushOut(e,item,dir){
     if(t.d===(dir+2)%4)return false;                                  // Band zeigt auf uns zurück
     return beltPut(t,item,t._in===dir?0:.5,false);                    // von hinten: Anfang, von der Seite: Mitte
   }
-  return inputOk(t,e.x,e.y)&&put(t,item,false);
+  return putFrom(t,item,e.x,e.y);
+}
+/* Item von der Nachbarkachel (sx,sy) in Gebäude t geben – der Zusammenführer merkt sich die Eingangsseite */
+function putFrom(t,item,sx,sy){
+  if(!inputOk(t,sx,sy))return false;
+  if(BLD[t.t].kind==='merge'){const s=dirTo(t.x,t.y,sx,sy);if(t.q[s])return false;t.q[s]=item;return true}
+  return put(t,item,false);
 }
 
 /* Kann Gebäude t das Item aufnehmen? test=true prüft nur. */
 function put(t,item,test){
   switch(BLD[t.t].kind){
     case 'belt':return beltPut(t,item,.5,test);
+    case 'merge':return false;
     case 'split':
       if(t.h)return false;
       if(!test)t.h=item;return true;
@@ -648,7 +653,7 @@ function put(t,item,test){
     }
     case 'lab':
       if(item!=='rot'&&item!=='gruen'&&item!=='blau')return false;
-      if((t.inv[item]||0)>=10)return false;
+      if((t.inv[item]||0)>=100)return false;
       if(!test)t.inv[item]=(t.inv[item]||0)+1;return true;
     case 'silo':
       if(item!=='raketenteil'||t.parts>=10||t._launch)return false;
@@ -704,9 +709,18 @@ function asmUpd(e,dt){
   if(e.p>=1){e.outN+=r.n;e.w=0;e.p=0;addProd(e.r,r.n);count(e,r.n)}
 }
 
-/* Kiste mit eingeschaltetem Ausgang gibt ihren Inhalt nach und nach aufs Band */
-function chestUpd(e){
-  for(const k in e.inv){if(pushOut(e,k)){if(!--e.inv[k])delete e.inv[k];count(e,1)}return}
+/* Kiste gibt das gewählte Item mit der eingestellten Menge pro Minute am Ausgang ab */
+function chestUpd(e,dt){
+  if(!(e.orate>0))return;
+  e._acc=Math.min(2,(e._acc||0)+dt*e.orate/60);
+  while(e._acc>=1&&e.inv[e.oi]>0&&pushOut(e,e.oi)){e._acc--;if(!--e.inv[e.oi])delete e.inv[e.oi];count(e,1)}
+}
+/* Zusammenführer: Eingangsseiten reihum nach vorn ausgeben */
+function mergeUpd(e){
+  for(let i=0;i<4;i++){
+    const s=(e.rr+i)%4;
+    if(e.q[s]&&pushOut(e,e.q[s])){e.q[s]=null;e.rr=(s+1)%4;count(e,1);return}
+  }
 }
 
 /* Verteiler: reihum nach vorn, links, rechts – mit Filter nur das Filter-Item nach vorn */
@@ -760,8 +774,8 @@ function beltUpd(b,dt){
           if(beltPut(nb,f[0],entry,false)){it.shift();count(b,1)}
         }
       }else if(inputOk(nb,b.x,b.y)){
-        if(put(nb,f[0],false)){it.shift();count(b,1)}
-        else{
+        if(putFrom(nb,f[0],b.x,b.y)){it.shift();count(b,1)}
+        else if(BLD[nb.t].kind!=='merge'&&BLD[nb.t].kind!=='split'){
           // Gebäude braucht das vorderste Item gerade nicht (z. B. genug Kohle):
           // es nimmt stattdessen ein passendes Item vom letzten Bandstück – so verstopfen gemischte Bänder nicht
           for(let i=1;i<it.length;i++)if(put(nb,it[i][0],false)){it.splice(i,1);count(b,1);break}
@@ -840,8 +854,9 @@ function simTick(dt){
   for(const e of L.furn)furnUpd(e,dt);
   for(const e of L.asm)asmUpd(e,dt);
   for(const e of L.lab)labUpd(e,dt);
-  for(const e of L.chest)if(e.ou)chestUpd(e);
+  for(const e of L.chest)if(e.oi)chestUpd(e,dt);
   for(const e of L.split)splitUpd(e);
+  for(const e of L.merge)mergeUpd(e);
   for(const e of L.belt)beltUpd(e,dt);
   for(const e of L.silo)siloUpd(e,dt);
   craftUpd(dt);
@@ -1008,6 +1023,15 @@ function bldArt(g,t,d,v){
 function bldBody(g,t,d,R){
   switch(t){
     case 'band':case 'schnellband':case 'expressband':R();beltArt(g,BLD[t].tier,0,0);break;
+    case 'zusammen':{
+      body(g,.1,.1,.8,.8,.12,'#5f6a5a');
+      g.save();R();
+      g.fillStyle='#24282e';rr(g,.24,.3,.52,.5,.05);g.fill();
+      g.strokeStyle='#e8b53a';g.lineWidth=.06;g.beginPath();
+      g.moveTo(.5,.78);g.lineTo(.5,.26);g.moveTo(.42,.36);g.lineTo(.5,.26);g.lineTo(.58,.36);
+      g.moveTo(.27,.62);g.lineTo(.46,.46);g.moveTo(.73,.62);g.lineTo(.54,.46);g.stroke();
+      g.restore();break;
+    }
     case 'verteiler':{
       body(g,.1,.1,.8,.8,.12,'#5a6674');
       g.save();R();
@@ -1301,8 +1325,9 @@ function render(dt){
   // Gebäude + bewegte Details
   for(const e of blds){
     const X=TX(e.x),Y=TY(e.y),k=BLD[e.t].kind;
-    const bk=e.t+e.d+(e.ou?'v':'');ctx.drawImage(bldC[bk]||(bldC[bk]=bldSpr(e.t,e.d,ts,e.ou)),X,Y,ts,ts);
-    if(k==='split'){if(e.h){const q=ts*.34;ctx.drawImage(iSpr(e.h,q),X+ts*.5-q/2,Y+ts*.55-q/2,q,q)}}
+    const bk=e.t+e.d;ctx.drawImage(bldC[bk]||(bldC[bk]=bldSpr(e.t,e.d,ts)),X,Y,ts,ts);
+    if(k==='merge'){const it=e.q.find(Boolean);if(it){const q=ts*.3;ctx.drawImage(iSpr(it,q),X+ts*.5-q/2,Y+ts*.36-q/2,q,q)}}
+    else if(k==='split'){if(e.h){const q=ts*.34;ctx.drawImage(iSpr(e.h,q),X+ts*.5-q/2,Y+ts*.55-q/2,q,q)}}
     else if(k==='drill'){
       const[u,v]=rotPt(.5,.54,e.d),cx=X+u*ts,cy=Y+v*ts,a=e._on?TIME*7:0;
       ctx.strokeStyle='#aeb6bf';ctx.lineWidth=ts*.05;ctx.beginPath();
@@ -1547,26 +1572,55 @@ function longPress(sx,sy){
 let ROUTE=null;
 const free=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&!G[y*W+x]&&RES[y*W+x]!==WATER;
 function dirTo(ax,ay,bx,by){return bx>ax?1:bx<ax?3:by>ay?2:0}
-/* Startfeld bestimmen: am Ausgang eines Gebäudes, am Ende eines Bandes oder ein freies Feld */
+/* Ende einer Bandlinie (dem Band in Pfeilrichtung folgen) */
+function beltEnd(b){
+  const seen=new Set([b]);
+  for(let i=0;i<500;i++){
+    const n=entAt(b.x+DX[b.d],b.y+DY[b.d]);
+    if(!n||BLD[n.t].kind!=='belt'||seen.has(n)||n.d===(b.d+2)%4)break;
+    seen.add(n);b=n;
+  }
+  return b;
+}
+/* Startfeld bestimmen: am Ausgang eines Gebäudes, am Ende eines Bandes oder ein freies Feld.
+   Liegt am Ausgang schon ein Band, geht es an dessen Ende weiter. */
 function routeStart(x,y){
   const e=G[y*W+x];
   if(!e){if(RES[y*W+x]===WATER){fail(x,y,'Auf Wasser kann man nicht bauen.');return null}return{x,y,d:null}}
-  const k=BLD[e.t].kind;
-  if(k!=='belt'&&!hasOut(e)){fail(x,y,BLD[e.t].n+' hat keinen Ausgang. Tippe auf ein freies Feld oder ein Gebäude mit oranger Seite.');return null}
-  const fx=x+DX[e.d],fy=y+DY[e.d];
-  if(!free(fx,fy)){fail(x,y,'Vor dem Ausgang ist kein Platz frei.');return null}
-  return{x:fx,y:fy,d:e.d};
+  let src=e;
+  if(BLD[e.t].kind!=='belt'){
+    if(!hasOut(e)){fail(x,y,BLD[e.t].n+' hat keinen Ausgang. Tippe auf ein Gebäude mit oranger Seite, ein Band oder ein freies Feld.');return null}
+    const fx=x+DX[e.d],fy=y+DY[e.d];
+    if(free(fx,fy))return{x:fx,y:fy,d:e.d};
+    const f=entAt(fx,fy);
+    if(!f||BLD[f.t].kind!=='belt'){fail(x,y,'Vor dem Ausgang ist kein Platz frei.');return null}
+    src=f;
+  }
+  const end=beltEnd(src),fx=end.x+DX[end.d],fy=end.y+DY[end.d];
+  if(!free(fx,fy)){fail(x,y,'Dieses Band endet schon an einem Gebäude oder Hindernis.');return null}
+  FLASH={x:end.x,y:end.y,t:.6};
+  return{x:fx,y:fy,d:end.d};
 }
-/* Zielfelder: freie Nachbarn eines Gebäudes/Bandes (mit Richtung hinein) oder das Feld selbst */
+/* Zielfelder: freie Nachbarn eines Gebäudes/Bandes (mit Richtung hinein) oder das Feld selbst.
+   Bei Gebäuden zählen auch Bänder, die schon hineinführen – dort wird seitlich eingespeist. */
 function routeGoals(x,y){
   const t=G[y*W+x],goals=[];
   if(!t){if(free(x,y))goals.push({x,y,d:null});return goals}
+  const okCell=(nx,ny)=>free(nx,ny)||(ROUTE&&nx===ROUTE.cx&&ny===ROUTE.cy);
+  const beltGoals=b=>{
+    for(let d=0;d<4;d++){
+      const nx=b.x-DX[d],ny=b.y-DY[d];
+      if(d===(b.d+2)%4||!okCell(nx,ny))continue;                 // nicht frontal gegen das Band
+      goals.push({x:nx,y:ny,d});
+    }
+  };
+  if(BLD[t.t].kind==='belt'){beltGoals(t);return goals}
   for(let d=0;d<4;d++){
-    const nx=x-DX[d],ny=y-DY[d];                  // Nachbar, von dem aus ein Band in Richtung d auf t zeigt
-    if(!free(nx,ny)&&!(ROUTE&&nx===ROUTE.cx&&ny===ROUTE.cy))continue;
-    if(BLD[t.t].kind==='belt'){if(d===(t.d+2)%4)continue}      // nicht frontal gegen das Band
-    else if(!inputOk(t,nx,ny))continue;                        // nicht in einen Ausgang
-    goals.push({x:nx,y:ny,d});
+    const nx=x-DX[d],ny=y-DY[d];                                 // Nachbar, von dem aus ein Band in Richtung d auf t zeigt
+    if(!inputOk(t,nx,ny))continue;                               // nicht in einen Ausgang
+    if(okCell(nx,ny)){goals.push({x:nx,y:ny,d});continue}
+    const n=entAt(nx,ny);
+    if(n&&BLD[n.t].kind==='belt'&&n.d===d)beltGoals(n);          // Band führt schon hinein: seitlich einspeisen
   }
   return goals;
 }
@@ -1741,7 +1795,6 @@ function handMine(x,y,r){
    7. OBERFLÄCHE
    ===================================================================== */
 let uiDirty=true,winPending=false,TOT={};
-const TOPITEMS=['eisenplatte','kupferplatte','kohle','stein','schaltkreis'];
 
 /* ---------- Ton (Web Audio, synthetisch) ---------- */
 let AC=null;
@@ -1790,43 +1843,62 @@ function fillIcons(root){
 }
 const ic=(id,d)=>`<canvas data-ic="${id}"${d?` data-d="${d}"`:''}></canvas>`;
 
-/* ---------- obere Leiste ---------- */
-function buildTop(){
-  $('#res').innerHTML=TOPITEMS.map(k=>`<button class="chip" data-k="${k}" title="${ITEMS[k].n}">${ic(k)}<div class="cv"><b id="c_${k}">0</b><i id="r_${k}" class="z">0/min</i></div></button>`).join('');
-  fillIcons($('#res'));
-  $('#res').onclick=()=>openMenu('stats');
-}
+/* ---------- oben: Stromanzeige ---------- */
+function buildTop(){}
 function updTop(){
-  for(const k of TOPITEMS){
-    $('#c_'+k).textContent=fmt(TOT[k]||0);
-    const r=rate(k),el=$('#r_'+k);el.textContent=fmtRate(r)+'/min';el.className=r>0?'':'z';
-  }
   let cap=0,use=0,dem=0;for(const N of NETS){cap+=N.cap;use+=N.use;dem+=N.dem}
-  const pw=$('#pow');
-  if(L.steam.length||L.solar.length||NETS.some(N=>N.cons.length)){
-    pw.style.display='block';pw.textContent=`⚡ ${fmtKW(use)} / ${fmtKW(cap)}`;pw.classList.toggle('low',dem>cap+.1);
-  }else pw.style.display='none';
+  const pw=$('#pow'),on=L.steam.length||L.solar.length||NETS.some(N=>N.cons.length);
+  pw.classList.toggle('on',!!on);
+  if(on){pw.textContent=`⚡ ${fmtKW(use)} / ${fmtKW(cap)}`;pw.classList.toggle('low',dem>cap+.1)}
 }
 
-/* ---------- Bau-Leiste ---------- */
+/* ---------- Schnellleiste: 6 Favoriten (Stern im Bau-Menü) ---------- */
+const FAV_DEFAULT=['band','bohrer','ofen','kiste','verteiler','labor'];
+/* Gebäude im Bau-Menü nach Gruppen */
+const BUILD_GROUPS=[
+  ['Förderbänder',['band','schnellband','expressband','verteiler','zusammen']],
+  ['Lager',['kiste']],
+  ['Abbau',['bohrer','ebohrer']],
+  ['Verarbeitung',['ofen','eofen','montage','montage2']],
+  ['Forschung',['labor']],
+  ['Energie',['dampf','mast','solar']],
+  ['Raumfahrt',['silo']],
+];
 let palKey='';
-function palItems(){return PAL_ORDER.filter(t=>unlocked(t)||(TOT[t]||0)>0||tool===t)}
 function buildPalette(){
-  const items=palItems(),key=items.join(',')+'|'+curDir;
+  const fav=S.fav,key=fav.join(',')+'|'+curDir;
   if(key!==palKey){
     palKey=key;
-    $('#pal').innerHTML=items.map(t=>`<button class="pb${tool===t?' sel':''}${S.newB.includes(t)?' new':''}" data-t="${t}">${ic(t,BLD[t].rot?curDir:0)}<em id="p_${t}"></em><span>${BLD[t].n}</span></button>`).join('');
+    $('#pal').innerHTML=fav.map((t,i)=>t
+      ?`<button class="pb" data-t="${t}">${ic(t,BLD[t].rot?curDir:0)}<em id="p_${t}"></em><span>${BLD[t].n}</span></button>`
+      :`<button class="pb empty" data-i="${i}" aria-label="Platz belegen">+</button>`).join('');
     fillIcons($('#pal'));
   }
-  for(const t of items){const n=TOT[t]||0,el=$('#p_'+t);el.textContent=fmt(n);el.className=n?'':'no'}
-  document.querySelectorAll('.pb').forEach(b=>b.classList.toggle('sel',b.dataset.t===tool));
+  for(const t of fav){if(!t)continue;const n=TOT[t]||0,el=$('#p_'+t);if(el){el.textContent=fmt(n);el.className=n?'':'no'}}
+  document.querySelectorAll('.pb').forEach(b=>b.classList.toggle('sel',!!b.dataset.t&&b.dataset.t===tool));
+  $('#bBuild').classList.toggle('sel',!!tool&&!fav.includes(tool));
 }
 $('#pal').addEventListener('click',e=>{
   const b=e.target.closest('.pb');if(!b)return;
+  if(!b.dataset.t){openBuild();return}
   const t=b.dataset.t;
-  if(S.newB.includes(t)){S.newB=S.newB.filter(x=>x!==t);b.classList.remove('new')}
   selectTool(tool===t?null:t);
 });
+/* Bau-Menü: Gebäude nach Gruppen, Tippen wählt aus, Stern legt es in die Schnellleiste */
+function openBuild(){
+  const lockTech=t=>{const r=REC[t];return r&&r.tech&&!isDone(r.tech)?TECH[r.tech].n:null};
+  let h='<p>Tippe auf ein Gebäude zum Bauen. Mit dem Stern legst du es in deine Schnellleiste (6 Plätze).</p>';
+  for(const[name,list]of BUILD_GROUPS){
+    h+=`<h4>${name}</h4>`;
+    for(const t of list){
+      const lock=lockTech(t)&&!(TOT[t]>0),fav=S.fav.includes(t);
+      h+=`<div class="row${lock?' lock':''}${tool===t?' cur':''}">${ic(t,BLD[t].rot?curDir:0)}<div class="rt"><b>${esc(BLD[t].n)} <small style="color:var(--dim);font-weight:400">· ${fmt(TOT[t]||0)}</small>${S.newB.includes(t)?' <small style="color:var(--acc)">neu</small>':''}</b>
+        <div class="ing">${lock?'Gesperrt – Forschung: '+esc(lockTech(t)):esc(toolHint(t))}</div></div>
+        <div class="rb"><button class="btn star${fav?' on':''}" data-a="fav" data-v="${t}" aria-label="Favorit">${fav?'★':'☆'}</button>${lock?'':`<button class="btn acc" data-a="pick" data-v="${t}">Bauen</button>`}</div></div>`;
+    }
+  }
+  openSheet('build','Gebäude',null,h,{keepScroll:SH.kind==='build'});
+}
 function selectTool(t){
   if(ROUTE&&ROUTE.t!==t){ROUTE=null;updRouteBar()}
   tool=t;if(t)delMode=false;
@@ -1842,6 +1914,8 @@ function toolHint(t){
     case 'furn':return`${B.n}: ${fmtRate(B.speed*20)} Platten/min${dir}`;
     case 'asm':return`${B.n}: Tempo ×${String(B.speed).replace('.',',')}${dir}`;
     case 'split':return`${B.n}: Eingang hinten, Ausgänge vorn/links/rechts${dir}`;
+    case 'merge':return`${B.n}: Eingänge hinten/links/rechts, Ausgang vorn${dir}`;
+    case 'chest':return`${B.n}: 800 Plätze, Ausgang mit einstellbarer Menge/min${dir}`;
   }
   return B.n+dir;
 }
@@ -1861,7 +1935,7 @@ $('#bRot').onclick=rotateAct;
 $('#bDel').onclick=()=>{delMode=!delMode;if(delMode){tool=null;toast('Abriss: Tippe auf ein Gebäude.','',1600)}updToolUI();sfx('click')};
 $('#bCraft').onclick=()=>openCraft();
 $('#bRes').onclick=()=>openResearch();
-$('#bGoal').onclick=()=>openGoals();
+$('#bBuild').onclick=()=>openBuild();
 $('#bMenu').onclick=()=>openMenu();
 
 /* ---------- Banner: Tutorial oder nächstes Ziel ---------- */
@@ -1876,7 +1950,7 @@ function updBanner(){
     $('#bSkip').style.display=s.end?'none':'';
     return;
   }
-  const g=GOALS.find(g=>!goalDone(g));
+  const g=S.showGoal&&GOALS.find(g=>!goalDone(g));
   if(!g){b.className='';return}
   b.className='on goal';$('#bSmall').textContent='Nächstes Ziel';
   let t=esc(g.d);if(g.p){const[a,m]=g.p();t+=` <b>(${fmt(Math.min(a,m))}/${m})</b>`}
@@ -1884,7 +1958,7 @@ function updBanner(){
 }
 $('#bBtn').onclick=e=>{e.stopPropagation();S.tut=-1;updBanner()};
 $('#bSkip').onclick=e=>{e.stopPropagation();S.tut=-1;updBanner();toast('Tutorial übersprungen. Du findest es im Menü.')};
-$('#banner').onclick=()=>{if(S.tut<0)openGoals()};
+$('#banner').onclick=()=>{if(S.tut<0)openMenu('goals')};
 
 /* ---------- Bottom-Sheet ---------- */
 let SH={kind:null,live:null,tab:null};
@@ -1906,6 +1980,13 @@ function closeSheet(){SH={kind:null,live:null};SEL=null;$('#sheet').classList.re
 $('#sheetX').onclick=closeSheet;
 $('#sheetBg').onclick=closeSheet;
 const ACT={};
+ACT.pick=v=>{S.newB=S.newB.filter(x=>x!==v);closeSheet();selectTool(v)};
+ACT.fav=v=>{
+  const i=S.fav.indexOf(v);
+  if(i>=0)S.fav[i]=null;
+  else{const j=S.fav.indexOf(null);if(j<0){toast('Die Leiste ist voll – nimm erst bei einem anderen Gebäude den Stern weg.','bad');return}S.fav[j]=v}
+  palKey='';buildPalette();openBuild();
+};
 function onSheetClick(e){const b=e.target.closest('[data-a]');if(!b||b.disabled)return;const f=ACT[b.dataset.a];if(f){f(b.dataset.v,b);uiDirty=true}}
 $('#sheetBody').addEventListener('click',onSheetClick);
 $('#sheetTabs').addEventListener('click',onSheetClick);
@@ -1997,8 +2078,13 @@ function openInfo(e){
     }
     case 'chest':{
       h+=`<div class="grid" id="cInv"></div>`;
-      btns.push(['takeout','Alles ins Inventar']);btns.push(['chestout',e.ou?'Ausgang aufs Band: an':'Ausgang aufs Band: aus']);
-      live=()=>{let n=0;for(const i in e.inv)n+=e.inv[i];setSt(`${fmt(n)} / ${B.cap} Items · zählt zu deinem Vorrat`,'');invGrid('cInv',e.inv)};
+      {const keys=Object.keys(ITEMS).filter(i=>e.inv[i]>0||i===e.oi);
+       h+=`<h4>Ausgang (orange Seite)</h4><div class="rates"><div class="rrow"><small>Item</small><b>${e.oi?esc(ITEMS[e.oi].n):'keins'}</b></div>
+         <div class="rrow"><small>Menge</small><button class="btn" data-a="orate" data-v="-1">–</button><b style="min-width:84px;text-align:center">${e.orate}/min</b><button class="btn" data-a="orate" data-v="1">+</button></div>
+         <div class="rrow"><small>Gibt aus</small><b id="iRate">${e.oi?'wird gemessen …':'–'}</b></div></div>
+         <div class="grid"><button class="cell${e.oi?'':' sel'}" data-a="oitem" data-v=""><div class="chk">–</div><span>Aus</span></button>${keys.map(i=>`<button class="cell${e.oi===i?' sel':''}" data-a="oitem" data-v="${i}">${ic(i)}<span>${esc(ITEMS[i].n)}</span></button>`).join('')}</div>`}
+      btns.push(['takeout','Alles ins Inventar']);
+      live=()=>{let n=0;for(const i in e.inv)n+=e.inv[i];setSt(`${fmt(n)} / ${B.cap} Items · zählt zu deinem Vorrat`,'');invGrid('cInv',e.inv);if(e.oi&&e._r!==undefined)setTxt('iRate',fmtRate(e._r)+'/min')};
       break;
     }
     case 'lab':{
@@ -2102,7 +2188,9 @@ ACT.takeout=()=>{
   toast(n?`${n} Items ins Inventar genommen.`:'Nichts zu nehmen.');refreshInfo();
 };
 ACT.upg=v=>{const e=selE();if(!e)return;const[t,m]=v.split(':');upgradeBelts(m==='L'?beltLine(e):[e],t);refreshInfo()};
-ACT.chestout=()=>{const e=selE();if(!e)return;e.ou=e.ou?0:1;dirty=true;toast(e.ou?'Die Kiste gibt ihren Inhalt jetzt an der orangen Seite aufs Band.':'Kisten-Ausgang aus.');refreshInfo()};
+const ORATES=[0,5,10,15,20,30,40,60,90,120,180,240];
+ACT.oitem=v=>{const e=selE();if(!e)return;e.oi=v||null;sfx('click');refreshInfo()};
+ACT.orate=v=>{const e=selE();if(!e)return;let i=ORATES.indexOf(e.orate);if(i<0)i=7;e.orate=ORATES[clamp(i+ +v,0,ORATES.length-1)];sfx('click');refreshInfo()};
 ACT.filter=v=>{const e=selE();if(!e)return;e.fi=v||null;sfx('click');refreshInfo()};
 ACT.rot=()=>{const e=selE();if(!e)return;e.d=(e.d+1)%4;dirty=true;sfx('click');refreshInfo()};
 ACT.del=()=>{const e=selE();if(e)demolish(e)};
@@ -2237,22 +2325,25 @@ function openResearch(){
 ACT.research=v=>{S.res.cur=v;S.res.prog=S.res.prog&&S.res.cur===v?S.res.prog:0;sfx('click');openResearch();toast('Forschung gestartet: '+TECH[v].n)};
 
 /* ---------- Ziele ---------- */
-function openGoals(){
-  let h=`<div class="row cur"><div class="chk${S.rockets?' ok':''}">🚀</div><div class="rt"><b>Endziel: Schieß eine Rakete ins All</b><div class="ing">Erforsche den Raketenbau, baue ein Raketensilo und fülle es mit 10 Raketenteilen.</div></div></div><h4>Meilensteine</h4>`;
+function goalsHtml(){
+  let h=`<div class="tog"><span>Nächstes Ziel auf der Karte anzeigen</span><button class="sw${S.showGoal?' on':''}" data-a="showgoal" aria-label="Ziel-Anzeige"></button></div>`+`<div class="row cur"><div class="chk${S.rockets?' ok':''}">🚀</div><div class="rt"><b>Endziel: Schieß eine Rakete ins All</b><div class="ing">Erforsche den Raketenbau, baue ein Raketensilo und fülle es mit 10 Raketenteilen.</div></div></div><h4>Meilensteine</h4>`;
   GOALS.forEach((g,i)=>{
     const ok=goalDone(g);let pr='';
     if(g.p&&!ok){const[a,m]=g.p();pr=`<div class="bar"><div style="width:${(Math.min(1,a/m)*100).toFixed(1)}%"></div></div>`}
     h+=`<div class="row${ok?' done':''}"><div class="chk${ok?' ok':''}">${ok?'✓':i+1}</div><div class="rt"><b>${esc(g.n)}</b><div class="ing">${esc(g.d)}</div>${pr}</div></div>`;
   });
   h+=`<p>Spielzeit: ${fmtDur(S.time)} · Raketen gestartet: ${S.rockets||0}</p>`;
-  openSheet('goals','Ziele',null,h);
+  return h;
 }
+function openGoals(){openMenu('goals')}
+ACT.showgoal=(v,b)=>{S.showGoal=!S.showGoal;b.classList.toggle('on',S.showGoal);updBanner()};
 
 /* ---------- Menü: Statistik, Einstellungen, Spielstand ---------- */
 function openMenu(tab){
-  tab=tab||(SH.kind==='menu'&&SH.tab)||'stats';
+  tab=tab||(SH.kind==='menu'&&SH.tab)||'goals';
   let h='',live;
-  if(tab==='stats'){
+  if(tab==='goals')h+=goalsHtml();
+  else if(tab==='stats'){
     h+=`<p>Produktion der letzten Minute und insgesamt.</p><div id="stTab"></div>`;
     live=()=>{
       const el=$('#stTab');if(!el)return;
@@ -2274,7 +2365,7 @@ function openMenu(tab){
       <h4>Exportieren</h4><div class="btns"><button class="btn acc" data-a="export">Code erzeugen</button><button class="btn" data-a="copy">Kopieren</button></div><textarea id="exTxt" readonly placeholder="Hier erscheint dein Code."></textarea>
       <h4>Importieren</h4><textarea id="imTxt" placeholder="Code hier einfügen"></textarea><div class="btns"><button class="btn" data-a="import">Spielstand laden</button></div>`;
   }
-  openSheet('menu','Menü',null,h,{live,tab,tabs:[['stats','Statistik'],['set','Einstellungen'],['save','Spielstand']]});
+  openSheet('menu','Menü',null,h,{live,tab,tabs:[['goals','Ziele'],['stats','Statistik'],['set','Einstellungen'],['save','Spielstand']]});
 }
 ACT.sound=(v,b)=>{S.sound=!S.sound;b.classList.toggle('on',S.sound);if(S.sound){audioUnlock();sfx('click')}};
 ACT.tut=()=>{S.tut=0;updBanner();closeSheet();toast('Tutorial gestartet.')};
@@ -2337,11 +2428,11 @@ function uiTick(dt){
    8. SPEICHERN, EXPORT/IMPORT, OFFLINE-FORTSCHRITT, SELBST-UPDATE
    ===================================================================== */
 const KEY='funkenwerk-1';
-const BUILD='2026-09-26-8';
+const BUILD='2026-09-26-9';
 
 function newGame(){
   S={v:1,seed:(Math.random()*1e9)|0,time:0,savedAt:Date.now(),cam:null,inv:Object.assign({},START_INV),prod:{},
-    res:{cur:null,prog:0,done:[]},flags:{},goals:[],tut:0,rockets:0,sound:true,cq:[],dir:1,ents:[],newB:[]};
+    res:{cur:null,prog:0,done:[]},flags:{},goals:[],tut:0,rockets:0,sound:true,cq:[],dir:1,ents:[],newB:[],fav:FAV_DEFAULT.slice(),showGoal:false};
   initWorld();
   // Kamera auf das Eisenfeld nahe der Mitte
   let sx=0,sy=0,n=0;
@@ -2358,7 +2449,7 @@ function initWorld(){
 function validSave(o){return o&&o.v===1&&typeof o.seed==='number'&&Array.isArray(o.ents)}
 /* ergänzt fehlende Felder und verwirft kaputte Einträge */
 function migrate(o){
-  const d={time:0,inv:{},prod:{},res:{cur:null,prog:0,done:[]},flags:{},goals:[],tut:-1,rockets:0,sound:true,cq:[],dir:1,newB:[]};
+  const d={time:0,inv:{},prod:{},res:{cur:null,prog:0,done:[]},flags:{},goals:[],tut:-1,rockets:0,sound:true,cq:[],dir:1,newB:[],fav:FAV_DEFAULT.slice(),showGoal:false};
   for(const k in d)if(o[k]===undefined)o[k]=d[k];
   // Greifarme gibt es nicht mehr: jeder wird zu 2 Förderbändern
   const oldIns=k=>k==='greifer'||k==='schnellgreifer';
@@ -2372,6 +2463,7 @@ function migrate(o){
     if(!e||!BLD[e.t]||!(e.x>=0&&e.y>=0&&e.x<W&&e.y<H))return false;
     if(e.inv)clean(e.inv);
     if(e.it)e.it=e.it.filter(i=>ITEMS[i[0]]);
+    if(e.t==='kiste'){delete e.ou;if(e.oi&&!ITEMS[e.oi])e.oi=null}
     const k=e.y*W+e.x;if(seen.has(k))return false;seen.add(k);
     const f=mkEnt(e.t,e.x,e.y,e.d||0);for(const q in f)if(e[q]===undefined)e[q]=f[q];
     return true;
@@ -2379,6 +2471,7 @@ function migrate(o){
   o.res.done=o.res.done.filter(id=>TECH[id]);
   if(o.res.cur&&!TECH[o.res.cur])o.res.cur=null;
   o.cq=o.cq.filter(c=>REC[c.r]);
+  o.fav=Array.from({length:6},(_,i)=>{const t=o.fav&&o.fav[i];return t&&BLD[t]?t:null});
   return o;
 }
 function loadState(o){
