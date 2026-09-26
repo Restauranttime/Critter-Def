@@ -1,0 +1,1877 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Tatort Kleckersdorf</title>
+<!--pwa-->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kleckersdorf">
+<meta name="theme-color" content="#2a2238">
+<link rel="apple-touch-icon" href="krimi-icon-180.png">
+<link rel="icon" type="image/png" href="krimi-icon-192.png">
+<link rel="manifest" href="krimi.webmanifest">
+<!--/pwa-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&display=swap">
+<style>
+@font-face{font-family:"Ziffern";src:url(https://fonts.gstatic.com/s/pressstart2p/v16/e3t4euO8T-267oIAQAu6jDQyK3nVivNm4I81.woff2) format("woff2");unicode-range:U+30-39;size-adjust:70%;font-display:swap}
+:root{
+  --wood:#9a5a3a; --wood-d:#4a2a1e; --parch:#f6e6c4; --parch-d:#dcc08a;
+  --ink:#33201a; --gold:#ffcf3f; --leaf:#5cc14a; --red:#c8402f; --blue:#2f4f7f;
+  --bg:#2a2238; color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%;min-height:calc(100% + var(--gap,0px));margin:0;overflow:hidden;overscroll-behavior:none;background:var(--bg)}
+body{font-synthesis:none;font-family:"Ziffern","Pixelify Sans",ui-monospace,"Courier New",monospace;color:var(--ink);
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#cv{position:fixed;top:0;left:0;width:100%;height:calc(100% + var(--gap,0px));display:block;image-rendering:pixelated;touch-action:none}
+.panel{background:var(--parch);border:3px solid var(--wood-d);border-radius:6px;
+  box-shadow:inset 0 0 0 2px var(--parch-d),0 3px 0 rgba(0,0,0,.35)}
+#hud{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:10px;display:flex;flex-direction:column;gap:6px;pointer-events:none;align-items:flex-start}
+#clock{padding:5px 10px 6px;min-width:128px;line-height:1.1}
+#clock .cr{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+#cDay{font-weight:700;font-size:15px}
+#cTime{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+#cSub,#cWx{font-size:12px;opacity:.75}
+#talerBox{padding:3px 10px;font-weight:700;font-size:18px;display:flex;align-items:center;gap:7px;font-variant-numeric:tabular-nums}
+.coin{width:14px;height:14px;border-radius:50%;background:var(--gold);box-shadow:inset -2px -2px 0 #c9901c;border:2px solid #7a4a10;flex:none}
+#caseBox{padding:4px 10px 5px;max-width:min(58vw,260px);line-height:1.15}
+#caseBox b{display:block;font-size:13px}
+#caseBox span{font-size:12px;opacity:.8}
+#menuBtn,#bookBtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);width:44px;height:40px;font-family:inherit;font-size:20px;font-weight:700;color:var(--ink);cursor:pointer;display:grid;place-items:center;padding:0}
+#menuBtn{right:10px}
+#bookBtn{right:60px}
+#bookBtn canvas{width:28px;height:28px;image-rendering:pixelated}
+#bookDot{position:absolute;right:-5px;top:-5px;width:14px;height:14px;border-radius:50%;background:var(--red);border:2px solid #fff3d6}
+#aBtn{position:fixed;right:16px;bottom:calc(var(--sab,env(safe-area-inset-bottom,0px)) + 30px);width:88px;height:88px;border-radius:50%;
+  background:radial-gradient(circle at 38% 32%,#ffe38a,#f0b43a 60%,#c9831f);border:4px solid var(--wood-d);box-shadow:0 4px 0 var(--wood-d);
+  font-family:inherit;font-weight:700;font-size:15px;color:var(--ink);display:grid;place-items:center;text-align:center;line-height:1.05;padding:4px;cursor:pointer;touch-action:none}
+#aBtn:active,#aBtn.down{transform:translateY(3px);box-shadow:0 1px 0 var(--wood-d)}
+#aBtn.long{font-size:12.5px}
+#aBtn.idle{filter:saturate(.35) brightness(.95)}
+#dogBtn{position:fixed;right:114px;bottom:calc(var(--sab,env(safe-area-inset-bottom,0px)) + 40px);width:60px;height:60px;border-radius:50%;padding:0;display:grid;place-items:center;cursor:pointer;touch-action:manipulation}
+#dogBtn canvas{width:38px;height:38px;image-rendering:pixelated}
+#dogBtn.wag{animation:wag .5s ease-in-out 3}
+@keyframes wag{25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
+#joy{position:fixed;width:112px;height:112px;margin:-56px 0 0 -56px;border-radius:50%;border:3px solid rgba(255,243,214,.55);background:rgba(20,15,30,.25);pointer-events:none}
+#joy i{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;background:rgba(255,243,214,.8);border:3px solid var(--wood-d)}
+#joy.ghost{opacity:.45}
+#toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 205px);transform:translateX(-50%);max-width:min(88vw,380px);padding:8px 14px;font-size:15px;text-align:center;pointer-events:none;transition:opacity .3s;z-index:5}
+#toast.off{opacity:0}
+#saveDot{position:fixed;right:112px;top:calc(env(safe-area-inset-top,0px) + 20px);font-size:12px;color:#fff3d6;text-shadow:0 1px 0 #000;pointer-events:none;transition:opacity .4s}
+#saveDot.off{opacity:0}
+#dlg{position:fixed;left:0;right:0;bottom:calc(var(--sab,env(safe-area-inset-bottom,0px)) + 10px);padding:0 10px;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:6;touch-action:manipulation}
+#dCh{display:flex;flex-direction:column;gap:6px;width:min(100%,560px);align-items:stretch;max-height:52vh;overflow:auto;padding:2px}
+#dCh:empty{display:none}
+.ch{font-family:inherit;font-weight:700;font-size:16px;text-align:left;color:var(--ink);background:#fff4dc;border:3px solid var(--wood-d);border-radius:6px;box-shadow:0 3px 0 var(--wood-d);padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.ch:active{transform:translateY(2px);box-shadow:0 1px 0 var(--wood-d)}
+.ch.old{background:#eadcbc;color:#6a5a4a;font-weight:600}
+.ch .dot{width:10px;height:10px;border-radius:50%;background:var(--red);flex:none}
+.ch.bye{background:#d8c8a8}
+.ch canvas{width:24px;height:24px;image-rendering:pixelated;flex:none}
+.dbox{width:min(100%,560px);min-height:112px;display:flex;gap:10px;padding:10px 12px 12px;cursor:pointer;position:relative}
+#dPic{width:72px;height:72px;image-rendering:pixelated;flex:none;border:3px solid var(--wood-d);border-radius:5px;background:#e8d4a8}
+.dtx{flex:1;min-width:0}
+#dName{display:block;font-size:16px;color:var(--red);margin-bottom:3px}
+#dText{margin:0;font-size:17px;line-height:1.32;min-height:44px}
+#dText.nar{font-style:italic;color:#5a4636}
+#dMore{position:absolute;right:12px;bottom:4px;font-size:14px;animation:bob 1s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(3px)}}
+.dbox.nopic #dPic{display:none}
+#fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:8}
+#flash{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%) rotate(-6deg);font-size:44px;font-weight:700;color:#fff3d6;z-index:9;pointer-events:none;
+  text-shadow:0 3px 0 var(--red),3px 0 0 var(--red),-3px 0 0 var(--red),0 -3px 0 var(--red),0 7px 0 rgba(0,0,0,.4);opacity:0}
+#flash.go{animation:flash 1.3s ease-out}
+@keyframes flash{0%{opacity:0;transform:translate(-50%,-50%) rotate(-6deg) scale(2.2)}15%{opacity:1;transform:translate(-50%,-50%) rotate(-6deg) scale(1)}80%{opacity:1}100%{opacity:0}}
+#modalWrap{z-index:10}
+#modalWrap,#title{position:fixed;inset:0;display:grid;place-items:center;padding:16px;background:rgba(20,14,28,.6);touch-action:auto}
+#modal{width:min(100%,460px);max-height:calc(100% - 20px);overflow:auto;padding:16px 16px 18px;touch-action:pan-y}
+#modal h2{margin:0 0 8px;font-size:24px;text-wrap:balance}
+#modal h3{margin:14px 0 4px;font-size:18px}
+#modal p{margin:6px 0;font-size:16px;line-height:1.35}
+.btn{font-family:inherit;font-weight:700;font-size:17px;color:#fff3d6;background:var(--wood);border:3px solid var(--wood-d);border-radius:6px;
+  box-shadow:0 3px 0 var(--wood-d);padding:9px 16px;cursor:pointer;text-shadow:0 2px 0 rgba(0,0,0,.3)}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--wood-d)}
+.btn.alt{background:#6a7a9a}
+.btn.sm{font-size:15px;padding:5px 10px}
+.btn:disabled{opacity:.45}
+.btn.wide{width:100%}
+.btn.danger{background:#b8483a}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+button:focus-visible{outline:3px solid #2e7fd0;outline-offset:2px}
+.tabs{display:flex;gap:4px;margin:0 0 10px;flex-wrap:wrap}
+.tab{font-family:inherit;font-weight:700;font-size:15px;padding:6px 10px;border:3px solid var(--wood-d);border-radius:6px 6px 0 0;background:#e6d2a6;color:var(--ink);cursor:pointer}
+.tab.on{background:#fff4dc;border-bottom-color:#fff4dc}
+.rows{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.row{display:grid;grid-template-columns:36px 1fr auto;gap:8px;align-items:center;background:#fff4dc;border:2px solid var(--parch-d);border-radius:5px;padding:6px 8px}
+.row.set{grid-template-columns:1fr auto}
+.row canvas{width:32px;height:32px;image-rendering:pixelated}
+.row b{display:block;font-size:16px}
+.row small{display:block;font-size:14px;line-height:1.3;opacity:.85}
+.row.key{border-color:#c8904a}
+.row.dim{opacity:.55}
+.row .tag{font-size:12px;font-weight:700;color:#fff;background:var(--red);border-radius:4px;padding:1px 5px;margin-left:4px;vertical-align:2px}
+.hearts{color:#c9372a;font-size:16px;letter-spacing:1px;white-space:nowrap}
+.hearts .e{color:#c9a57a}
+.note{background:#e2eccb;border:2px solid #8aac5a;border-radius:5px;padding:6px 8px;font-size:15px}
+.warn{background:#f3c9b4;border:2px solid #c46a4a;border-radius:5px;padding:6px 8px}
+.qs{margin:6px 0 0;padding:0;list-style:none}
+.qs li{font-size:16px;padding:3px 0}
+.qs li i{font-style:normal;display:inline-block;width:22px;font-weight:700}
+.stars{font-size:30px;letter-spacing:4px;color:#e0a020;text-shadow:0 2px 0 var(--wood-d)}
+.stars .e{color:#c9b48a}
+.pgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:6px}
+.pick{font-family:inherit;color:var(--ink);background:#fff4dc;border:3px solid var(--parch-d);border-radius:6px;padding:6px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:13px;font-weight:700;text-align:center;line-height:1.15}
+.pick canvas{width:48px;height:48px;image-rendering:pixelated}
+.pick.on{border-color:var(--red);box-shadow:0 0 0 2px var(--red);background:#fff}
+.plist{display:flex;flex-direction:column;gap:5px;margin-top:6px}
+.plist .pick{flex-direction:row;justify-content:flex-start;text-align:left;font-size:15px;padding:6px 8px;gap:8px}
+.plist .pick canvas{width:28px;height:28px}
+.soles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px}
+.soles .pick canvas{width:100%;height:auto;max-width:70px}
+.cast{display:flex;gap:12px;align-items:center;background:#e8dcc4;border:2px solid var(--parch-d);border-radius:6px;padding:8px}
+.cast canvas{width:70px;image-rendering:pixelated;flex:none}
+.zet{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:10px auto 0;width:min(100%,340px);background:#6a5040;padding:4px;border-radius:5px}
+.zet canvas{width:100%;display:block;cursor:pointer;border:3px solid transparent;border-radius:3px;background:#6a5040}
+.zet canvas.on{border-color:var(--gold)}
+.who{display:flex;gap:12px;align-items:center}
+.who canvas{width:64px;height:64px;image-rendering:pixelated;border:3px solid var(--wood-d);border-radius:5px;flex:none;background:#e8d4a8}
+.sws{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.sw{width:34px;height:34px;border-radius:50%;border:3px solid var(--wood-d);padding:0;cursor:pointer}.sw.on{outline:3px solid var(--red);outline-offset:1px}
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}.seg .btn{background:#b89a72}.seg .btn.on{background:var(--wood);outline:3px solid var(--red)}
+input[type=text]{font-family:inherit;font-size:18px;padding:7px 10px;border:3px solid var(--wood-d);border-radius:6px;background:#fff8e8;color:var(--ink);width:100%;-webkit-user-select:text;user-select:text}
+#title .card{width:min(100%,400px);padding:22px 20px;text-align:center}
+#title h1{margin:0;font-size:44px;line-height:1.02;color:#fff3d6;text-shadow:0 3px 0 var(--wood-d),3px 0 0 var(--wood-d),-3px 0 0 var(--wood-d),0 -3px 0 var(--wood-d),0 7px 0 rgba(0,0,0,.35)}
+#title .sub{margin:10px 0 16px;font-size:17px;color:#fff3d6;text-shadow:0 2px 0 #000}
+#title .btns{justify-content:center;flex-direction:column;align-items:stretch}
+#title .help{margin-top:16px;font-size:14px;line-height:1.4;text-align:left}
+#titlePic{width:192px;height:96px;image-rendering:pixelated;margin:0 auto 6px;display:block}
+#saveInfo{margin-top:10px;font-size:14px;color:#fff3d6;text-shadow:0 1px 0 #000}
+textarea{width:100%;font:12px ui-monospace,Menlo,monospace;border:2px solid var(--parch-d);border-radius:5px;padding:6px;background:#fff8e8;color:var(--ink);resize:vertical;-webkit-user-select:text;user-select:text}
+.saved{font-size:13px;opacity:.75;margin-top:10px!important}
+.mgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.tile{display:flex;align-items:center;gap:10px;text-align:left;padding:10px;background:#fff4dc;border:3px solid var(--wood-d);border-radius:6px;box-shadow:0 3px 0 var(--wood-d);font-family:inherit;color:var(--ink);cursor:pointer;min-height:60px}
+.tile:active{transform:translateY(2px);box-shadow:0 1px 0 var(--wood-d)}
+.tile canvas{width:32px;height:32px;image-rendering:pixelated;flex:none}
+.tile b{display:block;font-size:17px}.tile small{display:block;font-size:12px;opacity:.75}
+.price{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+button,textarea,input{font-synthesis:none}
+body.pre #hud,body.pre #bookBtn,body.pre #menuBtn,body.pre #aBtn,body.pre #dogBtn,body.pre #joy{visibility:hidden}
+body.talk #joy{visibility:hidden}
+@media (max-height:500px){#dCh{display:grid;grid-template-columns:1fr 1fr;max-height:46vh}.ch{padding:6px 10px;font-size:15px}.dbox{min-height:84px;padding:8px 10px}#dPic{width:56px;height:56px}#dText{font-size:16px;min-height:0}#toast{top:calc(env(safe-area-inset-top,0px) + 12px)}}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){#toast,#saveDot{transition:none}#dMore,#dogBtn.wag{animation:none}}
+</style>
+</head>
+<body class="pre">
+<canvas id="cv"></canvas>
+
+<div id="hud">
+  <div id="clock" class="panel">
+    <div class="cr"><span id="cDay">Samstag</span><span id="cWx">Sonnig</span></div>
+    <div id="cTime">8:15</div>
+    <div class="cr"><span id="cSub">Tag 1 · Sommer</span></div>
+  </div>
+  <div id="talerBox" class="panel"><span class="coin"></span><span id="taler">20</span></div>
+  <div id="caseBox" class="panel" hidden><b id="caseT"></b><span id="caseP"></span></div>
+</div>
+<button id="bookBtn" class="panel" aria-label="Notizbuch"><canvas width="16" height="16"></canvas><i id="bookDot" hidden></i></button>
+<button id="menuBtn" class="panel" aria-label="Menü">≡</button>
+<div id="saveDot" class="off">Gespeichert</div>
+<div id="joy" class="ghost"><i></i></div>
+<button id="aBtn" aria-label="Aktion"><span id="aLab">…</span></button>
+<button id="dogBtn" class="panel" aria-label="Krümel um einen Hinweis bitten"><canvas width="16" height="16"></canvas></button>
+<div id="toast" class="panel off"></div>
+<div id="flash">Widerspruch!</div>
+<div id="dlg" hidden><div id="dCh"></div><div class="panel dbox" id="dBox"><canvas id="dPic" width="32" height="32"></canvas><div class="dtx"><b id="dName"></b><p id="dText"></p></div><span id="dMore">▼</span></div></div>
+<div id="fade"></div>
+<div id="modalWrap" hidden><div id="modal" class="panel"></div></div>
+
+<div id="title">
+  <div class="card">
+    <canvas id="titlePic" width="64" height="32"></canvas>
+    <h1>Tatort Kleckers&shy;dorf</h1>
+    <div class="sub">Ein gemütlicher Dorfkrimi. Kuchen, Klatsch und kleine Geheimnisse.</div>
+    <div class="btns">
+      <button class="btn" id="bCont" hidden>Weiterspielen</button>
+      <button class="btn alt" id="bNew">Neues Spiel</button>
+      <button class="btn alt" id="bCode">Spielstand mit Code laden</button>
+    </div>
+    <div id="saveInfo">Spielstand wird gesucht…</div>
+    <div class="help panel" style="padding:10px 12px">
+      <b>Steuerung</b><br>
+      Linke Bildschirmhälfte ziehen: laufen<br>
+      Runder Knopf: reden, untersuchen, Türen<br>
+      Dackel-Knopf: Krümel schnüffelt dir einen Hinweis<br>
+      Buch oben rechts: dein Notizbuch mit allen Hinweisen
+    </div>
+  </div>
+</div>
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const cv=$('#cv'),ctx=cv.getContext('2d');
+let dpr=1,TS=32,camX=0,camY=0,GAP=0;
+const VH=()=>innerHeight+GAP;
+
+/* ---------- helpers ---------- */
+function hash(x,y){let h=(x*374761393+y*668265263)|0;h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967296}
+function rgb(h){return[1,3,5].map(i=>parseInt(h.slice(i,i+2),16))}
+function mix(a,b,t){const A=rgb(a),B=rgb(b);return'#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('')}
+const lt=(c,t=.3)=>mix(c,'#ffffff',t),dk=(c,t=.3)=>mix(c,'#000000',t);
+function mk(w,h,fn){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'));return c}
+function R(g,x,y,w,h,c){g.fillStyle=c;g.fillRect(x,y,w,h)}
+function ell(g,cx,cy,rx,ry,c){g.fillStyle=c;for(let y=Math.floor(cy-ry);y<=cy+ry;y++)for(let x=Math.floor(cx-rx);x<=cx+rx;x++){const dx=(x+.5-cx)/rx,dy=(y+.5-cy)/ry;if(dx*dx+dy*dy<=1)g.fillRect(x,y,1,1)}}
+const circ=(g,cx,cy,r,c)=>ell(g,cx,cy,r,r,c);
+function line(g,x0,y0,x1,y1,c,t=1){g.fillStyle=c;const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0))||1;for(let i=0;i<=n;i++)g.fillRect(Math.round(x0+(x1-x0)*i/n),Math.round(y0+(y1-y0)*i/n),t,t)}
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- basics ---------- */
+const WDAYS=['Samstag','Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag'];
+const WX={sonne:'Sonnig',wolken:'Bewölkt',regen:'Regen',nebel:'Nebel'};
+const DX=[0,0,-1,1],DY=[1,-1,0,0]; // 0 runter, 1 hoch, 2 links, 3 rechts
+const fmtT=m=>`${Math.floor(m/60)%24}:${String(Math.floor(m%60)).padStart(2,'0')}`;
+const HAIRS=['#2a1a10','#5a3a1e','#a0602a','#e0b050','#c4452f','#d8d4cc','#3a3a5a'];
+const SKINS=['#f6d3b4','#e8b48a','#c68a5a','#98603a','#6a4028'];
+const COATS=['#2f4f7f','#3f6e3a','#8a3a3a','#6a4a8a','#b8883a','#4a4a4a','#2a7a7a'];
+const STYLES=[['kurz','Kurz'],['lang','Lang'],['zopf','Zopf'],['dutt','Dutt']];
+const TITLES=['Wachtmeisterin','Wachtmeister','Ohne Titel'];
+
+/* ---------- people ---------- */
+const NPC={
+  marlene:{n:'Marlene Pfefferle',s:'Marlene',role:'Rentnerin, backt „Pfefferles Wolke“',pal:{hair:'#dcd8d0',skin:'#f0c8a8',shirt:'#8a5aa8',pants:'#5a4a6a',shoe:'#3a2a2a',bun:1,skirt:1,glasses:1}},
+  frieda:{n:'Frieda Kornblum',s:'Frieda',role:'Bäckerin',pal:{hair:'#e8c860',skin:'#f0c098',shirt:'#e87a6a',pants:'#7a5a4a',shoe:'#e8e0d0',apron:'#f8f4ec',tail:1,skirt:1}},
+  toni:{n:'Toni Hufnagel',s:'Toni',role:'Wirt vom „Goldenen Ochsen“',pal:{hair:'#3a2a1e',skin:'#e0a880',shirt:'#f4efe4',vest:'#3f6e3a',pants:'#4a3a2a',shoe:'#2a1a10',stache:1,belly:1}},
+  egon:{n:'Egon Grummel',s:'Egon',role:'Nachbar, Gartenzwergfreund',pal:{hair:'#b8b0a8',bald:1,skin:'#e8b890',shirt:'#8aa05a',pants:'#3a5a8a',shoe:'#2a4a2a',boots:1,overall:1}},
+  kalle:{n:'Kalle Brandt',s:'Kalle',role:'Schulbub, zwölf Jahre',kid:1,pal:{hair:'#d86a2a',skin:'#f4c8a0',shirt:'#3a8ad8',pants:'#4a4a6a',shoe:'#e8e8e8',cap:'#d8402a'}},
+  jule:{n:'Jule Sommer',s:'Jule',role:'Postbotin',pal:{hair:'#4a2a1a',skin:'#c88a60',shirt:'#f0c030',pants:'#2a3a6a',shoe:'#2a2a2a',long:1,bag:1}},
+  albert:{n:'Albert Leisten',s:'Albert',role:'Schuhmachermeister',pal:{hair:'#ececec',skin:'#e8b890',shirt:'#8a6a4a',pants:'#4a3a2a',shoe:'#3a2010',apron:'#6a4a2a',glasses:1,beard:1}},
+  kurt:{n:'Kurt Wurstbauer',s:'Kurt',role:'Metzger',pal:{hair:'#c89a6a',skin:'#f0b088',shirt:'#f4f4f4',pants:'#5a5a6a',shoe:'#2a2a2a',apron:'#ece4e4',stripes:'#c84a4a',belly:1}},
+  heinz:{n:'Heinz Brettschneider',s:'Heinz',role:'Bürgermeister',pal:{hair:'#8a8a8a',skin:'#f0c0a0',shirt:'#2a3a5a',pants:'#2a3a5a',shoe:'#1a1a1a',chain:1,tie:'#c83a3a'}}
+};
+function npcPal(id){const p=NPC[id].pal;if(id=='toni'&&S&&S.g&&S.g.shaved&&S.day<S.g.shaved+6)return Object.assign({},p,{stache:0});return p}
+function playerPal(){const L=S.look;return{hair:L.hair,skin:L.skin,shirt:L.coat,pants:'#2a2a3a',shoe:'#1a1a1a',long:L.style=='lang',tail:L.style=='zopf',bun:L.style=='dutt',hat:L.hat,badge:1}}
+
+/* ---------- audio ---------- */
+let AC=null;
+function ac(){if(!AC)try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}return AC}
+function tone(f,d,ty,v,sl,t0){const a=ac();if(!a)return;const t=t0||a.currentTime,o=a.createOscillator(),gn=a.createGain();
+  o.type=ty;o.frequency.setValueAtTime(f,t);if(sl)o.frequency.linearRampToValueAtTime(Math.max(40,f+sl),t+d);
+  gn.gain.setValueAtTime(.0001,t);gn.gain.linearRampToValueAtTime(v,t+.01);gn.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(gn).connect(a.destination);o.start(t);o.stop(t+d+.03)}
+function sfx(k,p){if(!S||!S.sound)return;try{
+  const a=ac();if(!a||a.state!='running')return;const t=a.currentTime;
+  if(k=='clue'){[659,784,988,1319].forEach((f,i)=>tone(f,.14,'square',.035,0,t+i*.07));return}
+  if(k=='win'){[523,659,784,1047,784,1047].forEach((f,i)=>tone(f,.2,'triangle',.06,0,t+i*.12));return}
+  if(k=='bark'){tone(520,.07,'square',.05,-220,t);tone(560,.08,'square',.05,-240,t+.12);return}
+  if(k=='blip'){tone(p||520,.035,'square',.018,0,t);return}
+  if(k=='wider'){tone(180,.12,'sawtooth',.05,0,t);tone(880,.3,'square',.05,-300,t+.1);return}
+  const P={click:[800,.04,'square',.03,0],door:[260,.14,'triangle',.06,-100],wrong:[210,.3,'sawtooth',.04,-110],
+    coin:[880,.14,'square',.04,500],pop:[620,.09,'sine',.07,300],paper:[1200,.05,'triangle',.03,-600],sleep:[392,.6,'sine',.05,-200]}[k];
+  if(P)tone(P[0],P[1],P[2],P[3],P[4]);
+}catch(e){}}
+let mNext=0,mStep=0,mDeg=5;
+const MSC=[0,2,4,7,9],MBASS=[0,-3,5,7];
+function musicTick(){
+  const a=AC;if(!a||!S||!S.music||!S.sound||!started||document.hidden||a.state!='running')return;
+  const night=S.time>=1230,spb=60/(night?72:92)/2,root=night?220:261.63;
+  if(mNext<a.currentTime)mNext=a.currentTime+.05;
+  while(mNext<a.currentTime+.35){
+    const bar=Math.floor(mStep/8)%4;
+    if(mStep%4==0){const semi=(mStep%8==4?7:0)+MBASS[bar]-12;tone(root*Math.pow(2,semi/12),.5,'triangle',.03,0,mNext)}
+    const rate=(night?.3:.5)*(S.wx=='regen'?.7:1);
+    if(Math.random()<rate){mDeg=clamp(mDeg+rnd(-2,2),0,9);const semi=MSC[mDeg%5]+12*Math.floor(mDeg/5);tone(root*Math.pow(2,semi/12),.3,'triangle',.02,0,mNext)}
+    mNext+=spb;mStep++;
+  }
+}
+setInterval(musicTick,120);
+
+/* ---------- character sprites ---------- */
+function drawHat(r,hat,dir){
+  if(!hat||hat=='none')return;
+  if(hat=='muetze'){r(2,0,8,3,'#1f2f5a');r(2,2,8,1,'#e8e8e8');if(dir==0){r(2,3,8,1,'#101a30');r(5,0,2,1,'#f0c040')}if(dir==2)r(0,3,4,1,'#101a30');if(dir==3)r(8,3,4,1,'#101a30')}
+  if(hat=='detektiv'){r(1,0,10,3,'#8a6a3a');for(let i=0;i<5;i++)r(2+i*2,(i%2),1,1,'#5a3a1a');if(dir==0){r(1,3,2,3,'#8a6a3a');r(9,3,2,3,'#8a6a3a')}if(dir==2)r(0,2,3,1,'#6a4a2a');if(dir==3)r(9,2,3,1,'#6a4a2a')}
+  if(hat=='stroh'){r(-1,2,14,1,'#e8c860');r(3,0,6,2,'#e0b848');r(3,1,6,1,'#c83a3a')}
+  if(hat=='wolle'){r(2,0,8,3,'#c83a3a');r(2,2,8,1,'#f4f4f4');r(5,-2,2,2,'#f4f4f4')}
+}
+function drawPerson(x,y,dir,wt,pal,mv,sc){
+  sc=sc||1;const p=TS/16*sc,f=mv?Math.floor(wt*8)%4:0,bob=(f==1||f==3)?-p:0;
+  const ox=Math.round(x-6*p),oy=Math.round(y-22*p+bob);
+  const r=(a,b,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(ox+Math.round(a*p),oy+Math.round(b*p),Math.ceil(w*p),Math.ceil(h*p))};
+  ctx.fillStyle='rgba(0,0,0,.22)';ctx.beginPath();ctx.ellipse(x,y-p,5*p,2*p,0,0,7);ctx.fill();
+  const la=f==1?-1:0,lb=f==3?-1:0,side=dir>=2,H=pal.hair,sk=pal.skin,eye='#2a1a10';
+  const legC=pal.skirt?sk:pal.pants;
+  if(!side){r(3,17+la,3,4,legC);r(6,17+lb,3,4,dk(legC,.12));r(3,21+la,3,1,pal.shoe);r(6,21+lb,3,1,pal.shoe);if(pal.boots){r(3,19+la,3,3,pal.shoe);r(6,19+lb,3,3,pal.shoe)}}
+  else{r(4,17+la,3,4,legC);r(5,17+lb,3,4,dk(legC,.15));r(dir==2?3:5,21+la,4,1,pal.shoe);if(pal.boots)r(4,19,4,3,pal.shoe)}
+  if(pal.skirt)r(2,15,8,4,pal.pants);
+  const bw=pal.belly?1:0;
+  r(2-bw,10,8+2*bw,8,pal.shirt);r(2-bw,17,8+2*bw,1,dk(pal.shirt,.25));
+  if(pal.overall){r(3,13,6,5,pal.pants);if(!side){r(3,10,1,3,pal.pants);r(8,10,1,3,pal.pants)}}
+  if(pal.vest){if(!side){r(2-bw,10,3,8,pal.vest);r(7+bw,10,3,8,pal.vest)}else r(3,10,6,8,pal.vest)}
+  if(pal.apron&&dir!=1){if(!side)r(3,12,6,7,pal.apron);else r(dir==2?2:6,12,4,7,pal.apron);if(pal.stripes&&!side){r(4,13,1,5,pal.stripes);r(7,13,1,5,pal.stripes)}}
+  if(pal.tie&&dir==0)r(5,10,2,6,pal.tie);
+  if(pal.chain&&dir==0){r(3,11,1,1,'#f0c040');r(4,12,4,1,'#f0c040');r(8,11,1,1,'#f0c040');r(5,13,2,2,'#f0c040')}
+  if(pal.badge&&dir==0)r(7,12,2,2,'#f0c040');
+  if(pal.bag){if(dir!=1)r(dir==2?7:dir==3?2:8,13,3,4,'#8a5a2a');else r(2,13,3,4,'#8a5a2a');if(dir==0)line2(r,3,10,8,13,'#6a4a2a')}
+  if(!side){r(1-bw,11,2,6,dk(pal.shirt,.12));r(9+bw,11,2,6,dk(pal.shirt,.12));r(1-bw,16,2,2,sk);r(9+bw,16,2,2,sk)}
+  else{const sw=mv?(f==1?-1:f==3?1:0):0;r(5+sw,11,2,6,dk(pal.shirt,.15));r(5+sw,16,2,2,sk)}
+  r(3,3,6,7,sk);
+  if(dir==0){
+    if(pal.bald){r(2,4,1,4,H);r(9,4,1,4,H);r(4,3,4,1,lt(sk,.25))}else{r(2,1,8,3,H);r(2,3,1,5,H);r(9,3,1,5,H)}
+    r(4,6,1,2,eye);r(7,6,1,2,eye);
+    if(pal.glasses){r(3,5,3,1,'#555');r(6,5,3,1,'#555')}
+    if(!pal.stache&&!pal.beard){r(3,8,1,1,'#f0a08c');r(8,8,1,1,'#f0a08c')}
+    if(pal.stache){r(3,8,6,1,H);r(3,9,1,1,H);r(8,9,1,1,H)}
+    if(pal.beard)r(3,8,6,2,H);
+    if(pal.long){r(1,3,1,9,H);r(10,3,1,9,H)}
+    if(pal.tail){r(1,4,1,4,H);r(10,4,1,4,H)}
+  }
+  if(dir==1){r(2,1,8,8,pal.bald?sk:H);if(pal.bald)r(2,4,8,4,H);if(pal.long)r(2,8,8,5,H);if(pal.tail)r(4,8,4,6,H)}
+  if(dir==2){if(!pal.bald){r(2,1,8,3,H);r(6,3,3,5,H)}else r(7,4,2,4,H);r(3,6,1,2,eye);if(pal.glasses)r(2,5,3,1,'#555');if(pal.long)r(7,6,3,7,H);if(pal.tail)r(8,5,2,6,H);if(pal.stache)r(1,8,3,1,H);if(pal.beard)r(3,8,3,2,H)}
+  if(dir==3){if(!pal.bald){r(2,1,8,3,H);r(3,3,3,5,H)}else r(3,4,2,4,H);r(8,6,1,2,eye);if(pal.glasses)r(7,5,3,1,'#555');if(pal.long)r(2,6,3,7,H);if(pal.tail)r(2,5,2,6,H);if(pal.stache)r(8,8,3,1,H);if(pal.beard)r(6,8,3,2,H)}
+  if(pal.bun&&!pal.hat)r(4,-1,4,2,H);
+  if(pal.cap){r(2,0,8,3,pal.cap);if(dir==0)r(2,3,8,1,dk(pal.cap,.3));if(dir==2)r(0,2,3,1,dk(pal.cap,.3));if(dir==3)r(9,2,3,1,dk(pal.cap,.3))}
+  drawHat(r,pal.hat,dir);
+}
+function line2(r,x0,y0,x1,y1,c){const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0));for(let i=0;i<=n;i++)r(Math.round(x0+(x1-x0)*i/n),Math.round(y0+(y1-y0)*i/n),1,1,c)}
+function drawDog(x,y,fx,wt,mv,sit){
+  const p=TS/16,f=mv?Math.floor(wt*10)%2:0;
+  const ox=Math.round(x-8*p),oy=Math.round(y-10*p);
+  const r=(a,b,w,h,c)=>{const aa=fx<0?16-a-w:a;ctx.fillStyle=c;ctx.fillRect(ox+Math.round(aa*p),oy+Math.round(b*p),Math.ceil(w*p),Math.ceil(h*p))};
+  ctx.fillStyle='rgba(0,0,0,.2)';ctx.beginPath();ctx.ellipse(x,y-p*.8,7*p,1.8*p,0,0,7);ctx.fill();
+  const c='#9a5226',d='#6a3014',b='#c47a44';
+  if(sit){r(3,4,8,5,c);r(3,8,8,1,d);r(4,6,5,2,b);r(10,1,4,4,c);r(13,3,3,2,c);r(15,3,1,1,'#1a1a1a');r(10,2,2,4,d);r(12,2,1,1,'#1a1a1a');r(9,4,1,3,'#d83a3a');r(1,6,3,1,c);r(5,9,2,1,d);r(9,9,2,1,d);return}
+  r(0,4,2,1,c);r(1,5,1,1,c);
+  r(2,4,10,4,c);r(3,7,8,1,b);r(2,4,10,1,lt(c,.15));
+  r(3,8,2,2-(f?1:0),d);r(9,8,2,1+(f?1:0),d);r(5,8,1,1+(f?1:0),d);r(11,8,1,2-(f?1:0),d);
+  r(11,1,4,4,c);r(14,3,2,2,c);r(15,3,1,1,'#1a1a1a');r(11,2,2,5,d);r(13,2,1,1,'#1a1a1a');r(10,4,1,3,'#d83a3a');
+}
+
+/* ---------- portraits (32x32) ---------- */
+function portrait(g,pal,bg){
+  g.clearRect(0,0,32,32);R(g,0,0,32,32,bg||'#e8d4a8');
+  const H=pal.hair,sk=pal.skin;
+  if(pal.long)R(g,7,9,18,16,H);
+  if(pal.tail)R(g,23,11,3,11,H);
+  R(g,4,25,24,7,pal.shirt);R(g,3,27,26,5,pal.shirt);
+  if(pal.vest){R(g,3,25,7,7,pal.vest);R(g,22,25,7,7,pal.vest)}
+  if(pal.overall){R(g,9,27,14,5,pal.pants);R(g,10,25,2,3,pal.pants);R(g,20,25,2,3,pal.pants)}
+  if(pal.apron){R(g,9,27,14,5,pal.apron);if(pal.stripes){R(g,11,27,1,5,pal.stripes);R(g,20,27,1,5,pal.stripes)}}
+  if(pal.tie)R(g,15,25,2,7,pal.tie);
+  if(pal.chain){R(g,9,26,14,1,'#f0c040');R(g,14,27,4,3,'#f0c040')}
+  if(pal.bag)line(g,5,25,26,32,'#6a4a2a',2);
+  if(pal.badge)R(g,21,28,3,3,'#f0c040');
+  R(g,13,21,6,5,dk(sk,.12));
+  R(g,9,8,14,15,sk);R(g,10,23,12,1,sk);R(g,8,12,1,6,sk);R(g,23,12,1,6,sk);
+  R(g,7,13,2,3,dk(sk,.08));R(g,23,13,2,3,dk(sk,.08));
+  if(pal.bald){R(g,8,11,2,6,H);R(g,22,11,2,6,H);R(g,11,8,6,1,lt(sk,.3))}
+  else{R(g,8,5,16,5,H);R(g,8,9,2,5,H);R(g,22,9,2,5,H);R(g,10,9,4,1,H);if(!pal.cap&&!pal.hat)R(g,9,4,14,1,dk(H,.15))}
+  if(pal.bun&&!pal.hat)R(g,12,1,8,4,H);
+  R(g,11,11,4,1,dk(H,.25));R(g,17,11,4,1,dk(H,.25));
+  R(g,12,13,2,2,'#2a1a10');R(g,18,13,2,2,'#2a1a10');R(g,12,13,1,1,'#fff');R(g,18,13,1,1,'#fff');
+  if(pal.glasses){const c='#4a4a4a';R(g,10,12,6,1,c);R(g,10,15,6,1,c);R(g,10,12,1,4,c);R(g,15,12,1,4,c);R(g,16,12,6,1,c);R(g,16,15,6,1,c);R(g,16,12,1,4,c);R(g,21,12,1,4,c)}
+  R(g,15,15,2,3,dk(sk,.15));
+  if(pal.beard){R(g,9,18,14,5,H);R(g,10,23,12,2,H);R(g,14,19,4,1,'#8a3a2a')}
+  else if(pal.stache){R(g,11,18,10,2,H);R(g,10,19,2,2,H);R(g,20,19,2,2,H);R(g,14,20,4,1,'#8a3a2a')}
+  else{R(g,14,19,4,1,'#8a3a2a');R(g,10,17,2,1,'#f0a08c');R(g,20,17,2,1,'#f0a08c')}
+  if(pal.cap){R(g,8,3,16,6,pal.cap);R(g,6,8,20,2,dk(pal.cap,.3))}
+  const h=pal.hat;
+  if(h=='muetze'){R(g,7,3,18,6,'#1f2f5a');R(g,7,7,18,2,'#e8e8e8');R(g,6,9,20,2,'#101a30');R(g,14,4,4,3,'#f0c040')}
+  if(h=='detektiv'){R(g,7,3,18,7,'#8a6a3a');for(let y=3;y<10;y+=2)for(let x=7+(y%4?1:0);x<25;x+=3)R(g,x,y,1,1,'#5a3a1a');R(g,6,9,4,6,'#8a6a3a');R(g,22,9,4,6,'#8a6a3a')}
+  if(h=='stroh'){R(g,3,8,26,2,'#e8c860');R(g,9,3,14,6,'#e0b848');R(g,9,7,14,2,'#c83a3a')}
+  if(h=='wolle'){R(g,8,3,16,7,'#c83a3a');R(g,8,8,16,2,'#f4f4f4');R(g,14,0,4,3,'#f4f4f4')}
+}
+function dogPortrait(g){
+  R(g,0,0,32,32,'#e8d4a8');const c='#9a5226',d='#6a3014';
+  R(g,4,20,22,12,c);R(g,8,22,12,10,'#c47a44');
+  R(g,8,6,16,15,c);R(g,20,13,10,7,c);R(g,27,13,4,4,'#1a1a1a');R(g,8,6,5,16,d);R(g,22,6,2,14,d);R(g,5,9,4,14,d);
+  R(g,16,11,3,3,'#1a1a1a');R(g,16,11,1,1,'#fff');R(g,22,19,6,1,'#5a2010');R(g,8,21,14,2,'#d83a3a');R(g,14,23,3,3,'#f0c040');
+}
+const PORT={};
+function portraitCanvas(who){
+  const key=who+(who=='me'?JSON.stringify(S.look):who=='toni'?(npcPal('toni').stache?1:0):'');
+  if(PORT[key])return PORT[key];
+  return PORT[key]=mk(32,32,g=>{if(who=='kruemel')dogPortrait(g);else if(who=='me')portrait(g,playerPal(),'#c8d8e8');else portrait(g,npcPal(who))});
+}
+
+/* ---------- icons ---------- */
+const ICO={};
+function icon(k){return ICO[k]||(ICO[k]=mk(16,16,g=>drawIcon(g,k)))}
+function drawIcon(g,k){
+  switch(k){
+    case'buch':R(g,2,2,12,13,'#6a3a2a');R(g,3,3,10,11,'#8a4a32');R(g,12,2,2,13,'#4a2a1e');R(g,5,5,6,3,'#f6e6c4');R(g,6,6,4,1,'#8a4a32');R(g,3,13,10,1,'#f6e6c4');return;
+    case'hund':R(g,2,6,9,7,'#9a5226');R(g,9,6,6,4,'#9a5226');R(g,14,7,2,2,'#1a1a1a');R(g,3,5,3,8,'#6a3014');R(g,9,7,1,1,'#1a1a1a');R(g,4,12,7,1,'#d83a3a');R(g,10,11,4,1,'#5a2010');return;
+    case'uhr':circ(g,8,8,6.5,'#6a4a2a');circ(g,8,8,5.5,'#fff8e8');R(g,8,4,1,5,'#2a1a10');R(g,8,8,3,1,'#2a1a10');R(g,7,2,2,1,'#6a4a2a');return;
+    case'mehl':ell(g,8,11,6,3.5,'#e8e4dc');ell(g,8,10,4,3,'#fbfaf6');R(g,4,13,1,1,'#fff');R(g,12,8,1,1,'#fff');R(g,2,12,1,1,'#fff');return;
+    case'fuss':ell(g,8,5,4,4,'#8a6a4a');ell(g,8,12,3,3,'#8a6a4a');R(g,6,7,4,3,'#8a6a4a');for(let y=2;y<15;y+=2)for(let x=5;x<12;x+=2)R(g,x,y,1,1,'#c8a878');R(g,10,13,1,2,'#e8d4a8');return;
+    case'kruemel':[[3,5],[8,3],[12,6],[5,10],[10,11],[7,7],[13,12],[3,13]].forEach(([x,y],i)=>{R(g,x,y,2+(i%2),2,'#fffaf0');R(g,x,y+1,2,1,'#e0d4c0')});return;
+    case'beere':circ(g,8,9,5,'#a8c860');circ(g,7,8,3.5,'#c8e08a');for(let i=0;i<4;i++)R(g,5+i*2,6+i%2*5,1,1,'#7a9a40');R(g,6,6,2,1,'#f0ffe0');R(g,8,2,1,3,'#6a4a2a');return;
+    case'heber':R(g,3,3,7,7,'#c8ccd0');R(g,3,3,7,1,'#f0f4f8');R(g,8,9,2,6,'#6a4a2a');R(g,5,5,3,1,'#8a8e92');return;
+    case'aussage':R(g,1,2,14,9,'#fff8e8');R(g,1,2,14,1,'#c8b890');R(g,1,10,14,1,'#c8b890');R(g,4,11,3,3,'#fff8e8');R(g,4,13,1,1,'#c8b890');R(g,3,5,10,1,'#8a7a6a');R(g,3,7,7,1,'#8a7a6a');return;
+    case'bon':R(g,4,1,8,14,'#fbfbf4');for(let x=4;x<12;x+=2)R(g,x,14,1,1,'#c8c8c0');R(g,5,3,6,1,'#6a6a6a');R(g,5,5,4,1,'#9a9a9a');R(g,5,7,5,1,'#9a9a9a');R(g,5,10,6,1,'#2a2a2a');return;
+    case'sohle':R(g,4,1,8,14,'#8a3a2a');R(g,5,2,6,12,'#fff4dc');R(g,6,4,4,1,'#8a7a6a');R(g,6,6,4,1,'#8a7a6a');ell(g,8,11,2,2,'#8a6a4a');return;
+    case'zettel':R(g,2,3,12,10,'#f4ecd4');R(g,2,3,6,5,'#ece0c0');line(g,8,3,6,13,'#c8b890');R(g,4,6,7,1,'#6a5a8a');R(g,4,9,5,1,'#6a5a8a');R(g,9,11,3,1,'#6a5a8a');return;
+    case'zwerg':R(g,5,1,6,2,'#d83a3a');R(g,4,3,8,3,'#d83a3a');R(g,5,6,6,3,'#f0c8a0');R(g,5,8,6,3,'#f4f4f4');R(g,4,11,8,4,'#3a6ad8');R(g,6,6,1,1,'#2a1a10');R(g,9,6,1,1,'#2a1a10');return;
+    case'brief':R(g,1,4,14,9,'#f4ecd4');line(g,1,4,8,9,'#c8b890');line(g,15,4,8,9,'#c8b890');R(g,7,8,3,3,'#c83a3a');return;
+    case'rabe':circ(g,8,8,6.5,'#8a2a2a');circ(g,8,8,5,'#b83a3a');R(g,6,6,4,4,'#2a1a1a');R(g,10,7,2,1,'#e0b040');R(g,5,9,2,2,'#2a1a1a');R(g,7,10,2,2,'#e0b040');return;
+    case'brezel':line(g,3,12,8,4,'#b8743a',2);line(g,13,12,8,4,'#b8743a',2);line(g,3,12,13,8,'#b8743a',2);line(g,13,12,3,8,'#b8743a',2);R(g,6,7,1,1,'#fff');R(g,10,7,1,1,'#fff');return;
+    case'stern':R(g,7,1,2,4,'#f0b020');R(g,1,6,14,3,'#f0b020');R(g,4,9,8,2,'#f0b020');R(g,3,11,3,3,'#f0b020');R(g,10,11,3,3,'#f0b020');R(g,7,5,2,6,'#f0b020');R(g,7,3,1,2,'#ffe070');return;
+  }
+}
+
+/* ---------- world: tiles ---------- */
+const G={GRASS:0,COB:1,DIRT:2,WATER:3,SAND:4,BEET:5,WOOD:6,TILEF:7,WALL:8,VOID:9,MAT:10,STONE:11};
+const MAPS={};
+function newMap(id,w,h){return{id,w,h,g:new Uint8Array(w*h),sol:new Uint8Array(w*h),objs:[],doors:{},wall:[],lights:[],signs:[],layer:null}}
+const tkey=(x,y)=>x+','+y;
+function solidAt(m,x,y){x=Math.floor(x);y=Math.floor(y);if(x<0||y<0||x>=m.w||y>=m.h)return true;return m.sol[y*m.w+x]==1}
+function gAt(m,x,y){if(x<0||y<0||x>=m.w||y>=m.h)return-1;return m.g[y*m.w+x]}
+
+function drawTile(g,m,x,y){
+  const t=m.g[y*m.w+x],X=x*16,Y=y*16,h=(a,b)=>hash(x*7+a,y*13+b);
+  const nb=(dx,dy)=>gAt(m,x+dx,y+dy);
+  switch(t){
+    case G.GRASS:{R(g,X,Y,16,16,'#7ab24e');
+      for(let i=0;i<7;i++){const px=Math.floor(h(i,1)*16),py=Math.floor(h(i,2)*16);R(g,X+px,Y+py,1,2,h(i,3)<.5?'#5f9a3e':'#92c860')}
+      if(h(9,9)<.06){const c=['#f4f0e8','#f0d040','#e87aa8','#a8a8f0'][Math.floor(h(4,4)*4)];const px=2+Math.floor(h(5,5)*11),py=2+Math.floor(h(6,6)*11);R(g,X+px,Y+py,2,2,c);R(g,X+px,Y+py+2,1,1,'#4a8a2e')}
+      for(const[dx,dy]of[[0,-1],[0,1],[-1,0],[1,0]]){const n=nb(dx,dy);if(n==G.COB||n==G.DIRT){}}
+      break}
+    case G.COB:{R(g,X,Y,16,16,'#8e8474');
+      for(let r=0;r<4;r++){const off=(r+y)%2?4:0;for(let c=-1;c<3;c++){const sx=X+c*8+off,sy=Y+r*4;const v=hash(x*31+c+off,y*17+r);
+        R(g,Math.max(X,sx+1),sy+1,Math.min(7,X+16-(sx+1)),3,v<.33?'#b8ae9a':v<.66?'#aca28e':'#c4baa6');R(g,Math.max(X,sx+1),sy+1,Math.min(6,X+16-(sx+1)),1,'#d2c8b4')}}
+      break}
+    case G.DIRT:{R(g,X,Y,16,16,'#c89e66');for(let i=0;i<6;i++){const px=Math.floor(h(i,7)*15),py=Math.floor(h(i,8)*15);R(g,X+px,Y+py,2,1,h(i,9)<.5?'#b08a58':'#dab480')}
+      for(const[dx,dy,ax,ay,w,hh]of[[0,-1,0,0,16,1],[0,1,0,15,16,1],[-1,0,0,0,1,16],[1,0,15,0,1,16]]){if(nb(dx,dy)==G.GRASS)R(g,X+ax,Y+ay,w,hh,'#9aa65a')}
+      break}
+    case G.WATER:{R(g,X,Y,16,16,'#4f93cf');for(let i=0;i<3;i++){const px=Math.floor(h(i,11)*12),py=Math.floor(h(i,12)*14);R(g,X+px,Y+py,4,1,'#7ab4e4')}
+      if(nb(0,-1)!=G.WATER&&nb(0,-1)!=G.WOOD){R(g,X,Y,16,3,'#6a5a3a');R(g,X,Y+3,16,2,'#3f7fb8')}
+      if(nb(-1,0)!=G.WATER&&nb(-1,0)!=G.WOOD)R(g,X,Y,2,16,'#3f7fb8');if(nb(1,0)!=G.WATER&&nb(1,0)!=G.WOOD)R(g,X+14,Y,2,16,'#3f7fb8');if(nb(0,1)!=G.WATER)R(g,X,Y+14,16,2,'#8ab8e0');
+      break}
+    case G.SAND:{R(g,X,Y,16,16,'#ead49a');for(let i=0;i<5;i++)R(g,X+Math.floor(h(i,13)*15),Y+Math.floor(h(i,14)*15),1,1,'#c8b078');break}
+    case G.BEET:{R(g,X,Y,16,16,'#6a4a2e');for(let i=0;i<8;i++)R(g,X+Math.floor(h(i,15)*14),Y+Math.floor(h(i,16)*14),2,1,'#56391f');
+      for(let i=0;i<4;i++){const px=X+2+Math.floor(h(i,17)*11),py=Y+1+Math.floor(h(i,18)*11),c=['#e8404a','#f0c030','#c060d0','#f08030'][i];R(g,px,py+2,1,3,'#4a8a2e');R(g,px-1,py,3,2,c);R(g,px,py+1,1,1,'#fff4a0')}
+      R(g,X,Y+15,16,1,'#8a8278');break}
+    case G.WOOD:{R(g,X,Y,16,16,'#b98a52');for(let r=0;r<4;r++){R(g,X,Y+r*4+3,16,1,'#8a5f32');const o=Math.floor(h(r,19)*12);R(g,X+o,Y+r*4,1,3,'#9a6e3e')}R(g,X,Y,16,1,'#caa06a');break}
+    case G.TILEF:{for(let r=0;r<2;r++)for(let c=0;c<2;c++)R(g,X+c*8,Y+r*8,8,8,(r+c+x+y)%2?'#e8e4dc':'#c8c0b4');break}
+    case G.STONE:{R(g,X,Y,16,16,'#a8a098');for(let r=0;r<2;r++)for(let c=0;c<2;c++){R(g,X+c*8+1,Y+r*8+1,6,6,(r+c)%2?'#bab2a8':'#b2aa9e')}break}
+    case G.WALL:{const wc=m.wallC||'#e8d8b8';R(g,X,Y,16,16,wc);if(m.stripes)for(let i=0;i<16;i+=4)R(g,X+i,Y,1,16,dk(wc,.07));
+      if(y==1){R(g,X,Y+12,16,4,'#8a5a3a');R(g,X,Y+12,16,1,'#aa7a4a')}if(y==0)R(g,X,Y,16,2,dk(wc,.2));break}
+    case G.VOID:{R(g,X,Y,16,16,'#3a2a26');if(y>0&&gAt(m,x,y-1)!=G.VOID&&gAt(m,x,y-1)!=G.WALL)R(g,X,Y,16,3,'#5a3e32');break}
+    case G.MAT:{R(g,X,Y,16,16,'#3a2a26');R(g,X+1,Y,14,12,'#b84a3a');R(g,X+2,Y+1,12,10,'#d86a4a');for(let i=0;i<3;i++)R(g,X+3,Y+3+i*3,10,1,'#b84a3a');break}
+  }
+}
+function buildLayer(m){
+  m.layer=mk(m.w*16,m.h*16,g=>{for(let y=0;y<m.h;y++)for(let x=0;x<m.w;x++)drawTile(g,m,x,y);for(const w of m.wall)if(!w.if||w.if())wallItem(g,w)});
+}
+
+/* ---------- sprites ---------- */
+const SPR={};
+function spr(k,fn,w,h){return SPR[k]||(SPR[k]=mk(w,h,fn))}
+function treeSpr(v){return spr('tree'+v,g=>{
+  const cs=[['#3f7a34','#58a044','#78c05a'],['#35703a','#4e9448','#6ab45a'],['#4a7a2e','#66a03e','#88c056'],['#3f7a34','#58a044','#78c05a']][v];
+  ell(g,16,41,9,2.5,'rgba(0,0,0,.18)');R(g,13,28,6,14,'#6a4428');R(g,13,28,2,14,'#86583a');
+  ell(g,16,19,14,13,cs[0]);ell(g,14,16,11,10,cs[1]);ell(g,11,12,6,5,cs[2]);
+  for(let i=0;i<9;i++)R(g,5+Math.floor(hash(v,i)*22),8+Math.floor(hash(i,v+3)*20),2,2,cs[0]);
+  if(v==3)for(let i=0;i<8;i++)R(g,6+Math.floor(hash(i,31)*20),9+Math.floor(hash(33,i)*18),2,2,'#e03a2a');
+},32,44)}
+function firSpr(){return spr('fir',g=>{ell(g,14,45,8,2.5,'rgba(0,0,0,.18)');R(g,12,38,4,8,'#5a3a24');
+  for(let i=0;i<4;i++){const y=4+i*9,w=5+i*3.2;for(let r=0;r<12;r++){const ww=Math.round(w*(r/12)+2);R(g,14-ww,y+r,ww*2,1,r%12<2?'#3a7a4a':i%2?'#2a5e3a':'#2f6a40')}}R(g,13,1,2,4,'#3a7a4a')},28,48)}
+function bushSpr(berry){return spr('bush'+berry,g=>{ell(g,9,16,7,2,'rgba(0,0,0,.18)');ell(g,9,10,8,7,'#3f7a34');ell(g,8,8,6,5,'#58a044');ell(g,6,6,3,2,'#78c05a');
+  if(berry)for(let i=0;i<7;i++)R(g,3+Math.floor(hash(i,51)*12),5+Math.floor(hash(52,i)*9),2,2,'#c8e08a')},18,18)}
+function fenceSpr(mask){return spr('fence'+mask,g=>{const c='#e8e0d0',d='#a89c88';
+  if(mask&1)R(g,0,6,8,2,c),R(g,0,11,8,2,c);if(mask&2)R(g,8,6,8,2,c),R(g,8,11,8,2,c);
+  if(mask&4)R(g,7,0,2,6,c);if(mask&8)R(g,7,14,2,6,c);
+  R(g,6,3,4,13,c);R(g,6,3,4,1,'#fff');R(g,9,4,1,12,d);R(g,6,15,4,1,d)},16,20)}
+function propSpr(k){return spr('p_'+k,g=>{
+  switch(k){
+    case'lamp':R(g,7,10,2,30,'#2a2a2a');R(g,5,38,6,2,'#2a2a2a');R(g,4,2,8,9,'#2a2a2a');R(g,5,3,6,6,'#f8e8a0');R(g,3,1,10,2,'#1a1a1a');R(g,7,0,2,1,'#1a1a1a');break;
+    case'bench':R(g,1,4,30,3,'#9a6230');R(g,1,4,30,1,'#b8783a');R(g,1,9,30,4,'#9a6230');R(g,1,9,30,1,'#c88a4a');R(g,3,13,2,4,'#3a3a3a');R(g,27,13,2,4,'#3a3a3a');R(g,3,7,2,2,'#3a3a3a');R(g,27,7,2,2,'#3a3a3a');break;
+    case'well':ell(g,16,24,15,8,'#7a7268');ell(g,16,22,14,7,'#a8a098');ell(g,16,22,11,5,'#4f93cf');ell(g,15,21,6,2,'#7ab4e4');R(g,14,6,4,16,'#a8a098');R(g,13,5,6,2,'#c8c0b4');R(g,15,7,2,1,'#4f93cf');R(g,17,9,1,6,'#7ab4e4');R(g,14,4,4,1,'#8a8278');break;
+    case'maibaum':{R(g,7,6,3,90,'#e8e0d0');for(let y=10;y<96;y+=8)R(g,7,y,3,4,'#3a6ad8');ell(g,8,5,6,5,'#3f7a34');ell(g,8,4,4,3,'#58a044');ell(g,8,26,8,3,'#2f6a40');ell(g,8,25,6,2,'#4e9448');
+      const rc=['#e83a3a','#f0c030','#3a8ad8','#e87ab8','#5cc14a'];rc.forEach((c,i)=>line(g,2+i*3,27,1+i*3.5,40+i*3,c));R(g,4,94,9,2,'#8a8278');break}
+    case'fass':ell(g,8,15,7,2,'rgba(0,0,0,.2)');R(g,2,3,12,12,'#8a5a2a');R(g,1,5,14,8,'#9a6a3a');R(g,1,5,14,1,'#5a5a5a');R(g,1,11,14,1,'#5a5a5a');ell(g,8,3,6,2,'#b8884a');ell(g,8,3,4,1,'#8a5a2a');break;
+    case'kiste':R(g,1,4,14,12,'#b8884a');R(g,1,4,14,2,'#d0a060');R(g,1,4,1,12,'#8a5a2a');R(g,14,4,1,12,'#8a5a2a');line(g,2,6,13,15,'#8a5a2a');R(g,1,15,14,1,'#6a4020');break;
+    case'zwerg':ell(g,6,15,4,1.5,'rgba(0,0,0,.2)');R(g,4,0,3,2,'#d83a3a');R(g,3,2,5,3,'#d83a3a');R(g,3,5,5,3,'#f0c8a0');R(g,3,7,5,3,'#f4f4f4');R(g,2,9,7,5,'#3a6ad8');R(g,4,6,1,1,'#2a1a10');R(g,6,6,1,1,'#2a1a10');R(g,3,14,2,1,'#5a3a1a');R(g,6,14,2,1,'#5a3a1a');break;
+    case'falle':R(g,5,6,1,10,'#6a4a2a');R(g,2,1,7,6,'#c8e0e8');R(g,2,4,7,3,'#e8b840');R(g,3,1,5,1,'#8aa0a8');R(g,5,5,1,1,'#2a2a2a');break;
+    case'post':R(g,5,6,2,12,'#3a3a3a');R(g,1,0,12,8,'#e8b820');R(g,1,0,12,2,'#f8d040');R(g,3,3,8,1,'#2a2a2a');R(g,5,5,4,1,'#2a2a2a');break;
+    case'schaukel':R(g,1,2,2,30,'#8a5a2a');R(g,29,2,2,30,'#8a5a2a');R(g,0,1,32,3,'#6a4020');R(g,9,4,1,16,'#6a6a6a');R(g,15,4,1,16,'#6a6a6a');R(g,8,20,9,2,'#c83a3a');R(g,20,4,1,14,'#6a6a6a');R(g,25,4,1,14,'#6a6a6a');R(g,19,18,8,2,'#3a8ad8');break;
+    case'rutsche':R(g,2,4,3,20,'#8a8a8a');R(g,2,4,8,2,'#6a6a6a');for(let i=0;i<5;i++)R(g,2,7+i*4,8,1,'#6a6a6a');R(g,8,4,3,20,'#8a8a8a');line(g,11,6,28,26,'#e8402a',4);line(g,11,5,28,25,'#f07a5a');break;
+    case'tafel':R(g,0,6,48,4,'#f8f4ec');R(g,0,10,48,6,'#e8e0d0');for(let x=0;x<48;x+=4)R(g,x,10,2,6,'#c83a3a');R(g,2,16,2,6,'#6a4020');R(g,44,16,2,6,'#6a4020');
+      ell(g,8,5,5,3,'#6a3a1a');ell(g,8,4,5,2,'#8a5a2a');R(g,5,2,6,1,'#f8f0e0');ell(g,22,5,5,3,'#e8b0c0');ell(g,22,4,4,2,'#f8d0dc');R(g,21,1,2,2,'#c83a3a');ell(g,38,5,5,3,'#f0c860');ell(g,38,4,5,2,'#f8e090');R(g,36,3,1,1,'#c83a3a');R(g,40,3,1,1,'#c83a3a');break;
+    case'kuebel':R(g,3,9,10,7,'#b8683a');R(g,2,8,12,2,'#d0804a');ell(g,8,6,6,4,'#4e9448');[[4,4],[8,2],[11,5],[6,7]].forEach(([x,y],i)=>R(g,x,y,2,2,['#e83a5a','#f0c030','#e87ab8','#fff'][i]));break;
+    case'schilf':for(let i=0;i<6;i++){const x=2+i*2.4;line(g,x,16,x+(i%2?1:-1),4+i%3*2,'#6a8a3a');R(g,Math.round(x+(i%2?1:-1)),3+i%3*2,2,4,'#7a5a3a')}break;
+    case'schild':R(g,7,8,2,10,'#6a4020');R(g,0,0,16,9,'#8a5a2a');R(g,1,1,14,7,'#b8884a');break;
+    case'grab':break;
+  }
+},{lamp:[16,40],bench:[32,17],well:[32,32],maibaum:[16,100],fass:[16,16],kiste:[16,16],zwerg:[11,16],falle:[11,16],post:[14,18],schaukel:[32,32],rutsche:[32,28],tafel:[48,22],kuebel:[16,16],schilf:[16,16],schild:[16,18]}[k][0],{lamp:[16,40],bench:[32,17],well:[32,32],maibaum:[16,100],fass:[16,16],kiste:[16,16],zwerg:[11,16],falle:[11,16],post:[14,18],schaukel:[32,32],rutsche:[32,28],tafel:[48,22],kuebel:[16,16],schilf:[16,16],schild:[16,18]}[k][1])}
+
+/* ---------- buildings ---------- */
+function bldSprite(b){
+  const W=b.w*16,fh=(b.fh||2)*16+8,up=b.up||0,H=b.h*16+up;b.wins=[];
+  return mk(W,H,g=>{
+    const fy=H-fh,rt=up+(b.chim?0:0),rb=fy+3,rc=b.roof;
+    if(b.chim){const cx=b.chim*16;R(g,cx,rt-6,9,14,'#8a5a4a');R(g,cx-1,rt-8,11,3,'#6a4a3a')}
+    for(let y=rt;y<rb;y++){const s=(y-rt)/(rb-rt);R(g,0,y,W,1,mix(lt(rc,.12),dk(rc,.22),s))}
+    for(let y=rt+4;y<rb;y+=4){R(g,0,y,W,1,dk(rc,.3));for(let x=((y>>2)%2)*5;x<W;x+=10)R(g,x,y-3,1,3,dk(rc,.18))}
+    R(g,0,rt,W,2,dk(rc,.4));R(g,0,rt,1,rb-rt,dk(rc,.45));R(g,W-1,rt,1,rb-rt,dk(rc,.45));
+    if(b.chim){const cx=b.chim*16;R(g,cx,rt,9,6,'#8a5a4a');R(g,cx,rt,9,1,'#aa7a6a')}
+    if(b.gaube)for(const gx of b.gaube){const x=gx*16+2;R(g,x-1,rt+8,14,4,dk(rc,.35));R(g,x,rt+11,12,10,b.wall);R(g,x+2,rt+13,8,7,'#4a6a8a');R(g,x+2,rt+13,8,1,'#8ab0d0');R(g,x+5,rt+13,1,7,'#fff')}
+    R(g,1,fy,W-2,fh,b.wall);R(g,1,fy,W-2,3,dk(b.wall,.35));R(g,1,H-4,W-2,4,'#8a8278');R(g,1,H-4,W-2,1,'#a8a098');
+    const beam='#5a3a22';
+    if(b.fach){R(g,1,fy+3,W-2,2,beam);R(g,1,H-6,W-2,2,beam);const mid=fh>40?fy+Math.floor(fh/2):0;if(mid)R(g,1,mid,W-2,2,beam);
+      for(let x=1;x<W;x+=16){R(g,x,fy+3,2,fh-7,beam)}R(g,W-3,fy+3,2,fh-7,beam);
+      for(let x=1;x+16<=W;x+=32){if(Math.abs(x+8-(b.door-b.x)*16-8)<14)continue;line(g,x+2,H-7,x+14,fy+6,beam,2)}}
+    const rows=fh>40?2:1;
+    for(let c=0;c<b.w;c++){
+      if(b.x+c==b.door)continue;if(b.nowin&&b.nowin.includes(c))continue;
+      for(let r=0;r<rows;r++){
+        const wx=c*16+3,wy=rows==1?fy+8:fy+7+r*22;if(r==rows-1&&rows==2&&Math.abs(c-(b.door-b.x))<1)continue;
+        R(g,wx-1,wy-1,12,12,'#f4f0e8');R(g,wx,wy,10,10,'#4a6a8a');R(g,wx,wy,10,2,'#8ab0d0');R(g,wx+1,wy+2,2,3,'#a8c8e0');R(g,wx+4,wy,1,10,'#f4f0e8');R(g,wx,wy+4,10,1,'#f4f0e8');
+        if(b.shut){R(g,wx-4,wy-1,3,12,b.shut);R(g,wx+11,wy-1,3,12,b.shut)}
+        if(b.flowers!==0){R(g,wx-1,wy+10,12,3,'#8a5a2a');for(let i=0;i<5;i++)R(g,wx+i*2,wy+8,2,2,['#e83a4a','#f0c030','#e83a4a','#e87ab8','#e83a4a'][i])}
+        b.wins.push({x:b.x*16+wx,y:b.y*16-up+wy,w:10,h:10});
+      }
+    }
+    const dx=(b.door-b.x)*16+2,dh=b.dh||20,dw=b.dw||12;
+    R(g,dx-2,H-dh-4,dw+4,dh+2,dk(b.wall,.45));R(g,dx,H-dh-2,dw,dh,b.doorC||'#6a4022');for(let i=2;i<dw;i+=3)R(g,dx+i,H-dh-2,1,dh,dk(b.doorC||'#6a4022',.25));R(g,dx+dw-3,H-dh/2-2,2,2,'#e0c040');
+    R(g,dx-3,H-4,dw+6,3,'#b8b0a4');
+    if(b.board){const bx=dx+dw/2-b.board*8,by=fh>40?fy+fh-dh-17:fy-9;R(g,bx,by,b.board*16,9,b.boardC||'#3a2a1e');R(g,bx+1,by+1,b.board*16-2,7,b.boardC?lt(b.boardC,.15):'#5a3e2a');b.signAt={x:(b.x*16+bx+b.board*8)/16,y:(b.y*16-up+by+5)/16}}
+    if(b.icon){const ix=dx+dw+3,iy=H-dh-6;R(g,ix,iy,8,1,'#2a2a2a');R(g,ix+7,iy,1,3,'#2a2a2a');const ic=icon(b.icon);g.drawImage(ic,ix-1,iy+2,11,11)}
+    if(b.blue){R(g,1,fy+3,W-2,3,'#2f4f7f');R(g,1,fy+6,W-2,1,'#c8d0e0')}
+  });
+}
+function churchSprite(b){
+  const W=b.w*16,up=64,H=b.h*16+up;b.wins=[];
+  return mk(W,H,g=>{
+    const fy=H-56,rc='#5a6478';
+    for(let y=up;y<fy+3;y++){const s=(y-up)/(fy+3-up);R(g,4,y,W-8,1,mix(lt(rc,.1),dk(rc,.25),s))}
+    for(let y=up+4;y<fy;y+=4)R(g,4,y,W-8,1,dk(rc,.3));
+    R(g,4,fy,W-8,56,'#e8dcc4');R(g,4,fy,W-8,3,'#a89880');R(g,4,H-4,W-8,4,'#8a8278');
+    for(const cx of[16,W-26]){R(g,cx,fy+14,10,22,'#4a5a8a');ell(g,cx+5,fy+14,5,5,'#4a5a8a');R(g,cx+4,fy+10,2,26,'#e8dcc4');R(g,cx,fy+22,10,1,'#e8dcc4');b.wins.push({x:b.x*16+cx,y:b.y*16-up+fy+12,w:10,h:24})}
+    const tx=W/2-22,tw=44;
+    R(g,tx,20,tw,H-20,'#f0e4cc');R(g,tx,20,2,H-20,'#c8b89c');R(g,tx+tw-2,20,2,H-20,'#c8b89c');
+    for(let y=0;y<24;y++){const w=Math.round((tw+6)*(y/24));R(g,W/2-w/2,y-2+2,w,1,y<2?'#3a4a5a':'#4a5a70')}
+    R(g,W/2-1,-2+0,2,6,'#e0c040');R(g,W/2-3,1,6,2,'#e0c040');
+    circ(g,W/2,40,9,'#3a2a1e');circ(g,W/2,40,8,'#f8f4ea');R(g,W/2,34,1,6,'#2a1a10');R(g,W/2,40,4,1,'#2a1a10');
+    R(g,W/2-6,56,12,14,'#3a3a4a');ell(g,W/2,56,6,5,'#3a3a4a');R(g,W/2-4,58,8,10,'#1a1a2a');R(g,W/2-3,60,6,8,'#8a6a2a');
+    R(g,W/2-12,H-30,24,28,'#8a7a64');ell(g,W/2,H-30,12,8,'#8a7a64');R(g,W/2-10,H-28,20,26,'#5a3a22');ell(g,W/2,H-28,10,6,'#5a3a22');R(g,W/2,H-34,1,32,'#3a2412');R(g,W/2-5,H-16,2,2,'#e0c040');R(g,W/2+3,H-16,2,2,'#e0c040');
+    R(g,W/2-16,H-4,32,3,'#b8b0a4');
+  });
+}
+
+/* ---------- interiors: furniture ---------- */
+function furnSprite(f){
+  const W=f.w*16,ex=f.ex||0,H=f.h*16+ex;
+  return mk(W,H,g=>{
+    switch(f.k){
+      case'theke':case'tresen':case'vitrine':{R(g,0,ex+2,W,8,'#c8986a');R(g,0,ex+2,W,1,'#e0b888');R(g,0,ex+10,W,H-ex-10,'#7a4a2a');for(let x=4;x<W;x+=16)R(g,x,ex+13,10,H-ex-16,'#8a5a36');R(g,0,H-2,W,2,'#4a2a1a');
+        if(f.k=='tresen'){for(let i=0;i<3;i++){R(g,8+i*9,0,3,ex+4,'#e0c040');R(g,7+i*9,0,5,2,'#c8a030')}R(g,W-18,ex-2,5,6,'#d8e8f0');R(g,W-10,ex-2,5,6,'#d8e8f0')}
+        if(f.k=='vitrine'){R(g,2,ex-6,W-4,10,'rgba(200,230,240,.55)');R(g,2,ex-6,W-4,1,'#fff');for(let i=0;i<W/10-1;i++){R(g,5+i*10,ex,7,3,i%2?'#c8584a':'#d88a6a');R(g,6+i*10,ex,5,1,'#e8a88a')}}
+        if(f.items=='brot'){for(let i=0;i<W/12;i++){ell(g,6+i*12,ex+4,5,3,'#c8843a');R(g,4+i*12,ex+3,4,1,'#e8b060')}}
+        if(f.items=='kuchen'){for(let i=0;i<W/16;i++){ell(g,8+i*16,ex+4,6,3,['#6a3a1a','#f0c860','#e8b0c0'][i%3]);R(g,5+i*16,ex+1,6,1,'#fff8e8')}}
+        break}
+      case'desk':R(g,0,ex+2,W,9,'#8a5a36');R(g,0,ex+2,W,1,'#aa7a4a');R(g,2,ex+11,4,H-ex-11,'#6a4020');R(g,W-6,ex+11,4,H-ex-11,'#6a4020');R(g,6,ex+11,W-12,6,'#7a4a2a');
+        R(g,4,ex-1,9,7,'#f8f4ec');R(g,5,ex+1,6,1,'#8a8a8a');R(g,5,ex+3,5,1,'#8a8a8a');R(g,W-10,ex-6,2,9,'#2a2a2a');R(g,W-13,ex-8,8,3,'#3a8a3a');R(g,16,ex,6,3,'#2a2a2a');break;
+      case'tisch':R(g,0,ex+2,W,H-ex-8,'#a8784a');R(g,0,ex+2,W,1,'#c8986a');R(g,2,H-6,3,6,'#6a4020');R(g,W-5,H-6,3,6,'#6a4020');if(f.cloth){R(g,2,ex+3,W-4,H-ex-12,f.cloth);for(let x=2;x<W-2;x+=4)R(g,x,ex+3,2,2,'#fff')}break;
+      case'rund':ell(g,W/2,H/2+2,W/2-1,H/2-4,'#6a4020');ell(g,W/2,H/2,W/2-1,H/2-5,'#a8784a');ell(g,W/2,H/2-1,W/2-4,H/2-8,'#b8885a');R(g,W/2-9,H/2-4,18,7,'#f4ecd4');R(g,W/2-8,H/2-3,16,5,'#2a2a2a');R(g,W/2-3,H/2+8,2,6,'#d8e8f0');R(g,W/2+4,H/2+6,2,6,'#d8e8f0');break;
+      case'bett':R(g,0,ex,W,H-ex,'#6a4020');R(g,1,ex+1,W-2,H-ex-3,'#f4f0e8');R(g,2,ex+2,W-4,8,'#fff');R(g,1,ex+12,W-2,H-ex-15,f.col||'#3a6aa8');for(let y=ex+14;y<H-4;y+=4)R(g,1,y,W-2,1,dk(f.col||'#3a6aa8',.2));break;
+      case'schrank':R(g,0,0,W,H,'#6a6e78');R(g,1,1,W-2,H-2,'#8a8e98');for(let y=4;y<H-4;y+=10){R(g,2,y,W-4,8,'#9a9ea8');R(g,W/2-2,y+3,4,1,'#3a3a3a')}break;
+      case'regal':R(g,0,0,W,H,'#6a4020');R(g,1,1,W-2,H-2,'#4a2a18');for(let s=0;s<3;s++){const y=3+s*9;R(g,1,y+7,W-2,2,'#8a5a36');for(let x=2;x<W-2;x+=3)R(g,x,y+1+(x%2),2,6-(x%2),['#c83a3a','#3a6ad8','#e8c040','#3a8a4a','#8a4ac8'][(x+s)%5])}break;
+      case'pflanze':R(g,4,H-8,8,8,'#b8683a');R(g,3,H-9,10,2,'#d0804a');ell(g,8,H-15,7,7,'#3f7a34');ell(g,6,H-18,4,4,'#58a044');ell(g,11,H-13,3,3,'#58a044');break;
+      case'lampe':R(g,7,6,2,H-8,'#3a3a3a');R(g,4,H-3,8,3,'#3a3a3a');R(g,2,0,12,8,'#f0d890');R(g,3,1,10,1,'#fff4c0');break;
+      case'kaffee':R(g,0,ex+4,W,H-ex-4,'#8a5a36');R(g,0,ex+4,W,1,'#aa7a4a');R(g,3,ex-6,10,11,'#2a2a2a');R(g,4,ex-5,8,3,'#5a5a5a');R(g,6,ex+1,4,3,'#f4f4f4');R(g,7,ex+1,2,1,'#6a3a1a');break;
+      case'korb':ell(g,W/2,H/2+2,W/2-1,H/2-3,'#a8783a');ell(g,W/2,H/2+1,W/2-3,H/2-5,'#c84a4a');ell(g,W/2,H/2,W/2-5,H/2-6,'#d86a6a');break;
+      case'teppich':R(g,0,2,W,H-4,'#8a3a3a');R(g,2,4,W-4,H-8,'#b85a4a');for(let x=4;x<W-4;x+=6)for(let y=6;y<H-6;y+=6)R(g,x,y,2,2,'#e8c060');R(g,0,2,W,1,'#e8c060');R(g,0,H-3,W,1,'#e8c060');break;
+      case'fass':R(g,2,ex+2,W-4,H-ex-3,'#8a5a2a');R(g,1,ex+5,W-2,H-ex-9,'#9a6a3a');R(g,1,ex+5,W-2,1,'#5a5a5a');R(g,1,H-6,W-2,1,'#5a5a5a');ell(g,W/2,ex+2,W/2-2,2,'#b8884a');break;
+      case'herd':R(g,0,ex,W,H-ex,'#3a3a3a');R(g,1,ex+1,W-2,6,'#5a5a5a');circ(g,5,ex+4,2.5,'#2a2a2a');circ(g,11,ex+4,2.5,'#2a2a2a');R(g,2,ex+10,W-4,H-ex-12,'#2a2a2a');R(g,3,ex+11,W-6,2,'#6a6a6a');break;
+      case'werkbank':R(g,0,ex+2,W,8,'#a8784a');R(g,0,ex+2,W,1,'#c8986a');R(g,2,ex+10,3,H-ex-10,'#6a4020');R(g,W-5,ex+10,3,H-ex-10,'#6a4020');R(g,4,ex-2,8,5,'#3a2a1a');R(g,5,ex-4,6,2,'#3a2a1a');R(g,18,ex,6,3,'#8a8a8a');R(g,24,ex,2,4,'#6a4020');R(g,28,ex-1,4,4,'#c83a3a');break;
+      case'sofa':R(g,0,ex,W,H-ex,f.col||'#6a8a5a');R(g,0,ex,W,6,dk(f.col||'#6a8a5a',.2));R(g,0,ex,3,H-ex,dk(f.col||'#6a8a5a',.25));R(g,W-3,ex,3,H-ex,dk(f.col||'#6a8a5a',.25));break;
+      case'stuhl':R(g,3,0,10,8,'#8a5a36');R(g,3,8,10,4,'#aa7a4a');R(g,3,12,2,4,'#6a4020');R(g,11,12,2,4,'#6a4020');break;
+      case'flagge':R(g,7,0,2,H,'#8a8a8a');R(g,9,2,7,4,'#2a2a2a');R(g,9,6,7,4,'#c83a3a');R(g,9,10,7,4,'#e8c040');break;
+      case'ofen':R(g,0,ex,W,H-ex,'#a86a4a');for(let y=ex+2;y<H;y+=4)for(let x=(y/4%2)*4;x<W;x+=8)R(g,x,y,7,3,'#b87a5a');R(g,6,ex+6,W-12,10,'#2a1a14');ell(g,W/2,ex+11,W/2-8,4,'#e8702a');R(g,6,ex+6,W-12,2,'#5a3a2a');break;
+    }
+  });
+}
+function wallItem(g,w){
+  const X=w.x*16,Y=w.y*16,W=(w.w||1)*16;
+  switch(w.k){
+    case'fenster':R(g,X+2,Y+2,W-4,20,'#f4f0e8');R(g,X+4,Y+4,W-8,16,'#8ac0e8');R(g,X+4,Y+4,W-8,4,'#b8dcf4');R(g,X+W/2-1,Y+4,2,16,'#f4f0e8');R(g,X+4,Y+11,W-8,2,'#f4f0e8');R(g,X,Y+22,W,3,'#c8986a');
+      if(w.curtain){R(g,X+1,Y+1,5,22,w.curtain);R(g,X+W-6,Y+1,5,22,w.curtain)}break;
+    case'pinn':R(g,X,Y+2,W,20,'#6a4020');R(g,X+2,Y+4,W-4,16,'#c89a5a');
+      [[4,6,'#f8f4e8'],[14,5,'#f8e878'],[26,7,'#f8f4e8'],[36,6,'#a8d8f0'],[9,13,'#f8c8c8'],[30,13,'#f8f4e8']].forEach(([x,y,c])=>{if(x<W-8){R(g,X+x,Y+y,8,7,c);R(g,X+x+3,Y+y,2,1,'#c83a3a')}});
+      if(W>=40){line(g,X+8,Y+9,X+30,Y+16,'#c83a3a');line(g,X+18,Y+8,X+34,Y+16,'#c83a3a')}break;
+    case'bild':R(g,X+2,Y+4,12,10,'#c8a040');R(g,X+3,Y+5,10,8,'#8ac0e8');R(g,X+3,Y+10,10,3,'#5a9a3a');R(g,X+6,Y+7,3,4,'#e8dcc4');R(g,X+6,Y+6,3,1,'#c83a3a');break;
+    case'portrait':R(g,X+2,Y+2,12,14,'#c8a040');R(g,X+3,Y+3,10,12,'#5a6a8a');ell(g,X+8,Y+8,3,3,'#f0c0a0');R(g,X+5,Y+11,6,4,'#2a3a5a');R(g,X+6,Y+12,4,1,'#f0c040');break;
+    case'uhr':R(g,X+4,Y+1,8,4,'#6a4020');R(g,X+3,Y+4,10,10,'#8a5a36');circ(g,X+8,Y+9,3.5,'#f8f4e8');R(g,X+8,Y+7,1,3,'#2a1a10');R(g,X+7,Y+14,2,6,'#c8a040');R(g,X+6,Y+19,4,3,'#c8a040');R(g,X+7,Y+2,2,2,'#e8e0c0');break;
+    case'brotregal':R(g,X,Y+1,W,22,'#6a4020');for(let s=0;s<3;s++){R(g,X+1,Y+8+s*7,W-2,1,'#8a5a36');for(let x=2;x<W-6;x+=8)ell(g,X+x+3,Y+5+s*7,3.5,2.5,['#c8843a','#a8642a','#d89a4a'][(x/8+s)%3|0])}break;
+    case'schuhregal':R(g,X,Y+1,W,22,'#6a4020');for(let s=0;s<3;s++){R(g,X+1,Y+8+s*7,W-2,1,'#8a5a36');for(let x=2;x<W-6;x+=7){R(g,X+x,Y+4+s*7,6,3,['#3a2a1a','#8a3a2a','#2a2a4a','#6a4a2a'][(x/7+s)%4|0]);R(g,X+x+4,Y+2+s*7,2,2,'#3a2a1a')}}break;
+    case'wurst':R(g,X,Y+3,W,1,'#6a4020');for(let x=3;x<W-2;x+=5){R(g,X+x,Y+4,1,2,'#8a8a8a');R(g,X+x-1,Y+6,3,9+(x%3)*2,x%2?'#a84a3a':'#c86a4a')}break;
+    case'tuer':R(g,X+2,Y+1,12,23,'#4a3a3a');R(g,X+3,Y+2,10,22,'#6a5a5a');R(g,X+3,Y+8,10,1,'#4a3a3a');R(g,X+3,Y+16,10,1,'#4a3a3a');R(g,X+10,Y+12,2,2,'#c8c8c8');R(g,X+9,Y+5,4,2,'#c8c8c8');break;
+    case'geweih':R(g,X+5,Y+8,6,5,'#8a5a36');line(g,X+5,Y+8,X+1,Y+2,'#e8dcc0');line(g,X+10,Y+8,X+14,Y+2,'#e8dcc0');R(g,X+2,Y+4,2,1,'#e8dcc0');R(g,X+12,Y+4,2,1,'#e8dcc0');break;
+    case'wappen':R(g,X+3,Y+2,10,10,'#e8c040');R(g,X+4,Y+3,8,8,'#3a6ad8');R(g,X+5,Y+11,6,2,'#3a6ad8');R(g,X+7,Y+5,2,5,'#fff');R(g,X+5,Y+6,6,2,'#fff');break;
+    case'regalwand':R(g,X,Y+1,W,22,'#6a4020');for(let s=0;s<3;s++){R(g,X+1,Y+8+s*7,W-2,1,'#8a5a36');for(let x=2;x<W-2;x+=3)R(g,X+x,Y+3+s*7+(x%2),2,5-(x%2),['#c83a3a','#3a6ad8','#e8c040','#3a8a4a','#e8e0d0'][(x+s)%5])}break;
+  }
+}
+
+/* ---------- the village ---------- */
+const BLD=[
+  {id:'wache',x:3,y:12,w:7,h:7,wall:'#eef0f4',roof:'#3f5f8f',door:6,to:'wache',fh:3,board:2,sign:'POLIZEI',boardC:'#2f4f7f',blue:1,shut:'#3f5f8f',chim:5},
+  {id:'baecker',x:11,y:13,w:6,h:6,wall:'#f6e6c0',roof:'#b5432f',fach:1,door:13,to:'baecker',icon:'brezel',board:2,sign:'Bäckerei',chim:4,gaube:[1]},
+  {id:'kirche',x:20,y:5,w:8,h:11,church:1,door:23,door2:24,locked:'Die Kirchentür ist abgeschlossen. Am Aushang steht: „Pfarrer Benedikt ist auf Pilgerreise.“'},
+  {id:'rathaus',x:31,y:12,w:6,h:7,wall:'#f0dcc0',roof:'#7a3a2a',fach:1,door:33,to:'rathaus',fh:3,board:2,sign:'Rathaus',gaube:[1,4]},
+  {id:'wirt',x:38,y:12,w:8,h:7,wall:'#f4ecd8',roof:'#8a3a2a',fach:1,door:41,to:'wirt',fh:3,board:3,sign:'Zum Goldenen Ochsen',shut:'#3f6e3a',chim:6},
+  {id:'marlene',x:3,y:24,w:6,h:7,wall:'#f4d8dc',roof:'#b5532f',door:5,to:'marlene',shut:'#8a5aa8',chim:1},
+  {id:'egon',x:13,y:24,w:6,h:7,wall:'#dcd8c8',roof:'#5a5a5a',door:15,locked:'Egon lässt niemanden ins Haus. Am Türschild steht: „Privat!“',shut:'#5a7a4a'},
+  {id:'schuster',x:26,y:24,w:5,h:7,wall:'#e8e0c8',roof:'#6a4a3a',fach:1,door:28,to:'schuster',icon:'sohle',board:2,sign:'Schuhe',gaube:[2]},
+  {id:'metzger',x:32,y:24,w:6,h:7,wall:'#f8f4f0',roof:'#a83a3a',door:34,to:'metzger',board:2,sign:'Metzgerei',boardC:'#8a2a2a',shut:'#a83a3a'},
+  {id:'brandt',x:40,y:24,w:6,h:7,wall:'#d8e8d0',roof:'#4a6a8a',door:42,locked:'Bei Familie Brandt ist gerade niemand da.',shut:'#4a6a8a',chim:4}
+];
+const BLDBY={};BLD.forEach(b=>{BLDBY[b.id]=b;if(b.to)BLDBY['to_'+b.to]=b});
+const DORF_W=48,DORF_H=44;
+function genDorf(){
+  const W=DORF_W,H=DORF_H,m=newMap('dorf',W,H);MAPS.dorf=m;
+  const set=(x,y,t)=>{if(x>=0&&y>=0&&x<W&&y<H)m.g[y*W+x]=t};
+  const rect=(x0,y0,x1,y1,t)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)set(x,y,t)};
+  const sol=(x,y,v=1)=>{if(x>=0&&y>=0&&x<W&&y<H)m.sol[y*W+x]=v};
+  const add=(k,x,y,o)=>{const s=propSpr(k);m.objs.push(Object.assign({spr:s,px:x*16,py:(y+1)*16-s.height,sy:y+1},o||{}))};
+  // ground
+  rect(2,20,45,21,G.COB);rect(17,16,30,23,G.COB);rect(23,22,24,35,G.COB);rect(2,34,45,35,G.DIRT);
+  rect(37,9,37,19,G.DIRT);rect(39,7,44,10,G.DIRT);rect(38,9,38,9,G.DIRT);rect(23,36,24,38,G.DIRT);
+  // pond, playground, beds
+  for(let y=34;y<H;y++)for(let x=0;x<20;x++){const dx=(x+.5-9.5)/6.6,dy=(y+.5-39.5)/2.8;if(dx*dx+dy*dy<=1){set(x,y,G.WATER);sol(x,y)}}
+  rect(9,36,9,38,G.WOOD);for(let y=36;y<=38;y++)sol(9,y,0);
+  rect(27,37,34,40,G.SAND);
+  rect(7,31,8,31,G.BEET);rect(3,31,3,31,G.BEET);rect(14,31,14,31,G.BEET);rect(17,31,18,31,G.BEET);
+  // buildings
+  for(const b of BLD){
+    for(let y=b.y;y<b.y+b.h;y++)for(let x=b.x;x<b.x+b.w;x++)sol(x,y);
+    const dy=b.y+b.h-1;if(b.to)sol(b.door,dy,0);
+    b.spr=b.church?churchSprite(b):bldSprite(b);
+    m.objs.push({spr:b.spr,px:b.x*16,py:b.y*16-(b.church?64:(b.up||0)),sy:b.y+b.h,bld:b});
+    for(const w of b.wins)m.lights.push({win:1,x:w.x,y:w.y,w:w.w,h:w.h});
+    if(b.to)m.doors[tkey(b.door,dy)]={to:b.to};
+    if(b.sign&&b.signAt)m.signs.push({x:b.signAt.x,y:b.signAt.y,t:b.sign,w:b.board});
+    for(let y=dy+1;y<(b.y<20?20:34);y++){if(gAt(m,b.door,y)==G.GRASS)set(b.door,y,b.y<20?G.COB:G.DIRT)}
+  }
+  // forest border
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const edge=x<2||x>=W-2||y<3||y>=H-2;if(!edge)continue;sol(x,y);
+    if((x+y)%2==0||hash(x,y)<.3){const fir=hash(y,x)<.45;const s=fir?firSpr():treeSpr(Math.floor(hash(x+1,y)*3));const jx=Math.floor((hash(x,y+5)-.5)*6),jy=Math.floor((hash(x+5,y)-.5)*4);
+      m.objs.push({spr:s,px:x*16+8-s.width/2+jx,py:(y+1)*16-s.height+2+jy,sy:y+1+jy/16})}
+  }
+  const tree=(x,y,v)=>{sol(x,y);const s=v=='fir'?firSpr():treeSpr(v);m.objs.push({spr:s,px:x*16+8-s.width/2,py:(y+1)*16-s.height+2,sy:y+1})};
+  [[3,4],[6,6],[9,4],[12,7],[15,5],[16,9],[30,5],[33,7],[36,4],[2,9],[13,10],[29,9]].forEach(([x,y],i)=>tree(x,y,i%3==0?'fir':i%3));
+  [[38,37],[41,39],[44,37],[38,40],[44,40],[41,36]].forEach(([x,y])=>tree(x,y,3));
+  [[19,37],[21,40],[26,41],[35,41],[17,41]].forEach(([x,y],i)=>tree(x,y,i%2?1:0));
+  // hedges & gooseberries
+  for(let y=25;y<=30;y++){sol(10,y);sol(11,y);m.objs.push({spr:bushSpr(1),px:10*16-1,py:(y+1)*16-18,sy:y+1},{spr:bushSpr(1),px:11*16-1,py:(y+1)*16-18,sy:y+1})}
+  for(let y=25;y<=30;y++){sol(19,y);m.objs.push({spr:bushSpr(0),px:19*16-1,py:(y+1)*16-18,sy:y+1})}
+  // fences
+  const fences=[];for(let x=2;x<=11;x++)if(x!=10&&x!=5)fences.push([x,33]);for(let x=12;x<=20;x++)if(x!=15)fences.push([x,33]);
+  for(let x=38;x<=45;x++){fences.push([x,6]);fences.push([x,11])}for(let y=7;y<=10;y++){if(y!=9)fences.push([38,y]);fences.push([45,y])}
+  const fs=new Set(fences.map(([x,y])=>tkey(x,y)));
+  for(const[x,y]of fences){sol(x,y);const mask=(fs.has(tkey(x-1,y))?1:0)|(fs.has(tkey(x+1,y))?2:0)|(fs.has(tkey(x,y-1))?4:0)|(fs.has(tkey(x,y+1))?8:0);const s=fenceSpr(mask);m.objs.push({spr:s,px:x*16,py:(y+1)*16-s.height,sy:y+.9})}
+  // props
+  add('maibaum',18,17);sol(18,17);
+  {const s=propSpr('well');m.objs.push({spr:s,px:28*16,py:19*16-s.height,sy:19});for(let y=17;y<=18;y++)for(let x=28;x<=29;x++)sol(x,y)}
+  add('tafel',25,22);for(let x=25;x<=27;x++)sol(x,22);
+  [[10,19],[19,19],[30,19],[37,22],[12,22],[21,33],[31,33],[3,22],[45,22]].forEach(([x,y])=>{add('lamp',x,y);sol(x,y);m.lights.push({lamp:1,x:x+.5,y:y-1.9})});
+  [[19,23],[21,16],[12,36],[25,36]].forEach(([x,y])=>{add('bench',x,y);sol(x,y);sol(x+1,y)});
+  add('post',30,18);sol(30,18);
+  [[13,31],[14,32],[18,32]].forEach(([x,y])=>add('zwerg',x,y,{zwerg:1}));
+  add('falle',16,31);
+  [[43,7],[44,7],[44,8],[43,10]].forEach(([x,y])=>{add('fass',x,y);sol(x,y)});
+  [[39,7],[40,7]].forEach(([x,y])=>{add('kiste',x,y);sol(x,y)});
+  {const s=propSpr('schaukel');m.objs.push({spr:s,px:28*16,py:38*16-s.height,sy:38});sol(28,37);sol(29,37)}
+  {const s=propSpr('rutsche');m.objs.push({spr:s,px:32*16,py:40*16-s.height,sy:40});sol(32,39);sol(33,39)}
+  [[16,38],[16,40],[3,37],[15,37],[3,41],[5,42]].forEach(([x,y])=>{if(gAt(m,x,y)==G.GRASS)add('schilf',x,y)});
+  add('schilf',16,39,{zwergSpot:1});
+  [[10,18],[16,18],[31,18],[29,30],[25,30]].forEach(([x,y])=>{if(!m.sol[y*W+x]){add('kuebel',x,y);sol(x,y)}});
+  buildLayer(m);return m;
+}
+
+/* ---------- interiors ---------- */
+const hasDeco=k=>!!(S&&S.deco&&S.deco.includes(k));
+const INT={
+  wache:{w:13,h:9,wall:'#dfe6ee',stripes:1,floor:G.WOOD,ex:6,
+    wall_:[{k:'fenster',x:2,y:0,w:2,curtain:'#3f5f8f'},{k:'pinn',x:5,y:0,w:3},{k:'wappen',x:9,y:0},{k:'bild',x:4,y:0,if:()=>hasDeco('bild')},{k:'uhr',x:8,y:0,if:()=>hasDeco('uhr')},{k:'fenster',x:10,y:0,w:2,curtain:'#3f5f8f'}],
+    f:[{k:'schrank',x:1,y:2,w:1,h:1,ex:14},{k:'desk',x:2,y:3,w:2,h:1,ex:6},{k:'stuhl',x:2,y:4,w:1,h:1,nos:1},{k:'bett',x:11,y:2,w:1,h:2,col:'#3f5f8f'},
+      {k:'teppich',x:4,y:4,w:4,h:3,flat:1,nos:1,if:()=>hasDeco('teppich')},{k:'regal',x:9,y:2,w:1,h:1,ex:14,if:()=>hasDeco('regal')},
+      {k:'pflanze',x:1,y:6,w:1,h:1,ex:8,if:()=>hasDeco('pflanze')},{k:'kaffee',x:10,y:6,w:1,h:1,ex:6,if:()=>hasDeco('kaffee')},
+      {k:'korb',x:8,y:7,w:1,h:1,flat:1,nos:1,if:()=>hasDeco('korb')},{k:'lampe',x:11,y:6,w:1,h:1,ex:12,if:()=>hasDeco('lampe')}]},
+  baecker:{w:10,h:7,wall:'#f8ecd4',floor:G.TILEF,ex:5,
+    wall_:[{k:'brotregal',x:1,y:0,w:3},{k:'fenster',x:4,y:0,w:2,curtain:'#e87a6a'},{k:'brotregal',x:6,y:0,w:3}],
+    f:[{k:'theke',x:1,y:3,w:5,h:1,ex:6,items:'brot'},{k:'vitrine',x:6,y:3,w:2,h:1,ex:6,items:'kuchen'},{k:'tisch',x:7,y:5,w:1,h:1,ex:4,cloth:'#e87a6a'}]},
+  wirt:{w:13,h:9,wall:'#e8d8b8',stripes:1,floor:G.WOOD,ex:6,
+    wall_:[{k:'regalwand',x:1,y:0,w:4},{k:'geweih',x:6,y:0},{k:'fenster',x:7,y:0,w:2,curtain:'#3f6e3a'},{k:'tuer',x:10,y:0},{k:'bild',x:11,y:0}],
+    f:[{k:'tresen',x:1,y:3,w:5,h:1,ex:6},{k:'fass',x:1,y:2,w:1,h:1,ex:2},{k:'rund',x:8,y:4,w:2,h:2},{k:'tisch',x:2,y:6,w:2,h:1,ex:4,cloth:'#c8d8a8'},{k:'tisch',x:10,y:7,w:1,h:1,ex:4,cloth:'#c8d8a8'},
+      {k:'stuhl',x:7,y:4,w:1,h:1,nos:1},{k:'stuhl',x:10,y:4,w:1,h:1,nos:1},{k:'korb2',x:11,y:2,w:1,h:1}]},
+  schuster:{w:9,h:7,wall:'#e8dcc4',floor:G.WOOD,ex:4,
+    wall_:[{k:'schuhregal',x:1,y:0,w:3},{k:'fenster',x:4,y:0,w:1},{k:'schuhregal',x:5,y:0,w:3}],
+    f:[{k:'werkbank',x:1,y:3,w:2,h:1,ex:6},{k:'stuhl',x:3,y:3,w:1,h:1,nos:1},{k:'regal',x:7,y:2,w:1,h:1,ex:14}]},
+  metzger:{w:9,h:7,wall:'#f0f0ec',floor:G.TILEF,ex:4,
+    wall_:[{k:'wurst',x:1,y:0,w:3},{k:'fenster',x:4,y:0,w:1},{k:'wurst',x:5,y:0,w:3}],
+    f:[{k:'vitrine',x:1,y:3,w:5,h:1,ex:6},{k:'tisch',x:7,y:3,w:1,h:1,ex:4}]},
+  marlene:{w:9,h:7,wall:'#f0dce4',stripes:1,floor:G.WOOD,ex:4,
+    wall_:[{k:'bild',x:3,y:0},{k:'fenster',x:5,y:0,w:2,curtain:'#8a5aa8'},{k:'uhr',x:7,y:0}],
+    f:[{k:'herd',x:1,y:2,w:1,h:1,ex:4},{k:'ofen',x:2,y:2,w:1,h:1,ex:4},{k:'tisch',x:5,y:3,w:2,h:1,ex:4,cloth:'#e8c8e0'},{k:'sofa',x:1,y:5,w:2,h:1,ex:4,col:'#8a5aa8'},{k:'pflanze',x:7,y:5,w:1,h:1,ex:8}]},
+  rathaus:{w:10,h:7,wall:'#ece0cc',stripes:1,floor:G.WOOD,ex:5,
+    wall_:[{k:'portrait',x:4,y:0},{k:'wappen',x:5,y:0},{k:'fenster',x:1,y:0,w:2},{k:'fenster',x:7,y:0,w:2}],
+    f:[{k:'flagge',x:1,y:2,w:1,h:1,ex:12},{k:'desk',x:4,y:3,w:2,h:1,ex:6},{k:'schrank',x:8,y:2,w:1,h:1,ex:14},{k:'teppich',x:3,y:4,w:4,h:2,flat:1,nos:1},{k:'pflanze',x:1,y:5,w:1,h:1,ex:8}]}
+};
+function genInterior(id){
+  const d=INT[id],m=newMap(id,d.w,d.h);m.inside=1;m.wallC=d.wall;m.stripes=d.stripes;MAPS[id]=m;
+  for(let y=0;y<d.h;y++)for(let x=0;x<d.w;x++){const i=y*d.w+x;
+    if(y<2){m.g[i]=G.WALL;m.sol[i]=1}else if(x==0||x==d.w-1||y==d.h-1){m.g[i]=G.VOID;m.sol[i]=1}else m.g[i]=d.floor}
+  m.exit={x:d.ex,y:d.h-1};m.g[(d.h-1)*d.w+d.ex]=G.MAT;m.sol[(d.h-1)*d.w+d.ex]=0;
+  const b=BLDBY['to_'+id];m.doors[tkey(d.ex,d.h-1)]={to:'dorf',x:b.door+.5,y:b.y+b.h+.6,dir:0};
+  m.wall=d.wall_||[];
+  m.furn=d.f;refreshFurn(m);
+  return m;
+}
+function refreshFurn(m){
+  const d=INT[m.id];m.objs=[];
+  for(let y=2;y<d.h-1;y++)for(let x=1;x<d.w-1;x++)m.sol[y*d.w+x]=0;
+  for(const f of d.f){
+    if(f.if&&!f.if())continue;
+    if(f.k=='korb2'){const s=spr('bin',g=>{R(g,3,4,10,11,'#7a8a90');R(g,2,3,12,2,'#5a6a70');R(g,5,6,1,8,'#5a6a70');R(g,10,6,1,8,'#5a6a70');R(g,6,1,4,3,'#f4ecd4')},16,16);m.objs.push({spr:s,px:f.x*16,py:f.y*16,sy:f.y+1});m.sol[f.y*d.w+f.x]=1;continue}
+    const s=f.spr||(f.spr=furnSprite(f));
+    m.objs.push({spr:s,px:f.x*16,py:f.y*16-(f.ex||0),sy:f.flat?-99:f.y+f.h});
+    if(!f.nos)for(let y=f.y;y<f.y+f.h;y++)for(let x=f.x;x<f.x+f.w;x++)m.sol[y*d.w+x]=1;
+  }
+  buildLayer(m);
+}
+
+/* ---------- pathfinding ---------- */
+function bfs(m,sx,sy,tx,ty){
+  const W=m.w,Hh=m.h,N=W*Hh,prev=new Int32Array(N).fill(-1),s=sy*W+sx,t=ty*W+tx;
+  if(sx<0||sy<0||sx>=W||sy>=Hh||tx<0||ty<0||tx>=W||ty>=Hh)return null;
+  const q=new Int32Array(N);let h=0,e=0;q[e++]=s;prev[s]=s;
+  while(h<e){const c=q[h++];if(c==t)break;const cx=c%W,cy=(c/W)|0;
+    for(let k=0;k<4;k++){const nx=cx+DX[k],ny=cy+DY[k];if(nx<0||ny<0||nx>=W||ny>=Hh)continue;const n=ny*W+nx;if(prev[n]>=0)continue;if(m.sol[n]&&n!=t)continue;prev[n]=c;q[e++]=n}}
+  if(prev[t]<0)return null;
+  const path=[];let c=t;while(c!=s){path.push([c%W,(c/W)|0]);c=prev[c]}path.reverse();return path;
+}
+
+/* ---------- game state ---------- */
+let S=null,started=false,paused=false,hasSave=false;
+function newGame(){
+  S={v:1,name:'',tit:'Wachtmeisterin',look:{hair:'#5a3a1e',skin:'#e8b48a',coat:'#2f4f7f',style:'kurz',hat:'muetze'},
+    day:1,time:495,wx:'sonne',map:'wache',px:6.5,py:6.6,dir:1,taler:20,
+    c:{id:1,f:{},cl:[],ask:{},wrong:0,solved:0,stars:0},g:{},fr:{},chat:{},met:{},q:{},deco:[],hats:['muetze','none'],done:[],
+    sound:true,music:true,savedAt:0,newCl:0};
+}
+function migrate(s){
+  if(!s||typeof s!='object'||!s.c||!s.look)return null;
+  s.g=s.g||{};s.fr=s.fr||{};s.chat=s.chat||{};s.met=s.met||{};s.q=s.q||{};s.deco=s.deco||[];s.hats=s.hats||['muetze','none'];s.done=s.done||[];
+  s.c.f=s.c.f||{};s.c.cl=s.c.cl||[];s.c.ask=s.c.ask||{};s.sound=s.sound!==false;s.music=s.music!==false;
+  if(!MAPS[s.map])s.map='wache',s.px=6.5,s.py=6.6;
+  return s;
+}
+const has=id=>S.c.cl.includes(id);
+const WN=()=>S.tit&&S.tit!='Ohne Titel'?S.tit+' '+S.name:S.name;
+const fill=t=>t.replace(/\{WN\}/g,WN()).replace(/\{N\}/g,S.name);
+const hearts=id=>Math.min(5,Math.floor((S.fr[id]||0)/20));
+function addFr(id,n){S.fr[id]=Math.min(100,(S.fr[id]||0)+n)}
+
+/* ---------- NPC schedules ---------- */
+// [ab Minute, Karte, x, y, Blickrichtung]; Karte null = zu Hause
+const SCHED={
+  marlene:[[0,null],[420,'dorf',4,32,0],[720,'marlene',3,4,0],[1080,'dorf',20,23,0],[1290,null]],
+  frieda:[[0,null],[400,'baecker',3,2,0],[780,'dorf',20,18,0],[960,'baecker',3,2,0],[1110,'wirt',7,5,3],[1320,null]],
+  toni:[[0,null],[400,'dorf',42,8,0],[540,'wirt',3,2,0],[1400,null]],
+  egon:[[0,null],[420,'dorf',16,32,0],[1140,'wirt',10,5,2],[1320,null]],
+  kalle:[[0,null],[480,'dorf',30,40,1],[720,'dorf',17,37,2],[1020,'dorf',22,17,0],[1200,null]],
+  jule:[[0,null],[450,'walk'],[1020,'dorf',25,19,0],[1140,'wirt',8,6,1],[1320,null]],
+  albert:[[0,null],[480,'schuster',4,3,2],[1080,'dorf',26,36,0],[1260,null]],
+  kurt:[[0,null],[420,'metzger',3,2,0],[1080,'wirt',9,3,0],[1320,null]],
+  heinz:[[0,null],[480,'rathaus',4,2,0],[1020,'dorf',24,19,0],[1260,null]]
+};
+const HOME={marlene:[5,30],frieda:[13,18],toni:[41,18],egon:[15,30],kalle:[42,30],jule:[45,34],albert:[28,30],kurt:[34,30],heinz:[33,18]};
+const JULE_WP=[[6,19],[14,21],[22,19],[35,19],[43,21],[37,15],[37,21],[30,33],[24,28],[16,34],[6,34],[9,36],[22,26],[24,21]];
+const NS={};
+function initNpcs(){for(const id in NPC){NS[id]={id,map:null,x:0,y:0,dir:0,path:null,goal:'',wt:0,mv:false,talk:false,wi:0,pause:0,fx:1}}placeNpcs(true)}
+function npcGoal(id){
+  if(S.cut&&S.cut[id])return S.cut[id];
+  if(!S.g.intro){if(id=='heinz')return{map:'wache',x:5,y:4,dir:0};if(id=='marlene')return S.g.mArr?{map:'wache',x:7,y:5,dir:2}:{map:null}}
+  const sc=SCHED[id];let e=sc[0];for(const s of sc)if(S.time>=s[0])e=s;
+  if(e[1]=='walk'){if(S.wx=='regen')return{map:'dorf',x:36,y:20,dir:0};const w=JULE_WP[NS.jule.wi%JULE_WP.length];return{map:'dorf',x:w[0],y:w[1],dir:0,walk:1}}
+  if(e[1]&&e[1]=='dorf'&&S.wx=='regen'&&(id=='kalle'||id=='albert'))return{map:null};
+  return{map:e[1],x:e[2],y:e[3],dir:e[4]||0};
+}
+function entryFor(toMap,fromMap,id){
+  if(toMap!='dorf'){const m=MAPS[toMap];return[m.exit.x,m.exit.y-1]}
+  if(fromMap&&fromMap!='dorf'){const b=BLDBY['to_'+fromMap];return[b.door,b.y+b.h]}
+  return HOME[id];
+}
+function exitFor(fromMap,toMap,id){
+  if(fromMap!='dorf'){const m=MAPS[fromMap];return[m.exit.x,m.exit.y]}
+  if(toMap){const b=BLDBY['to_'+toMap];return[b.door,b.y+b.h-1]}
+  return HOME[id];
+}
+function setPos(n,x,y){n.x=x+.5;n.y=y+.6;n.path=null;n.goal=''}
+function placeNpcs(all){for(const id in NS){const n=NS[id],g=npcGoal(id);if(all||n.map!=S.map){n.map=g.map;if(g.map)setPos(n,g.x,g.y),n.dir=g.dir}}}
+function npcVisible(n){return n.map&&n.map==S.map}
+function updNpc(n,dt){
+  if(n.talk){n.mv=false;return}
+  const g=npcGoal(n.id),same=n.map&&n.map==S.map;
+  if(!g.map){
+    if(!n.map)return;
+    if(!same){n.map=null;return}
+    const ex=exitFor(n.map,null,n.id);if(walkTo(n,ex[0],ex[1],dt)){if(n.map!='dorf'){const e=entryFor('dorf',n.map,n.id);n.map='dorf';setPos(n,e[0],e[1]);if(S.map!='dorf')n.map=null}else n.map=null}
+    return;
+  }
+  if(n.map!=g.map){
+    if(same){const ex=exitFor(n.map,g.map,n.id);if(walkTo(n,ex[0],ex[1],dt)){const from=n.map;
+      if(from!='dorf'&&g.map!='dorf'){n.map='dorf';const e=entryFor('dorf',from,n.id);setPos(n,e[0],e[1]);if(S.map!='dorf'){n.map=g.map;setPos(n,g.x,g.y)}}
+      else{n.map=g.map;if(g.map==S.map){const e=entryFor(g.map,from,n.id);setPos(n,e[0],e[1])}else setPos(n,g.x,g.y)}}
+      return}
+    const from=n.map;n.map=g.map;
+    if(g.map==S.map){const e=entryFor(g.map,from,n.id);setPos(n,e[0],e[1])}else{setPos(n,g.x,g.y);n.dir=g.dir}
+    return;
+  }
+  if(n.pause>0){n.pause-=dt;n.mv=false;return}
+  if(walkTo(n,g.x,g.y,dt)){n.dir=g.dir;if(g.walk){n.wi++;n.pause=2+Math.random()*2}}
+}
+function walkTo(n,tx,ty,dt){
+  const cx=Math.floor(n.x),cy=Math.floor(n.y);
+  if(cx==tx&&cy==ty&&Math.abs(n.x-(tx+.5))<.06&&Math.abs(n.y-(ty+.6))<.06){n.mv=false;n.path=null;return true}
+  const key=n.map+tx+','+ty,m=MAPS[n.map];
+  if(n.goal!=key||!n.path){n.goal=key;n.path=bfs(m,cx,cy,tx,ty)||[];n.path.push([tx,ty]);n.stuck=0}
+  let wp=n.path[0];if(!wp){n.x=tx+.5;n.y=ty+.6;return true}
+  const px=wp[0]+.5,py=wp[1]+.6,dx=px-n.x,dy=py-n.y,d=Math.hypot(dx,dy),sp=2.4*dt;
+  if(d<=sp){n.x=px;n.y=py;n.path.shift()}else{n.x+=dx/d*sp;n.y+=dy/d*sp}
+  if(Math.abs(dx)>Math.abs(dy))n.dir=dx<0?2:3;else n.dir=dy<0?1:0;
+  if(dx)n.fx=dx<0?-1:1;
+  n.mv=true;n.wt+=dt;return false;
+}
+
+/* ---------- case 1: Der verschwundene Preiskuchen ---------- */
+const CASE1={
+  id:1,title:'Der verschwundene Preiskuchen',short:'Fall 1',season:'Sommer',
+  suspects:['frieda','egon','kalle','toni','jule','kurt','marlene','albert','heinz'],
+  clues:{
+    zeit:{n:'Tatzeit',ic:'uhr',key:1,d:'Marlene stellte ihre Stachelbeer-Baiser-Torte um 7:30 Uhr zum Abkühlen aufs Fensterbrett. Um 8:00 Uhr war sie weg.'},
+    mehl:{n:'Mehlstaub',ic:'mehl',d:'Feiner Mehlstaub auf Marlenes Fensterbank. Für ein Baiser braucht man doch kaum Mehl…'},
+    fuss:{n:'Gipsabdruck',ic:'fuss',key:1,d:'Tiefer Schuhabdruck im Blumenbeet unter dem Fenster: Karomuster, am Absatz eine kleine Kerbe, etwa Größe 45.'},
+    kruemel:{n:'Baiserkrümel',ic:'kruemel',key:1,d:'Weiße Baiserkrümel am Gartentor. Die Spur führt vom Tatort weg.'},
+    beere:{n:'Stachelbeere im Hinterhof',ic:'beere',key:1,d:'Die Krümelspur endet im Hinterhof des Wirtshauses „Zum Goldenen Ochsen“. Dort liegt eine zerdrückte Stachelbeere.'},
+    heber:{n:'Tortenheber',ic:'heber',d:'In Marlenes Küche liegt ein Tortenheber mit der Gravur „Bäckerei Kornblum“.'},
+    frieda_mehl:{n:'Friedas Besuch',ic:'aussage',who:'frieda',d:'Frieda hat Marlene gestern Abend ihren Tortenheber gebracht, noch mit Mehl an der Schürze.'},
+    frieda_alibi:{n:'Friedas Alibi',ic:'aussage',who:'frieda',d:'Frieda stand ab 6 Uhr im Laden. Jule kam um 7:40 Uhr, Kalle um 8:02 Uhr.'},
+    frieda_toni:{n:'Keine Brötchen für Toni',ic:'aussage',who:'frieda',key:1,d:'Laut Frieda war Toni heute gar nicht in der Bäckerei. Er backt seine Brötchen seit Jahren selbst.'},
+    egon_pfeifen:{n:'Pfeifen am Zaun',ic:'aussage',who:'egon',d:'Egon hörte gegen 7:45 Uhr schwere Schritte am Zaun. Jemand pfiff „Kein schöner Land“, und zwar falsch.'},
+    egon_sohle:{n:'Egons Stiefel',ic:'sohle',who:'egon',d:'Egon trägt Gummistiefel mit Wellenprofil, Größe 42.'},
+    kalle_bon:{n:'Kalles Kassenbon',ic:'bon',who:'kalle',d:'Kalle kaufte um 8:02 Uhr bei Frieda einen Windbeutel. Daher die Sahne im Gesicht.'},
+    jule_karton:{n:'Jules Beobachtung',ic:'aussage',who:'jule',key:1,d:'Jule sah Toni um 7:45 Uhr am Gartenweg, mit einem großen weißen Karton unterm Arm. Er pfiff ein Lied.'},
+    toni_keller:{n:'Tonis Aussage',ic:'aussage',who:'toni',d:'Toni behauptet, er sei den ganzen Morgen im Keller gewesen und habe keinen Fuß vor die Tür gesetzt.'},
+    toni_broetchen:{n:'Tonis zweite Aussage',ic:'aussage',who:'toni',d:'Toni gibt zu, draußen gewesen zu sein. Angeblich hat er bei Frieda Brötchen geholt, der Karton sei für die Brötchen gewesen.'},
+    toni_luege:{n:'Tonis Lüge',ic:'aussage',who:'toni',key:1,d:'Toni hat zweimal gelogen: Er war draußen, und Brötchen hat er bei Frieda nicht gekauft.'},
+    sohle:{n:'Sohlenvergleich',ic:'sohle',key:1,d:'Laut Alberts Sohlenbuch passt der Abdruck zu Tonis Arbeitsschuhen: Karo, Kerbe am Absatz, Größe 45.'},
+    wette:{n:'Wettzettel',ic:'zettel',key:1,d:'„WETTE! Frieda gewinnt den Kuchenwettbewerb zum 10. Mal. Wer verliert, rasiert sich den Schnurrbart ab! Gez. Toni, gez. Kurt“'},
+    kurt_wette:{n:'Kurts Aussage',ic:'aussage',who:'kurt',key:1,d:'Kurt bestätigt die Wette. Gewinnt Marlene, muss Toni seinen geliebten Schnurrbart abrasieren.'}
+  },
+  motives:[['neid','Neid auf Marlenes Backkunst'],['wespen','Ärger über Wespen und Kuchenduft'],['hunger','Heißhunger auf Süßes'],['geld','Die Torte teuer weiterverkaufen'],['wette','Eine verlorene Wette verhindern','wette']],
+  proofs:['sohle','jule_karton','toni_luege']
+};
+const ITEMS={zwerg:{n:'Gartenzwerg Horst',ic:'zwerg',d:'Rote Mütze, blaue Hose, etwas Schilf im Bart.'},brief:{n:'Brief an Albert',ic:'brief',d:'Ein Brief mit Kinderschrift: „An Opa Albert, Schuhmacherei“.'}};
+const QUESTS={
+  zwerg:{n:'Horst ist weg',who:'egon',d:'Egons Gartenzwerg Horst ist seit gestern verschwunden.',done:'Horst steht wieder in Egons Garten.'},
+  brief:{n:'Verlorene Post',who:'jule',d:'Jule hat einen Brief für Albert verloren, irgendwo zwischen Spielplatz und Teich.',done:'Albert hat seinen Brief bekommen.'}
+};
+const CUR=()=>CASE1;
+function gain(id,quiet){
+  if(has(id))return false;S.c.cl.push(id);S.newCl=1;
+  if(!quiet){const c=CUR().clues[id];toast((c.who?'Neue Aussage: ':'Neuer Hinweis: ')+c.n,2.6);sfx('clue')}
+  saveSoon();return true;
+}
+function keyProgress(){const cs=CUR().clues,k=Object.keys(cs).filter(i=>cs[i].key);return[k.filter(has).length,k.length]}
+
+/* talk content: topics [id,label,req,lines,after]; present {clue:[lines,after,req]} */
+const T={
+  marlene:{
+    intro:[['marlene','Ach, {WN}! Gut, dass Sie da sind. Bitte finden Sie meine Torte!']],
+    topics:[
+      ['was','Was ist genau passiert?',null,[['marlene','Um halb acht hab ich meine Torte zum Abkühlen aufs Fensterbrett gestellt. Stachelbeer-Baiser. „Pfefferles Wolke“ nenn ich sie.'],['marlene','Dann hab ich Kaffee gekocht, und um acht war das Fensterbrett leer. Nur noch Krümel!']],()=>gain('zeit')],
+      ['wer','Wer wusste von der Torte?',()=>S.c.ask.marlene_was,[['marlene','Na, das ganze Dorf! Für den Wettbewerb meldet man sich im Rathaus an.'],['marlene','Frieda Kornblum hat neunmal hintereinander gewonnen. Die hat ganz schön geguckt, als ich mich angemeldet hab.'],['marlene','Und Egon von nebenan schimpft seit Tagen, mein Kuchenduft locke die Wespen an.']]],
+      ['torte','Erzählen Sie von der Torte.',null,[['marlene','Früher hab ich jeden Wettbewerb gewonnen. Dann kam mein Rücken, und ich hab zehn Jahre ausgesetzt.'],['marlene','Die Stachelbeeren sind aus meinem eigenen Garten. Die gibt es sonst nirgends im Dorf. Sauer, aber mit Baiser ein Gedicht.']]]
+    ],
+    present:{
+      mehl:[[['marlene','Mehl? Ich hab gestern gar keinen Teig gemacht… Ach, Frieda war gestern Abend kurz hier. Fragen Sie sie doch selbst.']]],
+      heber:[[['marlene','Den hat mir Frieda gestern gebracht. Meiner ist beim Umzug meiner Tochter verschwunden.'],['marlene','Frieda ist eine Konkurrentin, ja. Aber keine schlechte Seele.']]],
+      fuss:[[['marlene','Größe 45? Ich trage 37! In meinem Beet hat niemand etwas verloren.']]],
+      kruemel:[[['marlene','Das sind meine Baiserkrümel! Dann ist der Dieb durchs Gartentor raus.']]],
+      beere:[[['marlene','Das ist eine von meinen Stachelbeeren! Im Hinterhof vom Wirtshaus? Was hat die denn da zu suchen?']]],
+      wette:[[['marlene','Eine Wette um einen Schnurrbart? Um MEINE Torte? Männer…']]],
+      jule_karton:[[['marlene','Ein weißer Karton… So einer passt genau über meine Torte.']]]
+    },
+    def:'Hm, dazu fällt mir nichts ein, {WN}.',
+    chat:['Mein Rücken sagt, morgen gibt es Regen.','Kommen Sie mal auf ein Stück Kuchen vorbei, {WN}!','Krümel ist ja ein ganz Lieber. Der kriegt nachher einen Zipfel Baiser.','Früher war hier jeden Samstag Tanz im Ochsen. Das waren Zeiten!']
+  },
+  frieda:{
+    intro:[['frieda','Grüß Gott! Sie sind also die neue Besetzung der Wache. Frieda Kornblum. Nehmen Sie eine Brezel, die geht aufs Haus.'],['frieda','Das mit Marlenes Torte hab ich schon gehört. In Kleckersdorf spricht sich alles schneller rum als frische Brötchen.']],
+    topics:[
+      ['wo','Wo waren Sie heute früh?',null,[['frieda','Hier im Laden, seit sechs Uhr. Wie jeden Tag außer sonntags.'],['frieda','Um zwanzig vor acht war Jule da, die Postbotin. Kurz nach acht kam Kalle und hat einen Windbeutel gekauft, der kleine Vielfraß.']],()=>gain('frieda_alibi')],
+      ['wb','Und der Kuchenwettbewerb?',null,[['frieda','Neunmal hab ich gewonnen. Neunmal! Mit meiner Donauwelle.'],['frieda','Ob mich Marlenes Anmeldung geärgert hat? Ein bisschen. Aber ich gewinne lieber gegen die Beste als gegen niemanden.']]],
+      ['toni','War Toni heute Brötchen holen?',()=>has('toni_broetchen')&&!has('frieda_toni'),[['frieda','Toni? Bei mir? Nein! Toni backt seine Brötchen seit Jahren selbst.'],['frieda','Wir hatten mal Streit wegen dem Preis. Seitdem kommt er höchstens zum Kaffeetrinken, und heute war er gar nicht da.']],()=>gain('frieda_toni')]
+    ],
+    present:{
+      mehl:[[['frieda','Ach, das Mehl! Ich war gestern Abend bei Marlene und hab ihr meinen Tortenheber gebracht. Die Schürze hatte ich noch an.'],['frieda','Ich bin Bäckerin, {WN}. Ich hinterlasse überall Mehl.']],()=>gain('frieda_mehl')],
+      heber:[[['frieda','Genau der! Den will ich übrigens wiederhaben, wenn der Trubel vorbei ist.']]],
+      fuss:[[['frieda','Größe 45? Ich hab zierliche 38. Und in der Backstube trage ich Clogs mit Noppen.']]],
+      kalle_bon:[[['frieda','Stimmt, 8:02 Uhr. Der Junge kauft jeden Morgen einen Windbeutel. Seine Mutter weiß nichts davon.']]],
+      jule_karton:[[['frieda','Ein großer weißer Karton? So welche hab ich hier auch… Aber Toni hat heute keinen bei mir gekauft.'],['frieda','Toni war heute überhaupt nicht hier. Der backt seine Brötchen selbst, seit wir uns wegen dem Preis gestritten haben.']],()=>gain('frieda_toni')],
+      toni_broetchen:[[['frieda','Toni will bei mir Brötchen geholt haben? Heute? Das ist ja lustig. Der war seit Jahren nicht mehr zum Einkaufen hier.']],()=>gain('frieda_toni')],
+      wette:[[['frieda','Die zwei wetten auf MICH? Das ist ja… irgendwie auch ein Kompliment. Aber doch nicht so!']]],
+      beere:[[['frieda','Stachelbeeren kaufe ich nicht. Die sind mir zu sauer.']]]
+    },
+    def:'Da kann ich Ihnen nicht helfen. Aber eine Brezel?',
+    chat:['Um vier Uhr früh ist das Dorf am schönsten. Nur ich, der Ofen und die Amsel.','Die Brezel heute ist besonders knusprig, finden Sie nicht?','Wissen Sie, was eine gute Donauwelle ausmacht? Geduld. Und Butter.']
+  },
+  egon:{
+    intro:[['egon','Was? Ah, die Polizei. Na, endlich kümmert sich mal jemand.'],['egon','Egon Grummel. Und bevor Sie fragen: Ich hab die Torte nicht. Ich mag nicht mal Baiser.']],
+    topics:[
+      ['wo','Wo waren Sie heute früh?',null,[['egon','Hier im Garten. Wespenfallen aufhängen. Wegen dem Kuchenduft von nebenan, sag ich Ihnen!'],['egon','Gesehen hab ich nix, die Hecke ist zu hoch. Gehört hab ich aber was.']]],
+      ['gehoert','Was haben Sie gehört?',()=>S.c.ask.egon_wo,[['egon','So um Viertel vor acht ist einer am Zaun vorbei. Schwere Schritte.'],['egon','Und gepfiffen hat er. „Kein schöner Land“. Falsch gepfiffen. Grauenhaft.']],()=>gain('egon_pfeifen')],
+      ['zwerg','Sie wirken bedrückt.',()=>!S.q.zwerg,[['egon','Bedrückt? Ich? …'],['egon','Horst ist weg. Mein Gartenzwerg. Rote Mütze, blaue Hose. Seit gestern Abend.'],['egon','Wenn Sie schon Polizei spielen, dann suchen Sie lieber den.']],()=>startQuest('zwerg')],
+      ['horst','Horst zurückgeben',()=>S.q.zwerg==1&&S.g.hasZwerg,[['egon','HORST! Mein Horst!'],['egon','… Ähm. Danke. Das war anständig von Ihnen, {WN}.'],['egon','Hier, für die Kaffeekasse der Wache. Und sagen Sie keinem, dass ich gerührt war.']],()=>finishQuest('zwerg',30)]
+    ],
+    present:{
+      fuss:[[['egon','Meine Stiefel? Bitte, schauen Sie. Wellenprofil, Größe 42. Zufrieden?']],()=>gain('egon_sohle')],
+      kruemel:[[['egon','Krümel auf dem Weg. Da kommen die Wespen. Hab ich es nicht gesagt?']]],
+      beere:[[['egon','Stachelbeeren wachsen hier nur bei der Pfefferle. Schrecklich sauer, die Dinger.']]],
+      wette:[[['egon','Wetten. Unfug. Der Toni wettet dauernd, schon seit der Schulzeit.']]],
+      jule_karton:[[['egon','Toni? Der pfeift beim Zapfen immer dasselbe Lied. Falsch.']]],
+      zwerg:[[['egon','HORST!']],()=>{}]
+    },
+    def:'Hmpf. Keine Ahnung.',
+    chat:['Die Wespen sind dieses Jahr eine Plage.','Mein Rasen ist exakt vier Zentimeter hoch. Wie es sich gehört.','Hmpf. Schönes Wetter. Zu schön.']
+  },
+  kalle:{
+    intro:[['kalle','Hi! Bist du die Polizei? Echt jetzt? Cool!'],[null,'Kalle hat einen Klecks Sahne im Mundwinkel.'],['kalle','Ist das dein Hund? Wie heißt der? Krümel? Hihi, passt ja!']],
+    topics:[
+      ['sahne','Du hast da Sahne im Gesicht.',null,[['kalle','Äh… das ist vom Windbeutel! Von Frieda!'],['kalle','Guck, hier ist der Bon: 8:02 Uhr. Ich hab nix geklaut, echt nicht!']],()=>gain('kalle_bon')],
+      ['frueh','Hast du heute früh was gesehen?',null,[['kalle','Die Jule ist wie eine Rakete an mir vorbeigeradelt. Die kommt überall rum, die weiß alles.'],['kalle','Und Egon hat mit seinen Wespenfallen rumgeschimpft. Wie immer.']]],
+      ['zwerg','Weißt du was über Egons Gartenzwerg?',()=>S.q.zwerg==1&&!S.g.hasZwerg,[['kalle','…'],['kalle','Vielleicht hab ich Horst ein bisschen… im Schilf am Teich versteckt. Nur zum Spaß!'],['kalle','Sag es bitte nicht meiner Mutter!']],()=>{S.g.zwergHint=1}]
+    ],
+    present:{
+      kruemel:[[['kalle','Baiser? Igitt, das ist doch nur Zucker und Luft.']]],
+      fuss:[[['kalle','Größe 45?! Das ist ja riesig! Ich hab 37.']]],
+      zwerg:[[['kalle','Oh. Du hast Horst gefunden. Ähm. Gib ihn Egon zurück, ja? Bitte ohne meinen Namen.']]],
+      wette:[[['kalle','Toni ohne Schnurrbart? Das will ich sehen!']]]
+    },
+    def:'Keine Ahnung. Darf ich Krümel streicheln?',
+    chat:['Wusstest du, dass Dackel früher Dachse gejagt haben? Steht in meinem Tierbuch!','Wenn ich groß bin, werd ich auch Polizei. Oder Astronaut.','Im Teich wohnt ein riesiger Karpfen. Ehrlich!']
+  },
+  jule:{
+    intro:[['jule','Moin! Jule Sommer, ich bringe die Post. Und die Neuigkeiten.'],['jule','Sie sind also die neue Besetzung der Wache. Willkommen in Kleckersdorf!']],
+    topics:[
+      ['frueh','Was haben Sie heute früh gesehen?',null,[['jule','Um zwanzig vor acht war ich bei Frieda, Brötchen holen.'],['jule','Und so um Viertel vor acht hab ich Toni gesehen. Hinten am Gartenweg. Mit so einem großen weißen Karton unterm Arm.'],['jule','Er hat gepfiffen. Ich hab mich noch gewundert. Toni ist morgens doch sonst nie draußen.']],()=>gain('jule_karton')],
+      ['brief','Sie wirken gestresst.',()=>!S.q.brief,[['jule','Oh, sieht man das? Mir ist ein Brief aus der Tasche gefallen! Für Albert, den Schuster.'],['jule','Irgendwo zwischen Spielplatz und Teich muss er liegen. Wenn Sie ihn finden, bringen Sie ihn Albert?']],()=>startQuest('brief')]
+    ],
+    present:{
+      fuss:[[['jule','Karomuster, Größe 45… Fragen Sie Albert, den Schuster. Der kennt jede Schuhsohle im Dorf!']],()=>{S.g.hintAlbert=1}],
+      egon_pfeifen:[[['jule','„Kein schöner Land“? Das pfeift Toni immer beim Zapfen. Ganz schief.']]],
+      wette:[[['jule','Oha. Das erklärt einiges.']]],
+      toni_keller:[[['jule','Im Keller? Nee. Ich hab ihn doch gesehen, am Gartenweg!']]],
+      brief:[[['jule','Den bringen Sie bitte direkt zu Albert. Danke!']]]
+    },
+    def:'Da weiß ich leider nix. Aber ich höre mich um!',
+    chat:['Wussten Sie, dass Egon sich Gartenzwerg-Kataloge schicken lässt? Jeden Monat!','Bei Regen fahr ich die Runde zweimal so schnell.','Kleckersdorf hat 412 Einwohner und 3 Hunde. Mit Krümel 4!']
+  },
+  albert:{
+    intro:[['albert','Grüß Gott. Albert Leisten, Schuhmachermeister. Seit einundfünfzig Jahren.'],['albert','Jeder Schuh in Kleckersdorf ist schon mal über meine Werkbank gegangen.']],
+    topics:[
+      ['schuhe','Sie kennen alle Schuhe im Dorf?',null,[['albert','Jede Sohle. Ich führe ein Sohlenbuch: wer welches Profil trägt und welche Größe.'],['albert','Wenn Sie einen Abdruck haben, bringen Sie ihn ruhig her.']]],
+      ['brief2','Brief übergeben',()=>S.q.brief==1&&S.g.hasBrief,[['albert','Ein Brief für mich? Das ist die Schrift meiner Enkelin!'],['albert','Danke, {WN}. Hier, nehmen Sie das. Und kommen Sie vorbei, wenn Ihre Stiefel drücken.']],()=>finishQuest('brief',30)]
+    ],
+    present:{
+      fuss:[[['albert','Ein Gipsabdruck! Sauber gemacht. Dann schauen wir mal ins Sohlenbuch.']],()=>soleGame(),()=>!has('sohle')],
+      sohle:[[['albert','Tonis Arbeitsschuhe, eindeutig. Die Kerbe hat er sich letzten Winter am Kellertor geholt.']]],
+      egon_sohle:[[['albert','Egons Gummistiefel. Wellenprofil, die hab ich erst im Frühjahr geflickt.']]],
+      brief:[[['albert','Für mich?']],()=>{}]
+    },
+    def:'Da kann ich nichts zu sagen. Ich bin nur Schuster.',
+    chat:['Ein guter Schuh hält ein Leben lang. Ein schlechter nur bis zum nächsten Regen.','Früher hab ich die Schützenstiefel fürs ganze Dorf gemacht.','Krümel hat gute Pfoten. Die brauchen keine Schuhe.']
+  },
+  toni:{
+    intro:[[null,'Toni poliert Gläser und pfeift dabei „Kein schöner Land“. Ziemlich schief.'],['toni','Servus! Toni Hufnagel, Wirt vom Goldenen Ochsen. Was darf es sein? Eine Apfelschorle? Geht aufs Haus!'],['toni','Schlimme Sache, das mit der Torte. Ganz schlimm.']],
+    topics:[
+      ['wo','Wo waren Sie heute früh?',null,[['toni','Im Keller! Den ganzen Morgen. Neues Fass angestochen.'],['toni','Ich hab keinen Fuß vor die Tür gesetzt. Ehrenwort.']],()=>gain('toni_keller')],
+      ['bart','Schöner Schnurrbart.',null,[['toni','Gell? Dreißig Jahre Pflege. Jeden Morgen mit Bartwachs.'],['toni','Ohne den Schnurrbart wär ich nicht der Toni. Der ist mein ganzer Stolz.']]],
+      ['kuehl','Was ist hinter der Kellertür?',null,[['toni','Die Kühlkammer. Da darf keiner rein. Hygiene! Vorschriften!'],['toni','Also, ähm… da ist nur Käse drin. Und Butter. Ganz normale Sachen.']]]
+    ],
+    present:{
+      jule_karton:[[['toni','Jule? Die sieht Gespenster!'],['toni','… Na gut. Ich war kurz draußen. Brötchen holen, bei Frieda. Der Karton war für die Brötchen.']],()=>gain('toni_broetchen'),()=>has('toni_keller')&&!has('toni_broetchen'),1],
+      frieda_toni:[[['toni','Ich… äh… hab mich im Tag geirrt. Also, in der Bäckerei. Also…'],['toni','Mir ist heiß. Ist Ihnen auch so heiß hier drin?']],()=>gain('toni_luege'),()=>has('toni_broetchen')&&!has('toni_luege'),1],
+      egon_pfeifen:[[['toni','Pfeifen? Jeder pfeift „Kein schöner Land“! Das ist ein Volkslied!']]],
+      fuss:[[['toni','Größe 45? Das ist… eine sehr häufige Größe. Glaub ich.']]],
+      sohle:[[['toni','Na und? Dann bin ich halt mal durch ein Beet gelaufen. Das ist doch kein Verbrechen!']]],
+      beere:[[['toni','Stachelbeeren? Die… die sind für mein Kompott!']]],
+      wette:[[['toni','Wo haben Sie DEN her? Der war zerrissen!'],['toni','Das ist Privatsache. Stammtischgeheimnis.']]],
+      kruemel:[[['toni','Krümel? In meinem Hof? Das waren bestimmt die Spatzen.']]],
+      toni_luege:[[['toni','Ich sag jetzt gar nix mehr. Höchstens was mit Anwalt. Oder mit Kaffee.']]]
+    },
+    def:'Keine Ahnung, {WN}. Noch eine Schorle?',
+    chat:['Im Ochsen gibt es jeden Freitag Schnitzel. Kommen Sie vorbei!','Der Stammtisch ist heilig. Da sitzt seit 1962 immer derselbe Haufen.','Ohne Bart zieht es ganz schön an der Oberlippe.']
+  },
+  kurt:{
+    intro:[['kurt','Moin moin! Kurt Wurstbauer. Beste Leberkäs-Semmel im ganzen Landkreis.'],['kurt','Die Torte von der Marlene, ne? Traurig. Aber gut für meine Wette. Ähm. Vergessen Sie das.']],
+    topics:[
+      ['wette','Was für eine Wette?',null,[['kurt','Ach, nur so eine Stammtischsache mit Toni. Worum es geht, sag ich nicht. Ehrensache.'],['kurt','Wenn Sie den Wettzettel finden, reden wir weiter. Den hat Toni.']]]
+    ],
+    present:{
+      wette:[[['kurt','Na gut. Ja. Toni hat gewettet, dass Frieda zum zehnten Mal gewinnt. Ich hab auf Marlene gesetzt.'],['kurt','Wer verliert, rasiert sich den Schnurrbart ab. Heute früh war Toni ganz komisch. Meinte, ich soll mir keine Hoffnungen machen.']],()=>gain('kurt_wette')],
+      jule_karton:[[['kurt','Toni mit einem Karton? Der trägt doch sonst nur Fässer.']]]
+    },
+    def:'Da kann ich nix zu sagen. Leberkäs?',
+    chat:['Ein ordentlicher Leberkäs braucht Zeit. Und ein bisschen Liebe.','Toni ohne Bart. Ich kann mich nicht dran gewöhnen.','Moin! Heute schon was Ordentliches gegessen?']
+  },
+  heinz:{
+    intro:[['heinz','Ah, {WN}! Schön, Sie zu sehen. Alles im Griff?']],
+    topics:[
+      ['fest','Das Sommerfest?',null,[['heinz','Der Kuchenwettbewerb ist der Höhepunkt! Ich bin Juror. Ich hab extra nicht gefrühstückt.'],['heinz','Die Preisverleihung verschieben wir, bis Sie den Fall gelöst haben. Nur keine Eile.']]],
+      ['dorf','Erzählen Sie von Kleckersdorf.',null,[['heinz','Kleckersdorf! 412 Einwohner, ein Brunnen, ein Maibaum und eine Kirche mit Glocke.'],['heinz','Die Glocke läutet übrigens seit 1953 nicht mehr. Keiner weiß, warum. Aber das ist eine andere Geschichte.']]]
+    ],
+    present:{},
+    def:'Da müssen Sie die Leute fragen, {WN}. Ich bin nur der Bürgermeister.',
+    chat:['Nächstes Jahr bewerben wir uns bei „Unser Dorf soll schöner werden“!','Haben Sie schon die Leberkäs-Semmel bei Kurt probiert? Hervorragend.','Ein ruhiges Dorf ist ein gutes Dorf. Meistens.']
+  }
+};
+function startQuest(q){if(S.q[q])return;S.q[q]=1;toast('Neuer Auftrag: '+QUESTS[q].n,2.6);sfx('pop');S.newCl=1}
+function finishQuest(q,t){S.q[q]=2;S.taler+=t;addFr(QUESTS[q].who,20);if(q=='zwerg')S.g.hasZwerg=0;if(q=='brief')S.g.hasBrief=0;sfx('coin');toast(`Auftrag erledigt: ${QUESTS[q].n} · +${t} Taler`,3);saveSoon()}
+
+/* ---------- places to examine ---------- */
+const SPOTS=[
+  {map:'dorf',x:7,y:30,l:'Ansehen',when:()=>S.g.caseOn&&!has('mehl'),act:()=>say([[null,'Die Fensterbank. Ein runder, sauberer Abdruck, wo die Torte stand. Drumherum liegt feiner weißer Staub.'],['me','Mehl? Für ein Baiser braucht man doch kaum Mehl…']],()=>gain('mehl'))},
+  {map:'dorf',x:7,y:31,l:'Untersuchen',when:()=>S.g.caseOn&&!has('fuss'),act:fussSpot},{map:'dorf',x:8,y:31,l:'Untersuchen',when:()=>S.g.caseOn&&!has('fuss'),act:fussSpot},
+  {map:'dorf',x:10,y:33,l:'Untersuchen',when:()=>S.g.caseOn&&!has('kruemel'),act:()=>say([[null,'Am Gartentor liegen weiße Krümel. Baiser!'],['kruemel','*schnüffel, schnüffel* … Wuff!'],[null,'Krümel hat die Spur aufgenommen. Die Krümel führen den Gartenweg entlang.']],()=>{gain('kruemel');sfx('bark')})},
+  {map:'dorf',x:41,y:9,l:'Untersuchen',when:()=>S.g.caseOn&&!has('beere'),act:()=>{if(!has('kruemel')){say([[null,'Ein Hinterhof mit Fässern und Kisten. Es riecht nach Bier und… irgendwas Süßem.']]);return}
+    say([[null,'Hier endet die Krümelspur. Neben den Fässern liegt eine zerdrückte Stachelbeere.'],['me','Eine Stachelbeere, hier im Wirtshaus-Hinterhof…'],['kruemel','Wuff! *wedelt*']],()=>gain('beere'))}},
+  {map:'marlene',x:5,y:3,l:'Ansehen',when:()=>S.g.caseOn&&!has('heber'),act:()=>say([[null,'Auf dem Küchentisch liegt ein Tortenheber. In den Griff ist etwas eingraviert: „Bäckerei Kornblum“.']],()=>gain('heber'))},
+  {map:'wirt',x:11,y:2,l:'Durchsuchen',when:()=>S.g.caseOn&&!has('wette'),act:()=>say([[null,'Im Papierkorb liegen Kronkorken, eine Bierdeckel-Rechnung und vier Papierfetzen mit Schrift.'],['me','Die setze ich mal zusammen.']],zettelGame)},
+  {map:'wirt',x:10,y:1,l:'Ansehen',act:()=>say([[null,S.c.solved?'Die Kühlkammer. Hier stand die Torte, gut gekühlt und unversehrt.':'Eine schwere Tür mit der Aufschrift „Kühlkammer. Zutritt nur für Personal“. Sie ist abgeschlossen.']])},
+  {map:'dorf',x:16,y:39,l:'Nehmen',when:()=>!S.g.hasZwerg&&S.q.zwerg!=2,act:()=>say([[null,'Im Schilf liegt ein Gartenzwerg mit roter Mütze. Auf dem Sockel steht „Horst“.'],['me','Das muss Egons Horst sein.']],()=>{S.g.hasZwerg=1;if(!S.q.zwerg)S.q.zwerg=1;toast('Gartenzwerg Horst eingesteckt');sfx('pop')})},
+  {map:'dorf',x:33,y:41,l:'Nehmen',when:()=>S.q.brief==1&&!S.g.hasBrief,act:()=>say([[null,'Unter der Rutsche liegt ein Brief. „An Opa Albert, Schuhmacherei“.']],()=>{S.g.hasBrief=1;toast('Brief eingesteckt');sfx('paper')})},
+  {map:'wache',x:5,y:1,l:'Pinnwand',act:()=>openBoard()},{map:'wache',x:6,y:1,l:'Pinnwand',act:()=>openBoard()},{map:'wache',x:7,y:1,l:'Pinnwand',act:()=>openBoard()},
+  {map:'wache',x:2,y:3,l:'Katalog',act:()=>openCatalog()},{map:'wache',x:3,y:3,l:'Katalog',act:()=>openCatalog()},
+  {map:'wache',x:11,y:2,l:'Schlafen',act:()=>askSleep()},{map:'wache',x:11,y:3,l:'Schlafen',act:()=>askSleep()},
+  {map:'dorf',x:18,y:17,l:'Ansehen',act:()=>say([[null,'Der Kleckersdorfer Maibaum. Oben flattern bunte Bänder, unten hängen die Wappen der Vereine.']])},
+  {map:'dorf',x:28,y:18,l:'Ansehen',act:()=>say([[null,'Der Dorfbrunnen. Auf dem Grund glitzern Münzen. Du lässt sie liegen, du bist ja Polizei.']])},{map:'dorf',x:29,y:18,l:'Ansehen',act:()=>say([[null,'Der Dorfbrunnen. Auf dem Grund glitzern Münzen. Du lässt sie liegen, du bist ja Polizei.']])},
+  {map:'dorf',x:25,y:22,l:'Ansehen',act:tafelSpot},{map:'dorf',x:26,y:22,l:'Ansehen',act:tafelSpot},{map:'dorf',x:27,y:22,l:'Ansehen',act:tafelSpot},
+  {map:'dorf',x:30,y:18,l:'Ansehen',act:()=>say([[null,'Ein gelber Briefkasten. Nächste Leerung: wenn Jule vorbeikommt.']])},
+  {map:'dorf',x:16,y:31,l:'Ansehen',act:()=>say([[null,'Eine Wespenfalle aus einem Marmeladenglas. Drei Wespen sind drin. Sie wirken beleidigt.']])},
+  {map:'dorf',x:42,y:8,l:'Ansehen',when:()=>has('beere')||S.c.solved,act:()=>say([[null,'Fässer mit der Aufschrift „Goldener Ochse“. Eins davon ist frisch angestochen.']])}
+];
+function fussSpot(){say([[null,'Im Blumenbeet unter dem Fenster ist ein tiefer Schuhabdruck. Groß! Karomuster, und am Absatz fehlt ein kleines Stück, wie eine Kerbe.'],['me','Den gieße ich mit Gips aus. Das Spurenset hab ich immer dabei.']],()=>gain('fuss'))}
+function tafelSpot(){say([[null,S.c.solved?'Die Kuchentafel. Ganz vorn steht Marlenes Torte mit einer goldenen Schleife: „1. Preis“.':'Die Kuchentafel für den Wettbewerb. Friedas Donauwelle, Kuchen aus dem ganzen Dorf… und eine Lücke mit dem Schild „Pfefferles Wolke“.']])}
+for(const b of BLD)if(b.locked){const dy=b.y+b.h-1;SPOTS.push({map:'dorf',x:b.door,y:dy,l:'Tür',act:()=>say([[null,b.locked]])});if(b.door2)SPOTS.push({map:'dorf',x:b.door2,y:dy,l:'Tür',act:()=>say([[null,b.locked]])})}
+
+/* ---------- Krümel's hints ---------- */
+const HINTS1=[
+  [()=>!has('zeit'),'marlene','Marlene wartet sicher an ihrem Haus am Gartenweg. Frag sie, was genau passiert ist.'],
+  [()=>!has('fuss')||!has('kruemel')||!has('mehl'),'tatort','Schau dir den Tatort genau an: die Fensterbank, das Blumenbeet darunter und das Gartentor.'],
+  [()=>!has('beere'),'hof','Krümel hat die Krümelspur in der Nase. Folge den weißen Krümeln bis zum Ende.'],
+  [()=>!has('jule_karton'),'jule','Jule, die Postbotin, kommt überall herum. Frag sie, was sie heute früh gesehen hat.'],
+  [()=>!has('toni_keller'),'toni','Die Spur führte zum Wirtshaus. Frag Toni, wo er heute früh war.'],
+  [()=>!has('sohle'),'albert','Wem gehört der Schuhabdruck? Albert, der Schuster, kennt jede Sohle im Dorf. Zeig ihm den Gipsabdruck.'],
+  [()=>!has('toni_broetchen'),'toni','Tonis Aussage passt nicht zu dem, was Jule gesehen hat. Halte ihm Jules Beobachtung vor.'],
+  [()=>!has('frieda_toni'),'frieda','Hat Toni wirklich Brötchen geholt? Frag Frieda in der Bäckerei danach.'],
+  [()=>!has('toni_luege'),'toni','Frieda sagt, Toni war gar nicht bei ihr. Halte Toni Friedas Aussage vor.'],
+  [()=>!has('wette'),'korb','Aber warum? Im Wirtshaus liegt etwas Zerrissenes im Papierkorb.'],
+  [()=>!has('kurt_wette'),'kurt','Auf dem Zettel steht noch ein Name: Kurt. Zeig ihm den Wettzettel.'],
+  [()=>true,'pinn','Krümel ist sich sicher: Du hast alles, was du brauchst. Geh zur Pinnwand in der Wache und löse den Fall.']
+];
+const HINT_POS={tatort:['dorf',8,31],hof:['dorf',41,9],korb:['wirt',11,2],pinn:['wache',6,2],zwerg:['dorf',16,39],brief:['dorf',33,41],egon:null};
+function currentHint(){
+  if(!S.g.caseOn&&!S.c.solved)return null;
+  if(S.c.solved){
+    if(S.q.zwerg==1)return S.g.hasZwerg?['egon','Bring Horst zurück zu Egon.']:[S.g.zwergHint?'zwerg':'kalle',S.g.zwergHint?'Kalle hat Horst im Schilf am Teich versteckt.':'Vielleicht weiß Kalle, wo Horst steckt.'];
+    if(S.q.brief==1)return S.g.hasBrief?['albert','Bring den Brief zu Albert in die Schuhmacherei.']:['brief','Jules Brief liegt irgendwo beim Spielplatz.'];
+    return null;
+  }
+  for(const h of HINTS1)if(h[0]())return[h[1],h[2]];
+}
+function hintTarget(k){
+  if(NPC[k]){const n=NS[k];if(!n.map)return null;return[n.map,n.x,n.y]}
+  const p=HINT_POS[k];return p?[p[0],p[1]+.5,p[2]+.5]:null;
+}
+
+/* ---------- UI basics ---------- */
+let toastT=0;
+function toast(m,sec=2.6){const e=$('#toast');e.textContent=m;e.classList.remove('off');toastT=sec}
+const modalOpen=()=>!$('#modalWrap').hidden;
+function openModal(html){if(joy.id!=null)resetJoy();for(const k in keys)keys[k]=false;$('#aBtn').classList.remove('down');$('#modal').innerHTML=html;$('#modalWrap').hidden=false;paused=true;hydrate($('#modal'));$('#modal').scrollTop=0}
+function closeModal(){$('#modalWrap').hidden=true;paused=!!D}
+function hydrate(root){
+  root.querySelectorAll('canvas[data-icon]').forEach(c=>{c.width=16;c.height=16;c.getContext('2d').drawImage(icon(c.dataset.icon),0,0)});
+  root.querySelectorAll('canvas[data-who]').forEach(c=>{c.width=32;c.height=32;c.getContext('2d').drawImage(portraitCanvas(c.dataset.who),0,0)});
+}
+function flash(t){const f=$('#flash');f.textContent=t;f.classList.remove('go');void f.offsetWidth;f.classList.add('go');shake=.4}
+let shake=0;
+function hideCtl(h){document.body.classList.toggle('talk',h);$('#aBtn').hidden=h;$('#dogBtn').hidden=h||!S.g.intro}
+const heartsHtml=id=>{const h=hearts(id);return`<span class="hearts">${'♥'.repeat(h)}<span class="e">${'♥'.repeat(5-h)}</span></span>`};
+
+/* ---------- dialogue ---------- */
+let D=null,talking=null;
+const WHO_NAME=w=>w=='me'?S.name:w=='kruemel'?'Krümel':NPC[w]?NPC[w].s:'';
+const PITCH={marlene:700,frieda:640,toni:300,egon:240,kalle:820,jule:720,albert:280,kurt:330,heinz:380,me:520,kruemel:900};
+function say(lines,done){
+  if(joy.id!=null)resetJoy();for(const k in keys)keys[k]=false;
+  D={q:lines.slice(),done,full:'',shown:0,ch:null};paused=true;$('#dlg').hidden=false;hideCtl(true);nextLine();
+}
+function showLine(who,t){
+  D.who=who;D.full=fill(t);D.shown=0;D.bl=0;
+  const box=$('#dBox');box.classList.toggle('nopic',!who);
+  $('#dName').textContent=who?WHO_NAME(who):'';$('#dName').hidden=!who;
+  const tx=$('#dText');tx.classList.toggle('nar',!who);tx.textContent='';
+  if(who){const c=$('#dPic').getContext('2d');c.clearRect(0,0,32,32);c.drawImage(portraitCanvas(who),0,0)}
+  $('#dCh').innerHTML='';$('#dMore').hidden=true;
+}
+function nextLine(){
+  if(!D)return;
+  const it=D.q.shift();
+  if(it===undefined){const d=D.done;closeDlg();if(d)d();return}
+  if(it.ch){showLine(it.who,it.t||'');D.ch=it.ch;return}
+  D.ch=null;showLine(it[0],it[1]);
+}
+function renderChoices(){
+  const box=$('#dCh');box.innerHTML='';
+  D.ch.forEach(([label,fn,cls,ic])=>{const b=document.createElement('button');b.className='ch'+(cls?' '+cls:'');
+    b.innerHTML=(cls=='new'?'<span class="dot"></span>':'')+(ic?`<canvas data-icon="${ic}"></canvas>`:'')+`<span>${esc(label)}</span>`;
+    b.onclick=e=>{e.stopPropagation();sfx('click');closeDlg(true);fn()};box.appendChild(b)});
+  hydrate(box);
+}
+function closeDlg(keep){D=null;$('#dlg').hidden=true;$('#dCh').innerHTML='';paused=modalOpen();hideCtl(false);if(!keep)talking=null}
+function dlgTap(){
+  if(!D)return;
+  if(D.shown<D.full.length){D.shown=D.full.length;$('#dText').textContent=D.full;if(D.ch)renderChoices();else $('#dMore').hidden=false;return}
+  if(D.ch)return;sfx('click');nextLine();
+}
+function dlgTick(dt){
+  if(!D||D.shown>=D.full.length)return;
+  const before=Math.floor(D.shown);D.shown=Math.min(D.full.length,D.shown+dt*58);const now=Math.floor(D.shown);
+  if(now>before){$('#dText').textContent=D.full.slice(0,now);if(D.who&&now%3==0)sfx('blip',PITCH[D.who]||520)}
+  if(D.shown>=D.full.length){$('#dText').textContent=D.full;if(D.ch)renderChoices();else $('#dMore').hidden=false}
+}
+$('#dBox').addEventListener('click',()=>dlgTap());
+
+/* ---------- talking ---------- */
+function talkTo(id){
+  const n=NS[id];talking=id;
+  const dx=S.px-n.x,dy=S.py-n.y;n.dir=Math.abs(dx)>Math.abs(dy)?(dx<0?2:3):(dy<0?1:0);
+  if(!S.met[id]){S.met[id]=1;addFr(id,4);say(T[id].intro,()=>talkMenu(id))}else talkMenu(id);
+}
+function talkMenu(id){
+  talking=id;const tt=T[id],opts=[];
+  for(const[tid,label,req,lines,after]of tt.topics){
+    if(req&&!req())continue;const k=id+'_'+tid,asked=S.c.ask[k];
+    opts.push([label,()=>{talking=id;S.c.ask[k]=1;if(!asked)addFr(id,2);say(lines,()=>{if(after)after();saveSoon();if(!modalOpen())talkMenu(id)})},asked?'old':'new']);
+  }
+  const ev=presentables();
+  if(ev.length)opts.push(['Hinweis vorlegen …',()=>presentMenu(id),'',null]);
+  if(S.chat[id]!=S.day)opts.push(['Plaudern',()=>{talking=id;S.chat[id]=S.day;addFr(id,6);const cl=tt.chat;
+    say([[id,cl[(S.day+id.length)%cl.length]]],()=>{toast(`Freundschaft mit ${NPC[id].s}: ${'♥'.repeat(hearts(id))||'♡'}`,1.8);talkMenu(id)})},'']);
+  opts.push(['Tschüss',()=>{talking=null},'bye']);
+  const greet=id=='kalle'?'Was gibt’s?':S.c.solved&&id=='toni'?'Ja… {WN}?':'Ja, {WN}?';
+  say([{who:id,t:greet,ch:opts}]);
+}
+function presentables(){
+  const cs=CUR().clues,r=S.c.cl.map(c=>[c,cs[c].n,cs[c].ic]);
+  if(S.g.hasZwerg)r.push(['zwerg',ITEMS.zwerg.n,'zwerg']);if(S.g.hasBrief)r.push(['brief',ITEMS.brief.n,'brief']);
+  return r;
+}
+function presentMenu(id){
+  const opts=presentables().map(([c,n,ic])=>[n,()=>present(id,c),'',ic]);
+  opts.push(['Zurück',()=>talkMenu(id),'bye']);
+  say([{who:'me',t:'Was zeige ich '+NPC[id].s+'?',ch:opts}]);
+}
+function present(id,c){
+  talking=id;const tt=T[id],p=tt.present[c];
+  if(c=='zwerg'&&id=='egon'&&S.q.zwerg==1){const t=tt.topics.find(t=>t[0]=='horst');S.c.ask.egon_horst=1;say(t[3],()=>{t[4]();talkMenu(id)});return}
+  if(c=='brief'&&id=='albert'&&S.q.brief==1){const t=tt.topics.find(t=>t[0]=='brief2');say(t[3],()=>{t[4]();talkMenu(id)});return}
+  if(p&&(!p[2]||p[2]())){
+    if(p[3]){flash('Widerspruch!');sfx('wider')}
+    say(p[0],()=>{if(p[1])p[1]();saveSoon();if(!modalOpen()&&!D)talkMenu(id)});
+  }else say([[id,tt.def]],()=>talkMenu(id));
+}
+
+/* ---------- notebook ---------- */
+let nbTab='fall';
+function openNotebook(tab){
+  if(tab)nbTab=tab;S.newCl=0;$('#bookDot').hidden=true;
+  const C=CUR(),tabs=[['fall','Fall'],['hin','Hinweise'],['leute','Personen'],['auf','Aufträge']];if(S.g.raben)tabs.push(['rabe','Rabe']);
+  let body='';
+  if(nbTab=='fall'){
+    if(!S.g.caseOn&&!S.c.solved)body='<p>Noch kein Fall. In Kleckersdorf ist es ruhig. Verdächtig ruhig.</p>';
+    else{
+      const[k,n]=keyProgress();
+      const qs=[[has('zeit'),'Wann verschwand die Torte?'],[has('fuss')&&has('kruemel'),'Welche Spuren gibt es am Tatort?'],[has('beere'),'Wohin führt die Krümelspur?'],[has('sohle'),'Wem gehört der Schuhabdruck?'],[has('toni_luege'),'Wer sagt nicht die Wahrheit?'],[has('wette')&&has('kurt_wette'),'Warum sollte jemand die Torte stehlen?']];
+      body=`<h3>${C.short}: ${C.title}</h3><p>Am Morgen des Sommerfests verschwand Marlene Pfefferles Stachelbeer-Baiser-Torte vom Fensterbrett. Der Kuchenwettbewerb wartet, bis der Fall gelöst ist.</p>
+        ${S.c.solved?`<div class="note"><b>Gelöst!</b> Toni Hufnagel hat die Torte genommen, um seine Wette zu retten. Marlene gewann den ersten Preis.<div class="stars">${'★'.repeat(S.c.stars)}<span class="e">${'★'.repeat(3-S.c.stars)}</span></div></div>`:`<p><b>Wichtige Hinweise:</b> ${k} von ${n}</p>`}
+        <h3>Offene Fragen</h3><ul class="qs">${qs.map(([d,t])=>`<li><i>${d?'✓':'?'}</i>${t}</li>`).join('')}</ul>
+        ${!S.c.solved?'<p class="saved">Wenn du dir sicher bist: Pinnwand in der Wache. Falsche Anklagen kosten Sterne, aber du darfst es erneut versuchen.</p>':''}`;
+    }
+  }
+  if(nbTab=='hin'){
+    const cs=CUR().clues,list=S.c.cl.filter(c=>!cs[c].who);
+    body=list.length?`<div class="rows">${list.map(c=>`<div class="row${cs[c].key?' key':''}"><canvas data-icon="${cs[c].ic}"></canvas><div><b>${cs[c].n}${cs[c].key?'<span class="tag">wichtig</span>':''}</b><small>${esc(fill(cs[c].d))}</small></div><span></span></div>`).join('')}</div>`:'<p>Noch keine Spuren. Untersuche Orte mit dem runden Knopf.</p>';
+    const aus=S.c.cl.filter(c=>cs[c].who);
+    if(aus.length)body+=`<h3>Aussagen</h3><div class="rows">${aus.map(c=>`<div class="row${cs[c].key?' key':''}"><canvas data-who="${cs[c].who}"></canvas><div><b>${cs[c].n}${cs[c].key?'<span class="tag">wichtig</span>':''}</b><small>${esc(cs[c].d)}</small></div><span></span></div>`).join('')}</div>`;
+    const it=[];if(S.g.hasZwerg)it.push('zwerg');if(S.g.hasBrief)it.push('brief');
+    if(it.length)body+=`<h3>Dabei</h3><div class="rows">${it.map(i=>`<div class="row"><canvas data-icon="${ITEMS[i].ic}"></canvas><div><b>${ITEMS[i].n}</b><small>${ITEMS[i].d}</small></div><span></span></div>`).join('')}</div>`;
+  }
+  if(nbTab=='leute'){
+    const ids=Object.keys(NPC).filter(i=>S.met[i]);
+    body=ids.length?`<div class="rows">${ids.map(i=>`<div class="row"><canvas data-who="${i}"></canvas><div><b>${NPC[i].n}</b><small>${NPC[i].role}</small></div>${heartsHtml(i)}</div>`).join('')}</div><p class="saved">Einmal am Tag plaudern bringt Freundschaft.</p>`:'<p>Du hast noch niemanden kennengelernt.</p>';
+    const un=Object.keys(NPC).length-ids.length;if(un>0&&ids.length)body+=`<p class="saved">Noch ${un} Leute im Dorf kennst du nicht.</p>`;
+  }
+  if(nbTab=='auf'){
+    const qs=Object.keys(QUESTS).filter(q=>S.q[q]);
+    body=qs.length?`<div class="rows">${qs.map(q=>`<div class="row${S.q[q]==2?' dim':''}"><canvas data-who="${QUESTS[q].who}"></canvas><div><b>${QUESTS[q].n}${S.q[q]==2?' ✓':''}</b><small>${S.q[q]==2?QUESTS[q].done:QUESTS[q].d}</small></div><span></span></div>`).join('')}</div>`:'<p>Keine Aufträge. Manche Leute im Dorf haben kleine Sorgen. Frag nach!</p>';
+  }
+  if(nbTab=='rabe'){
+    body=`<div class="who"><canvas data-icon="rabe" style="width:48px;height:48px"></canvas><div><h3 style="margin:0">Das Rätsel des Raben</h3></div></div>
+      <p>Hinter der Torte in der Kühlkammer lag ein vergilbter Umschlag. Das Siegel zeigt einen Raben mit einer Glocke im Schnabel.</p>
+      <p>Darin steht nur ein Satz: <i>„Wenn die Glocke schweigt, beginnt die Suche.“</i></p>
+      <p>Heinz sagt, die Kirchenglocke läutet seit 1953 nicht mehr.</p>
+      <div class="note">Fall 2 kommt mit dem nächsten Update.</div>`;
+  }
+  openModal(`<h2>Notizbuch</h2><div class="tabs">${tabs.map(([k,l])=>`<button class="tab${k==nbTab?' on':''}" data-t="${k}">${l}</button>`).join('')}</div>${body}<div class="btns"><button class="btn wide" id="nbX">Schließen</button></div>`);
+  $('#modal').querySelectorAll('.tab').forEach(b=>b.onclick=()=>{sfx('click');openNotebook(b.dataset.t)});
+  $('#nbX').onclick=closeModal;
+}
+
+/* ---------- puzzle: sole comparison ---------- */
+const SOLES=[['frieda','Frieda K.','Clogs, Noppen',38,'noppen',0],['egon','Egon G.','Gummistiefel, Wellen',42,'wellen',0],['kalle','Kalle B.','Turnschuhe, Zickzack',37,'zick',0],
+  ['heinz','Heinz B.','Halbschuhe, Karo',45,'karo',0],['toni','Toni H.','Arbeitsschuhe, Karo',45,'karo',1],['jule','Jule S.','Radschuhe, Karo',39,'karo',1]];
+function soleCanvas(size,pat,notch,scale){
+  const h=Math.round(28+(size-36)*1.6),w=Math.round(h*.42),W=40,H=60;
+  return mk(W,H,g=>{
+    const ox=(W-w)/2,oy=H-2-h;
+    const inSole=(x,y)=>{const t=(y-oy)/h;if(t<0||t>1)return false;let ww=t<.45?w*(.8+.2*Math.sin(t/.45*Math.PI/2)):t<.65?w*.72:w*.82;if(t<.12)ww*=Math.sqrt(t/.12);if(t>.9)ww*=Math.sqrt((1-t)/.1)*1+0;return Math.abs(x+.5-W/2)<=ww/2};
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!inSole(x,y))continue;const t=(y-oy)/h;let c='#8a6a4a',lx=x-ox,ly=y-oy;let on=false;
+      if(pat=='noppen')on=(lx%4<2)&&(ly%4<2);
+      if(pat=='wellen')on=((ly+Math.round(Math.sin(lx*.9)*1.5))%5)<2;
+      if(pat=='zick')on=((ly+Math.abs((lx%6)-3))%5)<2;
+      if(pat=='karo')on=(lx%4==0)||(ly%4==0);
+      if(pat=='streifen')on=ly%3==0;
+      if(t>.62&&t<.66)on=false;
+      R(g,x,y,1,1,on?'#5a3a22':c)}
+    if(notch){const ny=oy+h-7,nx=W/2+Math.round(w*.25);for(let i=0;i<4;i++)R(g,nx-i+1,ny+i,i+2,1,'#e8dcc4')}
+  });
+}
+function soleGame(){
+  const cast=soleCanvas(45,'karo',1);
+  let tries=0;
+  openModal(`<h2>Das Sohlenbuch</h2><div class="cast"><canvas id="sgCast" width="40" height="60"></canvas><div><b>Dein Gipsabdruck</b><p style="font-size:14px;margin:4px 0">Karomuster, Kerbe am Absatz. Länge etwa 30 cm, das ist ungefähr Größe 45.</p></div></div>
+    <p>Welche Sohle aus Alberts Buch passt? Achte auf Muster, Kerbe und Größe.</p>
+    <div class="soles">${SOLES.map((s,i)=>`<button class="pick" data-i="${i}"><canvas width="40" height="60"></canvas>${s[1]}<br><small>${s[2]}<br>Gr. ${s[3]}</small></button>`).join('')}</div>
+    <p id="sgMsg" role="status"></p><div class="btns"><button class="btn alt" id="sgX">Später</button></div>`);
+  $('#sgCast').getContext('2d').drawImage(cast,0,0);
+  $('#modal').querySelectorAll('.soles .pick').forEach(b=>{const s=SOLES[+b.dataset.i];b.querySelector('canvas').getContext('2d').drawImage(soleCanvas(s[3],s[4],s[5]),0,0);
+    b.onclick=()=>{const i=+b.dataset.i;tries++;
+      if(s[0]=='toni'){sfx('clue');closeModal();say([['albert','Karo, Kerbe am Absatz, Größe 45. Das sind Tonis Arbeitsschuhe!'],['albert','Die Kerbe hat er sich letzten Winter am Kellertor vom Wirtshaus geholt. Ich hab ihm noch gesagt, er soll sie reparieren lassen.']],()=>{gain('sohle');talkMenu('albert')});return}
+      sfx('wrong');b.disabled=true;
+      $('#sgMsg').textContent=s[4]!='karo'?'Das Profil passt überhaupt nicht.':!s[5]?'Das Karo stimmt. Aber schau genau auf den Absatz.':'Muster und Kerbe passen. Aber die Größe?'}});
+  $('#sgX').onclick=()=>{closeModal();talkMenu('albert')};
+}
+
+/* ---------- puzzle: torn note ---------- */
+let noteImg=null;
+function drawNote(){
+  return mk(320,220,g=>{
+    R(g,0,0,320,220,'#f4ecd4');for(let y=26;y<220;y+=22)R(g,0,y,320,1,'#c8d4e8');R(g,34,0,2,220,'#e8a8a8');
+    g.fillStyle='#3a3a7a';g.textBaseline='alphabetic';
+    const L=[['WETTE!',30,'bold 26px "Pixelify Sans"',44],['Frieda gewinnt den Kuchen-',64,'17px "Pixelify Sans"',44],['wettbewerb zum 10. Mal.',86,'17px "Pixelify Sans"',44],['Wer verliert, rasiert sich',120,'17px "Pixelify Sans"',44],['den Schnurrbart ab!',142,'bold 17px "Pixelify Sans"',44],['gez. Toni',190,'17px "Pixelify Sans"',48],['gez. Kurt',190,'17px "Pixelify Sans"',196]];
+    for(const[t,y,f,x]of L){g.font=f;g.fillText(t,x,y)}
+    line(g,48,196,120,194,'#3a3a7a');line(g,196,196,270,197,'#3a3a7a');
+  });
+}
+function zettelGame(){
+  noteImg=drawNote();
+  const P=[{i:0,r:2},{i:1,r:1},{i:2,r:0},{i:3,r:3}];
+  const ord=[3,0,2,1];let slots=ord.map(k=>P[k]),sel=-1,solved=false;
+  if(slots.every((p,i)=>p.i==i&&p.r==0))slots[0].r=1;
+  openModal(`<h2>Papierfetzen</h2><p>Tippe einen Fetzen an, um ihn zu drehen. Halte ihn gedrückt oder tippe erst auf „Tauschen“, um zwei Fetzen zu tauschen.</p>
+    <div class="zet" id="zg">${[0,1,2,3].map(i=>`<canvas width="160" height="110" data-s="${i}"></canvas>`).join('')}</div>
+    <div class="btns"><button class="btn sm alt" id="zSw">Tauschen</button><button class="btn sm alt" id="zX">Später</button></div><p id="zMsg" role="status"></p>`);
+  let swapMode=false;
+  const draw=()=>{$('#zg').querySelectorAll('canvas').forEach(c=>{const s=slots[+c.dataset.s],g=c.getContext('2d');g.clearRect(0,0,160,110);g.save();g.translate(80,55);g.rotate(s.r*Math.PI/2);
+    const sx=(s.i%2)*160,sy=Math.floor(s.i/2)*110;if(s.r%2){g.scale(110/160,160/110)}g.drawImage(noteImg,sx,sy,160,110,-80,-55,160,110);g.restore();
+    g.strokeStyle='rgba(120,90,60,.5)';g.lineWidth=2;g.strokeRect(1,1,158,108);c.classList.toggle('on',+c.dataset.s==sel)})};
+  const check=()=>{if(slots.every((p,i)=>p.i==i&&p.r==0)){solved=true;sfx('clue');
+    $('#zMsg').innerHTML='<b>Geschafft!</b> Ein Wettzettel, unterschrieben von Toni und Kurt.';
+    $('#zSw').hidden=true;$('#zX').textContent='Einstecken';$('#zX').className='btn';}};
+  const tapSlot=i=>{if(solved)return;sfx('paper');
+    if(swapMode){if(sel<0){sel=i}else{if(sel!=i){const t=slots[sel];slots[sel]=slots[i];slots[i]=t}sel=-1;swapMode=false;$('#zSw').classList.remove('on');$('#zSw').textContent='Tauschen'}}
+    else{slots[i].r=(slots[i].r+1)%4}draw();check()};
+  let hold=null,held=false;
+  $('#zg').querySelectorAll('canvas').forEach(c=>{
+    c.addEventListener('pointerdown',()=>{held=false;hold=setTimeout(()=>{held=true;if(!swapMode){swapMode=true;sel=+c.dataset.s;$('#zSw').textContent='Mit welchem?';draw()}},420)});
+    c.addEventListener('pointerup',()=>{clearTimeout(hold);if(!held)tapSlot(+c.dataset.s)});
+    c.addEventListener('pointerleave',()=>clearTimeout(hold));
+  });
+  $('#zSw').onclick=()=>{swapMode=!swapMode;sel=-1;$('#zSw').textContent=swapMode?'Welchen Fetzen?':'Tauschen';draw()};
+  $('#zX').onclick=()=>{closeModal();if(solved){say([['me','Eine Wette um Tonis Schnurrbart… Wenn Marlene gewinnt, verliert Toni.']],()=>gain('wette'))}};
+  draw();
+}
+
+/* ---------- the board: accusation ---------- */
+function openBoard(){
+  if(!S.g.caseOn&&!S.c.solved){say([[null,'Die Pinnwand ist noch leer. Nur ein Zettel: „Kaffee nachkaufen!“']]);return}
+  if(S.c.solved){openNotebook('fall');return}
+  const C=CUR(),sus=C.suspects.filter(i=>S.met[i]);
+  const mot=C.motives.filter(m=>!m[2]||has(m[2]));
+  const sel={who:null,mot:null,pr:null};
+  const cs=C.clues;
+  openModal(`<h2>Den Fall lösen</h2><p>Wer hat die Torte genommen, warum, und was beweist es?</p>
+    <h3>1. Wer war es?</h3><div class="pgrid">${sus.map(i=>`<button class="pick" data-w="${i}"><canvas data-who="${i}"></canvas>${NPC[i].s}</button>`).join('')}</div>
+    <h3>2. Warum?</h3><div class="plist">${mot.map(m=>`<button class="pick" data-m="${m[0]}">${m[1]}</button>`).join('')}</div>
+    <h3>3. Welcher Beweis zeigt es?</h3><div class="plist">${S.c.cl.map(c=>`<button class="pick" data-p="${c}"><canvas ${cs[c].who?`data-who="${cs[c].who}"`:`data-icon="${cs[c].ic}"`}></canvas>${cs[c].n}</button>`).join('')}</div>
+    <div class="btns"><button class="btn" id="acGo" disabled>Anklage erheben</button><button class="btn alt" id="acX">Noch nicht</button></div>`);
+  const upd=()=>{$('#modal').querySelectorAll('[data-w]').forEach(b=>b.classList.toggle('on',b.dataset.w==sel.who));$('#modal').querySelectorAll('[data-m]').forEach(b=>b.classList.toggle('on',b.dataset.m==sel.mot));
+    $('#modal').querySelectorAll('[data-p]').forEach(b=>b.classList.toggle('on',b.dataset.p==sel.pr));$('#acGo').disabled=!(sel.who&&sel.mot&&sel.pr)};
+  $('#modal').querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{sel.who=b.dataset.w;sfx('click');upd()});
+  $('#modal').querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{sel.mot=b.dataset.m;sfx('click');upd()});
+  $('#modal').querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{sel.pr=b.dataset.p;sfx('click');upd()});
+  $('#acX').onclick=closeModal;
+  $('#acGo').onclick=()=>{closeModal();accuse(sel)};
+}
+const REBUT={frieda:'Ich stand ab sechs Uhr im Laden! Jule und Kalle waren doch bei mir!',egon:'Ich? Ich mag nicht mal Baiser! Und meine Stiefel haben Wellen, Größe 42!',kalle:'Ich hab nur einen Windbeutel gegessen! Ich hab sogar den Bon!',
+  jule:'Ich hab doch Toni gesehen, nicht umgekehrt!',kurt:'Ich? Ich hab doch auf Marlene gewettet! Warum sollte ich ihre Torte klauen?',marlene:'Meine eigene Torte?! Also wirklich, {WN}!',albert:'Ich war den ganzen Morgen in der Werkstatt. Mit Größe 41.',heinz:'Ich bin der Juror! Ich hätte die Torte ja sowieso probieren dürfen!'};
+function accuse(sel){
+  const C=CUR();
+  if(sel.who!='toni'){S.c.wrong++;sfx('wrong');say([['me',`${NPC[sel.who].n}, ich glaube, Sie haben die Torte genommen!`],[sel.who,REBUT[sel.who]],[null,'Das passt nicht. Schau dir die Hinweise noch einmal an.']]);saveSoon();return}
+  if(sel.mot!='wette'){S.c.wrong++;sfx('wrong');say([['me','Toni Hufnagel, Sie haben die Torte genommen!'],['toni','Ich? Und warum, bitte schön, sollte ich das tun?'],[null,'Toni wird blass, aber das Motiv überzeugt nicht. Warum sollte gerade er Marlenes Torte wollen?']]);saveSoon();return}
+  if(!C.proofs.includes(sel.pr)){S.c.wrong++;sfx('wrong');say([['me','Toni Hufnagel, Sie haben die Torte genommen, um Ihre Wette zu retten!'],['toni','Das beweist gar nix!'],[null,'Toni verschränkt die Arme. Du brauchst einen Beweis, der zeigt, dass er am Tatort war oder gelogen hat.']]);saveSoon();return}
+  const proofLine={sohle:'Der Schuhabdruck im Beet passt genau zu Ihren Arbeitsschuhen. Karo, Größe 45, mit der Kerbe vom Kellertor.',jule_karton:'Jule hat Sie um 7:45 Uhr am Gartenweg gesehen. Mit einem großen weißen Karton.',toni_luege:'Sie waren nicht im Keller, und Brötchen haben Sie auch nicht geholt. Frieda sagt, Sie waren gar nicht da.'}[sel.pr];
+  S.c.stars=Math.max(1,3-S.c.wrong);
+  flash('Gelöst!');sfx('win');
+  endingScene(proofLine);
+}
+function endingScene(proofLine){
+  S.cut={toni:{map:'wache',x:7,y:4,dir:2},heinz:{map:'wache',x:4,y:5,dir:3},marlene:{map:'wache',x:8,y:5,dir:2}};
+  goMap('wache',6.5,6.4,1,()=>{placeNpcs();
+    say([[null,'Kurz darauf in der Wache.'],['me','Toni Hufnagel. '+proofLine],['me','Und Sie hatten einen Grund: Ihre Wette mit Kurt. Gewinnt Marlene, ist Ihr Schnurrbart dran.'],
+      ['toni','…Himmelherrgott. Ja. Ich war es.'],['toni','Ich hör, dass Marlene wieder mitbäckt. Marlene! Die hat früher jeden Wettbewerb gewonnen!'],
+      ['toni','Mein Schnurrbart, {WN}! Dreißig Jahre! Ich wollte die Torte nur bis nach der Preisverleihung in die Kühlkammer stellen. Ehrlich, es fehlt kein Krümel!'],
+      ['kruemel','Wuff!'],['toni','…Gut, ein paar Krümel.'],
+      ['marlene','Meine Wolke! Sie ist heil?'],['toni','Ganz heil, Marlene. Nur eine kleine Delle im Baiser. Es tut mir leid.'],
+      [null,'Am Nachmittag findet endlich der Kuchenwettbewerb auf dem Dorfplatz statt.'],
+      ['heinz','Liebe Kleckersdorferinnen und Kleckersdorfer! Der erste Preis geht an… Marlene Pfefferle und ihre Stachelbeer-Baiser-Torte!'],
+      ['marlene','Ach, {WN}! Ohne Sie hätte ich heute nur ein leeres Fensterbrett gehabt. Das erste Stück ist für Sie. Und ein Zipfel für Krümel.'],
+      ['frieda','Glückwunsch, Marlene. Ehrlich. Nächstes Jahr hol ich mir den Titel zurück!'],
+      ['kurt','Toni! Wettschulden sind Ehrenschulden. Der Rasierer liegt bereit!'],['toni','…Ade, mein Schnurrbart.'],
+      [null,'Als Wiedergutmachung hilft Toni beim Abbau der Festtische und bringt Marlene einen Monat lang Mittagessen.'],
+      ['heinz','Und unsere Wache hat ihren ersten Fall gelöst! Applaus für {WN}. Und für Krümel!']],()=>{
+        S.g.shaved=S.day;S.c.solved=1;S.g.caseOn=0;S.done.push(1);
+        const rw=100+25*S.c.stars;S.taler+=rw;addFr('marlene',20);addFr('frieda',6);addFr('heinz',8);
+        S.cut=null;placeNpcs(true);saveSoon();
+        openModal(`<h2>Fall gelöst!</h2><p><b>${CUR().title}</b></p><div class="stars">${'★'.repeat(S.c.stars)}<span class="e">${'★'.repeat(3-S.c.stars)}</span></div>
+          <p>${S.c.wrong?`Falsche Anklagen: ${S.c.wrong}`:'Ohne eine einzige falsche Anklage. Meisterhaft!'}</p><p class="price">Belohnung: +${rw} Taler</p>
+          <p style="font-size:14px">Im Katalog auf deinem Schreibtisch kannst du damit die Wache einrichten und neue Hüte kaufen.</p>
+          <div class="btns"><button class="btn wide" id="endOk">Weiter</button></div>`);
+        $('#endOk').onclick=()=>{closeModal();raven()};
+      });
+  });
+}
+function raven(){
+  say([['toni','Ach, {WN}… Das hier lag in der Kühlkammer, hinter der Torte. Ganz hinten im Regal. Hab ich noch nie gesehen.'],
+    [null,'Ein vergilbter Umschlag. Das Siegel zeigt einen Raben mit einer Glocke im Schnabel.'],[null,'Darin steht nur ein einziger Satz: „Wenn die Glocke schweigt, beginnt die Suche.“'],
+    ['me','Die Kirchenglocke läutet seit 1953 nicht mehr, hat Heinz gesagt…'],['kruemel','*knurrt leise*'],['me','Das hebe ich gut auf.']],()=>{
+      S.g.raben=1;S.newCl=1;toast('Neu im Notizbuch: Das Rätsel des Raben',3);sfx('clue');saveSoon();
+      setTimeout(()=>{if(!D&&!modalOpen())toast('Fall 2 kommt mit dem nächsten Update. Bis dahin: Kleckersdorf gehört dir!',4)},3200)});
+}
+
+/* ---------- catalog ---------- */
+const DECO=[['pflanze','Gummibaum',30],['teppich','Flickenteppich',60],['bild','Dorfbild',45],['uhr','Kuckucksuhr',70],['kaffee','Kaffeemaschine',40],['korb','Hundekörbchen',50],['regal','Bücherregal',80],['lampe','Stehlampe',35]];
+const HATS=[['muetze','Dienstmütze',0],['none','Ohne Hut',0],['detektiv','Detektivmütze',80],['stroh','Strohhut',50],['wolle','Pudelmütze',40]];
+let catTab='deko';
+function openCatalog(){
+  const rows=catTab=='deko'?DECO.map(([k,n,p])=>{const own=S.deco.includes(k);return`<div class="row set"><div><b>${n}</b><small>${own?'Steht in der Wache.':'Für die Wache.'}</small></div>${own?'<span>✓</span>':`<button class="btn sm" data-b="${k}" ${S.taler<p?'disabled':''}><span class="price">${p} T</span></button>`}</div>`}).join('')
+    :HATS.map(([k,n,p])=>{const own=S.hats.includes(k),on=S.look.hat==k;return`<div class="row set"><div><b>${n}</b><small>${on?'Trägst du gerade.':own?'Im Schrank.':'Zu kaufen.'}</small></div>${on?'<span>✓</span>':own?`<button class="btn sm alt" data-w="${k}">Anziehen</button>`:`<button class="btn sm" data-h="${k}" ${S.taler<p?'disabled':''}><span class="price">${p} T</span></button>`}</div>`}).join('');
+  openModal(`<h2>Katalog</h2><p>Du hast <b class="price">${S.taler} Taler</b>.</p><div class="tabs"><button class="tab${catTab=='deko'?' on':''}" data-t="deko">Wache</button><button class="tab${catTab=='hut'?' on':''}" data-t="hut">Hüte</button></div>
+    <div class="rows">${rows}</div><div class="btns"><button class="btn alt sm" id="caLook">Aussehen ändern</button><button class="btn wide" id="caX">Schließen</button></div>`);
+  $('#modal').querySelectorAll('.tab').forEach(b=>b.onclick=()=>{catTab=b.dataset.t;openCatalog()});
+  $('#modal').querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{const d=DECO.find(x=>x[0]==b.dataset.b);if(S.taler<d[2])return;S.taler-=d[2];S.deco.push(d[0]);refreshFurn(MAPS.wache);sfx('coin');saveSoon();openCatalog()});
+  $('#modal').querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{const d=HATS.find(x=>x[0]==b.dataset.h);if(S.taler<d[2])return;S.taler-=d[2];S.hats.push(d[0]);S.look.hat=d[0];sfx('coin');saveSoon();openCatalog()});
+  $('#modal').querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{S.look.hat=b.dataset.w;sfx('click');saveSoon();openCatalog()});
+  $('#caLook').onclick=()=>openCreator(()=>openCatalog(),true);
+  $('#caX').onclick=closeModal;
+}
+
+/* ---------- character creator ---------- */
+function openCreator(done,edit){
+  const L=S.look;let name=S.name||'',tit=S.tit||TITLES[0];
+  const sw=(arr,cur,key)=>`<div class="sws">${arr.map(c=>`<button class="sw${c==cur?' on':''}" style="background:${c}" data-k="${key}" data-v="${c}" aria-label="Farbe"></button>`).join('')}</div>`;
+  openModal(`<h2>${edit?'Aussehen':'Wer bist du?'}</h2>${edit?'':'<p>Du übernimmst die kleine Polizeiwache von Kleckersdorf.</p>'}
+    <div class="who"><canvas id="crPic" width="32" height="32"></canvas><div style="flex:1"><input type="text" id="crName" maxlength="14" placeholder="Dein Name" value="${esc(name)}"></div></div>
+    <h3>Anrede</h3><div class="seg" id="crTit">${TITLES.map(t=>`<button class="btn sm${t==tit?' on':''}" data-t="${t}">${t}</button>`).join('')}</div>
+    <h3>Frisur</h3><div class="seg" id="crSt">${STYLES.map(([k,l])=>`<button class="btn sm${k==L.style?' on':''}" data-s="${k}">${l}</button>`).join('')}</div>
+    <h3>Haare</h3>${sw(HAIRS,L.hair,'hair')}<h3>Haut</h3>${sw(SKINS,L.skin,'skin')}<h3>Jacke</h3>${sw(COATS,L.coat,'coat')}
+    <p id="crMsg" role="status"></p><div class="btns"><button class="btn wide" id="crOk">${edit?'Fertig':'Los geht’s!'}</button></div>`);
+  const pic=()=>{const c=$('#crPic').getContext('2d');delete PORT['me'+JSON.stringify(S.look)];c.drawImage(portraitCanvas('me'),0,0)};pic();
+  $('#modal').querySelectorAll('.sw').forEach(b=>b.onclick=()=>{S.look[b.dataset.k]=b.dataset.v;$('#modal').querySelectorAll(`.sw[data-k="${b.dataset.k}"]`).forEach(x=>x.classList.toggle('on',x==b));pic()});
+  $('#crSt').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.look.style=b.dataset.s;$('#crSt').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x==b));pic()});
+  $('#crTit').querySelectorAll('button').forEach(b=>b.onclick=()=>{tit=b.dataset.t;$('#crTit').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x==b))});
+  $('#crOk').onclick=()=>{const n=$('#crName').value.trim();if(!n){$('#crMsg').textContent='Wie heißt du? Gib einen Namen ein.';return}
+    S.name=n.slice(0,14);S.tit=tit;for(const k in PORT)if(k.startsWith('me'))delete PORT[k];closeModal();saveSoon();done&&done()};
+}
+
+/* ---------- menu & settings ---------- */
+function openMenu(){
+  if(!started)return;
+  const ago=S.savedAt?Math.round((Date.now()-S.savedAt)/1000):null;
+  openModal(`<h2>Pause</h2><div class="mgrid">
+    <button class="tile" id="mBook"><canvas data-icon="buch"></canvas><span><b>Notizbuch</b><small>Hinweise und Leute</small></span></button>
+    <button class="tile" id="mLook"><canvas data-who="me" style="width:32px;height:32px"></canvas><span><b>Aussehen</b><small>Name, Frisur, Farben</small></span></button>
+    <button class="tile" id="mHelp"><canvas data-icon="aussage"></canvas><span><b>Tipps</b><small>So funktioniert es</small></span></button>
+    <button class="tile" id="mSet"><canvas data-icon="uhr"></canvas><span><b>Einstellungen</b><small>Ton und Spielstand</small></span></button></div>
+    <p class="saved">${ago==null?'Noch nicht gespeichert.':`Automatisch gespeichert vor ${ago<60?ago+' s':Math.round(ago/60)+' min'}.`}</p>
+    <div class="btns"><button class="btn wide" id="mBack">Weiterspielen</button></div>`);
+  $('#mBack').onclick=closeModal;$('#mBook').onclick=()=>openNotebook();$('#mLook').onclick=()=>openCreator(openMenu,true);$('#mSet').onclick=openSettings;
+  $('#mHelp').onclick=()=>{openModal(`<h2>Tipps</h2>
+    <p><b>Laufen:</b> Auf der linken Bildschirmhälfte ziehen. Am Computer gehen auch Pfeiltasten oder WASD.</p>
+    <p><b>Runder Knopf:</b> Reden, Spuren untersuchen, Türen. Was passiert, steht auf dem Knopf.</p>
+    <p><b>Befragen:</b> Frag die Leute nach allem, was neu ist (roter Punkt). Mit „Hinweis vorlegen“ zeigst du ihnen Spuren und Aussagen. Passt etwas nicht zusammen: Widerspruch!</p>
+    <p><b>Krümel:</b> Der Dackel-Knopf gibt dir einen Tipp und zeigt dir mit einem Pfeil, wohin es geht.</p>
+    <p><b>Notizbuch:</b> Das Buch oben rechts sammelt alle Hinweise, Aussagen und Leute.</p>
+    <p><b>Lösen:</b> An der Pinnwand in der Wache wählst du Täter, Motiv und Beweis. Falsche Anklagen kosten einen Stern, du darfst es aber erneut versuchen.</p>
+    <p><b>Tageszeit:</b> Die Leute haben einen Tagesablauf. Abends sitzen viele im Wirtshaus. Nachts schlafen alle. Schlafen kannst du im Bett in der Wache.</p>
+    <p><b>Speichern:</b> Automatisch. Du kannst jederzeit schließen.</p>
+    <div class="btns"><button class="btn" id="hOk">Zurück</button></div>`);$('#hOk').onclick=openMenu};
+}
+function openSettings(){
+  const row=(id,lab,val)=>`<div class="row set"><b>${lab}</b><button class="btn sm" id="${id}">${val}</button></div>`;
+  openModal(`<h2>Einstellungen</h2><div class="rows">${row('sSnd','Töne',S.sound?'An':'Aus')}${row('sMus','Musik',S.music?'An':'Aus')}</div>
+    <h3>Spielstand</h3><p style="font-size:14px">${cloudState=='ok'?'Liegt auf dem Gerät und in deinem Konto.':'Liegt auf diesem Gerät.'} Das Spiel speichert automatisch.</p>
+    <div class="btns"><button class="btn alt sm" id="sSave">Jetzt speichern</button><button class="btn alt sm" id="sXfer">Spielstand übertragen</button></div>
+    <h3>Neu anfangen</h3><div class="btns"><button class="btn sm danger" id="sNew">Neues Spiel</button></div>
+    <div class="btns"><button class="btn" id="sBack">Zurück</button></div>`);
+  $('#sSnd').onclick=()=>{S.sound=!S.sound;$('#sSnd').textContent=S.sound?'An':'Aus'};
+  $('#sMus').onclick=()=>{S.music=!S.music;$('#sMus').textContent=S.music?'An':'Aus'};
+  $('#sSave').onclick=()=>{saveNow();flashSaved();$('#sSave').textContent='Gespeichert'};
+  $('#sXfer').onclick=()=>openTransfer(false);
+  $('#sNew').onclick=()=>{const b=$('#sNew');if(b.dataset.c){closeModal();start(true)}else{b.dataset.c=1;b.textContent='Wirklich? Alles wird gelöscht'}};
+  $('#sBack').onclick=openMenu;
+}
+
+/* ---------- sleep ---------- */
+function askSleep(){
+  say([{who:'me',t:S.time<1080?'Schon schlafen? Es ist doch erst '+fmtT(S.time)+'.':'Feierabend. Schlafen bis morgen früh?',ch:[['Schlafen bis 7 Uhr',()=>sleep(false)],['Noch nicht',()=>{},'bye']]}]);
+}
+function sleep(tired){
+  lock=true;sfx('sleep');fadeTo(1,.5,()=>{
+    S.day++;S.time=420;const r=Math.random();S.wx=S.day<3?'sonne':r<.5?'sonne':r<.72?'wolken':r<.88?'regen':'nebel';
+    goMapNow('wache',11.5,4.6,0);placeNpcs(true);saveNow();
+    setTimeout(()=>fadeTo(0,.6,()=>{lock=false;toast(`${WDAYS[(S.day-1)%7]}, Tag ${S.day}. ${S.wx=='regen'?'Es regnet.':S.wx=='nebel'?'Nebel liegt über dem Dorf.':'Guten Morgen!'}`,2.6)}),400);
+  });
+}
+
+/* ---------- maps & transitions ---------- */
+let lastTile='',lock=false,fadeA=0,fadeTarget=0,fadeSpd=0,fadeCb=null;
+function fadeTo(t,dur,cb){fadeTarget=t;fadeSpd=1/Math.max(.01,dur);fadeCb=cb||null}
+function goMapNow(map,x,y,dir){S.map=map;S.px=x;S.py=y;S.dir=dir;lastTile=tkey(Math.floor(x),Math.floor(y-.05));dog.x=x-DX[dir]*.8;dog.y=y-DY[dir]*.8+.05;trail.length=0;placeNpcs();snapCam()}
+function goMap(map,x,y,dir,cb){lock=true;sfx('door');fadeTo(1,.18,()=>{goMapNow(map,x,y,dir);fadeTo(0,.25,()=>{lock=false;cb&&cb()})})}
+
+/* ---------- save: device + account ---------- */
+const KEY='tatort-kleckersdorf-1';
+const BUILD='2026-09-26-1';
+let updating=false,saveT=0;
+async function checkUpdate(){
+  if(updating||window.claude||!/^https?:$/.test(location.protocol))return;
+  if(started&&(D||modalOpen()))return;
+  try{
+    const r=await fetch('krimi.html?check='+Date.now(),{cache:'no-store'});if(!r.ok)return;
+    const m=(await r.text()).match(/const BUILD='([^']+)'/);if(!m||m[1]===BUILD)return;
+    let tried=null;try{tried=sessionStorage.getItem('tk-upd')}catch(e){}
+    if(tried===m[1])return;
+    try{sessionStorage.setItem('tk-upd',m[1])}catch(e){}
+    updating=true;if(started)saveNow(false);toast('Neue Version wird geladen…',3);
+    setTimeout(()=>location.replace('krimi.html?v='+encodeURIComponent(m[1])),700);
+  }catch(e){}
+}
+let DB=null,UID=null,cloudBusy=false,cloudAgain=false,cloudState='none';
+function snapshot(){const o=Object.assign({},S);delete o.cut;o.savedAt=Date.now();return o}
+function saveSoon(){saveT=Math.min(saveT||1.2,1.2)}
+function saveNow(cloud=true){
+  if(!S||!started||!S.name)return;
+  const o=snapshot(),js=JSON.stringify(o);S.savedAt=o.savedAt;saveT=0;
+  try{localStorage.setItem(KEY,js)}catch(e){}
+  if(cloud)pushCloud(js);
+}
+async function pushCloud(js){
+  if(!DB||!UID)return;
+  if(cloudBusy){cloudAgain=true;return}
+  cloudBusy=true;
+  try{await DB.doc('data/users/'+UID+'/krimi').set({v:1,savedAt:S.savedAt,json:js});cloudState='ok'}catch(e){cloudState='err'}
+  cloudBusy=false;
+  if(cloudAgain){cloudAgain=false;pushCloud(JSON.stringify(snapshot()))}
+}
+function flashSaved(){const d=$('#saveDot');d.textContent=cloudState=='ok'?'Gespeichert ☁':'Gespeichert';d.classList.remove('off');setTimeout(()=>d.classList.add('off'),1400)}
+function loadLocal(){try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):null}catch(e){return null}}
+async function connectCloud(){
+  try{
+    if(!window.claude||typeof window.claude.use!='function'){setSaveInfo();return}
+    const[db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')]);
+    if(!db||!user){setSaveInfo();return}
+    const uid=await user.id();if(!uid){setSaveInfo();return}
+    DB=db;UID=uid;cloudState='ok';
+    const snap=await db.doc('data/users/'+uid+'/krimi').get();
+    if(snap.exists){const d=snap.data();
+      if(d&&d.json&&(d.savedAt||0)>((S&&S.savedAt)||0)+1500){
+        const sv=migrate(JSON.parse(d.json));
+        if(sv){if(!started){S=sv;hasSave=true;try{localStorage.setItem(KEY,d.json)}catch(e){}}else offerCloud(sv,d.json)}
+      }
+    }
+  }catch(e){cloudState='err'}
+  setSaveInfo();
+}
+function setSaveInfo(){
+  const where=cloudState=='ok'?'Speichert automatisch auf dem Gerät und in deinem Konto.':'Speichert automatisch auf diesem Gerät.';
+  $('#saveInfo').textContent=(hasSave&&S&&S.name?`Spielstand: ${S.name}, Tag ${S.day}. `:'')+where;
+  if(hasSave&&S&&S.name)$('#bCont').hidden=false;
+}
+function offerCloud(sv,js){
+  openModal(`<h2>Neuerer Spielstand gefunden</h2><p>In deinem Konto liegt ein neuerer Spielstand: ${esc(sv.name)}, Tag ${sv.day}. Möchtest du damit weiterspielen?</p>
+    <div class="btns"><button class="btn" id="cY">Laden</button><button class="btn alt" id="cN">Aktuellen behalten</button></div>`);
+  $('#cY').onclick=()=>{S=sv;try{localStorage.setItem(KEY,js)}catch(e){}closeModal();afterLoad();toast('Spielstand geladen.')};
+  $('#cN').onclick=()=>{closeModal();saveNow()};
+}
+async function packSave(){
+  let bytes=new TextEncoder().encode(JSON.stringify(snapshot())),tag='TK0:';
+  if(window.CompressionStream){try{bytes=new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());tag='TK1:'}catch(e){}}
+  let bin='';for(let i=0;i<bytes.length;i+=8192)bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+8192));
+  return tag+btoa(bin);
+}
+async function unpackSave(code){
+  code=code.replace(/\s+/g,'');const tag=code.slice(0,4);
+  let bytes=Uint8Array.from(atob(code.slice(4)),c=>c.charCodeAt(0));
+  if(tag=='TK1:')bytes=new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+  else if(tag!='TK0:')throw new Error('tag');
+  return migrate(JSON.parse(new TextDecoder().decode(bytes)));
+}
+function openTransfer(fromTitle){
+  const canOut=!fromTitle&&started;
+  openModal(`<h2>Spielstand übertragen</h2><p>So nimmst du deinen Spielstand in eine andere Version des Spiels mit, zum Beispiel vom Claude-Link in die App auf dem Home-Bildschirm.</p>
+    ${canOut?`<h3>1. Von hier mitnehmen</h3><p>Kopiere diesen Code.</p><textarea id="tfOut" readonly rows="3">Code wird erstellt…</textarea><div class="btns"><button class="btn sm" id="tfCopy">Code kopieren</button></div>`:''}
+    <h3>${canOut?'2. ':''}Hierher holen</h3><p>Füge einen Code aus der anderen Version ein. Der Spielstand hier wird dabei ersetzt.</p>
+    <textarea id="tfIn" rows="3" placeholder="TK1:…"></textarea><p id="tfMsg" role="status"></p>
+    <div class="btns"><button class="btn" id="tfLoad">Spielstand laden</button><button class="btn alt" id="tfX">Zurück</button></div>`);
+  const msg=t=>{$('#tfMsg').textContent=t};
+  if(canOut)packSave().then(c=>{const o=$('#tfOut');if(o)o.value=c}).catch(()=>{const o=$('#tfOut');if(o)o.value='Der Code konnte nicht erstellt werden.'});
+  const cp=$('#tfCopy');if(cp)cp.onclick=()=>{const o=$('#tfOut');if(!o.value.startsWith('TK'))return;
+    const sel=()=>{o.focus();o.select();o.setSelectionRange(0,o.value.length);msg('Code markiert. Tippe jetzt auf „Kopieren“.')};
+    try{navigator.clipboard.writeText(o.value).then(()=>msg('Kopiert! Öffne jetzt die andere Version und füge den Code dort ein.'),sel)}catch(e){sel()}};
+  $('#tfLoad').onclick=async()=>{const v=$('#tfIn').value.trim();if(!v){msg('Füge zuerst einen Code ein.');return}
+    let sv=null;try{sv=await unpackSave(v)}catch(e){}
+    if(!sv){msg('Der Code ist unvollständig oder beschädigt. Kopiere ihn noch einmal ganz.');return}
+    S=sv;hasSave=true;closeModal();if(!started)start(false);else afterLoad();saveNow();toast(`Spielstand geladen: ${S.name}, Tag ${S.day}`,3)};
+  $('#tfX').onclick=fromTitle?closeModal:openSettings;
+}
+
+/* ---------- input ---------- */
+const keys={};const joy={id:null,sx:0,sy:0,dx:0,dy:0};
+const joyEl=$('#joy');
+function joyGhost(){joyEl.classList.add('ghost');joyEl.style.left='84px';joyEl.style.top=(innerHeight-120)+'px';joyEl.firstElementChild.style.transform=''}
+joyGhost();
+function unlock(){const a=ac();if(a&&a.state=='suspended')a.resume()}
+cv.addEventListener('pointerdown',e=>{
+  e.preventDefault();unlock();if(!started)return;
+  if(D){dlgTap();return}
+  if(paused||lock)return;
+  if(e.clientX<innerWidth*.55){joy.id=e.pointerId;joy.sx=e.clientX;joy.sy=e.clientY;joy.dx=joy.dy=0;joyEl.classList.remove('ghost');joyEl.style.left=e.clientX+'px';joyEl.style.top=e.clientY+'px';try{cv.setPointerCapture(e.pointerId)}catch(_){}}
+});
+cv.addEventListener('pointermove',e=>{if(e.pointerId!==joy.id)return;let dx=e.clientX-joy.sx,dy=e.clientY-joy.sy;const l=Math.hypot(dx,dy),m=48;if(l>m){dx*=m/l;dy*=m/l}joy.dx=dx/m;joy.dy=dy/m;joyEl.firstElementChild.style.transform=`translate(${dx}px,${dy}px)`});
+function resetJoy(){joy.id=null;joy.dx=joy.dy=0;joyGhost()}
+const up=e=>{if(e.pointerId===joy.id)resetJoy()};
+cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);cv.addEventListener('lostpointercapture',up);
+addEventListener('pointerup',up);addEventListener('pointercancel',up);
+addEventListener('touchend',e=>{if(!e.touches.length&&joy.id!=null)resetJoy()},{passive:true});
+const aBtn=$('#aBtn');
+aBtn.addEventListener('pointerdown',e=>{e.preventDefault();unlock();aBtn.classList.add('down');doAction()});
+const aUp=()=>aBtn.classList.remove('down');
+aBtn.addEventListener('pointerup',aUp);aBtn.addEventListener('pointercancel',aUp);aBtn.addEventListener('pointerleave',aUp);
+$('#menuBtn').onclick=()=>{unlock();if(!D&&!lock)openMenu()};
+$('#bookBtn').onclick=()=>{unlock();if(started&&!D&&!lock)openNotebook()};
+$('#dogBtn').addEventListener('pointerdown',e=>{e.preventDefault();unlock();sniff()});
+addEventListener('keydown',e=>{
+  if(e.target&&(e.target.tagName=='INPUT'||e.target.tagName=='TEXTAREA'))return;
+  const k=e.key.toLowerCase();keys[k]=true;
+  if(k==' '||k=='e'||k=='enter'){e.preventDefault();unlock();if(!started||e.repeat)return;if(D)dlgTap();else if(!paused)doAction()}
+  if(k=='escape'){if(modalOpen()&&started)closeModal();else if(!D)openMenu()}
+  if(k=='n'&&started&&!paused)openNotebook();
+  if(k=='q'&&started&&!paused)sniff();
+});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false});
+addEventListener('blur',()=>{for(const k in keys)keys[k]=false;if(joy.id!=null)resetJoy()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){saveNow();for(const k in keys)keys[k]=false;if(joy.id!=null)resetJoy()}});
+addEventListener('pagehide',()=>saveNow());
+
+/* ---------- player, dog, interaction ---------- */
+const P={wt:0,mv:false};
+const dog={x:0,y:0,fx:1,wt:0,mv:false,idle:0,sniff:0,heart:0};
+const trail=[];
+function inputVec(){
+  let x=joy.dx,y=joy.dy;
+  if(keys.arrowleft||keys.a)x-=1;if(keys.arrowright||keys.d)x+=1;if(keys.arrowup||keys.w)y-=1;if(keys.arrowdown||keys.s)y+=1;
+  const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}return[x,y,Math.min(1,l)];
+}
+function blocked(x,y){
+  const m=MAPS[S.map],hw=.28;
+  if(solidAt(m,x-hw,y-.3)||solidAt(m,x+hw,y-.3)||solidAt(m,x-hw,y-.02)||solidAt(m,x+hw,y-.02))return true;
+  for(const id in NS){const n=NS[id];if(!npcVisible(n))continue;const d=Math.hypot(n.x-x,n.y-y);if(d<.55&&d<Math.hypot(n.x-S.px,n.y-S.py))return true}
+  return false;
+}
+function updPlayer(dt){
+  const[ix,iy,mg]=inputVec();P.mv=false;
+  if(mg<.18||lock||paused)return;
+  const sp=4.3*(mg<.6?.55:1)*dt;
+  if(Math.abs(ix)>Math.abs(iy))S.dir=ix<0?2:3;else S.dir=iy<0?1:0;
+  const nx=S.px+ix*sp,ny=S.py+iy*sp;
+  let moved=false;
+  if(!blocked(nx,S.py)){S.px=nx;moved=true}
+  if(!blocked(S.px,ny)){S.py=ny;moved=true}
+  if(!moved){// slide around corners
+    const m=MAPS[S.map];if(Math.abs(ix)>Math.abs(iy)){const fy=S.py-.16,cy=Math.floor(fy)+.6;if(Math.abs(cy-S.py)<.45&&!blocked(S.px,S.py+Math.sign(cy-S.py)*sp))S.py+=Math.sign(cy-S.py)*sp*.7}
+    else{const cx=Math.floor(S.px)+.5;if(Math.abs(cx-S.px)<.45&&!blocked(S.px+Math.sign(cx-S.px)*sp,S.py))S.px+=Math.sign(cx-S.px)*sp*.7}
+  }
+  P.mv=true;P.wt+=dt;
+  const last=trail[trail.length-1];if(!last||Math.hypot(last[0]-S.px,last[1]-S.py)>.12){trail.push([S.px,S.py]);if(trail.length>60)trail.shift()}
+  const tk=tkey(Math.floor(S.px),Math.floor(S.py-.05));
+  if(tk!=lastTile){lastTile=tk;const dr=MAPS[S.map].doors[tk];if(dr)enterDoor(dr)}
+}
+function enterDoor(dr){
+  if(dr.to=='dorf')goMap('dorf',dr.x,dr.y,0);
+  else{const m=MAPS[dr.to];goMap(dr.to,m.exit.x+.5,m.exit.y-.15,1)}
+}
+function updDog(dt){
+  if(dog.sniff>0)dog.sniff-=dt;if(dog.heart>0)dog.heart-=dt;
+  let tx=null,ty=null,acc=0;
+  for(let i=trail.length-1;i>0;i--){acc+=Math.hypot(trail[i][0]-trail[i-1][0],trail[i][1]-trail[i-1][1]);if(acc>1.15){tx=trail[i-1][0];ty=trail[i-1][1];break}}
+  const dp=Math.hypot(S.px-dog.x,S.py-dog.y);
+  if(tx==null||dp<1){dog.mv=false;dog.idle+=dt;return}
+  const dx=tx-dog.x,dy=ty-dog.y,d=Math.hypot(dx,dy);
+  if(d<.05){dog.mv=false;dog.idle+=dt;return}
+  const sp=Math.min(d,(dp>2.2?6.5:4.4)*dt);dog.x+=dx/d*sp;dog.y+=dy/d*sp;if(Math.abs(dx)>.02)dog.fx=dx<0?-1:1;dog.mv=true;dog.wt+=dt;dog.idle=0;
+}
+function findTarget(){
+  const m=MAPS[S.map],fx=DX[S.dir],fy=DY[S.dir];
+  let best=null,bs=9;
+  for(const id in NS){const n=NS[id];if(!npcVisible(n))continue;
+    const dx=n.x-S.px,dy=n.y-S.py,d=Math.hypot(dx,dy)||.01,dot=(dx*fx+dy*fy)/d;
+    if((d<1.3&&(dot>.3||d<.75))||(d<2.4&&dot>.85&&m.inside)){const sc=d-dot;if(sc<bs){bs=sc;best={t:'npc',id,l:'Reden'}}}}
+  if(best)return best;
+  const tx=Math.floor(S.px+fx*.75),ty=Math.floor(S.py-.3+fy*.75),ox=Math.floor(S.px),oy=Math.floor(S.py-.1);
+  for(const sp of SPOTS){if(sp.map!=S.map||(sp.when&&!sp.when()))continue;if((sp.x==tx&&sp.y==ty)||(sp.x==ox&&sp.y==oy))return{t:'spot',sp,l:sp.l}}
+  const dd=Math.hypot(dog.x-S.px,dog.y-S.py);if(dd<1.2)return{t:'dog',l:'Streicheln'};
+  return null;
+}
+function doAction(){
+  if(!started)return;if(D){dlgTap();return}if(paused||lock)return;
+  const t=findTarget();if(!t)return;
+  if(t.t=='npc')talkTo(t.id);
+  else if(t.t=='spot')t.sp.act();
+  else if(t.t=='dog'){dog.heart=1.4;sfx('bark');const l=['Krümel wedelt glücklich.','Krümel rollt sich auf den Rücken.','Krümel leckt dir die Hand.','Krümel macht „Wuff!“ und strahlt.'];toast(pick(l),1.6)}
+}
+let arrow=null;
+function sniff(){
+  if(!started||paused||lock||!S.g.intro)return;
+  const b=$('#dogBtn');b.classList.remove('wag');void b.offsetWidth;b.classList.add('wag');
+  dog.sniff=1.2;sfx('bark');
+  const h=currentHint();
+  if(!h){say([['kruemel','*schnüffel* … *wedel*'],[null,S.c.solved?'Krümel hat gerade keine Spur. Er will einfach nur gestreichelt werden.':'Krümel schnüffelt, findet aber nichts Besonderes.']]);return}
+  const[k,t]=h,tg=hintTarget(k);let extra='';
+  if(NPC[k]&&!NS[k].map)extra=` Aber ${NPC[k].s} ist gerade zu Hause. ${S.time>=1260||S.time<420?'Morgen früh ist wieder jemand unterwegs.':'Versuch es etwas später.'}`;
+  say([['kruemel','*schnüffel, schnüffel* Wuff!'],[null,t+extra]],()=>{if(tg){arrow={k,t:14};toast('Folge Krümels Pfeil!',1.8)}});
+}
+function arrowGoal(){
+  if(!arrow)return null;const tg=hintTarget(arrow.k);if(!tg)return null;
+  if(tg[0]==S.map)return[tg[1],tg[2],true];
+  if(S.map!='dorf'){const m=MAPS[S.map];return[m.exit.x+.5,m.exit.y+.5,false]}
+  const b=BLDBY['to_'+tg[0]];return b?[b.door+.5,b.y+b.h+.2,false]:null;
+}
+
+/* ---------- time ---------- */
+function updTime(dt){
+  if(!S.g.intro||S.cut)return;
+  const before=S.time;S.time+=dt/.6;
+  if(before<1320&&S.time>=1320)toast('Es ist 22 Uhr. Zeit fürs Bett in der Wache.',3);
+  if(S.time>=1440&&!D&&!modalOpen()&&!lock){S.time=1440;lock=true;say([[null,'Es ist Mitternacht. Krümel gähnt herzhaft und zieht dich zurück zur Wache.']],()=>{lock=false;sleep(true)})}
+}
+
+/* ---------- camera & render ---------- */
+function snapCam(){const m=MAPS[S.map];camX=camTarget(m)[0];camY=camTarget(m)[1]}
+function camTarget(m){
+  const W=cv.width,H=cv.height,mw=m.w*TS,mh=m.h*TS;
+  let x=S.px*TS-W/2,y=(S.py-.6)*TS-H/2;
+  x=mw<=W?(mw-W)/2:clamp(x,0,mw-W);y=mh<=H?(mh-H)/2-(m.inside?TS*.3:0):clamp(y,0,mh-H);return[x,y];
+}
+let CRUMBS=null;
+function buildCrumbs(){const m=MAPS.dorf,p=bfs(m,10,33,41,9)||[];CRUMBS=[[9.3,32.4],[10.2,33.3]];p.forEach(([x,y],i)=>{if(i%2==0)CRUMBS.push([x+.3+hash(x,y)*.4,y+.3+hash(y,x)*.4])})}
+function light(){
+  const t=S.time;let n=0;
+  if(t>=1140)n=Math.min(.58,(t-1140)/150*.58);if(t<450)n=.3*(450-t)/30;
+  return n;
+}
+function render(now){
+  const W=cv.width,H=cv.height;ctx.imageSmoothingEnabled=false;
+  ctx.fillStyle='#1a1520';ctx.fillRect(0,0,W,H);
+  if(!S)return;
+  const m=MAPS[S.map],s=TS/16;
+  const[ctx0,cty0]=camTarget(m);camX+=(ctx0-camX)*.2;camY+=(cty0-camY)*.2;if(Math.abs(ctx0-camX)<.5)camX=ctx0;if(Math.abs(cty0-camY)<.5)camY=cty0;
+  let sx=Math.round(camX),sy=Math.round(camY);
+  if(shake>0){sx+=Math.round((Math.random()-.5)*shake*20);sy+=Math.round((Math.random()-.5)*shake*20)}
+  ctx.drawImage(m.layer,-sx,-sy,m.w*TS,m.h*TS);
+  const X=x=>x*TS-sx,Y=y=>y*TS-sy;
+  // crumbs
+  if(S.map=='dorf'&&has('kruemel')&&!S.c.solved){if(!CRUMBS)buildCrumbs();ctx.fillStyle='#fffaf0';for(const[cx,cy]of CRUMBS){const px=X(cx),py=Y(cy);if(px<-10||py<-10||px>W+10||py>H+10)continue;ctx.fillRect(px,py,Math.ceil(s*2),Math.ceil(s*2));ctx.fillRect(px+s*4,py+s*2,Math.ceil(s),Math.ceil(s))}}
+  // sparkles at clue spots
+  const tt=now/1000;
+  for(const sp of SPOTS){if(sp.map!=S.map||!sp.when||!sp.when()||sp.l=='Tür'||sp.l=='Pinnwand'||sp.l=='Katalog'||sp.l=='Schlafen')continue;
+    if(Math.hypot(sp.x+.5-S.px,sp.y+.5-S.py)>5)continue;const ph=(tt*2+sp.x*.7)%2;if(ph>1)continue;
+    const a=Math.sin(ph*Math.PI),px=X(sp.x+.5),py=Y(sp.y+.35);ctx.fillStyle=`rgba(255,250,210,${a})`;const r=Math.ceil(s*(1+a*2));ctx.fillRect(px-r,py-Math.ceil(s/2),r*2,Math.ceil(s));ctx.fillRect(px-Math.ceil(s/2),py-r,Math.ceil(s),r*2)}
+  // drawables
+  const dl=[];
+  for(const o of m.objs){const px=o.px*s-sx,py=o.py*s-sy,w=o.spr.width*s,h=o.spr.height*s;if(px>W||py>H||px+w<0||py+h<0)continue;if(o.zwerg&&S.q.zwerg!=2&&o.px==18*16)continue;dl.push([o.sy,()=>ctx.drawImage(o.spr,px,py,w,h)])}
+  if(S.map=='dorf'){
+    if(!S.g.hasZwerg&&S.q.zwerg!=2)dl.push([39.2,()=>{ctx.save();ctx.translate(X(16.5),Y(39.6));ctx.rotate(-1.3);const z=propSpr('zwerg');ctx.drawImage(z,-z.width*s/2,-z.height*s/2,z.width*s,z.height*s);ctx.restore()}]);
+  }
+  for(const id in NS){const n=NS[id];if(!npcVisible(n))continue;const px=X(n.x),py=Y(n.y);if(px<-TS*2||px>W+TS*2||py<-TS*2||py>H+TS*2)continue;
+    dl.push([n.y,()=>{drawPerson(px,py,n.dir,n.wt,npcPal(id),n.mv,NPC[id].kid?.82:1);
+      if(S.g.intro&&!D&&npcHasNews(id)){const bob=Math.sin(tt*4)*s;const bx=px,by=py-(NPC[id].kid?20:25)*s+bob;ctx.fillStyle='#fff8e8';ctx.fillRect(bx-4*s,by-7*s,8*s,8*s);ctx.fillRect(bx-s,by+s,2*s,2*s);ctx.fillStyle='#c8402f';ctx.fillRect(bx-s,by-6*s,2*s,4*s);ctx.fillRect(bx-s,by-s,2*s,s)}}])}
+  const pp=playerPal();
+  dl.push([S.py,()=>drawPerson(X(S.px),Y(S.py),S.dir,P.wt,pp,P.mv)]);
+  if(S.g.intro||S.map!='wache'||true)dl.push([dog.y,()=>{drawDog(X(dog.x),Y(dog.y),dog.fx,dog.wt,dog.mv,!dog.mv&&dog.idle>1.5);
+    if(dog.sniff>0){ctx.fillStyle='#fff8e8';ctx.font=`bold ${Math.round(TS*.32)}px "Pixelify Sans"`;ctx.textAlign='center';ctx.fillText('schnüff',X(dog.x+dog.fx*.5),Y(dog.y-.9)-Math.sin(tt*10)*s)}
+    if(dog.heart>0){ctx.fillStyle='#e0453a';const hx=X(dog.x),hy=Y(dog.y-1.1-(1.4-dog.heart)*.5);ctx.fillRect(hx-3*s,hy,2*s,2*s);ctx.fillRect(hx+s,hy,2*s,2*s);ctx.fillRect(hx-3*s,hy+s,6*s,2*s);ctx.fillRect(hx-2*s,hy+3*s,4*s,s);ctx.fillRect(hx-s,hy+4*s,2*s,s)}}]);
+  dl.sort((a,b)=>a[0]-b[0]);for(const d of dl)d[1]();
+  // signs
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  for(const sg of m.signs){const px=X(sg.x),py=Y(sg.y);if(px<-200||px>W+200||py<-40||py>H+40)continue;const fs=Math.max(8,Math.round(TS*.26*(sg.t.length>12?.82:1)));ctx.font=`700 ${fs}px "Pixelify Sans"`;ctx.fillStyle='#fff3d6';ctx.fillText(sg.t,px,py+s*.5)}
+  ctx.textBaseline='alphabetic';
+  // light & weather
+  const nl=light()*(m.inside?.45:1);
+  if(S.map=='dorf'&&S.time>=1080&&S.time<1230){ctx.fillStyle=`rgba(255,130,50,${.1*Math.sin((S.time-1080)/150*Math.PI)})`;ctx.fillRect(0,0,W,H)}
+  if(S.map=='dorf'&&S.wx=='regen'){ctx.fillStyle='rgba(30,40,70,.18)';ctx.fillRect(0,0,W,H)}
+  if(nl>0){ctx.fillStyle=`rgba(16,20,56,${nl})`;ctx.fillRect(0,0,W,H);
+    if(S.map=='dorf'&&nl>.12){ctx.globalCompositeOperation='lighter';
+      for(const L of m.lights){if(L.lamp){const px=X(L.x),py=Y(L.y);if(px<-200||px>W+200||py<-200||py>H+200)continue;const g=ctx.createRadialGradient(px,py,0,px,py,TS*2.6);g.addColorStop(0,`rgba(255,210,120,${nl*.7})`);g.addColorStop(1,'rgba(255,210,120,0)');ctx.fillStyle=g;ctx.fillRect(px-TS*3,py-TS*3,TS*6,TS*6)}}
+      ctx.globalCompositeOperation='source-over';
+      for(const L of m.lights){if(L.win){ctx.fillStyle=`rgba(255,214,120,${Math.min(.85,nl*1.5)})`;ctx.fillRect(L.x*s-sx,L.y*s-sy,L.w*s,L.h*s)}}}}
+  if(S.map=='dorf'&&S.wx=='regen'){ctx.strokeStyle='rgba(200,220,255,.45)';ctx.lineWidth=Math.max(1,s*.6);ctx.beginPath();for(let i=0;i<90;i++){const rx=(hash(i,1)*W+tt*60)%W,ry=((hash(i,2)*H)+tt*900*(.8+hash(i,3)*.4))%H;ctx.moveTo(rx,ry);ctx.lineTo(rx-s*2,ry+s*9)}ctx.stroke()}
+  if(S.map=='dorf'&&S.wx=='nebel'){const a=clamp((720-S.time)/300,0,1)*.4+.1;ctx.fillStyle=`rgba(230,235,240,${a})`;ctx.fillRect(0,0,W,H);for(let i=0;i<5;i++){const fx=((hash(i,9)*W*1.5+tt*20*(i+1))%(W*1.5))-W*.25,fy=hash(9,i)*H;ctx.fillStyle=`rgba(240,244,248,${a*.8})`;ctx.beginPath();ctx.ellipse(fx,fy,W*.3,H*.08,0,0,7);ctx.fill()}}
+  // hint arrow
+  const ag=arrowGoal();
+  if(ag){const dx=ag[0]-S.px,dy=ag[1]-(S.py-.4),d=Math.hypot(dx,dy);
+    if(d<1.3&&ag[2])arrow=null;else{const a=Math.atan2(dy,dx),r=TS*1.5+Math.sin(tt*6)*s*2,cx=X(S.px)+Math.cos(a)*r,cy=Y(S.py-.7)+Math.sin(a)*r;
+      ctx.save();ctx.translate(cx,cy);ctx.rotate(a);ctx.fillStyle='#ffcf3f';ctx.strokeStyle='#4a2a1e';ctx.lineWidth=Math.max(2,s*1.2);ctx.beginPath();ctx.moveTo(TS*.4,0);ctx.lineTo(-TS*.2,-TS*.28);ctx.lineTo(-TS*.08,0);ctx.lineTo(-TS*.2,TS*.28);ctx.closePath();ctx.stroke();ctx.fill();ctx.restore();
+      if(ag[2]){const px=X(ag[0]),py=Y(ag[1]-1.6)+Math.sin(tt*6)*s*2;ctx.fillStyle='#ffcf3f';ctx.strokeStyle='#4a2a1e';ctx.beginPath();ctx.moveTo(px,py+TS*.3);ctx.lineTo(px-TS*.25,py);ctx.lineTo(px+TS*.25,py);ctx.closePath();ctx.stroke();ctx.fill()}}}
+}
+function npcHasNews(id){if(!S.met[id])return true;return T[id].topics.some(t=>(!t[2]||t[2]())&&!S.c.ask[id+'_'+t[0]])}
+
+/* ---------- HUD ---------- */
+const hudC={};
+function setTxt(id,v){if(hudC[id]!==v){hudC[id]=v;$(id).textContent=v}}
+function hud(){
+  setTxt('#cDay',WDAYS[(S.day-1)%7]);setTxt('#cTime',fmtT(S.time));setTxt('#cWx',WX[S.wx]);setTxt('#cSub',`Tag ${S.day} · Sommer`);setTxt('#taler',String(S.taler));
+  const cb=$('#caseBox'),on=S.g.caseOn||S.c.solved;if(cb.hidden==on)cb.hidden=!on;
+  if(on){setTxt('#caseT',CUR().short+': '+CUR().title);const[k,n]=keyProgress();setTxt('#caseP',S.c.solved?'Gelöst '+'★'.repeat(S.c.stars):`Wichtige Hinweise: ${k}/${n}`)}
+  $('#bookDot').hidden=!S.newCl;
+  if(!D&&!paused){const t=findTarget();const l=t?t.l:'…';setTxt('#aLab',l);aBtn.classList.toggle('idle',!t);aBtn.classList.toggle('long',l.length>9)}
+}
+
+/* ---------- main loop ---------- */
+function update(dt){
+  if(toastT>0){toastT-=dt;if(toastT<=0)$('#toast').classList.add('off')}
+  if(shake>0)shake=Math.max(0,shake-dt);
+  if(fadeA!=fadeTarget){fadeA+=Math.sign(fadeTarget-fadeA)*Math.min(Math.abs(fadeTarget-fadeA),fadeSpd*dt);$('#fade').style.opacity=fadeA;if(fadeA==fadeTarget&&fadeCb){const c=fadeCb;fadeCb=null;c()}}
+  if(!started||!S)return;
+  dlgTick(dt);
+  if(!D&&!modalOpen())talking=null;
+  for(const id in NS){NS[id].talk=talking==id;updNpc(NS[id],dt)}
+  if(!paused&&!lock){updPlayer(dt);updTime(dt)}
+  updDog(dt);
+  if(arrow){arrow.t-=paused?0:dt;if(arrow.t<=0)arrow=null}
+  if(saveT>0){saveT-=dt;if(saveT<=0){saveNow();flashSaved()}}
+}
+let last=performance.now(),autoT=0;
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);render(now);if(started&&S)hud();autoT+=dt;if(autoT>30&&started){autoT=0;saveNow()}requestAnimationFrame(loop)}
+
+/* ---------- intro ---------- */
+function intro(){
+  S.time=495;S.map='wache';goMapNow('wache',6.5,6.6,1);placeNpcs(true);lock=true;
+  setTimeout(()=>{lock=false;S.met.heinz=1;
+    say([['heinz','Da sind Sie ja! Willkommen in Kleckersdorf, {WN}! Heinz Brettschneider, Bürgermeister.'],
+      ['heinz','Das hier ist ab heute Ihre Wache. Schreibtisch, Pinnwand, und hinten ein Bett, falls es mal spät wird.'],
+      ['heinz','Und das ist Krümel. Der hat schon Ihrem Vorgänger geholfen. Beste Spürnase im ganzen Landkreis.'],['kruemel','Wuff!'],
+      ['heinz','Keine Sorge, in Kleckersdorf passiert nie etwas. Heute ist Sommerfest mit Kuchenwettbewerb. Das Aufregendste ist, wer gewinnt.'],
+      [null,'Da fliegt die Tür auf.']],()=>{
+        S.g.mArr=1;lock=true;
+        setTimeout(()=>{lock=false;
+          say([['marlene','Hilfe! Polizei! Meine Torte ist weg!'],['heinz','Marlene! Was ist denn los?'],
+            ['marlene','Meine Stachelbeer-Baiser-Torte! Für den Wettbewerb! Ich hab sie zum Abkühlen aufs Fensterbrett gestellt, und jetzt ist sie weg. Gestohlen!'],
+            ['heinz','Ein Tortendiebstahl. Am Sommerfest! {WN}, das ist Ihr erster Fall.'],
+            ['heinz','Die Preisverleihung verschieben wir, bis der Fall gelöst ist. Nehmen Sie sich ruhig Zeit.'],
+            ['marlene','Ich geh zurück nach Hause, an den Tatort. Mein Haus steht am Gartenweg, ganz im Westen. Das mit den lila Fensterläden!'],
+            [null,'Neuer Fall: Der verschwundene Preiskuchen']],()=>{
+              S.g.intro=1;S.g.caseOn=1;hideCtl(false);flash('Neuer Fall!');sfx('clue');saveNow();
+              setTimeout(()=>toast('Links ziehen zum Laufen. Der runde Knopf redet und untersucht.',4.5),1400);
+              setTimeout(()=>{if(!D)toast('Nicht weiter? Tipp auf Krümel unten rechts!',4)},7000);
+            });
+        },1300);
+      });
+  },500);
+}
+
+/* ---------- boot ---------- */
+function resize(){
+  const portrait=innerHeight>=innerWidth,full=portrait?Math.max(screen.height,screen.width):Math.min(screen.height,screen.width);
+  const g=navigator.standalone&&full-innerHeight>0&&full-innerHeight<80?full-innerHeight:0;
+  GAP=g;const rs=document.documentElement.style;rs.setProperty('--gap',g+'px');if(g)rs.setProperty('--sab','0px');else rs.removeProperty('--sab');
+  dpr=Math.min(3,window.devicePixelRatio||1);cv.width=Math.round(innerWidth*dpr);cv.height=Math.round(VH()*dpr);
+  const m=Math.min(innerWidth,VH()),across=m<520?10:m<800?12.5:15;TS=Math.max(24,Math.round(m*dpr/across));
+  if(joy.id==null)joyGhost();
+  if(S&&MAPS[S.map])snapCam();
+}
+addEventListener('resize',resize);
+function afterLoad(){
+  for(const k in PORT)delete PORT[k];
+  refreshFurn(MAPS.wache);initNpcs();goMapNow(S.map,S.px,S.py,S.dir);
+}
+function start(fresh){
+  if(fresh){newGame();try{localStorage.removeItem(KEY)}catch(e){}}
+  $('#title').hidden=true;document.body.classList.remove('pre');started=true;paused=false;unlock();
+  afterLoad();hideCtl(false);
+  if(!S.name)openCreator(()=>{intro()});
+  else if(!S.g.intro)intro();
+  else toast('Willkommen zurück, '+WN()+'!',2);
+}
+(function init(){
+  resize();genDorf();for(const k in INT)genInterior(k);
+  $('#bookBtn canvas').getContext('2d').drawImage(icon('buch'),0,0);
+  $('#dogBtn canvas').getContext('2d').drawImage(icon('hund'),0,0);
+  {const g=$('#titlePic').getContext('2d');g.imageSmoothingEnabled=false;
+    const d=mk(16,12,x=>{const c='#9a5226',k='#6a3014';R(x,0,4,2,1,c);R(x,2,4,10,4,c);R(x,3,7,8,1,'#c47a44');R(x,11,1,4,4,c);R(x,14,3,2,2,c);R(x,15,3,1,1,'#1a1a1a');R(x,11,2,2,5,k);R(x,13,2,1,1,'#1a1a1a');R(x,10,4,1,3,'#d83a3a');R(x,3,8,2,2,k);R(x,9,8,2,2,k)});
+    g.drawImage(d,4,14,32,24);circ(g,48,12,8,'#4a2a1e');circ(g,48,12,6,'#bfe4ff');R(g,45,9,3,2,'#fff');line(g,54,18,61,26,'#4a2a1e',3);R(g,39,28,20,2,'rgba(0,0,0,.2)');}
+  const sv=migrate(loadLocal());
+  if(sv){S=sv;hasSave=true}else newGame();
+  initNpcs();setSaveInfo();
+  $('#bCont').onclick=()=>start(false);
+  $('#bCode').onclick=()=>openTransfer(true);
+  $('#bNew').onclick=()=>{if(hasSave&&S.name&&!$('#bNew').dataset.c){$('#bNew').dataset.c=1;$('#bNew').textContent='Sicher? Alter Spielstand wird ersetzt';return}start(true)};
+  connectCloud();
+  checkUpdate();setInterval(checkUpdate,4*60*1000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkUpdate()});
+  if(sv&&sv.name&&/[?&]v=/.test(location.search))start(false);
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
