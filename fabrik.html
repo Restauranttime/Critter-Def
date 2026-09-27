@@ -1419,6 +1419,21 @@ function render(dt){
     }
   }
 
+  // Baustellen: durchscheinend mit Sanduhr-Symbol
+  if(S.sites.length){
+    for(const st of S.sites){
+      if(st.x<x0||st.x>x1||st.y<y0||st.y>y1)continue;
+      const X=TX(st.x),Y=TY(st.y),B=BLD[st.t];
+      ctx.globalAlpha=.4;
+      ctx.drawImage(B.kind==='belt'?sprite('L'+B.tier+'00'+st.d,bs,g=>{g.translate(.5,.5);g.rotate(st.d*Math.PI/2);g.translate(-.5,-.5);beltArt(g,B.tier,0,0)}):bldSpr(st.t,st.d,ts),X,Y,ts,ts);
+      ctx.globalAlpha=1;
+      ctx.setLineDash([ts*.12,ts*.08]);ctx.strokeStyle='rgba(255,210,122,.8)';ctx.lineWidth=Math.max(1,ts*.04);ctx.strokeRect(X+ts*.06,Y+ts*.06,ts*.88,ts*.88);ctx.setLineDash([]);
+      const r=Math.max(5,ts*.14),cx=X+ts*.5,cy=Y+ts*.5;
+      ctx.fillStyle='rgba(20,24,30,.8)';ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#ffd27a';ctx.beginPath();ctx.moveTo(cx-r*.5,cy-r*.6);ctx.lineTo(cx+r*.5,cy-r*.6);ctx.lineTo(cx,cy);ctx.lineTo(cx+r*.5,cy+r*.6);ctx.lineTo(cx-r*.5,cy+r*.6);ctx.lineTo(cx,cy);ctx.closePath();ctx.fill();
+    }
+  }
+
   // Raten direkt am Gebäude (ab mittlerem Zoom): aktuelle Ausgabe pro Minute
   if(ts>=56){
     ctx.font=`600 ${Math.round(ts*.17)}px system-ui,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
@@ -1598,7 +1613,9 @@ function tap(sx,sy){
   const[x,y]=toTile(sx,sy);
   if(x<0||y<0||x>=W||y>=H)return;
   const e=G[y*W+x];
-  if(delMode){if(e)demolish(e);return}
+  const site=!e&&siteAt(x,y);
+  if(delMode){if(e)demolish(e);else if(site)removeSite(site);return}
+  if(site){toast(`Baustelle ${BLD[site.t].n}: wartet auf Material aus dem Handwerk. Mit Abriss entfernen.`,'',2400);return}
   if(tool&&BLD[tool].kind==='belt'){beltTap(x,y);return}
   if(tool){
     if(e){
@@ -1626,7 +1643,7 @@ function longPress(sx,sy){
 /* ---------- Förderbänder verlegen: Start antippen, Ziel antippen ----------
    Auto: kürzester Weg mit wenigen Kurven (A*), Manuell: eigene Wegpunkte, dazwischen gerade/L-förmig. */
 let ROUTE=null;
-const free=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&!G[y*W+x]&&RES[y*W+x]!==WATER;
+const free=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&!G[y*W+x]&&RES[y*W+x]!==WATER&&!SITESET.has(y*W+x);
 function dirTo(ax,ay,bx,by){return bx>ax?1:bx<ax?3:by>ay?2:0}
 /* Ende einer Bandlinie (dem Band in Pfeilrichtung folgen) */
 function beltEnd(b){
@@ -1762,13 +1779,19 @@ function beltTap(x,y){
 function buildRoute(){
   const R=ROUTE;if(!R||!R.ok||!R.path.length)return;
   const seen=new Set(),cells=R.path.filter(c=>{const k=c.y*W+c.x;if(seen.has(k)||!free(c.x,c.y))return false;seen.add(k);return true});
-  const need=cells.length,have=total(R.t);
-  if(have<need){toast(`Es fehlen ${need-have} × ${BLD[R.t].n}. Im Handwerk herstellen.`,'bad');sfx('err');return}
-  takeItems(R.t,need);
-  for(const c of cells)addEnt(mkEnt(R.t,c.x,c.y,c.d));
+  // so viele Bänder wie möglich sofort bauen, den Rest als Baustellen
+  let built=0;
+  for(const c of cells){if(obtain(R.t))break;addEnt(mkEnt(R.t,c.x,c.y,c.d));built++}
+  const rest=cells.slice(built);
+  let msg=`${built} × ${BLD[R.t].n} gebaut.`,cls='good';
+  if(rest.length){
+    const m=queueFor(R.t,rest.length);
+    if(m){msg=`${built} gebaut – für den Rest fehlen ${fmt(m.n)} × ${ITEMS[m.k].n}.`;cls='bad'}
+    else{for(const c of rest)addSite(R.t,c.x,c.y,c.d);msg=`${built} gebaut, ${rest.length} als Baustelle – fertig, sobald das Handwerk nachliefert.`}
+  }
   const l=cells[cells.length-1];FLASH={x:l.x,y:l.y,t:.4};
   ROUTE=null;sfx('place');uiDirty=true;updRouteBar();
-  toast(`${need} × ${BLD[R.t].n} gebaut.`,'good',1500);
+  toast(msg,cls,2400);
 }
 function cancelRoute(){ROUTE=null;updRouteBar()}
 
@@ -1819,16 +1842,79 @@ function tryPlace(t,x,y,d){
   const r=RES[y*W+x],B=BLD[t];
   if(r===WATER)return fail(x,y,'Auf Wasser kann man nicht bauen.');
   if(B.kind==='drill'&&!r)return fail(x,y,'Bohrer müssen auf einem Rohstofffeld stehen.');
-  if(total(t)<1){
-    // fehlt das Gebäude, wird es (wenn möglich) gleich per Hand hergestellt
-    if(REC[t]&&unlocked(t)&&canCraft(t,1)){craft(t,1);toast(B.n+' wird hergestellt …');return}
-    return fail(x,y,`Kein ${B.n} im Vorrat. Stelle es im Handwerk her.`);
+  if(SITESET.has(y*W+x))return fail(x,y,'Hier ist schon eine Baustelle.');
+  const miss=obtain(t,1);
+  if(miss){
+    // Material fehlt: Zwischenprodukte ins Handwerk, hier entsteht eine Baustelle
+    const m=queueFor(t,1);
+    if(m)return fail(x,y,`Für ${B.n} fehlen ${fmt(m.n)} × ${ITEMS[m.k].n}.`);
+    addSite(t,x,y,d);sfx('place');FLASH={x,y,t:.35};uiDirty=true;
+    toast(`Baustelle: ${B.n} wird gebaut, sobald ${Object.keys(miss).map(k=>ITEMS[k].n).join(', ')} fertig ist.`,'',2600);
+    return;
   }
-  takeItems(t,1);
   const e=mkEnt(t,x,y,d);addEnt(e);autoFuel(e);
   if(B.kind==='silo'){S.flags.silo=1}
   sfx('place');FLASH={x,y,t:.35};puff(x+.5,y+.6,'rgba(200,200,200,.35)',4,1.2);
   uiDirty=true;
+}
+/* ---------- Gebäude direkt aus Material bauen ----------
+   Gebäude brauchen keine Handwerk-Warteschlange: sind die Materialien da, steht das Gebäude sofort.
+   Gebäude in der Zutatenliste (z. B. der Ofen im Bohrer) werden ebenfalls sofort mitgebaut.
+   Fehlen Zwischenprodukte (Zahnrad …), kommen nur diese ins Handwerk und am Platz entsteht eine Baustelle,
+   die sich selbst fertig baut, sobald alles da ist. */
+let SITESET=new Set();
+function syncSites(){SITESET=new Set(S.sites.map(s=>s.y*W+s.x))}
+const siteAt=(x,y)=>S.sites.find(s=>s.x===x&&s.y===y);
+/* plant need Stück von t aus dem Vorrat av; was fehlt, landet in miss */
+function instantPlan(t,need,av,miss){
+  const have=Math.max(0,av[t]||0),use=Math.min(have,need);
+  av[t]=have-use;let rest=need-use;if(!rest)return;
+  const r=REC[t];
+  if(!r||!BLD[t]||!unlocked(t)){miss[t]=(miss[t]||0)+rest;return}
+  const times=Math.ceil(rest/r.n);
+  for(const k in r.i)instantPlan(k,r.i[k]*times,av,miss);
+  av[t]+=times*r.n-rest;
+}
+/* verbraucht die Materialien (nur nach erfolgreichem Plan aufrufen) */
+function instantTake(t,need){
+  const use=Math.min(total(t),need);if(use)takeItems(t,use);
+  const rest=need-use;if(!rest)return;
+  const r=REC[t],times=Math.ceil(rest/r.n);
+  for(const k in r.i)instantTake(k,r.i[k]*times);
+  addProd(t,times*r.n);if(times*r.n>rest)give(t,times*r.n-rest);
+}
+/* n Gebäude t sofort bereitstellen. Ergebnis: null = geklappt, sonst fehlende Items */
+function obtain(t,n){
+  const miss={};instantPlan(t,n||1,totals(),miss);
+  if(Object.keys(miss).length)return miss;
+  instantTake(t,n||1);return null;
+}
+/* Fehlendes für n Gebäude t ins Handwerk einreihen. false = Rohstoffe fehlen (nicht herstellbar) */
+function queueFor(t,n){
+  const av=queueAvail(),miss={};instantPlan(t,n,av,miss);
+  const steps=[];let raw=null;
+  for(const k in miss){
+    if(!REC[k]||!unlocked(k)||REC[k].mach||!planCraft(k,miss[k],av,steps,0,{})){raw=k;break}
+  }
+  if(raw){const m={};if(REC[raw]&&unlocked(raw))planCraft(raw,miss[raw],queueAvail(),[],0,m);return m.k?m:{k:raw,n:miss[raw]}}
+  for(const s of steps)S.cq.push({r:s,s:0,a:0});
+  return null;
+}
+function addSite(t,x,y,d){S.sites.push({t,x,y,d:BLD[t].rot?d:0});syncSites()}
+function removeSite(s){S.sites.splice(S.sites.indexOf(s),1);syncSites();sfx('del');uiDirty=true}
+/* Baustellen der Reihe nach fertigstellen, sobald die Materialien da sind */
+function sitesUpd(){
+  if(!S.sites.length)return;
+  let changed=false;
+  for(const s of S.sites.slice()){
+    if(G[s.y*W+s.x]||RES[s.y*W+s.x]===WATER){S.sites.splice(S.sites.indexOf(s),1);changed=true;continue}
+    if(obtain(s.t))continue;
+    S.sites.splice(S.sites.indexOf(s),1);changed=true;
+    const e=mkEnt(s.t,s.x,s.y,s.d);addEnt(e);autoFuel(e);
+    if(BLD[s.t].kind==='silo')S.flags.silo=1;
+    puff(s.x+.5,s.y+.6,'rgba(200,200,200,.35)',4,1.2);
+  }
+  if(changed){syncSites();sfx('place');uiDirty=true}
 }
 /* Neu gebaute Brenner bekommen etwas Kohle aus dem Vorrat */
 function autoFuel(e){
@@ -1949,7 +2035,7 @@ function openBuild(){
     for(const t of list){
       const lock=lockTech(t)&&!(TOT[t]>0),fav=S.fav.includes(t);
       h+=`<div class="row${lock?' lock':''}${tool===t?' cur':''}">${ic(t,BLD[t].rot?curDir:0)}<div class="rt"><b>${esc(BLD[t].n)} <small style="color:var(--dim);font-weight:400">· ${fmt(TOT[t]||0)}</small>${S.newB.includes(t)?' <small style="color:var(--acc)">neu</small>':''}</b>
-        <div class="ing">${lock?'Gesperrt – Forschung: '+esc(lockTech(t)):esc(toolHint(t))}</div></div>
+        <div class="ing">${lock?'Gesperrt – Forschung: '+esc(lockTech(t)):esc(toolHint(t))}</div>${REC[t]&&!lock?ingHtml(REC[t].i,1):''}</div>
         <div class="rb"><button class="btn star${fav?' on':''}" data-a="fav" data-v="${t}" aria-label="Favorit">${fav?'★':'☆'}</button>${lock?'':`<button class="btn acc" data-a="pick" data-v="${t}">Bauen</button>`}</div></div>`;
     }
   }
@@ -2312,7 +2398,7 @@ function openCraft(tab){
   if(tab==='make'){
     h+=`<div id="cq"></div>`;
     for(const grp of REC_GROUPS){
-      const ids=Object.keys(REC).filter(r=>REC[r].g===grp&&unlocked(r)&&!REC[r].mach);
+      const ids=Object.keys(REC).filter(r=>REC[r].g===grp&&unlocked(r)&&!REC[r].mach&&!BLD[r]);   // Gebäude baut man direkt
       if(!ids.length)continue;
       h+=`<h4>${grp}</h4>`;
       for(const r of ids){
@@ -2321,7 +2407,7 @@ function openCraft(tab){
           <div class="rb"><button class="btn" data-a="craft" data-v="${r}:1">1</button><button class="btn" data-a="craft" data-v="${r}:5">5</button></div></div>`;
       }
     }
-    h+=`<p>Fehlende Zwischenprodukte (z. B. Zahnräder) werden automatisch mitgebaut. Zutaten kommen aus dem Inventar und allen Kisten.</p>`;
+    h+=`<p>Fehlende Zwischenprodukte (z. B. Zahnräder) werden automatisch mitgebaut. Zutaten kommen aus dem Inventar und allen Kisten. Gebäude baust du direkt über „Gebäude“ – ohne Warteschlange.</p>`;
     live=()=>{
       const q=$('#cq');if(!q)return;
       const sig=S.cq.length+'|'+(S.cq[0]?S.cq[0].r:'');
@@ -2472,7 +2558,7 @@ function uiTick(dt){
   const un=PAL_ORDER.filter(t=>unlocked(t)).join();
   if(lastUnlock&&un!==lastUnlock)for(const t of PAL_ORDER)if(unlocked(t)&&!lastUnlock.split(',').includes(t)&&!S.newB.includes(t))S.newB.push(t);
   lastUnlock=un;
-  updTop();buildPalette();
+  sitesUpd();updTop();buildPalette();
   // Tutorial
   if(S.tut>=0&&S.tut<TUT.length){const s=TUT[S.tut];if(!s.end&&s.ok()){S.tut++;sfx('goal')}}
   // Meilensteine
@@ -2485,10 +2571,10 @@ function uiTick(dt){
    8. SPEICHERN, EXPORT/IMPORT, OFFLINE-FORTSCHRITT, SELBST-UPDATE
    ===================================================================== */
 const KEY='funkenwerk-1';
-const BUILD='2026-09-26-12';
+const BUILD='2026-09-27-1';
 
 function newGame(){
-  S={v:1,ws:128,gen:2,seed:(Math.random()*1e9)|0,time:0,savedAt:Date.now(),cam:null,inv:Object.assign({},START_INV),prod:{},
+  S={v:1,ws:128,gen:2,sites:[],seed:(Math.random()*1e9)|0,time:0,savedAt:Date.now(),cam:null,inv:Object.assign({},START_INV),prod:{},
     res:{cur:null,prog:0,done:[]},flags:{},goals:[],tut:0,rockets:0,sound:true,cq:[],dir:1,ents:[],newB:[],fav:FAV_DEFAULT.slice(),showGoal:false};
   initWorld();
   // Kamera auf das Eisenfeld nahe der Mitte
@@ -2500,13 +2586,13 @@ function newGame(){
 function initWorld(){
   setWorldSize(S.ws||64);
   for(const e of S.ents)G[e.y*W+e.x]=e;
-  genWorld(S.seed);syncDone();reindex();buildTerrain();statReset();
+  genWorld(S.seed);syncDone();syncSites();reindex();buildTerrain();statReset();
   SPR.clear();palKey='';lastUnlock='';
 }
 function validSave(o){return o&&o.v===1&&typeof o.seed==='number'&&Array.isArray(o.ents)}
 /* ergänzt fehlende Felder und verwirft kaputte Einträge */
 function migrate(o){
-  const d={ws:64,gen:1,time:0,inv:{},prod:{},res:{cur:null,prog:0,done:[]},flags:{},goals:[],tut:-1,rockets:0,sound:true,cq:[],dir:1,newB:[],fav:FAV_DEFAULT.slice(),showGoal:false};
+  const d={ws:64,gen:1,sites:[],time:0,inv:{},prod:{},res:{cur:null,prog:0,done:[]},flags:{},goals:[],tut:-1,rockets:0,sound:true,cq:[],dir:1,newB:[],fav:FAV_DEFAULT.slice(),showGoal:false};
   for(const k in d)if(o[k]===undefined)o[k]=d[k];
   if(o.ws!==64&&o.ws!==128)o.ws=64;
   setWorldSize(o.ws);
@@ -2530,6 +2616,7 @@ function migrate(o){
   o.res.done=o.res.done.filter(id=>TECH[id]);
   if(o.res.cur&&!TECH[o.res.cur])o.res.cur=null;
   o.cq=o.cq.filter(c=>REC[c.r]);
+  o.sites=(o.sites||[]).filter(t=>t&&BLD[t.t]&&t.x>=0&&t.y>=0&&t.x<o.ws&&t.y<o.ws);
   o.fav=Array.from({length:6},(_,i)=>{const t=o.fav&&o.fav[i];return t&&BLD[t]?t:null});
   return o;
 }
