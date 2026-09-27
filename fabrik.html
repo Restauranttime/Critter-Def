@@ -298,8 +298,8 @@ const BLD={
   bohrer:{n:'Bohrer',kind:'drill',rate:.25,kw:150,burner:1,rot:1,out:1,d:'Fördert 15 Erz/min und gibt es am orangen Ausgang aus. Verbrennt Kohle.'},
   ebohrer:{n:'Elektrobohrer',kind:'drill',rate:.5,kw:90,rot:1,out:1,d:'Fördert 30 Erz/min mit Strom.'},
   ebohrer2:{n:'Tiefbohrer',kind:'drill',rate:1,kw:200,rot:1,out:1,d:'Fördert 60 Erz/min – füllt allein ein gelbes Band.'},
-  ofen:{n:'Steinofen',kind:'furn',speed:1,kw:90,burner:1,rot:1,out:1,d:'Schmilzt Erz zu Platten (20/min), Stein zu Ziegeln, später Eisen zu Stahl, Quarz zu Glas und Kalk zu Zement. Verbrennt Kohle.'},
-  stahlofen:{n:'Stahlofen',kind:'furn',speed:2,kw:180,burner:1,rot:1,out:1,d:'Doppelt so schnell wie der Steinofen (40 Platten/min). Verbrennt Kohle.'},
+  ofen:{n:'Steinofen',kind:'furn',speed:1,kw:90,burner:1,rot:1,out:1,d:'Schmilzt nach gewähltem Rezept: Erz zu Platten (20/min), Stein zu Ziegeln, später Eisen zu Stahl, Quarz zu Glas und Kalk zu Zement. Verbrennt Kohle.'},
+  stahlofen:{n:'Stahlofen',kind:'furn',speed:2,kw:150,rot:1,out:1,d:'Doppelt so schnell wie der Steinofen (40 Platten/min) und läuft mit Strom.'},
   eofen:{n:'Elektroofen',kind:'furn',speed:3,kw:240,rot:1,out:1,d:'Dreimal so schnell wie der Steinofen (60 Platten/min) und braucht nur Strom.'},
   montage:{n:'Montagemaschine 1',kind:'asm',speed:.75,kw:60,tier:1,rot:1,out:1,d:'Stellt Rezepte mit 1 Zutat her (z. B. Zahnrad, Kabel, Schrauben). Braucht Strom.'},
   montage2:{n:'Montagemaschine 2',kind:'asm',speed:1.25,kw:120,tier:2,rot:1,out:1,d:'Stellt Rezepte mit bis zu 2 Zutaten her und ist schneller.'},
@@ -426,7 +426,7 @@ const START_INV={bohrer:6,ofen:6,band:100,verteiler:2,kiste:4,labor:1,kohle:40,e
 const TUT=[
   {t:'Willkommen! Wähle unten den <b>Bohrer</b> und tippe auf ein blaugraues <b>Eisenerz</b>-Feld. Die orange Seite ist sein Ausgang.',
    ok:()=>L.drill.some(e=>RES[e.y*W+e.x]===1)},
-  {t:'Setze einen <b>Steinofen</b> ein paar Felder daneben auf freie Wiese.',
+  {t:'Setze einen <b>Steinofen</b> ein paar Felder daneben auf freie Wiese und wähle als Rezept <b>Eisenplatte</b>.',
    ok:()=>L.furn.length>0},
   {t:'Wähle das <b>Förderband</b>, tippe auf den <b>Bohrer</b> (Start) und dann auf den <b>Ofen</b> (Ziel). Der Weg wird automatisch gesucht – tippe auf <b>Bauen</b>.',
    ok:()=>L.furn.some(f=>f.inN>0||f.w||f.outN>0)},
@@ -602,7 +602,7 @@ function mkEnt(t,x,y,d){
     case 'belt':e.it=[];break;                                       // Items: [item, Position 0..1]
     case 'split':e.h=null;e.rr=0;e.fi=null;break;                    // gehaltenes Item, reihum-Zähler, Filter
     case 'drill':e.f=0;e.e=0;e.p=0;e.o=null;break;                   // Kohle, Energie, Fortschritt, wartendes Item
-    case 'furn':e.f=0;e.e=0;e.in=null;e.inN=0;e.out=null;e.outN=0;e.w=null;e.p=0;break;
+    case 'furn':e.r=null;e.f=0;e.e=0;e.in=null;e.inN=0;e.out=null;e.outN=0;e.w=null;e.p=0;break;
     case 'asm':e.r=null;e.inv={};e.outN=0;e.w=0;e.p=0;break;
     case 'chest':e.inv={};e.oi=null;e.orate=60;break;                // Ausgabe-Item und Menge pro Minute
     case 'merge':e.q=[null,null,null,null];e.rr=0;break;             // ein Platz pro Eingangsseite
@@ -705,6 +705,7 @@ function reindex(){
 /* =====================================================================
    4. SIMULATION  (läuft im festen Takt, getrennt vom Zeichnen)
    ===================================================================== */
+const CAP=100;                         // Fassungsvermögen von Eingang, Ausgang und Brennstoff
 const GAP=1/3;                         // Mindestabstand von Items auf dem Band: 3 Items pro Kachel
 let labFly=0;                          // Forschungseinheiten, die gerade in Laboren laufen
 
@@ -784,22 +785,22 @@ function put(t,item,test){
       if(!test)t.inv[item]=(t.inv[item]||0)+1;return true;
     }
     case 'drill':
-      if(item!=='kohle'||!BLD[t.t].burner||t.f>=10)return false;
+      if(item!=='kohle'||!BLD[t.t].burner||t.f>=CAP)return false;
       if(!test)t.f++;return true;
     case 'steam':
-      if(item!=='kohle'||t.f>=10)return false;
+      if(item!=='kohle'||t.f>=CAP)return false;
       if(!test)t.f++;return true;
     case 'furn':{
-      if(item==='kohle'&&BLD[t.t].burner){if(t.f>=10)return false;if(!test)t.f++;return true}
+      if(item==='kohle'&&BLD[t.t].burner&&t.r!=='kohle'){if(t.f>=CAP)return false;if(!test)t.f++;return true}
+      if(item!==t.r)return false;                                   // nur das Erz des gewählten Rezepts
       const r=SMELT[item];
       if(!r||(r.tech&&!DONE.has(r.tech)))return false;
-      if(t.inN>0&&t.in!==item)return false;
-      if(t.inN>=Math.max(10,r.n*2))return false;
+      if(t.inN>=CAP)return false;
       if(!test){t.in=item;t.inN++}return true;
     }
     case 'asm':{
       const r=t.r&&ingKinds(t.r)<=BLD[t.t].tier&&REC[t.r];
-      if(!r||!r.i[item]||(t.inv[item]||0)>=r.i[item]*2+2)return false;
+      if(!r||!r.i[item]||(t.inv[item]||0)>=Math.max(CAP,r.i[item]*2))return false;
       if(!test)t.inv[item]=(t.inv[item]||0)+1;return true;
     }
     case 'lab':
@@ -819,20 +820,27 @@ function drillUpd(e,dt){
   const res=RES_ITEM[RES[e.y*W+e.x]];
   if(!res){e._st='leer';e._on=0;return}
   let sp=1;
+  const selfFuel=B.burner&&res==='kohle';                           // Bohrer auf Kohle heizt mit eigener Kohle
+  if(selfFuel&&e.f<=0&&e.e<=0)e.e=COAL/4;                           // Anlauf ganz ohne Kohle
   if(B.burner){if(!burn(e,B.kw,dt)){e._st='kohle';e._on=0;return}}
   else{e._want=1;sp=e._pw||0;if(!sp){e._st='strom';e._on=0;return}}
   e._st=sp<1?'wenig':null;e._on=1;
   e.p+=B.rate*DRILL_BONUS*sp*dt;
-  if(e.p>=1){e.p-=1;addProd(res,1);count(e,1);if(!pushOut(e,res))e.o=res}
+  if(e.p>=1){
+    e.p-=1;addProd(res,1);count(e,1);
+    if(selfFuel&&e.f<3){e.f++;return}                               // erst den eigenen Vorrat auffüllen
+    if(!pushOut(e,res))e.o=res;
+  }
 }
 
 function furnUpd(e,dt){
   const B=BLD[e.t];
   if(e.outN>0&&pushOut(e,e.out)){if(!--e.outN)e.out=null}
+  if(!e.r){e._st='rezept';e._on=0;e._want=0;return}
   if(!e.w){
     const r=e.in&&SMELT[e.in];
     if(!r||e.inN<r.n||(r.tech&&!DONE.has(r.tech))){e._st=e.in?'zutaten':'leer';e._on=0;e._want=0;return}
-    if((e.outN>0&&e.out!==r.o)||e.outN>=20){e._st='voll';e._on=0;e._want=0;return}
+    if((e.outN>0&&e.out!==r.o)||e.outN>=CAP){e._st='voll';e._on=0;e._want=0;return}
     e.w=e.in;e.p=0;e.inN-=r.n;if(!e.inN)e.in=null;
   }
   const r=SMELT[e.w];let sp=1;
@@ -849,7 +857,7 @@ function asmUpd(e,dt){
   if(ingKinds(e.r)>B.tier){e._st='komplex';e._on=0;e._want=0;return}   // zu viele Zutaten-Sorten für diese Stufe
   if(e.outN>0&&pushOut(e,e.r))e.outN--;
   if(!e.w){
-    if(e.outN>=Math.max(10,r.n*4)){e._st='voll';e._on=0;e._want=0;return}
+    if(e.outN>=CAP){e._st='voll';e._on=0;e._want=0;return}
     for(const k in r.i)if((e.inv[k]||0)<r.i[k]){e._st='zutaten';e._on=0;e._want=0;return}
     for(const k in r.i)e.inv[k]-=r.i[k];
     e.w=1;e.p=0;
@@ -1589,6 +1597,7 @@ function render(dt){
       ctx.fillStyle='#d5dbe1';ctx.beginPath();ctx.arc(cx,cy,ts*.055,0,Math.PI*2);ctx.fill();
       if(e._on&&BLD[e.t].burner&&Math.random()<dt*1.2)puff(e.x+.25,e.y+.3,'rgba(90,90,90,.5)',1,.3);
     }else if(k==='furn'){
+      if(e.r&&SMELT[e.r]){const q=ts*.3;ctx.drawImage(iSpr(SMELT[e.r].o,q),X+ts*.04,Y+ts*.04,q,q)}
       if(e._on){
         const f=.55+.25*Math.sin(TIME*9+e.x);
         const burnerF=e.t==='ofen'||e.t==='stahlofen';
@@ -2052,6 +2061,8 @@ function tryPlace(t,x,y,d){
     return;
   }
   const e=mkEnt(t,x,y,d);addEnt(e);autoFuel(e);
+  // Öfen und Montagemaschinen brauchen ein Rezept: Auswahl gleich öffnen
+  if(B.kind==='furn'||B.kind==='asm'){openInfo(e);ACT[B.kind==='furn'?'frecipes':'recipes']();SH.autoPick=1}
   if(B.kind==='silo'){S.flags.silo=1}
   sfx('place');FLASH={x,y,t:.35};puff(x+.5,y+.6,'rgba(200,200,200,.35)',4,1.2);
   uiDirty=true;
@@ -2310,7 +2321,7 @@ let SH={kind:null,live:null,tab:null};
 const sheetOpen=()=>!!SH.kind;
 function openSheet(kind,title,iconId,html,opt){
   opt=opt||{};
-  SH={kind,live:opt.live||null,tab:opt.tab||null,ent:opt.ent||null};
+  SH={kind,live:opt.live||null,tab:opt.tab||null,ent:opt.ent||null,t0:performance.now()};
   SEL=opt.ent||null;
   $('#sheetTitle').textContent=title;
   const icn=$('#sheetIcon');icn.style.display=iconId?'':'none';
@@ -2323,7 +2334,7 @@ function openSheet(kind,title,iconId,html,opt){
 }
 function closeSheet(){SH={kind:null,live:null};SEL=null;$('#sheet').classList.remove('on');$('#sheetBg').classList.remove('on')}
 $('#sheetX').onclick=closeSheet;
-$('#sheetBg').onclick=closeSheet;
+$('#sheetBg').onclick=()=>{if(performance.now()-(SH.t0||0)>400)closeSheet()};   // Geisterklick direkt nach dem Öffnen ignorieren
 const ACT={};
 ACT.pick=v=>{S.newB=S.newB.filter(x=>x!==v);closeSheet();selectTool(v)};
 ACT.fav=v=>{
@@ -2363,7 +2374,7 @@ function maxRates(e){
   switch(B.kind){
     case 'drill':{const r=RES_ITEM[RES[e.y*W+e.x]];return[B.burner?[fuel(B.kw)]:[],r?[[r,B.rate*DRILL_BONUS*60]]:[]]}
     case 'furn':{
-      const key=e.w||e.in||Object.keys(SMELT).find(k=>SMELT[k].o===e.out)||'eisenerz',r=SMELT[key],per=B.speed*60/r.t;
+      const key=e.r||e.w||e.in||'eisenerz',r=SMELT[key],per=B.speed*60/r.t;
       return[[[key,per*r.n]].concat(B.burner?[fuel(B.kw)]:[]),[[r.o,per]]];
     }
     case 'asm':{if(!e.r)return[[],[]];const r=REC[e.r],per=B.speed*60/r.t;return[Object.keys(r.i).map(k=>[k,r.i[k]*per]),[[e.r,r.n*per]]]}
@@ -2400,8 +2411,10 @@ function openInfo(e){
     }
     case 'furn':{
       h+=`<div class="slots">${B.burner?slot('sF','Brennstoff','kohle'):''}${slot('sI','Eingang')}${slot('sO','Ausgang')}</div><div class="bar"><div id="iBar"></div></div>`;
-      const feeds=Object.keys(SMELT).filter(i=>(TOT[i]||0)>0&&(!SMELT[i].tech||isDone(SMELT[i].tech)));
-      h+=rateBlock(e)+`<p>${Object.keys(SMELT).filter(i=>!SMELT[i].tech||isDone(SMELT[i].tech)).map(i=>(SMELT[i].n>1?SMELT[i].n+' ':'')+ITEMS[i].n+' → '+ITEMS[SMELT[i].o].n).join(' · ')}. Dieser Ofen schafft ${fmtRate(B.speed*20)} Platten/min.</p>`;
+      const sr=e.r&&SMELT[e.r],feeds=e.r&&(TOT[e.r]||0)>0?[e.r]:[];
+      h=`<div class="st" id="iSt"></div><div class="row">${sr?ic(sr.o):'<div class="chk">?</div>'}<div class="rt"><b>${sr?esc(ITEMS[sr.o].n):'Kein Rezept'}</b>${sr?`<div class="ing"><span>${ic(e.r)}${sr.n} ${esc(ITEMS[e.r].n)}</span></div>`:'<div class="ing">Wähle, was der Ofen schmelzen soll.</div>'}</div><div class="rb"><button class="btn acc" data-a="frecipes">Rezept</button></div></div>`+h.slice(h.indexOf('</div>')+6);
+      if(sr)h+=rateBlock(e);
+      h+=`<p>Dieser Ofen schafft ${fmtRate(B.speed*20)} Platten/min. Er nimmt nur das Erz seines Rezepts an${B.burner?' und Kohle als Brennstoff':''}.</p>`;
       if(feeds.length)h+=`<h4>Einlegen</h4><div class="btns">${feeds.map(i=>`<button class="btn" data-a="feed" data-v="${i}">${ic(i)} ${esc(ITEMS[i].n)} (${fmt(TOT[i])})</button>`).join('')}</div>`;
       if(B.burner)btns.push(['fuel','Kohle einlegen']);
       btns.push(['takeout','Ausgang nehmen']);
@@ -2553,12 +2566,25 @@ ACT.recipes=()=>{
   }
   openSheet('recipes','Rezept wählen',e.t,h,{ent:e});
 };
+ACT.frecipes=()=>{
+  const e=selE();if(!e)return;
+  const ids=Object.keys(SMELT).filter(i=>!SMELT[i].tech||isDone(SMELT[i].tech));
+  const h=`<p>Wähle, was der Ofen schmelzen soll. Eingang und Ausgang gehen beim Wechsel ins Inventar.</p><div class="grid">${ids.map(i=>{const r=SMELT[i];
+    return`<button class="cell${e.r===i?' sel':''}" data-a="setsmelt" data-v="${i}">${ic(r.o)}<span>${esc(ITEMS[r.o].n)}</span><span style="color:var(--dim);font-size:10px">aus ${r.n} ${esc(ITEMS[i].n)}</span></button>`}).join('')}</div>`;
+  openSheet('recipes','Ofen-Rezept',e.t,h,{ent:e});
+};
+ACT.setsmelt=v=>{
+  const e=selE();if(!e)return;
+  if(e.inN)give(e.in,e.inN);if(e.outN)give(e.out,e.outN);if(e.w)give(e.w,SMELT[e.w].n);
+  e.r=v;e.in=null;e.inN=0;e.out=null;e.outN=0;e.w=null;e.p=0;
+  sfx('click');if(SH.autoPick){closeSheet();toast('Rezept: '+ITEMS[SMELT[v].o].n,'good',1200)}else openInfo(e);
+};
 ACT.setrec=v=>{
   const e=selE();if(!e)return;
   for(const i in e.inv)give(i,e.inv[i]);
   if(e.r){give(e.r,e.outN);if(e.w)for(const i in REC[e.r].i)give(i,REC[e.r].i[i])}
   e.r=v;e.inv={};e.outN=0;e.w=0;e.p=0;
-  sfx('click');openInfo(e);
+  sfx('click');if(SH.autoPick){closeSheet();toast('Rezept: '+ITEMS[v].n,'good',1200)}else openInfo(e);
 };
 ACT.launch=()=>{
   const e=selE();if(!e||e.parts<10||e._launch)return;
@@ -2777,7 +2803,7 @@ function uiTick(dt){
    8. SPEICHERN, EXPORT/IMPORT, OFFLINE-FORTSCHRITT, SELBST-UPDATE
    ===================================================================== */
 const KEY='funkenwerk-1';
-const BUILD='2026-09-27-2';
+const BUILD='2026-09-27-3';
 
 function newGame(){
   S={v:1,ws:128,gen:3,sites:[],seed:(Math.random()*1e9)|0,time:0,savedAt:Date.now(),cam:null,inv:Object.assign({},START_INV),prod:{},
@@ -2815,6 +2841,8 @@ function migrate(o){
     if(e.inv)clean(e.inv);
     if(e.it)e.it=e.it.filter(i=>ITEMS[i[0]]);
     if(e.t==='kiste'){delete e.ou;if(e.oi&&!ITEMS[e.oi])e.oi=null}
+    if(BLD[e.t].kind==='furn'&&e.r===undefined)e.r=e.in||e.w||Object.keys(SMELT).find(k=>SMELT[k].o===e.out)||null;   // alte Öfen: Rezept aus dem Inhalt ableiten
+    if(e.t==='stahlofen'&&e.f){o.inv.kohle=(o.inv.kohle||0)+e.f;e.f=0}
     const k=e.y*W+e.x;if(seen.has(k))return false;seen.add(k);
     const f=mkEnt(e.t,e.x,e.y,e.d||0);for(const q in f)if(e[q]===undefined)e[q]=f[q];
     return true;
