@@ -306,7 +306,7 @@ const BLD={
   montage3:{n:'Montagemaschine 3',kind:'asm',speed:2,kw:250,tier:3,rot:1,out:1,d:'Stellt alle Rezepte (bis 3 Zutaten) her und ist am schnellsten.'},
   kiste:{n:'Kiste',kind:'chest',cap:800,rot:1,out:1,d:'Lager für 800 Items, nimmt von Bändern an. Der Inhalt zählt zu deinem Vorrat. Am orangen Ausgang gibt sie ein gewähltes Item mit einstellbarer Menge pro Minute aufs Band.'},
   labor:{n:'Labor',kind:'lab',d:'Verbraucht Forschungspakete für die aktuelle Forschung. Pakete kommen per Band oder von Hand.'},
-  solar:{n:'Solarpanel',kind:'solar',kw:120,d:'Liefert dauerhaft 120 kW ohne Brennstoff.'},
+  solar:{n:'Solarpanel',kind:'solar',kw:60,d:'Liefert dauerhaft 60 kW ohne Brennstoff.'},
   dampf:{n:'Kohlekraftwerk',kind:'steam',kw:1800,water:1,d:'Erzeugt bis zu 1,8 MW aus Kohle (per Band, bei Volllast 27 Kohle/min). Muss direkt am Wasser stehen.'},
   mast:{n:'Strommast',kind:'pole',sup:2,reach:7.5,d:'Versorgt Gebäude im 5×5-Bereich, Leitungen bis 7 Felder.'},
   mast2:{n:'Mittlerer Mast',kind:'pole',sup:3,reach:11,d:'Versorgt Gebäude im 7×7-Bereich, Leitungen bis 11 Felder.'},
@@ -344,12 +344,12 @@ const REC={
   silizium:{i:{quarz:3,kohle:1},n:1,t:4,tech:'quarz',g:'Bauteile'},
   chip:{i:{silizium:2,kabel:4},n:1,t:6,tech:'elektronik',g:'Hightech'},
   fschaltkreis:{i:{schaltkreis:2,chip:1},n:1,t:6,tech:'elektronik',g:'Hightech'},
-  motor:{i:{rotor:1,stahl:2,kabel:4},n:1,t:10,tech:'motoren',g:'Hightech'},
+  motor:{i:{rotor:1,stahl:2},n:1,t:10,tech:'motoren',g:'Hightech'},
   raketenteil:{i:{rahmen:10,chip:10,motor:5},n:1,t:30,tech:'rakete',mach:1,g:'Hightech'},
-  rot:{i:{kupferplatte:1,zahnrad:1},n:1,t:5,g:'Forschung'},
+  rot:{i:{zahnrad:2},n:1,t:5,g:'Forschung'},
   gruen:{i:{band:1,schaltkreis:1},n:1,t:6,tech:'gruenpaket',g:'Forschung'},
-  blau:{i:{fschaltkreis:2,motor:1},n:2,t:12,tech:'blaupaket',g:'Forschung'},
-  gelb:{i:{chip:1,rahmen:1,beton:2},n:1,t:15,tech:'gelbpaket',g:'Forschung'},
+  blau:{i:{fschaltkreis:3,motor:1},n:3,t:18,tech:'blaupaket',g:'Forschung'},
+  gelb:{i:{chip:1,rahmen:2,beton:2},n:1,t:18,tech:'gelbpaket',g:'Forschung'},
   band:{i:{zahnrad:1,eisenplatte:1},n:2,t:.5,g:'Logistik'},
   schnellband:{i:{band:1,zahnrad:3},n:1,t:.5,tech:'logistik',g:'Logistik'},
   expressband:{i:{schnellband:1,zahnrad:5,schaltkreis:1},n:1,t:.5,tech:'expressband',g:'Logistik'},
@@ -378,7 +378,7 @@ const ingKinds=r=>Object.keys(REC[r].i).length;
 
 /* Forschungsbaum. c = Pakete pro Einheit (Wert = Anzahl Einheiten), t = Sekunden pro Einheit */
 const TECH={
-  elektrizitaet:{n:'Solarenergie',c:{rot:10},t:5,u:['solar','mast'],d:'Solarpanels liefern je 120 kW Strom, Strommasten verteilen ihn.'},
+  elektrizitaet:{n:'Solarenergie',c:{rot:10},t:5,u:['solar','mast'],d:'Solarpanels liefern je 60 kW Strom, Strommasten verteilen ihn.'},
   automatisierung:{n:'Automatisierung',c:{rot:10},t:5,req:['elektrizitaet'],u:['montage'],d:'Montagemaschine 1: stellt Rezepte mit 1 Zutat her.'},
   bergbau:{n:'Elektrischer Bergbau',c:{rot:20},t:5,req:['elektrizitaet'],u:['ebohrer'],d:'Elektrobohrer mit 30 Erz/min.'},
   automatisierung2:{n:'Automatisierung 2',c:{rot:30},t:5,req:['automatisierung'],u:['montage2'],d:'Montagemaschine 2: Rezepte mit bis zu 2 Zutaten, schneller.'},
@@ -420,7 +420,7 @@ const GOALS=[
 const goalDone=g=>g.p?(()=>{const[a,b]=g.p();return a>=b})():g.ok();
 
 /* Startinventar, damit man sofort loslegen kann */
-const START_INV={bohrer:6,ofen:6,band:100,verteiler:2,kiste:4,labor:1,kohle:40,eisenplatte:60,kupferplatte:30,stein:20};
+const START_INV={bohrer:6,ofen:6,band:100,verteiler:2,kiste:4,labor:1,kohle:40,eisenplatte:80,kupferplatte:30,stein:20};
 
 /* Tutorial für die ersten Minuten */
 const TUT=[
@@ -2277,7 +2277,7 @@ function toolHint(t){
     case 'furn':return`${B.n}: ${fmtRate(B.speed*20)} Platten/min${dir}`;
     case 'asm':return`${B.n}: Rezepte mit bis zu ${B.tier} ${B.tier>1?'Zutaten':'Zutat'}, Tempo ×${String(B.speed).replace('.',',')}${dir}`;
     case 'steam':return`${B.n}: bis 1,8 MW, muss direkt am Wasser stehen`;
-    case 'solar':return`${B.n}: 120 kW ohne Brennstoff`;
+    case 'solar':return`${B.n}: 60 kW ohne Brennstoff`;
     case 'pole':return`${B.n}: ${2*B.sup+1}×${2*B.sup+1} Felder, Leitung bis ${Math.floor(B.reach)} Felder`;
     case 'split':return`${B.n}: Eingang hinten, Ausgänge vorn/links/rechts. Auf ein Band tippen ersetzt es.`;
     case 'merge':return`${B.n}: Eingänge hinten/links/rechts, Ausgang vorn. Auf ein Band tippen ersetzt es.`;
@@ -2813,7 +2813,7 @@ function uiTick(dt){
    8. SPEICHERN, EXPORT/IMPORT, OFFLINE-FORTSCHRITT, SELBST-UPDATE
    ===================================================================== */
 const KEY='funkenwerk-1';
-const BUILD='2026-09-27-4';
+const BUILD='2026-09-27-5';
 
 function newGame(){
   S={v:1,ws:128,gen:3,sites:[],seed:(Math.random()*1e9)|0,time:0,savedAt:Date.now(),cam:null,inv:Object.assign({},START_INV),prod:{},
