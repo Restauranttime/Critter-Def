@@ -237,7 +237,7 @@ const DX=[0,1,0,-1],DY=[-1,0,1,0];     // Richtungen: 0 Nord, 1 Ost, 2 Süd, 3 W
 const DIRN=['Norden','Osten','Süden','Westen'];
 const COAL=4000;                       // Energie einer Kohle in kJ
 const HAND_SPEED=1.5;                  // Handwerk-Tempo
-const OFFLINE_MAX=8*3600;              // Offline-Fortschritt höchstens 8 Stunden
+const OFFLINE_MAX=30*60;               // Offline-Fortschritt höchstens 30 Minuten (sonst ist es mehr Warten als Spielen)
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function fmt(n){n=Math.floor(n);if(n>=1e6)return(n/1e6).toFixed(1).replace('.',',')+' M';if(n>=1e4)return Math.round(n/1e3)+'k';return n.toLocaleString('de-DE')}
@@ -480,6 +480,23 @@ const TECH={
   gelbpaket:{n:'Gelbe Forschung',c:{rot:150,gruen:150,blau:150},t:12,req:['automatisierung3','beton'],u:['gelb'],d:'Gelbe Forschungspakete für die Raumfahrt.'},
   rakete:{n:'Raketenbau',c:{rot:200,gruen:200,blau:200,gelb:200},t:15,req:['gelbpaket'],u:['silo','raketenteil'],d:'Das Endziel: Raketensilo und Raketenteile.'},
 };
+/* Kurze Tipps, die nach Abschluss einer Forschung erscheinen */
+const TIPS={
+  elektrizitaet:'Solarpanel und Strommast setzen: Alles im blauen Bereich eines Masts bekommt Strom. Masten verbinden sich von selbst, wenn sie nah genug stehen.',
+  automatisierung:'Montagemaschinen brauchen Strom und ein Rezept. Zutaten kommen per Band hinein, das Ergebnis geht am orangen Ausgang hinaus.',
+  automatisierung2:'Montagemaschine 2 schafft Rezepte mit 2 Zutaten – damit lassen sich rote Pakete und Schaltkreise automatisch bauen.',
+  logistik:'Tunnel: Beim Verlegen mit Start und Ziel nutzt der Auto-Weg Tunnel selbst, wenn etwas im Weg ist. Von Hand: erst Eingang, dann Ausgang setzen.',
+  stahl:'Stell einen Ofen auf das Rezept „Stahl“ und füttere ihn mit Eisenplatten.',
+  kohlekraft:'Kraftwerke brauchen Kohle per Band und Wasser per Leitung: Pumpe direkt ans Ufer setzen, dann Wasserleitung mit Start an der Pumpe und Ziel am Kraftwerk verlegen. Eine Pumpe reicht für 2 Kraftwerke.',
+  logistik2:'Smart-Verteiler: Für jeden Ausgang ein Item wählen – so trennst du gemischte Bänder. Smart-Zusammenführer lassen nur das gewählte Item herein.',
+  quarz:'Silizium braucht Wasser: Führe eine Wasserleitung an die Montagemaschine.',
+  beton:'Beton braucht Wasser: Führe eine Wasserleitung an die Montagemaschine. Zement kommt aus dem Ofen (Kalkstein).',
+  elektronik:'Chips brauchen Kühlmittel. Das macht eine Montagemaschine aus Kupferplatten und Wasser.',
+  hydraulik:'Stahlleitungen tragen 3.000 Wasser/min. Mit „Auswahl“ kannst du ganze Leitungen auf einmal aufrüsten.',
+  oel:'Ölquellen liegen weit draußen (dunkle Lachen). Ölpumpe darauf, Öl per Leitung zur Raffinerie, die zusätzlich Wasser braucht. Kunststoff und Schwefel kommen gemischt heraus – trenne sie mit einem Smart-Verteiler.',
+  dimension:'Alles, was in einen Dimensions-Eingang fließt, kannst du an jeder Dimensionskiste wieder herausholen – ideal für weit entfernte Produktionen.',
+  rakete:'Das Silo braucht 200 Raketenteile per Band. Eine eigene Produktionslinie lohnt sich!',
+};
 const techCount=id=>{const c=TECH[id].c;let m=0;for(const k in c)m=Math.max(m,c[k]);return m};
 
 /* Meilensteine bis zur Rakete */
@@ -511,7 +528,7 @@ const TUT=[
    ok:()=>L.furn.length>0},
   {t:'Wähle das <b>Förderband</b>, tippe auf den <b>Bohrer</b> (Start) und dann auf den <b>Ofen</b> (Ziel). Der Weg wird automatisch gesucht – tippe auf <b>Bauen</b>.',
    ok:()=>L.furn.some(f=>f.inN>0||f.w||f.outN>0)},
-  {t:'Setze eine <b>Kiste</b> und verbinde den <b>Ofen</b> genauso mit einem Band mit der Kiste. Platten in Kisten zählen zu deinem Vorrat.',
+  {t:'Setze eine <b>Kiste</b> und verbinde den <b>Ofen</b> genauso mit einem Band mit ihr. Das Band endet von selbst an ihrem Eingang (gegenüber der orangen Seite). Platten in Kisten zählen zu deinem Vorrat.',
    ok:()=>L.chest.some(c=>c.inv.eisenplatte>0)},
   {t:'Kohle geht irgendwann aus. Setze einen Bohrer auf <b>Kohle</b> (schwarz) und führe ein Band zum Ofen oder seitlich auf das Erzband.',
    ok:()=>prod('kohle')>=15},
@@ -519,7 +536,7 @@ const TUT=[
    ok:()=>prod('rot')>=10},
   {t:'Baue das <b>Labor</b>, halte den Finger lange darauf und lege die Pakete ein. Starte dann unter <b>Forschung</b> „Solarenergie“.',
    ok:()=>isDone('elektrizitaet')||(S.res.cur==='elektrizitaet'&&L.lab.some(l=>l.w||l.inv.rot>0))},
-  {t:'Stark! Du kennst die Grundlagen. Bänder sind oft der Engpass – rüste sie später auf. Dein großes Ziel: <b>Schieß eine Rakete ins All.</b>',end:1},
+  {t:'Stark! Nach jeder Forschung zeigt dir eine Meldung, was neu ist. Tipp: Mit <b>Auswahl</b> ziehst du einen Rahmen auf und kannst ganze Bereiche aufrüsten oder als Blaupause kopieren. Dein großes Ziel: <b>Schieß eine Rakete ins All.</b>',end:1},
 ];
 
 /* =====================================================================
@@ -551,6 +568,7 @@ function setWorldSize(n){W=H=n;RES=new Uint8Array(n*n);G=new Array(n*n).fill(nul
 
 /* Karte erzeugen. Version 2 (neue Spiele): große Welt, kleinere Felder mit viel Platz dazwischen */
 function genWorld(seed){
+  if((S.gen||1)>=5){genWorld5(seed);return addOil(seed,55,88,11)}
   if((S.gen||1)>=4){genWorld3(seed);return addOil(seed)}
   if((S.gen||1)>=3)return genWorld3(seed);
   if((S.gen||1)>=2)return genWorld2(seed);
@@ -644,11 +662,61 @@ function genWorld3(seed){
     k++;lake(x,y,2+r()*3);
   }
 }
+/* Kartenversion 5: große Welt (192×192), Vorkommen höchstens 8 Felder, insgesamt eher knapp, viel freie Fläche */
+function genWorld5(seed){
+  RES.fill(0);
+  const r=rng(seed),c=W/2,centers=[];
+  const grow=(t,cx,cy,size)=>{
+    size=Math.min(8,size);
+    const cells=[[cx|0,cy|0]],inSet=new Set([(cy|0)*W+(cx|0)]);
+    for(let tries=0;cells.length<size&&tries<size*30;tries++){
+      const[bx,by]=cells[(r()*cells.length)|0],d=(r()*4)|0,nx=bx+DX[d],ny=by+DY[d],k=ny*W+nx;
+      if(nx<2||ny<2||nx>=W-2||ny>=H-2||inSet.has(k)||RES[k])continue;
+      inSet.add(k);cells.push([nx,ny]);
+    }
+    for(const[x,y]of cells)RES[y*W+x]=t;
+    centers.push([cx,cy]);
+  };
+  const farFrom=(x,y,m)=>centers.every(([a,b])=>Math.hypot(a-x,b-y)>=m);
+  const place=(t,dMin,dMax,size,spacing)=>{
+    for(let tries=0;tries<800;tries++){
+      const a=r()*Math.PI*2,dist=dMin+r()*(dMax-dMin),x=c+Math.cos(a)*dist,y=c+Math.sin(a)*dist;
+      if(x<4||y<4||x>=W-4||y>=H-4||!farFrom(x,y,spacing))continue;
+      grow(t,x,y,size);return;
+    }
+  };
+  // Start: je ein volles Feld Eisen, Kupfer, Kohle, Stein nah an der Mitte, dazu je ein zweites Eisen- und Kupferfeld
+  for(const t of[1,2,3,4])place(t,7,13,8,8);
+  place(1,14,24,8,10);place(2,14,24,8,10);
+  // Quarz und Kalk etwas weiter weg
+  place(5,22,34,8,12);place(6,22,34,8,12);
+  // Rest der Karte: wenige kleine Vorkommen mit viel Platz dazwischen
+  const types=[1,1,1,1,2,2,2,3,3,4,4,5,5,6,6];
+  for(let tries=0;tries<8000&&centers.length<80;tries++){
+    const x=4+r()*(W-8),y=4+r()*(H-8);
+    if(Math.hypot(x-c,y-c)<18||!farFrom(x,y,14))continue;
+    grow(types[(r()*types.length)|0],x,y,4+((r()*5)|0));
+  }
+  const lake=(x,y,br)=>{
+    for(let yy=Math.floor(y-br-2);yy<=y+br+2;yy++)for(let xx=Math.floor(x-br-2);xx<=x+br+2;xx++){
+      if(xx<1||yy<1||xx>=W-1||yy>=H-1)continue;
+      const d=Math.hypot(xx+.5-x,yy+.5-y)/(br*(.75+.5*vnoise(xx*.5,yy*.5,seed+99)));
+      if(d<1&&!RES[yy*W+xx])RES[yy*W+xx]=WATER;
+    }
+  };
+  {const a=r()*Math.PI*2;lake(c+Math.cos(a)*18,c+Math.sin(a)*18,3)}
+  for(let k=0,tries=0;k<16&&tries<4000;tries++){
+    const x=8+r()*(W-16),y=8+r()*(H-16);
+    if(Math.hypot(x-c,y-c)<28)continue;
+    k++;lake(x,y,2+r()*3);
+  }
+}
 /* Kartenversion 4: dazu Ölquellen weit draußen (kleine Felder aus 2–4 Kacheln) */
-function addOil(seed){
+function addOil(seed,dMin,dMax,count){
+  dMin=dMin||34;dMax=dMax||60;count=count||9;
   const r=rng(seed+4242),c=W/2,spots=[];
-  for(let tries=0;tries<4000&&spots.length<9;tries++){
-    const a=r()*Math.PI*2,dist=34+r()*26,x=Math.round(c+Math.cos(a)*dist),y=Math.round(c+Math.sin(a)*dist);
+  for(let tries=0;tries<6000&&spots.length<count;tries++){
+    const a=r()*Math.PI*2,dist=dMin+r()*(dMax-dMin),x=Math.round(c+Math.cos(a)*dist),y=Math.round(c+Math.sin(a)*dist);
     if(x<4||y<4||x>=W-4||y>=H-4||spots.some(([u,v])=>Math.hypot(u-x,v-y)<16))continue;
     let ok=true;for(let yy=y-2;yy<=y+2&&ok;yy++)for(let xx=x-2;xx<=x+2;xx++)if(RES[yy*W+xx]){ok=false;break}
     if(!ok)continue;
@@ -1097,12 +1165,14 @@ function labUpd(e,dt){
   e.p+=dt*B.speed*sp/T.t;
   if(e.p>=1){e.w=null;e.p=0;labFly--;count(e,1);R.prog++;if(R.prog>=techCount(R.cur))finishTech()}
 }
+let RESQ=[];                           // abgeschlossene Forschungen, deren Meldung noch aussteht
 function finishTech(){
   const id=S.res.cur;
   S.res.done.push(id);S.res.cur=null;S.res.prog=0;syncDone();
   for(const l of L.lab)if(l.w===id){l.w=null;l.p=0}
   labFly=0;
   notify('Forschung abgeschlossen: '+TECH[id].n,'good');
+  RESQ.push(id);
   sfx('res');uiDirty=true;
 }
 
@@ -1796,10 +1866,10 @@ function beltPos(turn,p){
 }
 
 /* ---------- Gelände (vorgerendert in 16×16-Blöcken) ---------- */
-const CH=16,TPX=16;                    // Gelände weich vorgerendert; Raster und Erz werden scharf live gezeichnet
+const CH=16;let TPX=16;                // Gelände weich vorgerendert; Raster und Erz werden scharf live gezeichnet
 let CHUNKS=[];
 function buildTerrain(){
-  CHUNKS=[];
+  CHUNKS=[];TPX=W>128?12:16;             // große Welt: etwas gröber vorrendern, spart Speicher (Gelände ist ohnehin weich)
   for(let cy=0;cy<H/CH;cy++)for(let cx=0;cx<W/CH;cx++)
     CHUNKS.push(mk(CH*TPX,CH*TPX,g=>{g.scale(TPX,TPX);g.translate(-cx*CH,-cy*CH);drawChunk(g,cx,cy)}));
 }
@@ -3534,13 +3604,28 @@ ACT.import=async()=>{
 /* Rückkehr- und Sieg-Fenster */
 function openWelcome(sec,gain,msgs){
   const keys=Object.keys(gain).filter(k=>gain[k]>0).sort((a,b)=>gain[b]-gain[a]).slice(0,12);
-  let h=`<p>Du warst ${fmtDur(sec)} weg${sec>=OFFLINE_MAX?' (angerechnet werden höchstens 8 Stunden)':''}. Deine Fabrik hat weitergearbeitet:</p>`;
+  let h=`<p>Du warst ${fmtDur(sec)} weg${sec>=OFFLINE_MAX?' (angerechnet werden höchstens 30 Minuten)':''}. Deine Fabrik hat weitergearbeitet:</p>`;
   h+=keys.length?`<div class="grid">${keys.map(k=>`<div class="cell">${ic(k)}<b>+${fmt(gain[k])}</b><span>${esc(ITEMS[k].n)}</span></div>`).join('')}</div>`:'<p>Leider nichts – vielleicht fehlte Kohle oder Strom?</p>';
   if(msgs.length)h+=`<h4>Außerdem</h4>${msgs.map(m=>`<p>${esc(m)}</p>`).join('')}`;
   h+=`<p style="font-size:12px">Hochgerechnet aus einer Messung deiner Fabrik. Sie läuft, bis der erste Vorrat (z. B. Kohle von Hand) leer wäre.</p><div class="btns"><button class="btn acc" data-a="close">Weiter</button></div>`;
   openSheet('welcome','Willkommen zurück!',null,h);
 }
 ACT.close=()=>closeSheet();
+/* Meldung nach einer Forschung: was es jetzt Neues gibt */
+function openTechDone(id){
+  const T=TECH[id];if(!T)return;
+  const desc=u=>{
+    if(BLD[u])return esc(BLD[u].d||toolHint(u));
+    if(REC[u])return`Neues Rezept${REC[u].mach?' (nur Maschine)':''}: `+Object.keys(REC[u].i).map(k=>`${REC[u].i[k]} ${esc(ITEMS[k].n)}`).join(' + ');
+    const sm=Object.keys(SMELT).find(k=>SMELT[k].o===u);
+    return sm?`Ofen-Rezept: aus ${SMELT[sm].n} ${esc(ITEMS[sm].n)}`:'';
+  };
+  let h=`<p>${esc(T.d)}</p><h4>Neu freigeschaltet</h4>`+T.u.filter(u=>ITEMS[u]).map(u=>`<div class="row">${ic(u)}<div class="rt"><b>${esc(ITEMS[u].n)}</b><div class="ing">${desc(u)}</div></div></div>`).join('');
+  if(TIPS[id])h+=`<h4>Tipp</h4><p>${esc(TIPS[id])}</p>`;
+  h+=`<div class="btns"><button class="btn acc" data-a="close">Weiter</button><button class="btn" data-a="openres">Nächste Forschung</button></div>`;
+  openSheet('techdone','✓ '+T.n,T.u.find(u=>ITEMS[u])||null,h);
+  sfx('goal');
+}
 function openWin(){
   openSheet('win','Geschafft!','raketenteil',`<p style="color:var(--text);font-size:16px">Deine Rakete ist im All! Du hast Funkenwerk durchgespielt.</p>
     <p>Gespielt: ${fmtDur(S.time)} · Du kannst weiterbauen, die Fabrik vergrößern und weitere Raketen starten.</p>
@@ -3570,16 +3655,17 @@ function uiTick(dt){
   GOALS.forEach((g,i)=>{if(!S.goals.includes(i)&&goalDone(g)){S.goals.push(i);toast('Meilenstein erreicht: '+g.n,'good',3500);sfx('goal')}});
   updBanner();
   if(winPending&&!sheetOpen()){winPending=false;openWin()}
+  else if(RESQ.length&&!sheetOpen()&&!ROUTE)openTechDone(RESQ.shift());
 }
 
 /* =====================================================================
    8. SPEICHERN, EXPORT/IMPORT, OFFLINE-FORTSCHRITT, SELBST-UPDATE
    ===================================================================== */
 const KEY='funkenwerk-1';
-const BUILD='2026-09-28-3';
+const BUILD='2026-09-28-4';
 
 function newGame(){
-  S={v:1,ws:128,gen:4,sites:[],seed:(Math.random()*1e9)|0,time:0,savedAt:Date.now(),cam:null,inv:Object.assign({},START_INV),prod:{},
+  S={v:1,ws:192,gen:5,sites:[],seed:(Math.random()*1e9)|0,time:0,savedAt:Date.now(),cam:null,inv:Object.assign({},START_INV),prod:{},
     res:{cur:null,prog:0,done:[]},flags:{water:1},goals:[],tut:0,rockets:0,sound:true,cq:[],dir:1,ents:[],newB:[],fav:FAV_DEFAULT.slice(),showGoal:false,dim:{},bps:[]};
   initWorld();
   // Kamera auf das Eisenfeld nahe der Mitte
@@ -3592,14 +3678,14 @@ function initWorld(){
   setWorldSize(S.ws||64);
   for(const e of S.ents)G[e.y*W+e.x]=e;
   genWorld(S.seed);applyWorldRules();syncDone();syncSites();reindex();buildTerrain();statReset();
-  SPR.clear();palKey='';lastUnlock='';
+  SPR.clear();palKey='';lastUnlock='';RESQ=[];
 }
 function validSave(o){return o&&o.v===1&&typeof o.seed==='number'&&Array.isArray(o.ents)}
 /* ergänzt fehlende Felder und verwirft kaputte Einträge */
 function migrate(o){
   const d={ws:64,gen:1,sites:[],time:0,inv:{},prod:{},res:{cur:null,prog:0,done:[]},flags:{},goals:[],tut:-1,rockets:0,sound:true,cq:[],dir:1,newB:[],fav:FAV_DEFAULT.slice(),showGoal:false,dim:{},bps:[]};
   for(const k in d)if(o[k]===undefined)o[k]=d[k];
-  if(o.ws!==64&&o.ws!==128)o.ws=64;
+  if(o.ws!==64&&o.ws!==128&&o.ws!==192)o.ws=64;
   setWorldSize(o.ws);
   // Greifarme gibt es nicht mehr: jeder wird zu 2 Förderbändern
   const oldIns=k=>k==='greifer'||k==='schnellgreifer';
