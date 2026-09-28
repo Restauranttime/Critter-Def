@@ -2104,7 +2104,9 @@ function obtain(t,n){
 }
 /* Fehlendes für n Gebäude t ins Handwerk einreihen. false = Rohstoffe fehlen (nicht herstellbar) */
 function queueFor(t,n){
-  const av=queueAvail(),miss={};instantPlan(t,n,av,miss);
+  const av=queueAvail(),miss={};
+  for(const s of S.sites)instantPlan(s.t,1,av,{});   // was bestehende Baustellen schon brauchen, ist nicht mehr frei
+  instantPlan(t,n,av,miss);
   const steps=[];let raw=null;
   for(const k in miss){
     if(!REC[k]||!unlocked(k)||REC[k].mach||!planCraft(k,miss[k],av,steps,0,{})){raw=k;break}
@@ -2270,20 +2272,20 @@ function selectTool(t){
 }
 /* Kurzinfo beim Auswählen eines Gebäudes */
 function toolHint(t){
-  const B=BLD[t],dir=B.rot?' · Ausgang nach '+DIRN[curDir]:'';
+  const B=BLD[t];
   switch(B.kind){
     case 'belt':return`${B.n} (${beltRate(t)}/min): Start antippen, dann Ziel. Anderes Band antippen = umbauen.`;
-    case 'drill':return`${B.n}: ${fmtRate(B.rate*DRILL_BONUS*60)} Erz/min${dir}`;
-    case 'furn':return`${B.n}: ${fmtRate(B.speed*20)} Platten/min${dir}`;
-    case 'asm':return`${B.n}: Rezepte mit bis zu ${B.tier} ${B.tier>1?'Zutaten':'Zutat'}, Tempo ×${String(B.speed).replace('.',',')}${dir}`;
+    case 'drill':return`${B.n}: ${fmtRate(B.rate*DRILL_BONUS*60)} Erz/min`;
+    case 'furn':return`${B.n}: ${fmtRate(B.speed*20)} Platten/min`;
+    case 'asm':return`${B.n}: Rezepte mit bis zu ${B.tier} ${B.tier>1?'Zutaten':'Zutat'}, Tempo ×${String(B.speed).replace('.',',')}`;
     case 'steam':return`${B.n}: bis 1,8 MW, muss direkt am Wasser stehen`;
     case 'solar':return`${B.n}: 60 kW ohne Brennstoff`;
     case 'pole':return`${B.n}: ${2*B.sup+1}×${2*B.sup+1} Felder, Leitung bis ${Math.floor(B.reach)} Felder`;
     case 'split':return`${B.n}: Eingang hinten, Ausgänge vorn/links/rechts. Auf ein Band tippen ersetzt es.`;
     case 'merge':return`${B.n}: Eingänge hinten/links/rechts, Ausgang vorn. Auf ein Band tippen ersetzt es.`;
-    case 'chest':return`${B.n}: 800 Plätze, Ausgang mit einstellbarer Menge/min${dir}`;
+    case 'chest':return`${B.n}: 800 Plätze, Ausgang mit einstellbarer Menge/min`;
   }
-  return B.n+dir;
+  return B.n;
 }
 function updToolUI(){
   document.querySelectorAll('.pb').forEach(b=>b.classList.toggle('sel',b.dataset.t===tool));
@@ -2356,6 +2358,20 @@ ACT.fav=v=>{
 function onSheetClick(e){const b=e.target.closest('[data-a]');if(!b||b.disabled)return;const f=ACT[b.dataset.a];if(f){f(b.dataset.v,b);uiDirty=true}}
 $('#sheetBody').addEventListener('click',onSheetClick);
 $('#sheetTabs').addEventListener('click',onSheetClick);
+/* iOS verschluckt Klicks, wenn sich der Finger minimal bewegt oder die Liste noch nachscrollt:
+   Knöpfe im Menü lösen deshalb schon beim Loslassen aus, der nachfolgende Klick wird ignoriert */
+let tapDn=null,tapT=0;
+for(const el of [$('#sheetBody'),$('#sheetTabs')]){
+  el.addEventListener('pointerdown',e=>{const b=e.target.closest('[data-a]');tapDn=b?{b,x:e.clientX,y:e.clientY,t:performance.now()}:null});
+  el.addEventListener('pointercancel',()=>{tapDn=null});
+  el.addEventListener('pointerup',e=>{
+    const d=tapDn;tapDn=null;
+    if(!d||e.pointerType==='mouse'||e.target.closest('[data-a]')!==d.b)return;
+    if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>14||performance.now()-d.t>900)return;
+    tapT=performance.now();onSheetClick({target:d.b});
+  });
+}
+document.addEventListener('click',e=>{if(performance.now()-tapT<450){e.stopPropagation();e.preventDefault()}},true);
 ACT.tab=v=>{if(SH.kind==='craft')openCraft(v);else if(SH.kind==='menu')openMenu(v)};
 const setTxt=(id,t)=>{const el=document.getElementById(id);if(el&&el.textContent!==t)el.textContent=t};
 const setBar=(id,f)=>{const el=document.getElementById(id);if(el)el.style.width=(clamp(f,0,1)*100).toFixed(1)+'%'};
@@ -2813,7 +2829,7 @@ function uiTick(dt){
    8. SPEICHERN, EXPORT/IMPORT, OFFLINE-FORTSCHRITT, SELBST-UPDATE
    ===================================================================== */
 const KEY='funkenwerk-1';
-const BUILD='2026-09-27-5';
+const BUILD='2026-09-28-1';
 
 function newGame(){
   S={v:1,ws:128,gen:3,sites:[],seed:(Math.random()*1e9)|0,time:0,savedAt:Date.now(),cam:null,inv:Object.assign({},START_INV),prod:{},
