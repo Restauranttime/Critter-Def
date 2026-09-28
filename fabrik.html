@@ -57,13 +57,17 @@ button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
 #banner.goal .bx{display:none}
 
 /* ---------- Bauleiste für Förderband-Routen ---------- */
-#route{position:absolute;left:8px;right:8px;bottom:140px;z-index:6;display:none;flex-direction:column;gap:8px;
+#route,#selbar{position:absolute;left:8px;right:8px;bottom:140px;z-index:6;display:none;flex-direction:column;gap:8px;
   background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:10px;padding:8px 10px;font-size:14px;box-shadow:0 4px 14px rgba(0,0,0,.35)}
-#route.on{display:flex}
-#route .rb2{display:flex;gap:6px}
-#route button{flex:1;border:0;background:var(--panel3);border-radius:8px;padding:0 6px;min-height:44px;font-size:13px;font-weight:600}
-#route button.go{background:var(--ok);color:#0f2a17}
-#route button:disabled{opacity:.4}
+#selbar{border-left-color:var(--blue)}
+#route.on,#selbar.on{display:flex}
+#route .rb2,#selbar .rb2{display:flex;gap:6px;flex-wrap:wrap}
+#route button,#selbar button{flex:1;border:0;background:var(--panel3);border-radius:8px;padding:0 6px;min-height:44px;font-size:13px;font-weight:600;min-width:0}
+#route button.go,#selbar button.go{background:var(--ok);color:#0f2a17}
+#selbar button{flex:1 1 30%;white-space:nowrap}
+#selbar button.red{background:#5a2626;color:#ffd6d0}
+#route button:disabled,#selbar button:disabled{opacity:.4}
+input.txt{width:100%;min-height:44px;border-radius:10px;border:1px solid var(--line);background:#11161c;color:var(--text);padding:8px 10px;font:16px system-ui,sans-serif;user-select:text;-webkit-user-select:text}
 
 /* ---------- untere Leiste ---------- */
 #bottom{position:absolute;left:0;right:0;bottom:0;z-index:5;background:linear-gradient(rgba(22,27,34,.88),var(--panel));border-top:1px solid var(--line);
@@ -83,7 +87,7 @@ button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
 #acts{display:flex;gap:6px;padding:0 8px}
 .ab{flex:1 1 0;min-width:0;height:52px;border-radius:11px;border:2px solid transparent;background:var(--panel2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:0}
 .ab svg{width:24px;height:24px}
-.ab span{font-size:10px;color:var(--dim)}
+.ab span{font-size:9.5px;color:var(--dim);white-space:nowrap}
 .ab.sel{border-color:var(--acc);background:var(--panel3)}
 .ab.del.sel{border-color:var(--bad)}
 .ab .dot{position:absolute}
@@ -179,6 +183,7 @@ textarea{width:100%;min-height:90px;border-radius:10px;border:1px solid var(--li
 
 <div id="banner"><div class="bt"><small id="bSmall"></small><span id="bText"></span></div><button id="bBtn"></button><button id="bSkip" class="bx">Überspringen</button></div>
 
+<div id="selbar"><div id="sText" class="bt"></div><div class="rb2" id="sBtns"></div></div>
 <div id="route"><div id="rText" class="bt"></div><div class="rb2"><button id="rBack">Zurück</button><button id="rMode">Auto-Weg</button><button id="rCancel">Abbrechen</button><button id="rBuild" class="go">Bauen</button></div></div>
 
 <div id="bottom">
@@ -188,6 +193,7 @@ textarea{width:100%;min-height:90px;border-radius:10px;border:1px solid var(--li
     <button class="ab" id="bHand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 3l13 8-6 1.4L15 20l-3 1.3-3-7.5L5 17z"/></svg><span>Zeiger</span></button>
     <button class="ab" id="bRot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V5M6 11l6-6 6 6"/></svg><span>Drehen</span></button>
     <button class="ab del" id="bDel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg><span>Abriss</span></button>
+    <button class="ab" id="bSel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 3"><rect x="4" y="5" width="16" height="14" rx="1.5"/></svg><span>Auswahl</span></button>
     <button class="ab" id="bBuild"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 21V10l6-4v4l6-4v4l6-4v15z"/><path d="M7 17h2M11 17h2M15 17h2"/></svg><span>Gebäude</span></button>
     <button class="ab" id="bCraft"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4l6 6-3 3-6-6zM11 7L3 15v0l3 3 8-8"/><path d="M3 21h8"/></svg><span>Handwerk</span></button>
     <button class="ab" id="bRes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6L4.5 18.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7 15h10"/></svg><span>Forschung</span></button>
@@ -285,6 +291,12 @@ const ITEMS={
   gelb:{n:'Gelbes Forschungspaket',c:'#f0c33a'},
   raketenteil:{n:'Raketenteil',c:'#e9edf1'},
   wasser:{n:'Wasser',c:'#4a8ef0',fluid:1},
+  oel:{n:'Rohöl',c:'#3a2a1c',fluid:1},
+  kuehlmittel:{n:'Kühlmittel',c:'#59d0e0'},
+  kunststoff:{n:'Kunststoff',c:'#e8e2d0'},
+  schwefel:{n:'Schwefel',c:'#e8d24a'},
+  batterie:{n:'Batterie',c:'#6fae4f'},
+  steuereinheit:{n:'Steuereinheit',c:'#5a4fd0'},
 };
 const PACKS=['rot','gruen','blau','gelb'];
 /* Gebäude (sind zugleich Items). kind bestimmt das Verhalten in der Simulation.
@@ -295,6 +307,9 @@ const BLD={
   schnellband:{n:'Schnellband',kind:'belt',speed:2/3,tier:1,rot:1,d:'Transportiert bis zu 120 Items/min.'},
   expressband:{n:'Expressband',kind:'belt',speed:4/3,tier:2,rot:1,d:'Transportiert bis zu 240 Items/min.'},
   verteiler:{n:'Verteiler',kind:'split',rot:1,out:1,d:'Nimmt Items von hinten an und verteilt sie abwechselnd nach vorn, links und rechts.'},
+  tunnel:{n:'Bandtunnel',kind:'ug',speed:1/3,tier:0,range:5,rot:1,d:'Führt ein Band bis zu 5 Felder unter allem hindurch (60/min). Erst den Eingang setzen, dann den Ausgang in Pfeilrichtung.'},
+  tunnel2:{n:'Schnelltunnel',kind:'ug',speed:2/3,tier:1,range:7,rot:1,d:'Bandtunnel bis 7 Felder mit 120/min.'},
+  tunnel3:{n:'Expresstunnel',kind:'ug',speed:4/3,tier:2,range:9,rot:1,d:'Bandtunnel bis 9 Felder mit 240/min.'},
   zusammen:{n:'Zusammenführer',kind:'merge',rot:1,out:1,d:'Fasst bis zu drei Bänder (hinten, links, rechts) zu einem zusammen und gibt sie vorn aus. Alle Eingänge kommen reihum dran.'},
   sverteiler:{n:'Smart-Verteiler',kind:'split',smart:1,rot:1,out:1,d:'Verteiler mit Filter für jeden Ausgang: „Alles“, ein bestimmtes Item, „Rest“ (alles, was kein anderer Filter nimmt) oder „Aus“.'},
   szusammen:{n:'Smart-Zusammenführer',kind:'merge',smart:1,rot:1,out:1,d:'Zusammenführer mit Filter für jeden Eingang: Nur das gewählte Item kommt durch, alles andere bleibt auf dem Band.'},
@@ -320,6 +335,9 @@ const BLD={
   pumpe2:{n:'Hochleistungspumpe',kind:'pump',rate:40,shore:1,rot:1,out:1,d:'Pumpt 2.400 Wasser/min – genug für 4 Kohlekraftwerke. Muss direkt am Wasser stehen.'},
   leitung:{n:'Wasserleitung',kind:'pipe',rate:20,tier:0,rot:1,d:'Leitet bis zu 1.200 Wasser/min in Pfeilrichtung. Bauen: Start antippen (z. B. Pumpe), dann Ziel (z. B. Kraftwerk).'},
   leitung2:{n:'Stahlleitung',kind:'pipe',rate:50,tier:1,rot:1,d:'Leitet bis zu 3.000 Wasser/min in Pfeilrichtung.'},
+  rtunnel:{n:'Leitungstunnel',kind:'pug',rate:50,range:10,rot:1,d:'Führt eine Leitung bis zu 10 Felder unterirdisch (3.000/min). Erst den Eingang setzen, dann den Ausgang in Pfeilrichtung.'},
+  oelpumpe:{n:'Ölpumpe',kind:'opump',rate:10,kw:90,rot:1,out:1,d:'Fördert 600 Rohöl/min aus einer Ölquelle in die Leitung am orangen Ausgang. Braucht Strom. Reicht für 3 Raffinerien.'},
+  raffinerie:{n:'Raffinerie',kind:'refinery',speed:1,kw:400,rot:1,out:1,d:'Macht aus 200 Öl/min und 100 Wasser/min (per Leitung) 40 Kunststoff/min und 20 Schwefel/min. Beides kommt gemischt am orangen Ausgang aufs Band.'},
   rverteiler:{n:'Leitungsverteiler',kind:'psplit',rate:50,rot:1,out:1,d:'Nimmt Wasser von hinten an und teilt es gleichmäßig nach vorn, links und rechts auf.'},
   rzusammen:{n:'Leitungszusammenführer',kind:'pmerge',rate:50,rot:1,out:1,d:'Fasst Leitungen von hinten, links und rechts zusammen und gibt das Wasser vorn aus.'},
   mast:{n:'Strommast',kind:'pole',sup:2,reach:7.5,d:'Versorgt Gebäude im 5×5-Bereich, Leitungen bis 7 Felder.'},
@@ -331,11 +349,14 @@ for(const k in BLD)ITEMS[k]={n:BLD[k].n,b:1};
 const ROCKET=200;                      // Raketenteile pro Start
 const BELTS=['band','schnellband','expressband'];
 const PIPES=['leitung','leitung2'];
-const PAL_ORDER=['band','schnellband','expressband','verteiler','zusammen','sverteiler','szusammen','bohrer','ebohrer','ebohrer2','ofen','stahlofen','eofen','kiste','dimin','dimout','montage','montage2','montage3','labor','labor2','labor3',
+const PAL_ORDER=['band','schnellband','expressband','tunnel','tunnel2','tunnel3','rtunnel','oelpumpe','raffinerie','verteiler','zusammen','sverteiler','szusammen','bohrer','ebohrer','ebohrer2','ofen','stahlofen','eofen','kiste','dimin','dimout','montage','montage2','montage3','labor','labor2','labor3',
   'solar','windrad','dampf','pumpe','pumpe2','leitung','leitung2','rverteiler','rzusammen','mast','mast2','mast3','silo'];
 const ELECTRIC=t=>{const b=BLD[t];return!!b.kw&&!b.burner&&!b.gen};      // Stromverbraucher
-const TOGGLE=new Set(['drill','furn','asm','lab','steam','solar','wind','pump','dimin','dimout','chest']);   // abschaltbar
-const FLUID=new Set(['pipe','psplit','pmerge','pump']);                   // Wassergebäude (keine Items)
+const TOGGLE=new Set(['drill','furn','asm','lab','steam','solar','wind','pump','opump','refinery','dimin','dimout','chest']);   // abschaltbar
+const FLUID=new Set(['pipe','psplit','pmerge','pump','opump','pug']);     // Leitungsgebäude (keine Items)
+const TUN_OF={band:'tunnel',schnellband:'tunnel2',expressband:'tunnel3',leitung:'rtunnel',leitung2:'rtunnel'};   // Tunnel zur Strecke
+/* Raffinerie: pro Durchgang (3 s bei Tempo 1) */
+const REFINE={i:{oel:10,wasser:5},o:{kunststoff:2,schwefel:1},t:3};
 const LINE=k=>k==='belt'||k==='pipe';                                     // wird als Strecke verlegt
 const beltRate=t=>Math.round(BLD[t].speed*3*60);   // Items pro Minute
 const lineRate=t=>BLD[t].kind==='pipe'?BLD[t].rate*60:beltRate(t);
@@ -361,9 +382,12 @@ const REC={
   schaltkreis:{i:{eisenplatte:1,kabel:3},n:1,t:.5,g:'Bauteile'},
   rahmen:{i:{eisenplatte:6,schraube:12},n:1,t:6,g:'Bauteile'},
   rotor:{i:{eisenstange:5,schraube:20},n:1,t:8,tech:'motoren',g:'Bauteile'},
-  beton:{i:{zement:1,stein:2},n:2,t:2,tech:'beton',g:'Bauteile'},
-  silizium:{i:{quarz:3,kohle:1},n:1,t:4,tech:'quarz',g:'Bauteile'},
-  chip:{i:{silizium:2,kabel:4},n:1,t:6,tech:'elektronik',g:'Hightech'},
+  beton:{i:{zement:1,stein:2,wasser:10},n:2,t:2,tech:'beton',mach:1,g:'Bauteile'},
+  silizium:{i:{quarz:3,kohle:1,wasser:10},n:1,t:4,tech:'quarz',mach:1,g:'Bauteile'},
+  kuehlmittel:{i:{kupferplatte:1,wasser:10},n:1,t:2,tech:'elektronik',mach:1,g:'Bauteile'},
+  batterie:{i:{schwefel:1,kupferplatte:1},n:1,t:4,tech:'oel',g:'Bauteile'},
+  chip:{i:{silizium:2,kuehlmittel:2},n:1,t:6,tech:'elektronik',g:'Hightech'},
+  steuereinheit:{i:{fschaltkreis:1,kunststoff:2,batterie:1},n:1,t:8,tech:'oel',g:'Hightech'},
   fschaltkreis:{i:{schaltkreis:2,chip:1},n:1,t:6,tech:'elektronik',g:'Hightech'},
   motor:{i:{rotor:1,stahl:2},n:1,t:10,tech:'motoren',g:'Hightech'},
   raketenteil:{i:{rahmen:10,chip:10,motor:5},n:1,t:30,tech:'rakete',mach:1,g:'Hightech'},
@@ -379,6 +403,10 @@ const REC={
   sverteiler:{i:{verteiler:1,schaltkreis:5},n:1,t:1,tech:'logistik2',g:'Logistik'},
   szusammen:{i:{zusammen:1,schaltkreis:5},n:1,t:1,tech:'logistik2',g:'Logistik'},
   kiste:{i:{eisenplatte:4},n:1,t:.5,g:'Logistik'},
+  tunnel:{i:{band:4,eisenplatte:5},n:2,t:1,tech:'logistik',g:'Logistik'},
+  tunnel2:{i:{tunnel:2,zahnrad:10},n:2,t:1,tech:'logistik',g:'Logistik'},
+  tunnel3:{i:{tunnel2:2,zahnrad:10,schaltkreis:5},n:2,t:1,tech:'expressband',g:'Logistik'},
+  rtunnel:{i:{rohr:10,stahl:2},n:2,t:1,tech:'kohlekraft',g:'Logistik'},
   dimin:{i:{fschaltkreis:5,stahltraeger:5,motor:2},n:1,t:4,tech:'dimension',g:'Logistik'},
   dimout:{i:{fschaltkreis:5,stahltraeger:5,motor:2},n:1,t:4,tech:'dimension',g:'Logistik'},
   leitung:{i:{rohr:1},n:1,t:.5,tech:'kohlekraft',g:'Logistik'},
@@ -402,13 +430,25 @@ const REC={
   dampf:{i:{stahl:10,rohr:10,ziegel:20},n:1,t:3,tech:'kohlekraft',g:'Energie'},
   pumpe:{i:{rohr:5,zahnrad:5,schaltkreis:2},n:1,t:2,tech:'kohlekraft',g:'Energie'},
   pumpe2:{i:{pumpe:1,motor:2,stahl:5},n:1,t:3,tech:'hydraulik',g:'Energie'},
+  oelpumpe:{i:{pumpe:1,stahltraeger:4,motor:2},n:1,t:3,tech:'oel',g:'Produktion'},
+  raffinerie:{i:{stahltraeger:10,rohr:20,fschaltkreis:5},n:1,t:5,tech:'oel',g:'Produktion'},
   mast:{i:{eisenplatte:1,kabel:2},n:2,t:.5,tech:'elektrizitaet',g:'Energie'},
   mast2:{i:{stahl:2,kabel:4,eisenstange:4},n:1,t:1,tech:'kohlekraft',g:'Energie'},
   mast3:{i:{stahltraeger:2,kabel:10,beton:2},n:1,t:2,tech:'hochspannung',g:'Energie'},
   silo:{i:{beton:100,stahltraeger:50,motor:20,chip:50},n:1,t:30,tech:'rakete',g:'Produktion'},
 };
 const REC_GROUPS=['Grundteile','Bauteile','Hightech','Forschung','Logistik','Produktion','Energie'];
-const ingKinds=r=>Object.keys(REC[r].i).length;
+const ingKinds=r=>Object.keys(REC[r].i).filter(k=>!ITEMS[k].fluid).length;   // Flüssigkeiten zählen nicht
+/* Welten mit Öl (Kartenversion 4): Kunststoff, Schwefel und Batterien stecken im Endspiel */
+const REC_BASE={gelb:REC.gelb.i,raketenteil:REC.raketenteil.i,silo:REC.silo.i};
+function applyWorldRules(){
+  const oil=(S.gen||1)>=4;
+  REC.gelb.i=oil?{batterie:2,rahmen:2,beton:2}:REC_BASE.gelb;
+  REC.raketenteil.i=oil?{rahmen:10,steuereinheit:5,motor:5}:REC_BASE.raketenteil;
+  REC.silo.i=oil?Object.assign({kunststoff:100},REC_BASE.silo):REC_BASE.silo;
+  TECH.oel.hide=!oil;
+  TECH.gelbpaket.req=oil?['automatisierung3','beton','oel']:['automatisierung3','beton'];
+}
 
 /* Forschungsbaum. c = Pakete pro Einheit (Wert = Anzahl Einheiten), t = Sekunden pro Einheit */
 const TECH={
@@ -416,10 +456,10 @@ const TECH={
   automatisierung:{n:'Automatisierung',c:{rot:10},t:5,req:['elektrizitaet'],u:['montage'],d:'Montagemaschine 1: stellt Rezepte mit 1 Zutat her.'},
   bergbau:{n:'Elektrischer Bergbau',c:{rot:20},t:5,req:['elektrizitaet'],u:['ebohrer'],d:'Elektrobohrer mit 30 Erz/min.'},
   automatisierung2:{n:'Automatisierung 2',c:{rot:30},t:5,req:['automatisierung'],u:['montage2'],d:'Montagemaschine 2: Rezepte mit bis zu 2 Zutaten, schneller.'},
-  logistik:{n:'Logistik',c:{rot:30},t:5,req:['automatisierung'],u:['schnellband'],d:'Rote Schnellbänder mit 120 Items/min.'},
+  logistik:{n:'Logistik',c:{rot:30},t:5,req:['automatisierung'],u:['schnellband','tunnel','tunnel2'],d:'Rote Schnellbänder mit 120 Items/min und Bandtunnel.'},
   stahl:{n:'Stahlverarbeitung',c:{rot:40},t:5,req:['automatisierung'],u:['stahl','stahltraeger','stahlofen'],d:'Öfen schmelzen 5 Eisenplatten zu Stahl. Dazu Stahlträger und der schnellere Stahlofen.'},
   gruenpaket:{n:'Grüne Forschung',c:{rot:40},t:5,req:['automatisierung2'],u:['gruen'],d:'Grüne Forschungspakete für fortgeschrittene Technik.'},
-  kohlekraft:{n:'Kohlekraft',c:{rot:50,gruen:50},t:8,req:['gruenpaket','stahl'],u:['dampf','pumpe','leitung','rverteiler','rzusammen','mast2'],d:'Kohlekraftwerke mit 1,8 MW, dazu Pumpen und Wasserleitungen für ihr Wasser und mittlere Strommasten.'},
+  kohlekraft:{n:'Kohlekraft',c:{rot:50,gruen:50},t:8,req:['gruenpaket','stahl'],u:['dampf','pumpe','leitung','rverteiler','rzusammen','rtunnel','mast2'],d:'Kohlekraftwerke mit 1,8 MW, dazu Pumpen und Wasserleitungen für ihr Wasser und mittlere Strommasten.'},
   logistik2:{n:'Intelligente Logistik',c:{rot:50,gruen:50},t:8,req:['gruenpaket','logistik'],u:['sverteiler','szusammen'],d:'Smart-Verteiler und Smart-Zusammenführer mit Filtern für jede Seite.'},
   labor2:{n:'Schnellere Labore',c:{rot:60,gruen:60},t:8,req:['gruenpaket','stahl'],u:['labor2'],d:'Labor 2: forscht doppelt so schnell, braucht Strom.'},
   windkraft:{n:'Windkraft',c:{rot:60,gruen:60},t:8,req:['motoren'],u:['windrad'],d:'Windräder mit 300 kW ohne Brennstoff.'},
@@ -427,13 +467,14 @@ const TECH={
   quarz:{n:'Quarzverarbeitung',c:{rot:50,gruen:50},t:8,req:['gruenpaket'],u:['glas','silizium'],d:'Öfen schmelzen Quarz zu Glas, Montagemaschinen machen Silizium.'},
   beton:{n:'Betonbau',c:{rot:50,gruen:50},t:8,req:['gruenpaket'],u:['zement','beton'],d:'Öfen brennen Kalkstein zu Zement, daraus wird Beton.'},
   motoren:{n:'Motoren',c:{rot:60,gruen:60},t:8,req:['gruenpaket','stahl'],u:['rotor','motor'],d:'Rotoren und Motoren.'},
-  elektronik:{n:'Elektronik',c:{rot:75,gruen:75},t:8,req:['quarz','stahl'],u:['chip','fschaltkreis'],d:'Computerchips und fortgeschrittene Schaltkreise.'},
-  expressband:{n:'Expressbänder',c:{rot:75,gruen:75},t:8,req:['gruenpaket','logistik'],u:['expressband'],d:'Blaue Expressbänder mit 240 Items/min.'},
+  elektronik:{n:'Elektronik',c:{rot:75,gruen:75},t:8,req:['quarz','stahl'],u:['kuehlmittel','chip','fschaltkreis'],d:'Kühlmittel (aus Wasser), Computerchips und fortgeschrittene Schaltkreise.'},
+  expressband:{n:'Expressbänder',c:{rot:75,gruen:75},t:8,req:['gruenpaket','logistik'],u:['expressband','tunnel3'],d:'Blaue Expressbänder mit 240 Items/min und Expresstunnel.'},
   eofen:{n:'Elektroöfen',c:{rot:100,gruen:100},t:10,req:['elektronik','kohlekraft'],u:['eofen'],d:'Elektroöfen: dreimal so schnell wie der Steinofen.'},
   tiefbohrer:{n:'Tiefbohrer',c:{rot:100,gruen:100},t:10,req:['bergbau','motoren','elektronik'],u:['ebohrer2'],d:'Tiefbohrer mit 60 Erz/min.'},
   blaupaket:{n:'Blaue Forschung',c:{rot:100,gruen:100},t:10,req:['elektronik','motoren'],u:['blau'],d:'Blaue Forschungspakete.'},
   automatisierung3:{n:'Automatisierung 3',c:{rot:100,gruen:100,blau:50},t:10,req:['blaupaket'],u:['montage3'],d:'Montagemaschine 3: alle Rezepte, am schnellsten.'},
   labor3:{n:'Hochleistungslabore',c:{rot:100,gruen:100,blau:50},t:10,req:['blaupaket','labor2'],u:['labor3'],d:'Labor 3: forscht dreimal so schnell, braucht Strom.'},
+  oel:{n:'Ölverarbeitung',c:{rot:100,gruen:100,blau:100},t:10,req:['blaupaket','hydraulik'],u:['oelpumpe','raffinerie','batterie','steuereinheit'],d:'Ölpumpen auf Ölquellen, Raffinerien für Kunststoff und Schwefel, dazu Batterien und Steuereinheiten.'},
   dimension:{n:'Dimensionslager',c:{rot:150,gruen:150,blau:100},t:10,req:['blaupaket'],u:['dimin','dimout'],d:'Dimensions-Eingang und Dimensionskiste: ein gemeinsames Lager, das überall abrufbar ist.'},
   hochspannung:{n:'Hochspannung',c:{rot:100,gruen:100,blau:50},t:10,req:['blaupaket','kohlekraft','beton'],u:['mast3'],d:'Hochspannungsmasten mit großer Reichweite.'},
   gelbpaket:{n:'Gelbe Forschung',c:{rot:150,gruen:150,blau:150},t:12,req:['automatisierung3','beton'],u:['gelb'],d:'Gelbe Forschungspakete für die Raumfahrt.'},
@@ -486,11 +527,12 @@ const TUT=[
    ===================================================================== */
 /* Rohstoffe pro Kachel: 0 nichts, 1 Eisen, 2 Kupfer, 3 Kohle, 4 Stein, 5 Quarz, 6 Kalk, 9 Wasser */
 let RES=new Uint8Array(W*H);
-const RES_ITEM=[null,'eisenerz','kupfererz','kohle','stein','quarz','kalk'];
-const RES_NAME=['Wiese','Eisenerz','Kupfererz','Kohle','Stein','Quarz','Kalkstein'];
+const RES_ITEM=[null,'eisenerz','kupfererz','kohle','stein','quarz','kalk',null];
+const RES_NAME=['Wiese','Eisenerz','Kupfererz','Kohle','Stein','Quarz','Kalkstein','Ölquelle'];
+const OIL=7;
 const WATER=9;
 let G=new Array(W*H).fill(null);      // Gitter: Kachel -> Gebäude
-const L={belt:[],split:[],merge:[],drill:[],furn:[],asm:[],chest:[],lab:[],steam:[],pole:[],solar:[],silo:[],wind:[],pipe:[],psplit:[],pmerge:[],pump:[],dimin:[],dimout:[]}; // Gebäude nach Art
+const L={belt:[],split:[],merge:[],drill:[],furn:[],asm:[],chest:[],lab:[],steam:[],pole:[],solar:[],silo:[],wind:[],pipe:[],psplit:[],pmerge:[],pump:[],dimin:[],dimout:[],ug:[],pug:[],opump:[],refinery:[]}; // Gebäude nach Art
 let S=null;                            // gesamter Spielstand (wird gespeichert)
 let DONE=new Set();                    // erforschte Technologien (schneller Zugriff)
 let DRILL_BONUS=1;
@@ -509,6 +551,7 @@ function setWorldSize(n){W=H=n;RES=new Uint8Array(n*n);G=new Array(n*n).fill(nul
 
 /* Karte erzeugen. Version 2 (neue Spiele): große Welt, kleinere Felder mit viel Platz dazwischen */
 function genWorld(seed){
+  if((S.gen||1)>=4){genWorld3(seed);return addOil(seed)}
   if((S.gen||1)>=3)return genWorld3(seed);
   if((S.gen||1)>=2)return genWorld2(seed);
   genWorld1(seed);
@@ -601,6 +644,19 @@ function genWorld3(seed){
     k++;lake(x,y,2+r()*3);
   }
 }
+/* Kartenversion 4: dazu Ölquellen weit draußen (kleine Felder aus 2–4 Kacheln) */
+function addOil(seed){
+  const r=rng(seed+4242),c=W/2,spots=[];
+  for(let tries=0;tries<4000&&spots.length<9;tries++){
+    const a=r()*Math.PI*2,dist=34+r()*26,x=Math.round(c+Math.cos(a)*dist),y=Math.round(c+Math.sin(a)*dist);
+    if(x<4||y<4||x>=W-4||y>=H-4||spots.some(([u,v])=>Math.hypot(u-x,v-y)<16))continue;
+    let ok=true;for(let yy=y-2;yy<=y+2&&ok;yy++)for(let xx=x-2;xx<=x+2;xx++)if(RES[yy*W+xx]){ok=false;break}
+    if(!ok)continue;
+    spots.push([x,y]);RES[y*W+x]=OIL;
+    const n=1+((r()*3)|0);
+    for(let k=0;k<n;k++){const d=(r()*4)|0,q=(y+DY[d])*W+x+DX[d];if(!RES[q])RES[q]=OIL}
+  }
+}
 /* ursprünglicher Generator (64×64) für ältere Spielstände */
 function genWorld1(seed){
   RES.fill(0);
@@ -647,7 +703,10 @@ function mkEnt(t,x,y,d){
     case 'chest':e.inv={};e.oi=null;e.orate=60;break;                // Ausgabe-Item und Menge pro Minute
     case 'merge':e.q=[null,null,null,null];e.rr=0;if(BLD[t].smart)e.fi=[null,null,null];break;   // ein Platz pro Eingangsseite, Filter hinten/links/rechts
     case 'dimout':e.oi=null;e.orate=60;break;
-    case 'pipe':case 'psplit':case 'pmerge':e.fl=0;break;            // Wassermenge im Stück
+    case 'pipe':case 'psplit':case 'pmerge':e.fl=0;e.ft=null;break;  // Menge und Art der Flüssigkeit im Stück
+    case 'ug':e.io='in';e.it=[];break;                                // Tunnel: Eingang ('in') oder Ausgang ('out')
+    case 'pug':e.io='in';e.fl=0;e.ft=null;break;
+    case 'refinery':e.fin={oel:0,wasser:0};e.oq={};e.w=0;e.p=0;e.rr=0;break;
     case 'lab':e.inv={};e.w=null;e.p=0;break;
     case 'steam':e.f=0;e.e=0;e.wa=0;break;                           // Kohle, Energie, Wasser
     case 'silo':e.parts=0;break;
@@ -662,12 +721,13 @@ function refund(e){
   const add=(k,n)=>{if(k&&n>0)give(k,n)};
   add(e.t,1);
   switch(BLD[e.t].kind){
-    case 'belt':for(const[i]of e.it)add(i,1);break;
+    case 'belt':case 'ug':if(e.it)for(const[i]of e.it)add(i,1);break;
+    case 'refinery':for(const k in e.oq)add(k,e.oq[k]);break;
     case 'split':add(e.h,1);break;
     case 'merge':for(const i of e.q)add(i,1);break;
     case 'drill':add('kohle',e.f);add(e.o,1);break;
     case 'furn':add('kohle',e.f);add(e.in,e.inN);add(e.out,e.outN);if(e.w)add(e.w,SMELT[e.w].n);break;
-    case 'asm':for(const k in e.inv)add(k,e.inv[k]);if(e.r){add(e.r,e.outN);if(e.w)for(const k in REC[e.r].i)add(k,REC[e.r].i[k])}break;
+    case 'asm':for(const k in e.inv)if(!ITEMS[k].fluid)add(k,Math.floor(e.inv[k]));if(e.r){add(e.r,e.outN);if(e.w)for(const k in REC[e.r].i)if(!ITEMS[k].fluid)add(k,REC[e.r].i[k])}break;
     case 'chest':for(const k in e.inv)add(k,e.inv[k]);break;
     case 'lab':for(const k in e.inv)add(k,e.inv[k]);if(e.w&&TECH[e.w])for(const k in TECH[e.w].c)add(k,1);break;
     case 'steam':add('kohle',e.f);break;
@@ -709,6 +769,20 @@ function feedsInto(e,x,y){
   const k=BLD[e.t].kind;if(!FLUID.has(k))return false;
   const ds=k==='psplit'?[e.d,(e.d+3)%4,(e.d+1)%4]:[e.d];
   return ds.some(d=>e.x+DX[d]===x&&e.y+DY[d]===y);
+}
+/* Tunnel koppeln: Eingang mit dem nächsten Ausgang gleicher Art und Richtung in Reichweite */
+function pairTunnels(){
+  for(const k of['ug','pug'])for(const e of L[k]){e._pair=null;e._len=1}
+  for(const k of['ug','pug'])for(const e of L[k]){
+    if(e.io!=='in')continue;
+    const R=BLD[e.t].range;
+    for(let j=1;j<=R+1;j++){
+      const c=entAt(e.x+DX[e.d]*j,e.y+DY[e.d]*j);
+      if(!c||BLD[c.t].kind!==k||c.d!==e.d)continue;
+      if(c.io==='out'&&!c._pair){e._pair=c;c._pair=e;e._len=j+1}
+      break;
+    }
+  }
 }
 /* Form einer Leitung: gerade oder Kurve (wenn nur von einer Seite gespeist) */
 function pipeShape(b){
@@ -757,6 +831,7 @@ function reindex(){
   for(const e of S.ents)L[BLD[e.t].kind].push(e);
   for(const b of L.belt)beltShape(b);
   for(const b of L.pipe)pipeShape(b);
+  pairTunnels();
   buildPower();
   dirty=false;
 }
@@ -807,21 +882,32 @@ function beltPut(b,item,p,test){
 
 /* ---------- Ein- und Ausgänge ---------- */
 /* Hat das Gebäude einen Ausgang (orange Seite in Blickrichtung)? */
-const hasOut=e=>!!BLD[e.t].out;
+const hasOut=e=>!!BLD[e.t].out||(e.io==='out'&&!!e._pair);      // Tunnel-Ausgang gibt vorn aus
 /* Darf Gebäude t ein Item von der Nachbarkachel (sx,sy) annehmen? Nie über den eigenen Ausgang. */
 function inputOk(t,sx,sy){
   const k=BLD[t.t].kind;
-  if(FLUID.has(k)||k==='dimout')return false;                                  // nimmt keine Items an
+  if(FLUID.has(k)||k==='dimout'||k==='refinery')return false;                  // nimmt keine Items an
+  if(k==='ug')return t.io==='in'&&sx===t.x-DX[t.d]&&sy===t.y-DY[t.d];           // Tunnel: nur hinten in den Eingang
   if(k==='split'||k==='chest')return sx===t.x-DX[t.d]&&sy===t.y-DY[t.d];     // Verteiler und Kiste: nur von hinten
   return !(hasOut(t)&&sx===t.x+DX[t.d]&&sy===t.y+DY[t.d]);
 }
-/* Darf t Wasser von der Nachbarkachel (sx,sy) annehmen? */
-function fluidIn(t,sx,sy){
+/* Braucht t die Flüssigkeit ft? (ohne ft: irgendeine) */
+function fluidWant(t,ft){
   const k=BLD[t.t].kind;
-  if(k==='steam')return true;
-  if(k==='psplit')return sx===t.x-DX[t.d]&&sy===t.y-DY[t.d];
-  if(k==='pipe'||k==='pmerge')return !(sx===t.x+DX[t.d]&&sy===t.y+DY[t.d]);
-  return false;
+  if(k==='steam')return !ft||ft==='wasser';
+  if(k==='refinery')return !ft||ft in REFINE.i;
+  if(k==='asm'){const r=t.r&&REC[t.r];if(!r)return false;return ft?r.i[ft]>0:Object.keys(r.i).some(i=>ITEMS[i].fluid)}
+  return !ft||!(t.fl>1e-6)||t.ft===ft;                                         // Leitungen: nur eine Flüssigkeit zugleich
+}
+/* Darf t Flüssigkeit (ft) von der Nachbarkachel (sx,sy) annehmen? */
+function fluidIn(t,sx,sy,ft){
+  const k=BLD[t.t].kind,back=sx===t.x-DX[t.d]&&sy===t.y-DY[t.d],front=sx===t.x+DX[t.d]&&sy===t.y+DY[t.d];
+  let ok=false;
+  if(k==='steam')ok=true;
+  else if(k==='psplit')ok=back;
+  else if(k==='pug')ok=t.io==='in'&&back;
+  else if(k==='pipe'||k==='pmerge'||k==='refinery'||k==='asm')ok=!front;
+  return ok&&fluidWant(t,ft);
 }
 /* Smart-Zusammenführer: Filter-Nummer der Eingangsseite (0 hinten, 1 links, 2 rechts) */
 const mergeSide=(t,s)=>s===(t.d+2)%4?0:s===(t.d+3)%4?1:s===(t.d+1)%4?2:-1;
@@ -885,6 +971,9 @@ function put(t,item,test){
     case 'silo':
       if(item!=='raketenteil'||t.parts>=ROCKET||t._launch)return false;
       if(!test)t.parts++;return true;
+    case 'ug':
+      if(t.io!=='in')return false;
+      return beltPut(t,item,0,test);
     case 'dimin':
       if(t.off||ITEMS[item].fluid)return false;
       if(!test){S.dim[item]=(S.dim[item]||0)+1;count(t,1)}return true;
@@ -941,7 +1030,7 @@ function asmUpd(e,dt){
   if(e.outN>0&&pushOut(e,e.r))e.outN--;
   if(!e.w){
     if(e.outN>=CAP){e._st='voll';e._on=0;e._want=0;return}
-    for(const k in r.i)if((e.inv[k]||0)<r.i[k]){e._st='zutaten';e._on=0;e._want=0;return}
+    for(const k in r.i)if((e.inv[k]||0)<r.i[k]){e._st=ITEMS[k].fluid?'wasser':'zutaten';e._on=0;e._want=0;return}
     for(const k in r.i)e.inv[k]-=r.i[k];
     e.w=1;e.p=0;
   }
@@ -1018,29 +1107,30 @@ function finishTech(){
 }
 
 /* Band: vorderstes Item weiterreichen (auf das nächste Band oder in ein Gebäude), dann alle aufrücken */
+/* Tunnel-Eingänge laufen wie ein langes Band (Länge _len) und geben am Ausgang ab */
 function beltUpd(b,dt){
   const it=b.it;if(!it.length)return;
-  const v=BLD[b.t].speed*dt;
+  const v=BLD[b.t].speed*dt,len=b._pair?b._len:1,sx=b._pair?b._pair.x:b.x,sy=b._pair?b._pair.y:b.y;
   const f=it[0];
-  if(f[1]+v>=1){
-    const nb=entAt(b.x+DX[b.d],b.y+DY[b.d]);
+  if(f[1]+v>=len&&(BLD[b.t].kind==='belt'||b._pair)){
+    const nb=entAt(sx+DX[b.d],sy+DY[b.d]);
     if(nb){
       if(BLD[nb.t].kind==='belt'){
         if(nb.d!==(b.d+2)%4){
-          const entry=b.d===nb._in?Math.max(0,f[1]+v-1):.5;   // von hinten: am Anfang, von der Seite: in der Mitte
+          const entry=b.d===nb._in?Math.max(0,f[1]+v-len):.5;   // von hinten: am Anfang, von der Seite: in der Mitte
           if(beltPut(nb,f[0],entry,false)){it.shift();count(b,1)}
         }
-      }else if(inputOk(nb,b.x,b.y)){
-        if(putFrom(nb,f[0],b.x,b.y)){it.shift();count(b,1)}
+      }else if(inputOk(nb,sx,sy)){
+        if(putFrom(nb,f[0],sx,sy)){it.shift();count(b,1)}
         else if(BLD[nb.t].kind!=='split'&&(BLD[nb.t].kind!=='merge'||BLD[nb.t].smart)){
           // Gebäude braucht das vorderste Item gerade nicht (z. B. genug Kohle oder Filter passt nicht):
           // es nimmt stattdessen ein passendes Item vom letzten Bandstück – so verstopfen gemischte Bänder nicht
-          for(let i=1;i<it.length;i++)if(putFrom(nb,it[i][0],b.x,b.y)){it.splice(i,1);count(b,1);break}
+          for(let i=1;i<it.length;i++)if(it[i][1]>=len-1&&putFrom(nb,it[i][0],sx,sy)){it.splice(i,1);count(b,1);break}
         }
       }
     }
   }
-  let lim=1;
+  let lim=len;
   for(let i=0;i<it.length;i++){
     let np=it[i][1]+v;if(np>lim)np=lim;
     if(np>it[i][1])it[i][1]=np;
@@ -1082,25 +1172,71 @@ function powerStep(dt){
 /* ---------- Wasser ----------
    Jedes Leitungsstück hat einen kleinen Speicher und gibt pro Takt höchstens seine Rate an das Feld in Pfeilrichtung weiter.
    So bestimmt das schwächste Stück den Durchfluss, und volle Leitungen stauen zurück bis zur Pumpe. */
-const FCAP={pipe:20,psplit:40,pmerge:40,steam:100};
-const flv=t=>BLD[t.t].kind==='steam'?t.wa:t.fl;
-/* gibt bis zu amt Wasser von src in Richtung dir ab, liefert die angenommene Menge */
-function fluidPush(src,amt,dir){
-  const t=entAt(src.x+DX[dir],src.y+DY[dir]);
-  if(!t||amt<=0||!fluidIn(t,src.x,src.y))return 0;
-  const k=BLD[t.t].kind,a=Math.min(amt,FCAP[k]-flv(t));
+const FCAP={pipe:20,psplit:40,pmerge:40,pug:40,steam:100,refinery:100,asm:100};
+/* Füllstand von t für die Flüssigkeit ft */
+function flv(t,ft){
+  const k=BLD[t.t].kind;
+  if(k==='steam')return t.wa;
+  if(k==='refinery')return t.fin[ft]||0;
+  if(k==='asm')return t.inv[ft]||0;
+  return t.fl;
+}
+/* gibt bis zu amt Flüssigkeit (ft) von src an t ab, liefert die angenommene Menge */
+function fluidGive(t,amt,ft){
+  const k=BLD[t.t].kind,a=Math.min(amt,FCAP[k]-flv(t,ft));
   if(a<=0)return 0;
-  if(k==='steam')t.wa+=a;else t.fl+=a;
+  if(k==='steam')t.wa+=a;
+  else if(k==='refinery')t.fin[ft]=(t.fin[ft]||0)+a;
+  else if(k==='asm')t.inv[ft]=(t.inv[ft]||0)+a;
+  else{t.fl+=a;t.ft=ft}
   return a;
+}
+function fluidPush(src,amt,dir,ft){
+  ft=ft||src.ft||'wasser';
+  const t=entAt(src.x+DX[dir],src.y+DY[dir]);
+  if(!t||amt<=0||!fluidIn(t,src.x,src.y,ft))return 0;
+  return fluidGive(t,amt,ft);
 }
 function pumpUpd(e,dt){
   if(isOff(e))return;
-  const a=fluidPush(e,BLD[e.t].rate*dt,e.d);
+  const a=fluidPush(e,BLD[e.t].rate*dt,e.d,'wasser');
   e._on=a>0;e._st=a>0?null:'abnehmer';count(e,a);
 }
+/* Ölpumpe: wie die Pumpe, braucht aber Strom */
+function opumpUpd(e,dt){
+  if(isOff(e))return;
+  const t=entAt(e.x+DX[e.d],e.y+DY[e.d]);
+  if(!t||!fluidIn(t,e.x,e.y,'oel')||flv(t,'oel')>=FCAP[BLD[t.t].kind]-1e-6){e._st='abnehmer';e._on=0;e._want=0;return}   // nichts frei: kein Strom nötig
+  e._want=1;const sp=e._pw||0;
+  if(!sp){e._st='strom';e._on=0;return}
+  const a=fluidPush(e,BLD[e.t].rate*sp*dt,e.d,'oel');
+  e._on=a>0;e._st=sp<1?'wenig':null;count(e,a);
+}
 function pipeUpd(e,dt){
-  const a=fluidPush(e,Math.min(e.fl,BLD[e.t].rate*dt),e.d);
+  let a;
+  if(BLD[e.t].kind==='pug'&&e.io==='in'){                                   // Tunnel-Eingang: direkt in den Ausgang
+    a=e._pair&&e.fl>0?fluidGive(e._pair,Math.min(e.fl,BLD[e.t].rate*dt),e.ft):0;
+  }else a=fluidPush(e,Math.min(e.fl,BLD[e.t].rate*dt),e.d);
   e.fl-=a;e._mv=a>1e-6;count(e,a);
+}
+/* Raffinerie: Öl + Wasser -> Kunststoff + Schwefel, Ausgabe abwechselnd am Ausgang */
+function refineryUpd(e,dt){
+  const ks=Object.keys(e.oq).filter(k=>e.oq[k]>0);
+  for(let i=0;i<ks.length;i++){const k=ks[(e.rr+i)%ks.length];if(pushOut(e,k)){if(!--e.oq[k])delete e.oq[k];e.rr++;break}}
+  if(isOff(e))return;
+  const B=BLD[e.t],R=REFINE;
+  if(!e.w){
+    let n=0;for(const k in e.oq)n+=e.oq[k];
+    if(n>=CAP){e._st='voll';e._on=0;e._want=0;return}
+    for(const k in R.i)if((e.fin[k]||0)<R.i[k]){e._st=k==='oel'?'oel':'wasser';e._on=0;e._want=0;return}
+    for(const k in R.i)e.fin[k]-=R.i[k];
+    e.w=1;e.p=0;
+  }
+  e._want=1;const sp=e._pw||0;
+  if(!sp){e._st='strom';e._on=0;return}
+  e._st=sp<1?'wenig':null;e._on=1;
+  e.p+=dt*B.speed*sp/R.t;
+  if(e.p>=1){e.w=0;e.p=0;for(const k in R.o){e.oq[k]=(e.oq[k]||0)+R.o[k];addProd(k,R.o[k]);count(e,R.o[k])}}
 }
 /* Leitungsverteiler: gleichmäßig auf alle Ausgänge, die noch Platz haben */
 function psplitUpd(e,dt){
@@ -1158,8 +1294,12 @@ function simTick(dt){
   for(const e of L.merge)mergeUpd(e);
   for(const e of L.dimout)if(e.oi)dimoutUpd(e,dt);
   for(const e of L.belt)beltUpd(e,dt);
+  for(const e of L.ug)if(e.io==='in')beltUpd(e,dt);
   for(const e of L.pump)pumpUpd(e,dt);
+  for(const e of L.opump)opumpUpd(e,dt);
   for(const e of L.pipe)pipeUpd(e,dt);
+  for(const e of L.pug)pipeUpd(e,dt);
+  for(const e of L.refinery)refineryUpd(e,dt);
   for(const e of L.psplit)psplitUpd(e,dt);
   for(const e of L.pmerge)pipeUpd(e,dt);
   for(const e of L.silo)siloUpd(e,dt);
@@ -1392,7 +1532,7 @@ function ports(g,t,d,out){
     g.fillStyle='#f2a33a';g.beginPath();g.moveTo(.33,.13);g.lineTo(.67,.13);g.lineTo(.6,0);g.lineTo(.4,0);g.closePath();g.fill();
     g.fillStyle='#3a2406';g.beginPath();g.moveTo(.44,.1);g.lineTo(.5,.03);g.lineTo(.56,.1);g.closePath();g.fill();
   });
-  const ins=(k==='split'||k==='chest'||k==='psplit')?[2]:(k==='drill'||k==='pole'||k==='solar'||k==='wind'||k==='belt'||k==='pipe'||k==='pump'||k==='dimout')?[]:out?[1,2,3]:[0,1,2,3];
+  const ins=(k==='split'||k==='chest'||k==='psplit')?[2]:(k==='drill'||k==='pole'||k==='solar'||k==='wind'||k==='belt'||k==='pipe'||k==='pump'||k==='opump'||k==='dimout')?[]:out?[1,2,3]:[0,1,2,3];
   for(const s of ins)side(s,()=>{
     g.fillStyle='rgba(20,24,30,.6)';g.beginPath();g.moveTo(.35,-.001);g.lineTo(.65,-.001);g.lineTo(.5,.15);g.closePath();g.fill();
     g.fillStyle='rgba(230,236,244,.9)';g.beginPath();g.moveTo(.4,.015);g.lineTo(.6,.015);g.lineTo(.5,.115);g.closePath();g.fill();
@@ -1401,12 +1541,37 @@ function ports(g,t,d,out){
 function bldArt(g,t,d,v){
   const R=()=>{g.translate(.5,.5);g.rotate(d*Math.PI/2);g.translate(-.5,-.5)};
   bldBody(g,t,d,R);
-  if(!LINE(BLD[t].kind))ports(g,t,d,BLD[t].out||(t==='kiste'&&v));
+  const k=BLD[t].kind;
+  if(!LINE(k)&&k!=='ug'&&k!=='pug')ports(g,t,d,BLD[t].out||(t==='kiste'&&v));
 }
 function bldBody(g,t,d,R){
   switch(t){
     case 'band':case 'schnellband':case 'expressband':R();beltArt(g,BLD[t].tier,0,0);break;
     case 'leitung':case 'leitung2':R();pipeArt(g,BLD[t].tier,0);break;
+    case 'tunnel':case 'tunnel2':case 'tunnel3':case 'rtunnel':{
+      R();
+      if(t==='rtunnel')pipeArt(g,1,0);else beltArt(g,BLD[t].tier,0,0);
+      g.fillStyle='rgba(0,0,0,.35)';rr(g,.08,.02,.84,.5,.12);g.fill();
+      g.fillStyle=t==='rtunnel'?'#3a4d63':['#6f5a24','#7a2f2f','#24486f'][BLD[t].tier];rr(g,.06,0,.88,.46,.12);g.fill();
+      g.fillStyle='#14181d';rr(g,.2,.1,.6,.3,.1);g.fill();
+      break;
+    }
+    case 'oelpumpe':{
+      body(g,.1,.12,.8,.78,.12,'#5b5046');
+      g.save();R();
+      g.fillStyle='#1d2630';rr(g,.4,.02,.2,.3,.03);g.fill();
+      g.fillStyle='#2b241e';rr(g,.2,.48,.6,.34,.08);g.fill();
+      g.restore();
+      g.strokeStyle='#e8b53a';g.lineWidth=.07;g.beginPath();g.moveTo(.22,.36);g.lineTo(.78,.26);g.stroke();
+      circ(g,.5,.31,.06);g.fillStyle='#3a3029';g.fill();
+      break;
+    }
+    case 'raffinerie':{
+      body(g,.05,.05,.9,.9,.12,'#6b6f76');
+      for(const[x,h]of[[.27,.42],[.5,.52],[.73,.36]]){g.fillStyle='#8f959d';rr(g,x-.1,.84-h,.2,h,.08);g.fill();g.fillStyle='#b5bbc2';rr(g,x-.1,.84-h,.07,h,.05);g.fill()}
+      g.fillStyle='#e8b53a';g.fillRect(.15,.62,.7,.05);
+      break;
+    }
     case 'rverteiler':case 'rzusammen':{
       body(g,.12,.12,.76,.76,.14,'#4d5f73');
       g.save();R();
@@ -1578,6 +1743,7 @@ function bldBody(g,t,d,R){
 /* ---------- Wasserleitung ----------
    kanonisch: Fluss nach Norden. turn 0 gerade, 1 Kurve von Osten, 3 Kurve von Westen */
 const PIPE_COL=[['#3c4652','#8d99a6'],['#2c3e57','#6f95c0']];
+const FLC={wasser:'90,168,255',oel:'196,138,52'};                  // Farbe der Flüssigkeit in Leitungen
 function pipePath(g,turn){
   g.beginPath();
   if(turn===1){g.moveTo(1,.5);g.lineTo(.5,.5);g.lineTo(.5,0)}
@@ -1637,9 +1803,16 @@ function buildTerrain(){
   for(let cy=0;cy<H/CH;cy++)for(let cx=0;cx<W/CH;cx++)
     CHUNKS.push(mk(CH*TPX,CH*TPX,g=>{g.scale(TPX,TPX);g.translate(-cx*CH,-cy*CH);drawChunk(g,cx,cy)}));
 }
-const ORE_COL=[null,['#7f95ad','#c3d1df'],['#c46f3a','#f3a672'],['#1f2226','#565c66'],['#b8a47a','#e2d6b6'],['#bfe6ef','#ffffff'],['#d8d0b8','#f4efe0']];
+const ORE_COL=[null,['#7f95ad','#c3d1df'],['#c46f3a','#f3a672'],['#1f2226','#565c66'],['#b8a47a','#e2d6b6'],['#bfe6ef','#ffffff'],['#d8d0b8','#f4efe0'],['#2a1f16','#5a4630']];
 /* Erz-Kachel in 6 Varianten */
 function oreArt(g,r,v){
+  if(r===OIL){                                                        // Ölquelle: dunkle, glänzende Lache
+    g.fillStyle='rgba(0,0,0,.35)';g.beginPath();g.ellipse(.52,.55,.38,.3,.3+v,0,Math.PI*2);g.fill();
+    const gr=g.createRadialGradient(.45,.45,.02,.5,.5,.36);gr.addColorStop(0,'#5a4630');gr.addColorStop(1,'#140e09');
+    g.fillStyle=gr;g.beginPath();g.ellipse(.5,.5,.36,.28,.3+v,0,Math.PI*2);g.fill();
+    g.fillStyle='rgba(180,160,255,.25)';g.beginPath();g.ellipse(.42,.42,.1,.04,-.4,0,Math.PI*2);g.fill();
+    return;
+  }
   const[c1,c2]=ORE_COL[r];
   if(r===5){                                                          // Quarz: kleine Kristalle
     for(let k=0;k<5;k++){
@@ -1723,6 +1896,16 @@ function drawRocket(X,Y,ts,t){
   ctx.restore();
 }
 
+/* Deckel eines Tunnelstücks: am Eingang vorn, am Ausgang hinten; ohne Partner rot umrandet */
+function tunnelHood(X,Y,ts,e){
+  ctx.save();ctx.translate(X+ts/2,Y+ts/2);ctx.rotate(e.d*Math.PI/2+(e.io==='out'?Math.PI:0));ctx.translate(-ts/2,-ts/2);
+  const col=BLD[e.t].kind==='pug'?'#3a4d63':['#6f5a24','#7a2f2f','#24486f'][BLD[e.t].tier];
+  ctx.fillStyle='rgba(0,0,0,.35)';ctx.fillRect(ts*.08,ts*.02,ts*.84,ts*.5);
+  ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(ts*.06,ts*.46);ctx.lineTo(ts*.06,ts*.1);ctx.quadraticCurveTo(ts*.06,0,ts*.16,0);ctx.lineTo(ts*.84,0);ctx.quadraticCurveTo(ts*.94,0,ts*.94,ts*.1);ctx.lineTo(ts*.94,ts*.46);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#14181d';ctx.fillRect(ts*.2,ts*.3,ts*.6,ts*.16);
+  if(!e._pair){ctx.strokeStyle='#ff6b5b';ctx.lineWidth=Math.max(1.5,ts*.04);ctx.strokeRect(ts*.06,0,ts*.88,ts*.46)}
+  ctx.restore();
+}
 /* ---------- Bild zeichnen ---------- */
 let SEL=null,HOVER=null,FLASH=null;
 function render(dt){
@@ -1791,7 +1974,7 @@ function render(dt){
     ctx.drawImage(bldC[key]||(bldC[key]=sprite(key,bs,g=>{g.translate(.5,.5);g.rotate(b.d*Math.PI/2);g.translate(-.5,-.5);pipeArt(g,tier,turn)})),TX(b.x),TY(b.y),ts,ts);
     if(b.fl>.05||b._mv){
       ctx.save();ctx.translate(TX(b.x),TY(b.y));ctx.scale(ts,ts);ctx.translate(.5,.5);ctx.rotate(b.d*Math.PI/2);ctx.translate(-.5,-.5);
-      pipePath(ctx,turn);ctx.lineCap='butt';ctx.strokeStyle=`rgba(90,168,255,${(.5+.45*Math.min(1,b.fl/FCAP.pipe)).toFixed(2)})`;ctx.lineWidth=.12;ctx.stroke();
+      pipePath(ctx,turn);ctx.lineCap='butt';ctx.strokeStyle=`rgba(${FLC[b.ft]||FLC.wasser},${(.5+.45*Math.min(1,b.fl/FCAP.pipe)).toFixed(2)})`;ctx.lineWidth=.12;ctx.stroke();
       ctx.restore();
     }
   }
@@ -1810,7 +1993,8 @@ function render(dt){
   // Gebäude + bewegte Details
   for(const e of blds){
     const X=TX(e.x),Y=TY(e.y),k=BLD[e.t].kind;
-    const bk=e.t+e.d;ctx.drawImage(bldC[bk]||(bldC[bk]=bldSpr(e.t,e.d,ts)),X,Y,ts,ts);
+    const bk=e.t+e.d,tun=k==='ug'||k==='pug';                       // Tunnel: nur das Band/Rohr, der Deckel kommt je nach Eingang/Ausgang dazu
+    ctx.drawImage(bldC[bk]||(bldC[bk]=tun?sprite('U'+bk,bs,g=>{g.translate(.5,.5);g.rotate(e.d*Math.PI/2);g.translate(-.5,-.5);if(k==='pug')pipeArt(g,1,0);else beltArt(g,BLD[e.t].tier,0,0)}):bldSpr(e.t,e.d,ts)),X,Y,ts,ts);
     if(k==='merge'){const it=e.q.find(Boolean);if(it){const q=ts*.3;ctx.drawImage(iSpr(it,q),X+ts*.5-q/2,Y+ts*.36-q/2,q,q)}}
     else if(k==='split'){if(e.h){const q=ts*.34;ctx.drawImage(iSpr(e.h,q),X+ts*.5-q/2,Y+ts*.55-q/2,q,q)}}
     else if(k==='drill'){
@@ -1836,6 +2020,22 @@ function render(dt){
       ctx.save();ctx.translate(X+ts*.5,Y+ts*.5);if(e._on)ctx.rotate(TIME*2.5);ctx.globalAlpha=.55;ctx.drawImage(g,-ts*.26,-ts*.26,ts*.52,ts*.52);ctx.restore();
       if(e.r){const q=ts*.36;ctx.drawImage(itemSpr(e.r,q),X+ts*.5-q/2,Y+ts*.5-q/2,q,q)}
       if(e.w){ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(X+ts*.2,Y+ts*.84,ts*.6,ts*.06);ctx.fillStyle='#63d17f';ctx.fillRect(X+ts*.2,Y+ts*.84,ts*.6*e.p,ts*.06)}
+    }else if(k==='ug'){
+      // Items auf dem sichtbaren Stück des Eingangs bzw. Ausgangs, dann der Deckel darüber
+      const ent=e.io==='in'?e:e._pair,len=ent&&ent._pair?ent._len:1;
+      if(ent&&ent.it.length)for(const[item,p]of ent.it){
+        const q=e.io==='in'?p:p-(len-1);if(q<0||q>1)continue;
+        const[u,v]=beltPos(0,q),[rx,ry]=rotPt(u,v,e.d),is2=ts*.36;
+        if(ts<26){ctx.fillStyle=ITEMS[item].c||'#ddd';ctx.fillRect(X+rx*ts-is2*.35,Y+ry*ts-is2*.35,is2*.7,is2*.7)}
+        else ctx.drawImage(iSpr(item,is2),X+rx*ts-is2/2,Y+ry*ts-is2/2,is2,is2);
+      }
+      tunnelHood(X,Y,ts,e);
+    }else if(k==='pug'){
+      if(e.fl>.05||e._mv){ctx.save();ctx.translate(X,Y);ctx.scale(ts,ts);ctx.translate(.5,.5);ctx.rotate(e.d*Math.PI/2);ctx.translate(-.5,-.5);
+        pipePath(ctx,0);ctx.lineCap='butt';ctx.strokeStyle=`rgba(${FLC[e.ft]||FLC.wasser},.8)`;ctx.lineWidth=.12;ctx.stroke();ctx.restore()}
+      tunnelHood(X,Y,ts,e);
+    }else if(k==='refinery'){
+      if(e._on&&Math.random()<dt*2)puff(e.x+.5,e.y+.15,'rgba(120,120,120,.45)',1,.3);
     }else if(k==='wind'){
       const cx=X+ts*.5,cy=Y+ts*.5,a=e.off?0:TIME*3+e.x;
       ctx.fillStyle='#e8edf2';ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=Math.max(1,ts*.015);
@@ -1844,7 +2044,7 @@ function render(dt){
     }else if(k==='pump'){
       if(e._on){ctx.fillStyle=`rgba(140,200,255,${.35+.25*Math.sin(TIME*6+e.x)})`;ctx.beginPath();ctx.arc(X+ts*.5,Y+ts*.58,ts*.12,0,Math.PI*2);ctx.fill()}
     }else if(k==='psplit'||k==='pmerge'){
-      if(e.fl>.05||e._mv){ctx.fillStyle=`rgba(90,168,255,${(.5+.45*Math.min(1,e.fl/FCAP.psplit)).toFixed(2)})`;ctx.beginPath();ctx.arc(X+ts*.5,Y+ts*.5,ts*.08,0,Math.PI*2);ctx.fill()}
+      if(e.fl>.05||e._mv){ctx.fillStyle=`rgba(${FLC[e.ft]||FLC.wasser},${(.5+.45*Math.min(1,e.fl/FCAP.psplit)).toFixed(2)})`;ctx.beginPath();ctx.arc(X+ts*.5,Y+ts*.5,ts*.08,0,Math.PI*2);ctx.fill()}
     }else if(k==='dimin'||k==='dimout'){
       const f=.2+.15*Math.sin(TIME*3+e.x*.7);ctx.fillStyle=`rgba(200,160,255,${f.toFixed(2)})`;ctx.beginPath();ctx.arc(X+ts*.5,Y+ts*.5,ts*.3,0,Math.PI*2);ctx.fill();
       if(k==='dimout'&&e.oi){const q=ts*.3;ctx.drawImage(iSpr(e.oi,q),X+ts*.5-q/2,Y+ts*.5-q/2,q,q)}
@@ -1894,7 +2094,7 @@ function render(dt){
   // Vorschau beim Bandbau (Start antippen, Ziel antippen)
   if(ROUTE){
     ctx.globalAlpha=.6;
-    for(const c of ROUTE.path)ctx.drawImage(bldSpr(ROUTE.t,c.d,ts),TX(c.x),TY(c.y),ts,ts);
+    for(const c of ROUTE.path)ctx.drawImage(bldSpr(c.ug?TUN_OF[ROUTE.t]:ROUTE.t,c.d,ts),TX(c.x),TY(c.y),ts,ts);
     ctx.globalAlpha=1;
     ctx.lineWidth=Math.max(2,ts*.06);
     ctx.strokeStyle='#63d17f';ctx.strokeRect(TX(ROUTE.sx)+2,TY(ROUTE.sy)+2,ts-4,ts-4);
@@ -1902,6 +2102,18 @@ function render(dt){
     if(ROUTE.end){ctx.strokeStyle=ROUTE.ok?'#f2a33a':'#ff6b5b';ctx.strokeRect(TX(ROUTE.end.x)+2,TY(ROUTE.end.y)+2,ts-4,ts-4)}
   }
 
+  // Auswahlrahmen
+  if(SELR){const b=selBox();ctx.fillStyle='rgba(90,168,255,.14)';ctx.fillRect(TX(b.x0),TY(b.y0),(b.x1-b.x0+1)*ts,(b.y1-b.y0+1)*ts);
+    ctx.setLineDash([ts*.2,ts*.12]);ctx.strokeStyle='#5aa8ff';ctx.lineWidth=Math.max(2,ts*.05);ctx.strokeRect(TX(b.x0),TY(b.y0),(b.x1-b.x0+1)*ts,(b.y1-b.y0+1)*ts);ctx.setLineDash([])}
+  // Blaupause: Vorschau an der gewählten Stelle
+  if(BPM&&BPM.x!=null&&S.bps[BPM.i]){
+    for(const q of bpPieces(S.bps[BPM.i],BPM.rot)){
+      const x=BPM.x+q.x,y=BPM.y+q.y;if(x<x0-1||x>x1+1||y<y0-1||y>y1+1)continue;
+      const ok=x>=0&&y>=0&&x<W&&y<H&&canStand(q.t,x,y);
+      ctx.globalAlpha=ok?.55:.3;ctx.drawImage(bldSpr(q.t,q.d,ts),TX(x),TY(y),ts,ts);ctx.globalAlpha=1;
+      if(!ok){ctx.strokeStyle='rgba(255,107,91,.8)';ctx.lineWidth=Math.max(1,ts*.04);ctx.strokeRect(TX(x)+2,TY(y)+2,ts-4,ts-4)}
+    }
+  }
   // Strommasten und Leitungen
   for(const p of poles)ctx.drawImage(bldSpr(p.t,0,ts),TX(p.x),TY(p.y),ts,ts);
   if(WIRES.length){
@@ -1988,11 +2200,14 @@ cv.addEventListener('pointerdown',e=>{
   const[ex,ey]=loc(e);
   PT.set(e.pointerId,{x:ex,y:ey});
   cam.vx=cam.vy=0;
-  if(PT.size===1){
+  if(PT.size===1&&selMode){                                     // Auswahl: Rahmen aufziehen
+    const[tx,ty]=toTile(ex,ey);gest={m:'sel'};SELR={x0:tx,y0:ty,x1:tx,y1:ty,drag:1};updSelBar();
+  }else if(PT.size===1){
     gest={m:'tap',sx:ex,sy:ey,lx:ex,ly:ey,lt:performance.now(),vx:0,vy:0,
       lp:setTimeout(()=>{if(gest&&gest.m==='tap'){gest.m='done';longPress(gest.sx,gest.sy)}},450)};
   }else if(PT.size===2){
     if(gest)clearTimeout(gest.lp);
+    if(gest&&gest.m==='sel'){SELR=null;updSelBar()}
     const[a,b]=[...PT.values()],mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
     gest={m:'pinch',d0:Math.hypot(a.x-b.x,a.y-b.y)||1,z0:cam.z,wx:(mx-VW/2)/cam.z+cam.x,wy:(my-VH/2)/cam.z+cam.y};
   }
@@ -2003,6 +2218,7 @@ cv.addEventListener('pointermove',e=>{
   }
   const p=PT.get(e.pointerId);if(!p||!gest)return;
   [p.x,p.y]=loc(e);
+  if(gest.m==='sel'){const[tx,ty]=toTile(p.x,p.y);if(SELR){SELR.x1=tx;SELR.y1=ty}return}
   if(gest.m==='tap'&&Math.hypot(p.x-gest.sx,p.y-gest.sy)>9){clearTimeout(gest.lp);gest.m='pan';gest.lx=gest.sx;gest.ly=gest.sy}
   if(gest.m==='pan'){
     const dx=p.x-gest.lx,dy=p.y-gest.ly,now=performance.now(),dts=Math.max(.008,(now-gest.lt)/1000);
@@ -2019,6 +2235,7 @@ function endPtr(e){
   if(!PT.has(e.pointerId))return;
   PT.delete(e.pointerId);
   if(!gest)return;
+  if(gest.m==='sel'){if(SELR)delete SELR.drag;if(e.type!=='pointerup')SELR=null;updSelBar();gest=null;return}
   if(gest.m==='tap'){clearTimeout(gest.lp);if(e.type==='pointerup')tap(gest.sx,gest.sy);gest=null}
   else if(gest.m==='pinch'){
     if(PT.size===1){const p=[...PT.values()][0];gest={m:'pan',lx:p.x,ly:p.y,lt:performance.now(),vx:0,vy:0}}
@@ -2042,7 +2259,7 @@ document.addEventListener('dblclick',e=>e.preventDefault());
 addEventListener('keydown',e=>{
   if(e.target.tagName==='TEXTAREA')return;
   if(e.key==='r'||e.key==='R')rotateAct();
-  else if(e.key==='Escape'){if(sheetOpen())closeSheet();else if(ROUTE)cancelRoute();else selectTool(null)}
+  else if(e.key==='Escape'){if(sheetOpen())closeSheet();else if(ROUTE)cancelRoute();else if(selMode||BPM)setSelMode(false);else selectTool(null)}
   else if(e.key==='q')selectTool(null);
 });
 
@@ -2057,6 +2274,7 @@ function camInertia(dt){
 function tap(sx,sy){
   const[x,y]=toTile(sx,sy);
   if(x<0||y<0||x>=W||y>=H)return;
+  if(BPM){BPM.x=x;BPM.y=y;sfx('click');updSelBar();return}   // Blaupause: Position wählen
   const e=G[y*W+x];
   const site=!e&&siteAt(x,y);
   if(delMode){if(e)demolish(e);else if(site)removeSite(site);return}
@@ -2150,10 +2368,12 @@ function routeGoals(x,y){
   return goals;
 }
 /* A* über (Feld, Richtung); Kurven kosten etwas mehr, damit der Weg ruhig aussieht */
-function findPath(sx,sy,sd,goals){
+/* tun: Tunnel-Gebäude, mit dem Hindernisse untertunnelt werden dürfen (oder null) */
+function findPath(sx,sy,sd,goals,tun){
   if(!goals.length)return null;
   const gi=new Map();for(const g of goals)gi.set(g.y*W+g.x,g);
-  const N=W*H*5,cost=new Float32Array(N).fill(1e9),prev=new Int32Array(N).fill(-1);
+  const N=W*H*5,cost=new Float32Array(N).fill(1e9),prev=new Int32Array(N).fill(-1),jmp=new Uint8Array(N);
+  const TR=tun?BLD[tun].range:0,tk=tun&&BLD[tun].kind;
   const h=(x,y)=>{let m=1e9;for(const g of goals)m=Math.min(m,Math.abs(g.x-x)+Math.abs(g.y-y));return m};
   const heap=[];
   const push=(f,s)=>{heap.push([f,s]);let i=heap.length-1;while(i>0){const p=(i-1)>>1;if(heap[p][0]<=heap[i][0])break;[heap[p],heap[i]]=[heap[i],heap[p]];i=p}};
@@ -2164,15 +2384,37 @@ function findPath(sx,sy,sd,goals){
   while(heap.length&&guard++<300000){
     const[,s]=pop(),c=cost[s],cell=(s/5)|0,dir=s%5,x=cell%W,y=(cell/W)|0;
     const g=gi.get(cell);
-    if(g){                                               // Ziel erreicht: Weg zurückverfolgen
-      const cells=[];let q=s;while(q>=0){const cc=(q/5)|0;cells.push({x:cc%W,y:(cc/W)|0});q=prev[q]}
+    if(g&&(!jmp[s]||g.d==null||g.d===dir)){             // Ziel erreicht: Weg zurückverfolgen
+      const cells=[];let q=s;
+      while(q>=0){
+        const cc=(q/5)|0,qx=cc%W,qy=(cc/W)|0;
+        if(jmp[q]){                                      // Tunnel: Ausgang, dann Eingang direkt hinter dem Vorgänger
+          const d=q%5,pc=(prev[q]/5)|0;cells.push({x:qx,y:qy,ug:'out'});cells.push({x:pc%W+DX[d],y:((pc/W)|0)+DY[d],ug:'in'});
+        }else cells.push({x:qx,y:qy});
+        q=prev[q];
+      }
       cells.reverse();return{cells,endDir:g.d};
     }
     for(let d=0;d<4;d++){
+      if(jmp[s]&&d!==dir)continue;                       // Tunnel-Ausgang gibt nur geradeaus weiter
+      if(dir!==4&&d===(dir+2)%4)continue;                // nie direkt kehrtmachen
       const nx=x+DX[d],ny=y+DY[d];
       if(!free(nx,ny))continue;
       const nc=c+1+(dir!==4&&dir!==d?.35:0),ns=(ny*W+nx)*5+d;
-      if(nc<cost[ns]){cost[ns]=nc;prev[ns]=s;push(nc+h(nx,ny),ns)}
+      if(nc<cost[ns]){cost[ns]=nc;prev[ns]=s;jmp[ns]=0;push(nc+h(nx,ny),ns)}
+      // Tunnel: Eingang auf (nx,ny), Ausgang D Felder weiter, dazwischen darf alles sein
+      if(!TR)continue;
+      let blocked=false;
+      for(let D=2;D<=TR+1;D++){
+        const mx=nx+DX[d]*(D-1),my=ny+DY[d]*(D-1),ox=nx+DX[d]*D,oy=ny+DY[d]*D;
+        if(mx<0||my<0||mx>=W||my>=H||ox<0||oy<0||ox>=W||oy>=H)break;
+        const m=G[my*W+mx];if(m&&BLD[m.t].kind===tk&&m.d===d)break;   // fremder Tunnel gleicher Richtung würde die Kopplung stören
+        if(!free(mx,my))blocked=true;
+        if(!blocked||!free(ox,oy))continue;
+        const og=gi.get(oy*W+ox);if(og&&og.d!=null&&og.d!==d)continue;   // Ausgang nicht falsch herum aufs Zielfeld
+        const tc=c+D+2.5+(dir!==4&&dir!==d?.35:0),ts2=(oy*W+ox)*5+d;
+        if(tc<cost[ts2]){cost[ts2]=tc;prev[ts2]=s;jmp[ts2]=1;push(tc+h(ox,oy),ts2)}
+      }
     }
   }
   return null;
@@ -2191,8 +2433,9 @@ function lSegment(ax,ay,bx,by){
 function withDirs(cells,endDir,startDir){
   return cells.map((c,i)=>{
     const n=cells[i+1];
-    const d=n?dirTo(c.x,c.y,n.x,n.y):endDir!=null?endDir:i>0?dirTo(cells[i-1].x,cells[i-1].y,c.x,c.y):startDir!=null?startDir:curDir;
-    return{x:c.x,y:c.y,d};
+    let d=n?dirTo(c.x,c.y,n.x,n.y):endDir!=null?endDir:i>0?dirTo(cells[i-1].x,cells[i-1].y,c.x,c.y):startDir!=null?startDir:curDir;
+    if(c.ug==='out')d=dirTo(cells[i-1].x,cells[i-1].y,c.x,c.y);                // Tunnel-Ausgang zeigt in Tunnelrichtung
+    return{x:c.x,y:c.y,d,ug:c.ug};
   });
 }
 function computeRoute(){
@@ -2209,7 +2452,7 @@ function computeRoute(){
   const last=cells[cells.length-1],tgt=G[R.end.y*W+R.end.x];
   let res=null;
   if(R.mode==='manual'&&!tgt){const seg=lSegment(last.x,last.y,R.end.x,R.end.y);if(seg)res={cells:[last].concat(seg),endDir:null}}
-  else{R.cx=last.x;R.cy=last.y;res=findPath(last.x,last.y,cells.length>1?dirTo(cells[cells.length-2].x,cells[cells.length-2].y,last.x,last.y):R.sd,routeGoals(R.end.x,R.end.y))}
+  else{R.cx=last.x;R.cy=last.y;const tt=TUN_OF[R.t];res=findPath(last.x,last.y,cells.length>1?dirTo(cells[cells.length-2].x,cells[cells.length-2].y,last.x,last.y):R.sd,routeGoals(R.end.x,R.end.y),tt&&unlocked(tt)&&R.mode!=='manual'?tt:null)}
   if(!res){R.ok=false;R.path=withDirs(cells,null,R.sd);return}
   cells=cells.concat(res.cells.slice(1));
   R.ok=true;R.path=withDirs(cells,res.endDir,R.sd);
@@ -2231,16 +2474,22 @@ function beltTap(x,y){
 function buildRoute(){
   const R=ROUTE;if(!R||!R.ok||!R.path.length)return;
   const seen=new Set(),cells=R.path.filter(c=>{const k=c.y*W+c.x;if(seen.has(k)||!free(c.x,c.y))return false;seen.add(k);return true});
-  // so viele Bänder wie möglich sofort bauen, den Rest als Baustellen
-  let built=0;
-  for(const c of cells){if(obtain(R.t))break;addEnt(mkEnt(R.t,c.x,c.y,c.d));built++}
-  const rest=cells.slice(built);
-  let msg=`${built} × ${BLD[R.t].n} gebaut.`,cls='good';
-  if(rest.length){
-    const m=queueFor(R.t,rest.length);
-    if(m){msg=`${built} gebaut – für den Rest fehlen ${fmt(m.n)} × ${ITEMS[m.k].n}.`;cls='bad'}
-    else{for(const c of rest)addSite(R.t,c.x,c.y,c.d);msg=`${built} gebaut, ${rest.length} als Baustelle – fertig, sobald das Handwerk nachliefert.`}
+  // so viel wie möglich sofort bauen, den Rest als Baustellen
+  const typ=c=>c.ug?TUN_OF[R.t]:R.t,rest=[];let built=0;
+  for(const c of cells){
+    const t=typ(c);
+    if(rest.length||obtain(t)){rest.push(c);continue}
+    const e=mkEnt(t,c.x,c.y,c.d);if(c.ug)e.io=c.ug;addEnt(e);built++;
   }
+  let msg=`${built} × gebaut.`,cls='good';
+  if(rest.length){
+    const need={};for(const c of rest)need[typ(c)]=(need[typ(c)]||0)+1;
+    let m=null;for(const t in need){m=queueFor(t,need[t]);if(m)break}
+    if(m){msg=`${built} gebaut – für den Rest fehlen ${fmt(m.n)} × ${ITEMS[m.k].n}.`;cls='bad'}
+    else{for(const c of rest)addSite(typ(c),c.x,c.y,c.d,c.ug?{io:c.ug}:null);msg=`${built} gebaut, ${rest.length} als Baustelle – fertig, sobald das Handwerk nachliefert.`}
+  }
+  const nt=cells.filter(c=>c.ug).length;if(nt&&!rest.length)msg=`${built-nt} × ${BLD[R.t].n} und ${nt} Tunnelstücke gebaut.`;
+  else if(!rest.length)msg=`${built} × ${BLD[R.t].n} gebaut.`;
   const l=cells[cells.length-1];FLASH={x:l.x,y:l.y,t:.4};
   ROUTE=null;sfx('place');uiDirty=true;updRouteBar();
   toast(msg,cls,2400);
@@ -2270,11 +2519,11 @@ function upgradeBelts(list,t){
 function updRouteBar(){
   const el=$('#route');
   if(!ROUTE){el.classList.remove('on');updBanner();return}
-  const R=ROUTE,n=new Set(R.path.filter(c=>free(c.x,c.y)).map(c=>c.y*W+c.x)).size,have=total(R.t);
+  const R=ROUTE,n=new Set(R.path.filter(c=>free(c.x,c.y)).map(c=>c.y*W+c.x)).size,nt=R.path.filter(c=>c.ug).length,have=total(R.t);
   let txt;
   if(!R.end&&!R.way.length)txt=R.mode==='manual'?'Tippe Wegpunkte an, zum Schluss das Ziel (Gebäude oder Band).':'Tippe auf das Ziel: ein Gebäude, ein Band oder ein freies Feld.';
   else if(!R.ok)txt='Kein freier Weg gefunden.';
-  else txt=`${n} × ${BLD[R.t].n} <span style="color:${have>=n?'var(--dim)':'var(--bad)'}">(Vorrat ${fmt(have)})</span>`;
+  else txt=`${n-nt} × ${BLD[R.t].n} <span style="color:${have>=n-nt?'var(--dim)':'var(--bad)'}">(Vorrat ${fmt(have)})</span>`+(nt?` + ${nt} × ${BLD[TUN_OF[R.t]].n} (Vorrat ${fmt(total(TUN_OF[R.t]))})`:'');
   $('#rText').innerHTML=txt;
   $('#rMode').textContent=R.mode==='manual'?'Manuell':'Auto-Weg';
   $('#rBack').style.display=R.way.length||R.end?'':'none';
@@ -2288,12 +2537,153 @@ $('#rCancel').onclick=cancelRoute;
 $('#rBack').onclick=()=>{if(!ROUTE)return;if(ROUTE.end)ROUTE.end=null;else ROUTE.way.pop();computeRoute();updRouteBar()};
 $('#rMode').onclick=()=>{if(!ROUTE)return;ROUTE.mode=S.routeMode=ROUTE.mode==='manual'?'auto':'manual';ROUTE.way=[];ROUTE.end=null;computeRoute();updRouteBar()};
 
+/* ---------- Auswahl-Werkzeug: Rahmen aufziehen, dann Bereich aufrüsten, schalten, abreißen oder als Blaupause speichern ---------- */
+let selMode=false,SELR=null,BPM=null;             // BPM: Blaupause wird gerade platziert {i,rot,x,y}
+const UPG={band:'schnellband',schnellband:'expressband',tunnel:'tunnel2',tunnel2:'tunnel3',leitung:'leitung2',bohrer:'ebohrer',ebohrer:'ebohrer2',
+  ofen:'stahlofen',stahlofen:'eofen',montage:'montage2',montage2:'montage3',labor:'labor2',labor2:'labor3',pumpe:'pumpe2',mast:'mast2',mast2:'mast3'};
+const selBox=()=>SELR&&{x0:Math.max(0,Math.min(SELR.x0,SELR.x1)),y0:Math.max(0,Math.min(SELR.y0,SELR.y1)),x1:Math.min(W-1,Math.max(SELR.x0,SELR.x1)),y1:Math.min(H-1,Math.max(SELR.y0,SELR.y1))};
+function selEnts(){
+  const b=selBox(),out=[];if(!b)return out;
+  for(let y=b.y0;y<=b.y1;y++)for(let x=b.x0;x<=b.x1;x++){const e=G[y*W+x];if(e)out.push(e)}
+  return out;
+}
+function setSelMode(on){
+  selMode=on;SELR=null;BPM=null;
+  if(on){tool=null;delMode=false;if(ROUTE){ROUTE=null;updRouteBar()}}
+  updToolUI();updSelBar();
+}
+/* Einstellungen eines Gebäudes für Blaupausen und Aufrüsten */
+function captureCfg(e){
+  const c={};
+  if(e.r)c.r=e.r;
+  if(e.fo)c.fo=e.fo.slice();
+  if(Array.isArray(e.fi))c.fi=e.fi.slice();
+  if(e.oi!==undefined&&e.oi)c.oi=e.oi,c.orate=e.orate;
+  if(e.io)c.io=e.io;
+  if(e.off)c.off=1;
+  return c;
+}
+function updSelBar(){
+  const el=$('#selbar');
+  if(!selMode&&!BPM){el.classList.remove('on');updBanner();return}
+  let txt,btns;
+  if(BPM){
+    const bp=S.bps[BPM.i];
+    txt=BPM.x==null?`Blaupause „${esc(bp.n)}“: tippe auf die Karte, wo sie hin soll (${bp.p.length} Teile).`:`„${esc(bp.n)}“ bei ${BPM.x}, ${BPM.y} – drehen oder bauen.`;
+    btns=[['bprot','Drehen'],['bpcancel','Abbrechen'],['bpbuild','Bauen','go',BPM.x==null]];
+  }else if(SELR&&!SELR.drag){
+    const b=selBox(),n=selEnts().length;
+    txt=`Bereich ${b.x1-b.x0+1}×${b.y1-b.y0+1} · ${n} ${n===1?'Gebäude':'Gebäude'}`;
+    btns=[['aupg','Aufrüsten','',!n],['atog','An/Aus','',!n],['abp','Blaupause','',!n],['adel','Abreißen','red',!n],['aclr','Neu']];
+  }else{
+    txt='Ziehe mit einem Finger einen Rahmen über den Bereich. Mit zwei Fingern verschieben und zoomen.';
+    btns=[['alib','Blaupausen'],['aend','Fertig']];
+  }
+  $('#sText').innerHTML=txt;
+  $('#sBtns').innerHTML=btns.map(([a,n,c,dis])=>`<button data-s="${a}" class="${c||''}"${dis?' disabled':''}>${n}</button>`).join('');
+  el.classList.add('on');$('#banner').className='';
+  el.style.bottom=($('#bottom').offsetHeight+8)+'px';
+}
+$('#sBtns').addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(!b||b.disabled)return;SACT[b.dataset.s]();sfx('click')});
+const SACT={
+  aend:()=>setSelMode(false),
+  aclr:()=>{SELR=null;updSelBar()},
+  alib:()=>openBuild(),
+  aupg:()=>{
+    let up=0,miss=0,none=0;const m={};
+    for(const e of selEnts()){
+      const nt=UPG[e.t];
+      if(!nt||!unlocked(nt)){none++;continue}
+      if(G[e.y*W+e.x]!==e)continue;
+      if(LINE(BLD[e.t].kind)||BLD[e.t].kind==='ug'){                  // Bänder, Leitungen, Tunnel: Items bleiben liegen
+        const r=obtain(nt);if(r){miss++;Object.assign(m,r);continue}
+        give(e.t,1);e.t=nt;dirty=true;up++;continue;
+      }
+      const c=captureCfg(e),x=e.x,y=e.y,d=e.d,old=e.t;
+      refund(e);removeEnt(e);
+      const r=obtain(nt);
+      const ne=mkEnt(r?old:nt,x,y,d);
+      if(r){obtain(old);miss++;Object.assign(m,r)}else up++;
+      applyCfg(ne,c);addEnt(ne);autoFuel(ne);
+    }
+    const mk=Object.keys(m)[0];
+    toast(`${up} aufgerüstet`+(miss?` · ${miss} fehlt Material${mk?' (z. B. '+ITEMS[mk].n+')':''}`:'')+(none&&!up&&!miss?' · nichts aufrüstbar (Forschung?)':''),up?'good':miss?'bad':'',3000);
+    uiDirty=true;updSelBar();
+  },
+  atog:()=>{
+    const list=selEnts().filter(e=>TOGGLE.has(BLD[e.t].kind));if(!list.length){toast('Hier gibt es nichts zum Schalten.');return}
+    const off=list.some(e=>!e.off);for(const e of list)e.off=off?1:0;
+    toast(`${list.length} Geräte ${off?'abgeschaltet':'eingeschaltet'}.`,'',1600);uiDirty=true;
+  },
+  adel:()=>{
+    const list=selEnts(),b=selBox();for(const e of list)demolish(e);
+    const st=S.sites.filter(t=>t.x>=b.x0&&t.x<=b.x1&&t.y>=b.y0&&t.y<=b.y1);for(const t of st)S.sites.splice(S.sites.indexOf(t),1);
+    syncSites();toast(`${list.length} Gebäude abgerissen.`,'',1600);SELR=null;updSelBar();
+  },
+  abp:()=>{
+    const n=S.bps.length+1;
+    openSheet('bpsave','Blaupause speichern',null,`<p>Gib der Blaupause einen Namen. Sie enthält Richtungen, Rezepte, Filter und Tunnel.</p><input class="txt" id="bpName" maxlength="30" value="Blaupause ${n}"><div class="btns"><button class="btn acc" data-a="bpsave">Speichern</button></div>`);
+  },
+  bprot:()=>{if(BPM){BPM.rot=(BPM.rot+1)%4;updSelBar()}},
+  bpcancel:()=>{BPM=null;updSelBar()},
+  bpbuild:()=>bpBuild(),
+};
+const BPACT={};                                   // Aktionen der Blaupausen-Bibliothek (werden unten in ACT übernommen)
+/* Teile einer Blaupause, rot mal um 90° im Uhrzeigersinn gedreht */
+function bpPieces(bp,rot){
+  let w=bp.w,h=bp.h,ps=bp.p.map(q=>({t:q.t,x:q.x,y:q.y,d:q.d,c:q.c}));
+  for(let i=0;i<rot;i++){ps=ps.map(q=>({t:q.t,x:h-1-q.y,y:q.x,d:BLD[q.t].rot?(q.d+1)%4:q.d,c:q.c}));[w,h]=[h,w]}
+  return ps;
+}
+/* Kann t auf (x,y) stehen? */
+function canStand(t,x,y){
+  if(!free(x,y))return false;
+  const r=RES[y*W+x],B=BLD[t];
+  if(B.kind==='drill'&&(!r||r===OIL))return false;
+  if(B.kind==='opump'&&r!==OIL)return false;
+  if(B.shore&&!nearWater(x,y))return false;
+  return true;
+}
+function bpBuild(){
+  if(!BPM||BPM.x==null)return;
+  const bp=S.bps[BPM.i],ps=bpPieces(bp,BPM.rot);
+  let built=0,skip=0;const rest=[];
+  for(const q of ps){
+    const x=BPM.x+q.x,y=BPM.y+q.y;
+    if(!canStand(q.t,x,y)){skip++;continue}
+    if(obtain(q.t)){rest.push([q,x,y]);continue}
+    const e=mkEnt(q.t,x,y,q.d);applyCfg(e,q.c);addEnt(e);autoFuel(e);built++;
+  }
+  let msg=`${built} gebaut`,cls='good';
+  if(rest.length){
+    const need={};for(const[q]of rest)need[q.t]=(need[q.t]||0)+1;
+    let m=null;for(const t in need){m=queueFor(t,need[t]);if(m)break}
+    if(m){msg+=` · für ${rest.length} weitere fehlen ${fmt(m.n)} × ${ITEMS[m.k].n}`;cls='bad'}
+    else{for(const[q,x,y]of rest)addSite(q.t,x,y,q.d,q.c);msg+=` · ${rest.length} als Baustelle`}
+  }
+  if(skip)msg+=` · ${skip} Felder belegt oder ungeeignet`;
+  toast(msg+'.',cls,3200);sfx('place');uiDirty=true;
+  BPM.x=BPM.y=null;updSelBar();
+}
+BPACT.bpsave=()=>{
+  const b=selBox();if(!b)return;
+  const name=(($('#bpName')||{}).value||'').trim()||'Blaupause '+(S.bps.length+1);
+  const p=selEnts().map(e=>({t:e.t,x:e.x-b.x0,y:e.y-b.y0,d:e.d,c:captureCfg(e)}));
+  S.bps.push({n:name.slice(0,30),w:b.x1-b.x0+1,h:b.y1-b.y0+1,p});
+  closeSheet();toast(`Blaupause „${name}“ gespeichert (${p.length} Teile). Du findest sie unter „Gebäude“.`,'good',2600);
+  SELR=null;updSelBar();
+};
+BPACT.bpuse=v=>{closeSheet();setSelMode(false);BPM={i:+v,rot:0,x:null,y:null};updSelBar()};
+BPACT.bpdel=v=>{const bp=S.bps[+v];if(!bp)return;S.bps.splice(+v,1);toast(`„${bp.n}“ gelöscht.`);openBuild()};
+$('#bSel').onclick=()=>setSelMode(!selMode&&!BPM);
+
 
 function fail(x,y,msg){FLASH={x,y,t:.5,bad:1};toast(msg,'bad');sfx('err')}
 function tryPlace(t,x,y,d){
   const r=RES[y*W+x],B=BLD[t];
   if(r===WATER)return fail(x,y,'Auf Wasser kann man nicht bauen.');
-  if(B.kind==='drill'&&!r)return fail(x,y,'Bohrer müssen auf einem Rohstofffeld stehen.');
+  if(B.kind==='drill'&&(!r||r===OIL))return fail(x,y,r===OIL?'Auf Öl braucht es eine Ölpumpe.':'Bohrer müssen auf einem Rohstofffeld stehen.');
+  if(B.kind==='opump'&&r!==OIL)return fail(x,y,'Die Ölpumpe muss auf einer Ölquelle stehen.');
   if(B.shore&&!nearWater(x,y))return fail(x,y,B.n+' muss direkt neben Wasser stehen.');
   if(SITESET.has(y*W+x))return fail(x,y,'Hier ist schon eine Baustelle.');
   const miss=obtain(t,1);
@@ -2305,7 +2695,12 @@ function tryPlace(t,x,y,d){
     toast(`Baustelle: ${B.n} wird gebaut, sobald ${Object.keys(miss).map(k=>ITEMS[k].n).join(', ')} fertig ist.`,'',2600);
     return;
   }
-  const e=mkEnt(t,x,y,d);addEnt(e);autoFuel(e);
+  const e=mkEnt(t,x,y,d);
+  if(B.kind==='ug'||B.kind==='pug'){
+    e.io=tunnelRole(t,x,y,d);
+    toast(e.io==='in'?`Tunnel-Eingang gesetzt. Setze jetzt den Ausgang in Pfeilrichtung (bis ${B.range} Felder dazwischen).`:'Tunnel-Ausgang gesetzt – verbunden.',e.io==='in'?'':'good',2600);
+  }
+  addEnt(e);autoFuel(e);
   // Öfen und Montagemaschinen brauchen ein Rezept: Auswahl gleich öffnen
   if(B.kind==='furn'||B.kind==='asm'){openInfo(e);ACT[B.kind==='furn'?'frecipes':'recipes']();SH.autoPick=1}
   if(B.kind==='silo'){S.flags.silo=1}
@@ -2358,7 +2753,30 @@ function queueFor(t,n){
   for(const s of steps)S.cq.push({r:s,s:0,a:0});
   return null;
 }
-function addSite(t,x,y,d){S.sites.push({t,x,y,d:BLD[t].rot?d:0});syncSites()}
+function addSite(t,x,y,d,c){const s={t,x,y,d:BLD[t].rot?d:0};if(c)s.c=c;S.sites.push(s);syncSites()}
+/* übernimmt gespeicherte Einstellungen (Blaupause, Aufrüsten, Tunnel) */
+function applyCfg(e,c){
+  if(!c)return;
+  const k=BLD[e.t].kind;
+  if(c.r!==undefined&&(k==='asm'||k==='furn')){
+    if(k==='furn'?SMELT[c.r]:(REC[c.r]&&unlocked(c.r)))e.r=c.r;
+  }
+  if(c.fo&&e.fo)e.fo=c.fo.slice();
+  if(c.fi&&Array.isArray(e.fi))e.fi=c.fi.slice();
+  if(c.oi!==undefined&&(k==='chest'||k==='dimout')){e.oi=c.oi;if(c.orate!==undefined)e.orate=c.orate}
+  if(c.io&&(k==='ug'||k==='pug'))e.io=c.io;
+  if(c.off)e.off=1;
+}
+/* Tunnelstück: Ausgang, wenn dahinter in Reichweite ein freier Eingang gleicher Art und Richtung liegt */
+function tunnelRole(t,x,y,d){
+  const k=BLD[t].kind,R=BLD[t].range;
+  for(let j=1;j<=R+1;j++){
+    const c=entAt(x-DX[d]*j,y-DY[d]*j);
+    if(!c||BLD[c.t].kind!==k||c.d!==d)continue;
+    return c.io==='in'&&(!c._pair||Math.abs(c._pair.x-c.x)+Math.abs(c._pair.y-c.y)>j)?'out':'in';
+  }
+  return'in';
+}
 function removeSite(s){S.sites.splice(S.sites.indexOf(s),1);syncSites();sfx('del');uiDirty=true}
 /* Baustellen der Reihe nach fertigstellen, sobald die Materialien da sind */
 function sitesUpd(){
@@ -2368,7 +2786,9 @@ function sitesUpd(){
     if(G[s.y*W+s.x]||RES[s.y*W+s.x]===WATER){S.sites.splice(S.sites.indexOf(s),1);changed=true;continue}
     if(obtain(s.t))continue;
     S.sites.splice(S.sites.indexOf(s),1);changed=true;
-    const e=mkEnt(s.t,s.x,s.y,s.d);addEnt(e);autoFuel(e);
+    const e=mkEnt(s.t,s.x,s.y,s.d);
+    const tk=BLD[s.t].kind;if((tk==='ug'||tk==='pug')&&!(s.c&&s.c.io))e.io=tunnelRole(s.t,s.x,s.y,s.d);
+    applyCfg(e,s.c);addEnt(e);autoFuel(e);
     if(BLD[s.t].kind==='silo')S.flags.silo=1;
     puff(s.x+.5,s.y+.6,'rgba(200,200,200,.35)',4,1.2);
   }
@@ -2395,7 +2815,9 @@ function demolish(e){
   uiDirty=true;
 }
 function handMine(x,y,r){
-  const k=RES_ITEM[r];give(k,1);addProd(k,1);
+  const k=RES_ITEM[r];
+  if(!k){toast('Öl kann man nicht per Hand abbauen – dafür gibt es die Ölpumpe.','',1800);return}
+  give(k,1);addProd(k,1);
   floatText(x+.5,y+.35,'+1',ITEMS[k].c);sfx('mine');uiDirty=true;
 }
 
@@ -2464,13 +2886,14 @@ function updTop(){
 const FAV_DEFAULT=['band','bohrer','ofen','kiste','verteiler','labor'];
 /* Gebäude im Bau-Menü nach Gruppen */
 const BUILD_GROUPS=[
-  ['Förderbänder',['band','schnellband','expressband','verteiler','zusammen','sverteiler','szusammen']],
+  ['Förderbänder',['band','schnellband','expressband','tunnel','tunnel2','tunnel3','verteiler','zusammen','sverteiler','szusammen']],
   ['Lager',['kiste','dimin','dimout']],
   ['Abbau',['bohrer','ebohrer','ebohrer2']],
   ['Verarbeitung',['ofen','stahlofen','eofen','montage','montage2','montage3']],
   ['Forschung',['labor','labor2','labor3']],
   ['Energie',['solar','windrad','dampf','mast','mast2','mast3']],
-  ['Wasser',['pumpe','pumpe2','leitung','leitung2','rverteiler','rzusammen']],
+  ['Leitungen',['pumpe','pumpe2','leitung','leitung2','rtunnel','rverteiler','rzusammen']],
+  ['Öl',['oelpumpe','raffinerie']],
   ['Raumfahrt',['silo']],
 ];
 let palKey='';
@@ -2497,9 +2920,13 @@ $('#pal').addEventListener('click',e=>{
 function openBuild(){
   const lockTech=t=>{const r=REC[t];return r&&r.tech&&!isDone(r.tech)?TECH[r.tech].n:null};
   let h='<p>Tippe auf ein Gebäude zum Bauen. Mit dem Stern legst du es in deine Schnellleiste (6 Plätze).</p>';
+  h+='<h4>Blaupausen</h4>'+(S.bps.length?S.bps.map((bp,i)=>`<div class="row"><div class="chk">▦</div><div class="rt"><b>${esc(bp.n)}</b><div class="ing">${bp.w}×${bp.h} Felder · ${bp.p.length} Teile</div></div><div class="rb"><button class="btn" data-a="bpdel" data-v="${i}" aria-label="Löschen">✕</button><button class="btn acc" data-a="bpuse" data-v="${i}">Setzen</button></div></div>`).join('')
+    :'<p>Noch keine. Mit „Auswahl“ in der unteren Leiste einen Rahmen aufziehen und „Blaupause“ tippen.</p>');
   for(const[name,list]of BUILD_GROUPS){
     h+=`<h4>${name}</h4>`;
-    for(const t of list){
+    const vis=list.filter(t=>!(REC[t]&&REC[t].tech&&TECH[REC[t].tech].hide));
+    if(!vis.length){h=h.slice(0,h.lastIndexOf('<h4>'));continue}
+    for(const t of vis){
       const lock=lockTech(t)&&!(TOT[t]>0),fav=S.fav.includes(t);
       h+=`<div class="row${lock?' lock':''}${tool===t?' cur':''}">${ic(t,BLD[t].rot?curDir:0)}<div class="rt"><b>${esc(BLD[t].n)} <small style="color:var(--dim);font-weight:400">· ${fmt(TOT[t]||0)}</small>${S.newB.includes(t)?' <small style="color:var(--acc)">neu</small>':''}</b>
         <div class="ing">${lock?'Gesperrt – Forschung: '+esc(lockTech(t)):esc(toolHint(t))}</div>${REC[t]&&!lock?ingHtml(REC[t].i,1):''}</div>
@@ -2510,6 +2937,7 @@ function openBuild(){
 }
 function selectTool(t){
   if(ROUTE&&ROUTE.t!==t){ROUTE=null;updRouteBar()}
+  if(t&&(selMode||BPM)){selMode=false;SELR=null;BPM=null;updSelBar()}
   tool=t;if(t)delMode=false;
   if(t)toast(toolHint(t),'',1800);
   updToolUI();sfx('click');
@@ -2526,6 +2954,10 @@ function toolHint(t){
     case 'solar':case 'wind':return`${B.n}: ${B.kw} kW ohne Brennstoff`;
     case 'pipe':return`${B.n} (${fmt(lineRate(t))}/min): Start antippen, dann Ziel. Andere Leitung antippen = umbauen.`;
     case 'pump':return`${B.n}: ${fmt(B.rate*60)} Wasser/min, muss direkt am Wasser stehen`;
+    case 'opump':return`${B.n}: ${fmt(B.rate*60)} Öl/min auf einer Ölquelle, ${B.kw} kW`;
+    case 'refinery':return`${B.n}: Öl + Wasser → Kunststoff + Schwefel, ${B.kw} kW`;
+    case 'ug':return`${B.n}: bis ${B.range} Felder unter allem durch, ${beltRate(t)}/min. Eingang setzen, dann Ausgang.`;
+    case 'pug':return`${B.n}: bis ${B.range} Felder unterirdisch, ${fmt(B.rate*60)}/min. Eingang setzen, dann Ausgang.`;
     case 'psplit':return`${B.n}: Eingang hinten, Ausgänge vorn/links/rechts. Auf eine Leitung tippen ersetzt sie.`;
     case 'pmerge':return`${B.n}: Eingänge hinten/links/rechts, Ausgang vorn. Auf eine Leitung tippen ersetzt sie.`;
     case 'lab':return`${B.n}: Forschung ×${B.speed}${B.kw?`, ${B.kw} kW`:', ohne Strom'}`;
@@ -2540,18 +2972,20 @@ function toolHint(t){
 }
 function updToolUI(){
   document.querySelectorAll('.pb').forEach(b=>b.classList.toggle('sel',b.dataset.t===tool));
-  $('#bHand').classList.toggle('sel',!tool&&!delMode);
+  $('#bHand').classList.toggle('sel',!tool&&!delMode&&!selMode&&!BPM);
+  $('#bSel').classList.toggle('sel',selMode||!!BPM);
   $('#bDel').classList.toggle('sel',delMode);
   $('#bRot').querySelector('svg').style.transform=`rotate(${curDir*90}deg)`;
 }
 function rotateAct(){
   if(SEL&&BLD[SEL.t].rot&&sheetOpen()){SEL.d=(SEL.d+1)%4;dirty=true;sfx('click');return}
+  if(BPM){SACT.bprot();sfx('click');return}
   curDir=(curDir+1)%4;palKey='';buildPalette();updToolUI();sfx('click');
   toast('Richtung: '+DIRN[curDir],'',1000);
 }
-$('#bHand').onclick=()=>{delMode=false;selectTool(null)};
+$('#bHand').onclick=()=>{delMode=false;if(selMode||BPM)setSelMode(false);selectTool(null)};
 $('#bRot').onclick=rotateAct;
-$('#bDel').onclick=()=>{delMode=!delMode;if(delMode){tool=null;toast('Abriss: Tippe auf ein Gebäude.','',1600)}updToolUI();sfx('click')};
+$('#bDel').onclick=()=>{delMode=!delMode;if(delMode){tool=null;if(selMode||BPM)setSelMode(false);toast('Abriss: Tippe auf ein Gebäude.','',1600)}updToolUI();sfx('click')};
 $('#bCraft').onclick=()=>openCraft();
 $('#bRes').onclick=()=>openResearch();
 $('#bBuild').onclick=()=>openBuild();
@@ -2560,7 +2994,7 @@ $('#bMenu').onclick=()=>openMenu();
 /* ---------- Banner: Tutorial oder nächstes Ziel ---------- */
 function updBanner(){
   const b=$('#banner');
-  if(ROUTE){b.className='';return}
+  if(ROUTE||selMode||BPM){b.className='';return}
   $('#banner').style.bottom=($('#bottom').offsetHeight+8)+'px';
   if(S.tut>=0&&S.tut<TUT.length){
     const s=TUT[S.tut];
@@ -2599,6 +3033,7 @@ function closeSheet(){SH={kind:null,live:null};SEL=null;$('#sheet').classList.re
 $('#sheetX').onclick=closeSheet;
 $('#sheetBg').onclick=()=>{if(performance.now()-(SH.t0||0)>400)closeSheet()};   // Geisterklick direkt nach dem Öffnen ignorieren
 const ACT={};
+Object.assign(ACT,BPACT);
 ACT.pick=v=>{S.newB=S.newB.filter(x=>x!==v);closeSheet();selectTool(v)};
 ACT.fav=v=>{
   const i=S.fav.indexOf(v);
@@ -2640,7 +3075,7 @@ const ST_TXT={kohle:['Kein Brennstoff – bitte Kohle einlegen','bad'],strom:['K
   voll:['Ausgang voll','warn'],zutaten:['Wartet auf Zutaten','warn'],leer:['Wartet auf Material','warn'],rezept:['Kein Rezept gewählt','bad'],
   komplex:['Rezept hat zu viele Zutaten für diese Stufe – Montagemaschine aufrüsten','bad'],
   keine:['Keine Forschung ausgewählt','warn'],pakete:['Wartet auf Forschungspakete','warn'],wartet:['Forschung wird gerade abgeschlossen','ok'],
-  aus:['Abgeschaltet','warn'],wasser:['Kein Wasser – Pumpe am See setzen und per Leitung anschließen','bad'],abnehmer:['Leitung voll oder nicht angeschlossen','warn']};
+  aus:['Abgeschaltet','warn'],oel:['Kein Öl – Ölpumpe per Leitung anschließen','bad'],wasser:['Kein Wasser – Pumpe am See setzen und per Leitung anschließen','bad'],abnehmer:['Leitung voll oder nicht angeschlossen','warn']};
 function statusOf(e){
   if(ELECTRIC(e.t)&&e._net<0)return['Kein Strommast in der Nähe','bad'];
   if(e._st)return ST_TXT[e._st]||['Bereit','ok'];
@@ -2659,6 +3094,8 @@ function maxRates(e){
     case 'lab':{const T=S.res.cur&&TECH[S.res.cur];return T?[Object.keys(T.c).map(k=>[k,60*B.speed/T.t]),[]]:[[],[]]}
     case 'steam':return[[fuel(B.kw),['wasser',B.kw*60/WATER_KJ]],[]];
     case 'pump':return[[],[['wasser',B.rate*60]]];
+    case 'opump':return[[],[['oel',B.rate*60]]];
+    case 'refinery':{const per=B.speed*60/REFINE.t;return[Object.keys(REFINE.i).map(k=>[k,REFINE.i[k]*per]),Object.keys(REFINE.o).map(k=>[k,REFINE.o[k]*per])]}
   }
   return[[],[]];
 }
@@ -2708,9 +3145,9 @@ function openInfo(e){
       if(r){btns.push(['feedall','Zutaten einlegen']);btns.push(['takeout','Ausgang nehmen'])}
       live=()=>{const[s,c]=statusOf(e);setSt(s,c);setBar('iBar',e.p);liveRate(e);
         const box=$('#aIn');if(!box||!r)return;
-        const sig=Object.keys(r.i).map(i=>i+(e.inv[i]||0)).join()+'|'+e.outN;
+        const sig=Object.keys(r.i).map(i=>i+Math.floor(e.inv[i]||0)).join()+'|'+e.outN;
         if(box.dataset.sig!==sig){box.dataset.sig=sig;
-          box.innerHTML=Object.keys(r.i).map(i=>`<div class="slot">${ic(i)}<div><small>${esc(ITEMS[i].n)}</small><b>${e.inv[i]||0}</b></div></div>`).join('')+`<div class="slot">${ic(e.r)}<div><small>Ausgang</small><b>${e.outN}</b></div></div>`;
+          box.innerHTML=Object.keys(r.i).map(i=>`<div class="slot">${ic(i)}<div><small>${esc(ITEMS[i].n)}</small><b>${fmt(e.inv[i]||0)}</b></div></div>`).join('')+`<div class="slot">${ic(e.r)}<div><small>Ausgang</small><b>${e.outN}</b></div></div>`;
           fillIcons(box)}};
       break;
     }
@@ -2775,10 +3212,22 @@ function openInfo(e){
       h+=`<div class="rates"><div class="rrow"><small>Durchfluss</small><b id="iRate">wird gemessen …</b></div><div class="rrow"><small>Maximal</small><b>${fmt(B.rate*60)}/min</b></div></div>`;
       live=()=>{setSt(`Füllstand ${Math.round(e.fl/FCAP[k]*100)} %`,'');if(e._r!==undefined)setTxt('iRate',fmt(e._r)+'/min')};
       break;
-    case 'pump':
+    case 'pump':case 'opump':
       h+=rateBlock(e);
       live=()=>{const[s,c]=statusOf(e);setSt(s,c);liveRate(e)};
       break;
+    case 'refinery':
+      h+=`<div class="slots">${slot('rO','Öl','oel')}${slot('rW','Wasser','wasser')}${slot('rK','Kunststoff','kunststoff')}${slot('rS','Schwefel','schwefel')}</div><div class="bar"><div id="iBar"></div></div>`+rateBlock(e);
+      live=()=>{const[s,c]=statusOf(e);setSt(s,c);setSlot('rO','oel',e.fin.oel||0);setSlot('rW','wasser',e.fin.wasser||0);
+        setSlot('rK','kunststoff',e.oq.kunststoff||0);setSlot('rS','schwefel',e.oq.schwefel||0);setBar('iBar',e.p);liveRate(e)};
+      break;
+    case 'ug':case 'pug':{
+      const P=e._pair;
+      h+=`<p>${e.io==='in'?'Eingang':'Ausgang'} · ${P?`verbunden, ${Math.abs(P.x-e.x)+Math.abs(P.y-e.y)-1} Felder unterirdisch`:`<span style="color:var(--bad)">nicht verbunden – setze ${e.io==='in'?'den Ausgang in Pfeilrichtung':'davor einen Eingang'} (bis ${B.range} Felder dazwischen)</span>`}</p>`;
+      const src=e.io==='in'?e:P;
+      live=()=>setSt(k==='ug'?`${src&&src.it?src.it.length:0} Items im Tunnel`:`Füllstand ${Math.round((e.fl||0)/FCAP.pug*100)} %`,'');
+      break;
+    }
     case 'steam':
       h+=`<div class="slots">${slot('sF','Brennstoff','kohle')}${slot('sW','Wasser','wasser')}</div>`+rateBlock(e).replace(/<div class="rrow"><small>Liefert jetzt.*?<\/div>/,'');
       btns.push(['fuel','Kohle einlegen']);
@@ -2824,6 +3273,7 @@ function openTileInfo(x,y){
   const r=RES[y*W+x];
   if(r===WATER){openSheet('tile','Wasser',null,'<p>Hier kann nicht gebaut werden.</p>');return}
   if(!r){openSheet('tile','Wiese',null,'<p>Freie Fläche zum Bauen.</p>');return}
+  if(r===OIL){openSheet('tile','Ölquelle',null,'<p>Unerschöpfliche Ölquelle. Setze eine Ölpumpe darauf (Forschung „Ölverarbeitung“) und leite das Öl per Leitung zu einer Raffinerie.</p>');return}
   const k=RES_ITEM[r];
   openSheet('tile',RES_NAME[r]+'-Feld',k,`<p>Unerschöpfliches Rohstofffeld. Setze einen Bohrer darauf oder tippe im Zeiger-Modus darauf, um per Hand abzubauen.</p>
     <div class="btns"><button class="btn acc" data-a="mine" data-v="${x},${y}">Per Hand abbauen</button></div>`);
@@ -2902,8 +3352,8 @@ ACT.setsmelt=v=>{
 };
 ACT.setrec=v=>{
   const e=selE();if(!e)return;
-  for(const i in e.inv)give(i,e.inv[i]);
-  if(e.r){give(e.r,e.outN);if(e.w)for(const i in REC[e.r].i)give(i,REC[e.r].i[i])}
+  for(const i in e.inv)if(!ITEMS[i].fluid)give(i,Math.floor(e.inv[i]));
+  if(e.r){give(e.r,e.outN);if(e.w)for(const i in REC[e.r].i)if(!ITEMS[i].fluid)give(i,REC[e.r].i[i])}
   e.r=v;e.inv={};e.outN=0;e.w=0;e.p=0;
   sfx('click');if(SH.autoPick){closeSheet();toast('Rezept: '+ITEMS[v].n,'good',1200)}else openInfo(e);
 };
@@ -3003,6 +3453,7 @@ function openResearch(){
   h+=`<p>Labore verbrauchen pro Einheit ein Paket jeder Farbe. Labore: ${L.lab.length}.</p>`;
   const avail=[],locked=[],done=[];
   for(const id in TECH){
+    if(TECH[id].hide&&!DONE.has(id))continue;                     // Öl gibt es nur in Welten mit Ölquellen
     if(DONE.has(id))done.push(id);
     else if((TECH[id].req||[]).every(q=>DONE.has(q)))avail.push(id);
     else locked.push(id);
@@ -3053,7 +3504,7 @@ function openMenu(tab){
       <div class="btns"><button class="btn" data-a="tut">Tutorial neu starten</button></div>
       <h4>Installieren</h4><p>Auf dem iPhone in Safari: Teilen → „Zum Home-Bildschirm“. Auf Android im Browser-Menü „App installieren“. Das Spiel lädt neue Versionen automatisch.</p>
       <h4>Steuerung</h4><p>Ein Finger ziehen: Karte verschieben · Zwei Finger: Zoom · Tippen: bauen oder öffnen · Lange drücken: Info und Abreißen · Im Zeiger-Modus auf Erz tippen: per Hand abbauen.</p>
-      <h4>Welt</h4><p>Deine Welt: ${W}×${H} Felder, Kartenversion ${S.gen}.${(S.gen||1)<3?' Quarz, Kalk und die kleinen Vorkommen gibt es erst in einer neuen Welt – dafür „Spielstand zurücksetzen“.':''}</p>
+      <h4>Welt</h4><p>Deine Welt: ${W}×${H} Felder, Kartenversion ${S.gen}.${(S.gen||1)<3?' Quarz, Kalk und die kleinen Vorkommen gibt es erst in einer neuen Welt – dafür „Spielstand zurücksetzen“.':(S.gen||1)<4?' Ölquellen (Kunststoff, Schwefel, Batterien) gibt es erst in einer neuen Welt – dafür „Spielstand zurücksetzen“.':''}</p>
       <h4>Neu anfangen</h4><div class="btns"><button class="btn red" data-a="reset">Spielstand zurücksetzen</button></div>
       <p style="font-size:12px">Funkenwerk · Version ${BUILD}<br>Anzeige: Fenster ${innerHeight} · Bildschirm ${screen.height} · Fläche ${Math.round(VH)} · Ausgleich ${GAPPX} · App ${navigator.standalone||matchMedia('(display-mode: standalone)').matches?'ja':'nein'}</p>`;
   }else{
@@ -3125,11 +3576,11 @@ function uiTick(dt){
    8. SPEICHERN, EXPORT/IMPORT, OFFLINE-FORTSCHRITT, SELBST-UPDATE
    ===================================================================== */
 const KEY='funkenwerk-1';
-const BUILD='2026-09-28-2';
+const BUILD='2026-09-28-3';
 
 function newGame(){
-  S={v:1,ws:128,gen:3,sites:[],seed:(Math.random()*1e9)|0,time:0,savedAt:Date.now(),cam:null,inv:Object.assign({},START_INV),prod:{},
-    res:{cur:null,prog:0,done:[]},flags:{water:1},goals:[],tut:0,rockets:0,sound:true,cq:[],dir:1,ents:[],newB:[],fav:FAV_DEFAULT.slice(),showGoal:false,dim:{}};
+  S={v:1,ws:128,gen:4,sites:[],seed:(Math.random()*1e9)|0,time:0,savedAt:Date.now(),cam:null,inv:Object.assign({},START_INV),prod:{},
+    res:{cur:null,prog:0,done:[]},flags:{water:1},goals:[],tut:0,rockets:0,sound:true,cq:[],dir:1,ents:[],newB:[],fav:FAV_DEFAULT.slice(),showGoal:false,dim:{},bps:[]};
   initWorld();
   // Kamera auf das Eisenfeld nahe der Mitte
   let sx=0,sy=0,n=0;
@@ -3140,13 +3591,13 @@ function newGame(){
 function initWorld(){
   setWorldSize(S.ws||64);
   for(const e of S.ents)G[e.y*W+e.x]=e;
-  genWorld(S.seed);syncDone();syncSites();reindex();buildTerrain();statReset();
+  genWorld(S.seed);applyWorldRules();syncDone();syncSites();reindex();buildTerrain();statReset();
   SPR.clear();palKey='';lastUnlock='';
 }
 function validSave(o){return o&&o.v===1&&typeof o.seed==='number'&&Array.isArray(o.ents)}
 /* ergänzt fehlende Felder und verwirft kaputte Einträge */
 function migrate(o){
-  const d={ws:64,gen:1,sites:[],time:0,inv:{},prod:{},res:{cur:null,prog:0,done:[]},flags:{},goals:[],tut:-1,rockets:0,sound:true,cq:[],dir:1,newB:[],fav:FAV_DEFAULT.slice(),showGoal:false,dim:{}};
+  const d={ws:64,gen:1,sites:[],time:0,inv:{},prod:{},res:{cur:null,prog:0,done:[]},flags:{},goals:[],tut:-1,rockets:0,sound:true,cq:[],dir:1,newB:[],fav:FAV_DEFAULT.slice(),showGoal:false,dim:{},bps:[]};
   for(const k in d)if(o[k]===undefined)o[k]=d[k];
   if(o.ws!==64&&o.ws!==128)o.ws=64;
   setWorldSize(o.ws);
@@ -3179,6 +3630,8 @@ function migrate(o){
   if(o.res.cur&&!TECH[o.res.cur])o.res.cur=null;
   o.cq=o.cq.filter(c=>REC[c.r]);
   o.sites=(o.sites||[]).filter(t=>t&&BLD[t.t]&&t.x>=0&&t.y>=0&&t.x<o.ws&&t.y<o.ws);
+  o.bps=(Array.isArray(o.bps)?o.bps:[]).filter(b=>b&&Array.isArray(b.p)).map(b=>(b.p=b.p.filter(q=>q&&BLD[q.t]),b));
+  o.sites.forEach(t=>{if(t.c&&typeof t.c!=='object')delete t.c});
   o.fav=Array.from({length:6},(_,i)=>{const t=o.fav&&o.fav[i];return t&&BLD[t]?t:null});
   return o;
 }
