@@ -484,7 +484,7 @@ function calc(){
 function oreMult(t){const N=NODES['ek_'+t];return N?Math.pow(2,lv('ek_'+t)):1}
 const hpAt=(t,d)=>BT[t].hp*Math.pow(HP_G,d-1);
 const valAt=(t,d)=>BT[t].c*Math.pow(VAL_G,d-1)*ST.coinM*oreMult(t);
-const prestigeTotal=b=>b>=ROUTE_DEPTH?Math.floor(Math.pow(b/10,1.6)):0;
+const prestigeTotal=b=>b>=ROUTE_DEPTH?Math.floor(2*Math.pow(b/10,1.6)):0;   // Kernsplitter insgesamt (doppelt so viele wie anfangs)
 const prestigeGain=()=>Math.max(0,prestigeTotal(S.best)-S.splitTot);
 
 /* ---------- Spielfeld einer Tiefe ---------- */
@@ -1661,7 +1661,7 @@ function openMenu(tab){
   }else{
     const pg=prestigeGain();
     h+=`<p class="lead">Kernsplitter: <b>${fmt(S.split)}</b> (insgesamt erhalten: ${S.splitTot})</p>
-      <p>Bei der Kernbohrung fängst du von vorne an, bekommst dafür aber Kernsplitter. Mit ihnen kaufst du im Kern-Baum Verbesserungen, die für immer bleiben. Kernsplitter insgesamt = (Bestleistung ÷ 10)<sup>1,6</sup>, abgerundet.</p>`;
+      <p>Bei der Kernbohrung fängst du von vorne an, bekommst dafür aber Kernsplitter. Mit ihnen kaufst du im Kern-Baum Verbesserungen, die für immer bleiben. Kernsplitter insgesamt = 2 × (Bestleistung ÷ 10)<sup>1,6</sup>, abgerundet.</p>`;
     if(S.best<ROUTE_DEPTH)h+=`<p class="lead">Möglich ab Bestleistung Tiefe ${ROUTE_DEPTH} (deine: ${S.best}).</p>`;
     else if(pg<=0)h+=`<p class="lead">Gerade gibt es keine neuen Kernsplitter. Erreiche erst eine neue Bestleistung (nächster Splitter ab Tiefe ${nextSplitDepth()}).</p>`;
     else h+=`<h4>Vorschau</h4><p class="lead">Du bekommst <b style="color:#ffc58a">${pg} Kernsplitter</b>.</p>
@@ -1704,7 +1704,7 @@ ACT.import=async()=>{
    7. SPEICHERN, EXPORT/IMPORT, CLOUD, SELBST-UPDATE
    ===================================================================== */
 const KEY='tiefgang-1';
-const BUILD='2026-10-01-1';
+const BUILD='2026-10-01-2';
 function validSave(o){return o&&o.v===1&&typeof o.coins==='number'&&o.lv&&typeof o.lv==='object'}
 /* ergänzt fehlende Felder und verwirft kaputte Einträge */
 function migrate(o){
