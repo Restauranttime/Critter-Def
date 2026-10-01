@@ -426,7 +426,7 @@ const REC={
   labor2:{i:{labor:1,schaltkreis:10,stahl:10},n:1,t:3,tech:'labor2',g:'Produktion'},
   labor3:{i:{labor2:1,fschaltkreis:10,motor:4},n:1,t:4,tech:'labor3',g:'Produktion'},
   solar:{i:{eisenplatte:5,kupferplatte:5,schaltkreis:3},n:1,t:2,tech:'elektrizitaet',g:'Energie'},
-  windrad:{i:{stahl:5,motor:1,eisenstange:10},n:1,t:3,tech:'windkraft',g:'Energie'},
+  windrad:{i:{stahl:5,zahnrad:10,eisenstange:10},n:1,t:3,tech:'windkraft',g:'Energie'},
   dampf:{i:{stahl:10,rohr:10,ziegel:20},n:1,t:3,tech:'kohlekraft',g:'Energie'},
   pumpe:{i:{rohr:5,zahnrad:5,schaltkreis:2},n:1,t:2,tech:'kohlekraft',g:'Energie'},
   pumpe2:{i:{pumpe:1,motor:2,stahl:5},n:1,t:3,tech:'hydraulik',g:'Energie'},
@@ -459,10 +459,10 @@ const TECH={
   logistik:{n:'Logistik',c:{rot:30},t:5,req:['automatisierung'],u:['schnellband','tunnel','tunnel2'],d:'Rote Schnellbänder mit 120 Items/min und Bandtunnel.'},
   stahl:{n:'Stahlverarbeitung',c:{rot:40},t:5,req:['automatisierung'],u:['stahl','stahltraeger','stahlofen'],d:'Öfen schmelzen 5 Eisenplatten zu Stahl. Dazu Stahlträger und der schnellere Stahlofen.'},
   gruenpaket:{n:'Grüne Forschung',c:{rot:40},t:5,req:['automatisierung2'],u:['gruen'],d:'Grüne Forschungspakete für fortgeschrittene Technik.'},
-  kohlekraft:{n:'Kohlekraft',c:{rot:50,gruen:50},t:8,req:['gruenpaket','stahl'],u:['dampf','pumpe','leitung','rverteiler','rzusammen','rtunnel','mast2'],d:'Kohlekraftwerke mit 1,8 MW, dazu Pumpen und Wasserleitungen für ihr Wasser und mittlere Strommasten.'},
+  kohlekraft:{n:'Kohlekraft',c:{rot:50,gruen:50},t:8,req:['gruenpaket','windkraft'],u:['dampf','pumpe','leitung','rverteiler','rzusammen','rtunnel','mast2'],d:'Kohlekraftwerke mit 1,8 MW, dazu Pumpen und Wasserleitungen für ihr Wasser und mittlere Strommasten.'},
   logistik2:{n:'Intelligente Logistik',c:{rot:50,gruen:50},t:8,req:['gruenpaket','logistik'],u:['sverteiler','szusammen'],d:'Smart-Verteiler und Smart-Zusammenführer mit Filtern für jede Seite.'},
   labor2:{n:'Schnellere Labore',c:{rot:60,gruen:60},t:8,req:['gruenpaket','stahl'],u:['labor2'],d:'Labor 2: forscht doppelt so schnell, braucht Strom.'},
-  windkraft:{n:'Windkraft',c:{rot:60,gruen:60},t:8,req:['motoren'],u:['windrad'],d:'Windräder mit 300 kW ohne Brennstoff.'},
+  windkraft:{n:'Windkraft',c:{rot:50},t:5,req:['stahl'],u:['windrad'],d:'Windräder mit 300 kW ohne Brennstoff – der Schritt zwischen Solar und Kohle.'},
   hydraulik:{n:'Hydraulik',c:{rot:75,gruen:75},t:8,req:['kohlekraft','motoren'],u:['pumpe2','leitung2'],d:'Hochleistungspumpen (2.400/min) und Stahlleitungen (3.000/min).'},
   quarz:{n:'Quarzverarbeitung',c:{rot:50,gruen:50},t:8,req:['gruenpaket'],u:['glas','silizium'],d:'Öfen schmelzen Quarz zu Glas, Montagemaschinen machen Silizium.'},
   beton:{n:'Betonbau',c:{rot:50,gruen:50},t:8,req:['gruenpaket'],u:['zement','beton'],d:'Öfen brennen Kalkstein zu Zement, daraus wird Beton.'},
@@ -487,6 +487,7 @@ const TIPS={
   automatisierung2:'Montagemaschine 2 schafft Rezepte mit 2 Zutaten – damit lassen sich rote Pakete und Schaltkreise automatisch bauen.',
   logistik:'Tunnel: Beim Verlegen mit Start und Ziel nutzt der Auto-Weg Tunnel selbst, wenn etwas im Weg ist. Von Hand: erst Eingang, dann Ausgang setzen.',
   stahl:'Stell einen Ofen auf das Rezept „Stahl“ und füttere ihn mit Eisenplatten.',
+  windkraft:'Ein Windrad liefert so viel wie 5 Solarpanels und braucht keinen Brennstoff. Später lohnen sich Kohlekraftwerke für richtig viel Strom.',
   kohlekraft:'Kraftwerke brauchen Kohle per Band und Wasser per Leitung: Pumpe direkt ans Ufer setzen, dann Wasserleitung mit Start an der Pumpe und Ziel am Kraftwerk verlegen. Eine Pumpe reicht für 2 Kraftwerke.',
   logistik2:'Smart-Verteiler: Für jeden Ausgang ein Item wählen – so trennst du gemischte Bänder. Smart-Zusammenführer lassen nur das gewählte Item herein.',
   quarz:'Silizium braucht Wasser: Führe eine Wasserleitung an die Montagemaschine.',
@@ -3662,7 +3663,7 @@ function uiTick(dt){
    8. SPEICHERN, EXPORT/IMPORT, OFFLINE-FORTSCHRITT, SELBST-UPDATE
    ===================================================================== */
 const KEY='funkenwerk-1';
-const BUILD='2026-09-28-4';
+const BUILD='2026-10-01-1';
 
 function newGame(){
   S={v:1,ws:192,gen:5,sites:[],seed:(Math.random()*1e9)|0,time:0,savedAt:Date.now(),cam:null,inv:Object.assign({},START_INV),prod:{},
