@@ -1,0 +1,14 @@
+{
+  "name": "Kleine Feldherren",
+  "short_name": "Feldherren",
+  "start_url": "feldherren.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#17130f",
+  "theme_color": "#17130f",
+  "icons": [
+    { "src": "feldherren-icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "feldherren-icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
