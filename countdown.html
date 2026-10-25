@@ -467,12 +467,12 @@ function terInit(b){
   const T=b.ter;if(!T)return;
   const r=rng(T.seed*7919+11);
   for(let i=0;i<T.n;i++){
-    const k=Math.round(3*Math.pow(1.9,i))+Math.floor(r()*3),a=T.amp*Math.pow(k/3,-.78)*(.6+r()*.6);
+    const k=Math.round(3*Math.pow(1.9,i))+Math.floor(r()*3),a=Math.min(T.amp*Math.pow(k/3,-1.02)*(.6+r()*.6),b.R*.03/k);
     b.tw.push([k,a,r()*TAU]);
   }
   // ganz feine Unebenheiten (nur ein paar Meter)
-  b.tw.push([Math.round(b.R/40),Math.min(4,T.amp*.002),r()*TAU]);
-  for(let i=0;i<(T.crat||0);i++){const w=.01+r()*.06*(i<3?2:1);b.cr.push([r()*TAU,w*(30e3/Math.max(b.R,30e3))*3,T.amp*(.25+r()*.5)])}
+  b.tw.push([Math.round(b.R/40),Math.min(1.2,T.amp*.001),r()*TAU]);
+  for(let i=0;i<(T.crat||0);i++){const w=(.01+r()*.06*(i<3?2:1))*(30e3/Math.max(b.R,30e3))*3,dep=Math.min(T.amp*(.25+r()*.5),w*b.R*.12);b.cr.push([r()*TAU,w,dep])}
   b.off=0;
   if(T.ocean){                                   // so verschieben, dass ein Teil unter dem Meeresspiegel liegt
     const s=[];for(let i=0;i<720;i++)s.push(terRaw(b,i/720*TAU));s.sort((x,y)=>x-y);b.off=-s[Math.floor(s.length*T.ocean)];
@@ -618,8 +618,8 @@ const PDEF=[
   {id:'heat_s',n:'Hitzeschild S',c:'aero',k:300,m:.1,w:1.25,h:.25,nd:'tb',res:{ab:.2},shield:1,maxT:3300,cdB:.9,tol:9,sh:'heat',tech:'surv',
    d:'Unter die Kapsel. Schützt beim Wiedereintritt – Hintern voraus!'},
   {id:'heat_m',n:'Hitzeschild M',c:'aero',k:900,m:.3,w:2.5,h:.35,nd:'tb',res:{ab:.8},shield:1,maxT:3300,cdB:.9,tol:9,sh:'heat',tech:'praez',d:'Großer Hitzeschild.'},
-  {id:'leg',n:'Landebein',c:'aero',k:440,m:.05,w:.5,h:1.6,rad:1,leg:{len:1.3},tol:14,sh:'leg',tech:'land',d:'Federt die Landung ab. Mit „Beine“ ausklappen.'},
-  {id:'leg_l',n:'Großes Bein',c:'aero',k:900,m:.2,w:.8,h:2.4,rad:1,leg:{len:2},tol:16,sh:'leg',tech:'schwer',d:'Für schwere Lander.'},
+  {id:'leg',n:'Landebein',c:'aero',k:440,m:.05,w:.5,h:1.6,rad:1,leg:{len:1.6},tol:14,sh:'leg',tech:'land',d:'Federt die Landung ab. Mit „Beine“ ausklappen.'},
+  {id:'leg_l',n:'Großes Bein',c:'aero',k:900,m:.2,w:.8,h:2.4,rad:1,leg:{len:2.4},tol:16,sh:'leg',tech:'schwer',d:'Für schwere Lander.'},
   {id:'wheel',n:'Rad',c:'aero',k:500,m:.1,w:.9,h:.9,rad:1,wheel:{r:.45,mot:8},tol:10,sh:'wheel',tech:'rover',d:'Angetriebenes Rad für Rover.'},
   {id:'wheel_l',n:'Großes Rad',c:'aero',k:1200,m:.3,w:1.5,h:1.5,rad:1,wheel:{r:.75,mot:24},tol:12,sh:'wheel',tech:'rover2',d:'Geländerad für schwere Rover.'},
   // Strom & Forschung
@@ -1234,37 +1234,37 @@ function physStep(V,dt,C){
     if(q.dep>.3&&sp>t.chute.vmax*1.6&&rho>.05){q.brk=1;q.dep=0;q.why='rip'}
     if(V.landed&&q.dep>0&&sp<1.5){q.cut=(q.cut||0)+dt;if(q.cut>2.5){q.dep=0;q.arm=0;q.brk=1;q.why='cut'}}
   }
-  // ---- Bodenkontakt ----
-  const nc=contacts(V,B,dt,C,ca,sa);
-  Fx+=nc.fx;Fy+=nc.fy;Tq+=nc.tq;
   // ---- Strom-Haushalt ----
   let ecIn=0;
   if(d.sol.length){const sl=V.light!==undefined?V.light:1;for(const i of d.sol){const q=ps[i],t=P[q.t];if(q.brk||q.dead)continue;if(t.sol.dep&&q.dep<.9)continue;ecIn+=t.sol.ec*sl}}
   resAdd(V,'ec',ecIn*dt);resTake(V,'ec',ecUse*dt);
-  // ---- Ruhe: liegt still → nichts rechnen ----
   const wake=thrustOn||C.rot||C.drive||C.tx||C.ty||V.wake>0;
   if(V.wake>0)V.wake-=dt;
-  if(V.rest&&!wake&&nc.n>0){V.vx=V.vy=V.om=0;return}
-  V.rest=false;
-  // ---- Integration ----
-  const g=-B.mu/(r*r*r);
+  // ---- Geschwindigkeit: Kräfte, dann Bodenkontakt (Stoß-Löser), dann Lage ----
+  const g=-B.mu/(r*r*r),ovx=V.vx,ovy=V.vy,oom=V.om;
   V.vx+=(Fx/m+g*V.x)*dt;V.vy+=(Fy/m+g*V.y)*dt;
-  if(TFx||TFy){V.tdvx=(V.tdvx||0)+TFx/m*dt;V.tdvy=(V.tdvy||0)+TFy/m*dt}
+  V.om+=Tq/I*dt;
+  const nc=contactSolve(V,B,dt,C,ca,sa);
+  if(V.rest&&!wake&&nc>0){V.vx=V.vy=V.om=0;return}  // liegt still: nichts bewegen
+  V.rest=false;
+  V.om=clamp(V.om,-15,15);
   V.x+=V.vx*dt;V.y+=V.vy*dt;
-  V.om+=Tq/I*dt;V.om=clamp(V.om,-15,15);
   V.th+=V.om*dt;if(V.th>1e4||V.th<-1e4)V.th=wrapA(V.th);
-  V.acc=Math.hypot(Fx,Fy)/m;
+  if(TFx||TFy){V.tdvx=(V.tdvx||0)+TFx/m*dt;V.tdvy=(V.tdvy||0)+TFy/m*dt}
+  V.acc=nc?Math.hypot(V.vx-ovx,V.vy-ovy)/dt:Math.hypot(Fx,Fy)/m;
   // Stillstand erkennen
-  if(nc.n>0&&Math.hypot(V.vx,V.vy)<.06&&Math.abs(V.om)<.01&&!wake){V.restT=(V.restT||0)+dt;if(V.restT>.6){V.rest=true;V.vx=V.vy=V.om=0}}else V.restT=0;
+  if(nc>0&&Math.hypot(V.vx,V.vy)<.15&&Math.abs(V.om)<.03&&!wake){V.restT=(V.restT||0)+dt;if(V.restT>.5){V.rest=true;V.vx=V.vy=V.om=0}}else V.restT=0;
 }
-/* Bodenkontakt: Federn an allen Eckpunkten, Beine weicher, Räder rollen */
-function contacts(V,B,dt,C,ca,sa){
-  const d=V.d,pts=d.pts,res={fx:0,fy:0,tq:0,n:0,water:0};
+
+/* Bodenkontakt als Stoß-Löser: Für jeden berührenden Eckpunkt wird ein Stoß berechnet, der das Eindringen aufhebt
+   (mit wirksamer Masse inkl. Drehung), mehrfach wiederholt. Reibung bremst seitlich, Räder und Astronauten treiben an.
+   Gibt die Zahl der Berührungen zurück. */
+const CT=[];
+function contactSolve(V,B,dt,C,ca,sa){
+  const d=V.d,pts=d.pts,m=d.m,I=d.I;
   const r=Math.hypot(V.x,V.y);
-  if(r-B.R-B.hmax>d.bR+5){V.landed=false;V.nc=0;for(const p of pts)p.c=0;return res}
-  const m=d.m,ncPrev=Math.max(1,V.nc||1);
-  const kB=m*3500/ncPrev,cB=1.7*Math.sqrt(kB*m/ncPrev);
-  let n=0,water=0;
+  if(r-B.R-B.hmax>d.bR+5){V.landed=false;V.nc=0;for(const p of pts)p.c=0;return 0}
+  let n=0,water=0;CT.length=0;
   for(const p of pts){
     const q=V.parts[p.i];
     if(q.dead){p.c=0;continue}
@@ -1273,32 +1273,43 @@ function contacts(V,B,dt,C,ca,sa){
     const pr=Math.hypot(px,py),an=Math.atan2(py,px);
     const h=terH(B,an),wet=B.ocean&&h<0,sh=wet?0:h,Rs=B.R+sh;
     const pen=Rs+(p.k===2?p.r:0)-pr;
-    if(pen<=0){p.c=0;continue}
-    // Normale (Hangneigung)
+    if(pen<=-.02){p.c=0;continue}
     let nx=px/pr,ny=py/pr;
     if(!wet){const e=.4/B.R,h1=terH(B,an+e),h0=terH(B,an-e),dh=(h1-h0)/(2*e)/Rs;const tx=-ny,ty=nx;nx-=dh*tx;ny-=dh*ty;const l=Math.hypot(nx,ny);nx/=l;ny/=l}
-    const vpx=V.vx-V.om*wy,vpy=V.vy+V.om*wx,vn=vpx*nx+vpy*ny;
+    const vn=(V.vx-V.om*wy)*nx+(V.vy+V.om*wx)*ny;
+    if(pen<=0&&vn>=0){p.c=0;continue}
     // Aufprall: beim ersten Berühren zu schnell → Teil kaputt
     if(!p.c&&-vn>p.tol*(wet?2.2:1)&&!V.noCrash){q.dead=1;q.why='crash';q.hitV=-vn;continue}
     p.c=1;n++;if(wet)water++;
-    let k=kB,c=cB;
-    if(p.k===1){k*=.35;c*=.9}
-    if(wet){k*=.08;c*=1.4}
-    const fn=Math.max(0,k*pen-c*vn);
-    // Reibung
-    const tx=-ny,ty=nx,vt=vpx*tx+vpy*ty;
-    let mu=wet?.05:p.k===2?(V.flags.brake&&!C.drive?.9:.04):.8;
-    let ft=-clamp(vt*m*8/ncPrev,-mu*fn,mu*fn);
-    if(p.k===2&&C.drive){ft+=clamp(C.drive*P[q.t].wheel.mot,-.9*fn,.9*fn)*(1-clamp(Math.abs(vt)/22,0,1))}
-    if(wet){ft-=vt*m*.6/ncPrev;}
-    const fx=fn*nx+ft*tx,fy=fn*ny+ft*ty;
-    res.fx+=fx;res.fy+=fy;res.tq+=wx*fy-wy*fx;
-    if(wet)res.fx+=-vpx*m*.4/ncPrev,res.fy+=-vpy*m*.4/ncPrev;
+    const tx=-ny,ty=nx,rn=wx*ny-wy*nx,rt=wx*ty-wy*tx;
+    const soft=p.k===1?.12:wet?.05:.25,slop=p.k===1?.06:.01;
+    CT.push({p,q,nx,ny,tx,ty,wx,wy,wet,kn:1/(1/m+rn*rn/I),kt:1/(1/m+rt*rt/I),bias:Math.min(wet?1.5:3,soft*Math.max(0,pen-slop)/dt),Ln:0,Lt:0});
   }
-  V.nc=n;res.n=n;res.water=water;
+  if(n){
+    const eva=V.kind==='eva';
+    for(let it=0;it<10;it++){
+      for(const c of CT){
+        let vx=V.vx-V.om*c.wy,vy=V.vy+V.om*c.wx;
+        const vn=vx*c.nx+vy*c.ny;
+        let dL=c.kn*(c.bias-vn);const L=Math.max(0,c.Ln+dL);dL=L-c.Ln;c.Ln=L;
+        if(dL){V.vx+=dL*c.nx/m;V.vy+=dL*c.ny/m;V.om+=(c.wx*c.ny-c.wy*c.nx)*dL/I}
+        // Reibung / Antrieb
+        vx=V.vx-V.om*c.wy;vy=V.vy+V.om*c.wx;
+        const vt=vx*c.tx+vy*c.ty;
+        let mu=.8,tg=0;
+        if(c.wet)mu=.05;
+        else if(c.p.k===2){if(C.drive){mu=.85;tg=C.drive*14}else mu=V.flags.brake?.85:.03}
+        else if(eva&&C.drive){mu=.9;tg=C.drive*2.2}
+        let dT=c.kt*(tg-vt);const T=clamp(c.Lt+dT,-mu*c.Ln,mu*c.Ln);dT=T-c.Lt;c.Lt=T;
+        if(dT){V.vx+=dT*c.tx/m;V.vy+=dT*c.ty/m;V.om+=(c.wx*c.ty-c.wy*c.tx)*dT/I}
+      }
+    }
+    if(water){const f=Math.exp(-.8*dt*water/n);V.vx*=f;V.vy*=f;V.om*=f}
+  }
+  V.nc=n;
   const sp=Math.hypot(V.vx,V.vy);
   V.landed=n>0&&sp<1.2;V.splashed=V.landed&&water>0;
-  return res;
+  return n;
 }
 /* =====================================================================
    6. WELT: Fahrzeuge verwalten, Stufen zünden, Trennen, Andocken, Zeitraffer, Einflusssphären
@@ -1561,7 +1572,7 @@ function shiftFrame(V,c,sg){const q=bodyRel(c,WS.t,{});V.x+=sg*q.x;V.y+=sg*q.y;V
 function railsBlock(V){
   if(!V)return'';
   if(V.mode==='landed'||V.rest)return'';
-  if(V.landed)return'Erst ganz zur Ruhe kommen';
+  if(V.landed&&V.nc>0)return Math.hypot(V.vx,V.vy)<.3?'':'Erst ganz zur Ruhe kommen';
   const B=vB(V),alt=vAlt(V);
   if(V.thrusting||V.d.eng.some(i=>V.parts[i].on&&P[V.parts[i].t].eng.fu==='sf'&&V.parts[i].r.sf>0))return'Nicht während ein Triebwerk läuft';
   if(B.atm&&alt<B.ah)return'Schneller Zeitraffer nur über der Lufthülle';
@@ -3266,7 +3277,7 @@ function autoAdd(t){
       if(t==='dec_r'){const tk=cs.filter(i=>P[ps[i].t].c==='tank'||P[ps[i].t].c==='eng');if(tk.length)tgt=tk.sort((a,b)=>P[ps[b].t].h-P[ps[a].t].h)[0]}}
     if(tgt===undefined||tgt<0){toast('Hier gibt es keine Stelle für ein seitliches Teil','bad');E.hist.pop();return}
     const q=ps[tgt],pd=P[q.t];
-    let fy=['fin','fin2','leg','leg_l','wheel','wheel_l','e_spinne'].includes(t)?q.y-pd.h/2+d.h/2:t==='dec_r'?q.y:q.y+pd.h/2-d.h/2;
+    let fy=['fin','fin2','e_spinne'].includes(t)?q.y-pd.h/2+d.h/2:d.leg?q.y-pd.h/2+d.h*.15:t==='dec_r'?q.y:q.y+pd.h/2-d.h/2;
     if(d.wheel)fy=q.y-pd.h/2;
     placeSide(one,tgt,fy,q.x+1,E.sym===2);
     return;
@@ -3665,9 +3676,8 @@ physStep=function(V,dt,C){
     const ca=Math.cos(V.th-Math.PI/2),sa=Math.sin(V.th-Math.PI/2);
     if((C.tx||C.ty)&&resSum(V,'mp')>0){const f=.11,lx=C.tx*f,ly=C.ty*f;resTake(V,'mp',Math.hypot(lx,ly)/(100*G0)*dt);
       V.vx+=(ca*lx-sa*ly)/V.d.m*dt;V.vy+=(sa*lx+ca*ly)/V.d.m*dt;V.wake=.5}
-    if(C.drive&&V.nc>0){const up=Math.atan2(V.y,V.x),tx=-Math.sin(up),ty=Math.cos(up),vt=V.vx*tx+V.vy*ty,want=C.drive*2.2;
-      const dv=clamp(want-vt,-6*dt,6*dt);V.vx+=tx*dv;V.vy+=ty*dv;V.wake=.5}
-    C={thr:0,rot:C.rot,tx:0,ty:0,drive:0};
+    if(C.drive)V.wake=.5;
+    C={thr:0,rot:C.rot,tx:0,ty:0,drive:C.drive};
   }
   return _physStep(V,dt,C);
 };
