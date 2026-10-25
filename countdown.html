@@ -168,6 +168,11 @@ button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
 #lost h3{margin:0;color:#ffb0b0}
 #lost p{margin:0;color:var(--dim)}
 
+@media (max-width:380px){
+  #thr{width:48px}.rot{width:50px;height:60px;font-size:24px}#stageB{width:74px;height:74px;font-size:13px}#dialBox{min-width:84px}
+  #fBot{gap:4px;left:4px;right:4px}#edSel .ds{font-size:11.5px}.pb{width:68px;height:86px}
+}
+@media (max-height:700px){#fBot{height:128px}#thr{height:128px}#dial{height:110px}#fChips{bottom:calc(env(safe-area-inset-bottom,0px) + 142px)}#nodeP{bottom:calc(env(safe-area-inset-bottom,0px) + 142px)}#fStages{bottom:calc(env(safe-area-inset-bottom,0px) + 192px)}}
 /* ---------- Tipp der Missionsleiterin ---------- */
 #tip{position:absolute;left:8px;right:8px;top:calc(env(safe-area-inset-top,0px) + 100px);display:none;gap:10px;align-items:flex-start;background:rgba(13,19,36,.97);border:1px solid var(--line);border-left:4px solid var(--acc);
   border-radius:14px;padding:9px 10px;box-shadow:0 6px 20px rgba(0,0,0,.5);z-index:15}
@@ -2437,9 +2442,9 @@ function drawVessel(c,V,pr){
   c.restore();
   // Plasma beim Wiedereintritt
   const hm=V.heatMax||0;
-  if(hm>40&&V===F.V||hm>40&&rad>4){
+  if(hm>12&&(V===F.V||rad>4)){
     const sp=Math.hypot(V.vx,V.vy);if(sp>1){
-      const ux=V.vx/sp,uy=V.vy/sp,f=clamp((hm-40)/500,0,1);
+      const ux=V.vx/sp,uy=V.vy/sp,f=clamp((hm-12)/110,0,1);
       w2s(V.x+ux*d.bR*.9,V.y+uy*d.bR*.9,SP2);
       const ang=Math.atan2(-(SP2.y-SP.y),SP2.x-SP.x);
       c.save();c.translate(SP2.x,SP2.y);c.rotate(-ang);
@@ -2925,7 +2930,7 @@ function tip(k,force){
   if(!S||!TIPS[k])return;if(!force&&S.tips[k])return;S.tips[k]=1;
   if(tipOn===k||tipQ.includes(k))return;tipQ.push(k);
 }
-function tipShow(k){tipOn=k;tipT=11;setTxt('#tipT',TIPS[k]);$('#tip').classList.add('on');drawGerda()}
+function tipShow(k){tipOn=k;tipT=MODE==='flight'?8:11;setTxt('#tipT',TIPS[k]);$('#tip').classList.add('on');drawGerda()}
 ACT.tipX=()=>{tipOn=null;$('#tip').classList.remove('on')};
 function tipTick(dt){
   if(tipOn){tipT-=dt;if(tipT<=0)ACT.tipX();return}
@@ -2993,7 +2998,7 @@ function openSettings(){
     <h4>Importieren</h4><textarea id="imTxt" placeholder="Code hier einfügen"></textarea><div class="btns"><button class="btn" data-a="import">Spielstand laden</button></div>
     <h4>Neu anfangen</h4><div class="btns"><button class="btn red" data-a="reset">${SANDBOX()?'Freies Spiel':'Karriere'} zurücksetzen</button></div>`:''}
     <h4>So spielst du</h4><p>Bau in der Montagehalle eine Rakete: Kapsel oben, Tanks, Triebwerk unten. Trenner teilen sie in Stufen. Beim Start drückst du STUFE, gibst Schub und lenkst mit ⟲ ⟳. In der Karte siehst du deine Bahn.</p>
-    <p>Δv (Delta-v) ist der Schwung, den deine Rakete insgesamt hat. In die Umlaufbahn um Murmel brauchst du etwa 2.300 m/s, zum Mond Knopf und zurück etwa 3.600 m/s. TWR ist Schub geteilt durch Gewicht – zum Abheben muss er über 1 sein.</p>
+    <p>Δv (Delta-v) ist der Schwung, den deine Rakete insgesamt hat. In die Umlaufbahn um Murmel brauchst du etwa 2.600 m/s, für eine Landung auf dem Mond Knopf und zurück noch etwa 1.800 m/s mehr. TWR ist Schub geteilt durch Gewicht – zum Abheben muss er über 1 sein.</p>
     <h4>Installieren</h4><p>Auf dem iPhone in Safari: Teilen → „Zum Home-Bildschirm“. Das Spiel lädt neue Versionen automatisch.</p>
     <p style="font-size:12px">Countdown · Version ${BUILD}</p>`;
   openSheet('set','Einstellungen',h,{keepScroll:true});
@@ -3425,7 +3430,7 @@ function assignDefaultCrew(d){
   const pods=d.parts.filter(q=>P[q.t].crew&&P[q.t].ctl);if(!pods.length)return;
   const any=d.parts.some(q=>q.crew&&q.crew.length);if(any)return;
   const free=crewAlive().filter(c=>c.st==='frei'&&!busy.has(c.id)&&!used.has(c.id)).sort((a,b)=>(a.job==='pilot'?-1:0)-(b.job==='pilot'?-1:0)||b.xp-a.xp);
-  const q=pods[0];while(q.crew.length<P[q.t].crew&&free.length)q.crew.push(free.shift().id);
+  const q=pods[0];if(free.length)q.crew.push(free.shift().id);   // nur einen Platz besetzen – weitere über 👤
 }
 function statsUI(){
   const st=E.stats,d=D();if(!st)return;
@@ -3482,7 +3487,7 @@ ACT.edInfo=()=>{
     <div><small>Masse</small><b>${dc(st.m,2)} t</b></div><div><small>Kosten</small><b>${SANDBOX()?'–':fmtM(st.k)}</b></div></div>
     <table class="st"><tr><th>Stufe</th><th>Δv All</th><th>Δv Boden</th><th>TWR</th><th>Brennt</th></tr>`;
   for(let s=0;s<st.stages.length;s++){const x=st.stages[s];if(!x)continue;h+=`<tr><td>${s+1}</td><td>${fmtNum(x.dv)}</td><td>${fmtNum(x.dvA||0)}</td><td>${dc(x.twrA||0,2)}</td><td>${Math.round(x.t)} s</td></tr>`}
-  h+=`</table><p>Ungefähr nötig: Umlaufbahn um Murmel ≈ 2.300 m/s · Knopf landen und zurück ≈ +3.000 m/s · Brösel ≈ +2.800 m/s · zu Rosto oder Dunstia ≈ +1.000 m/s ab der Umlaufbahn.</p>
+  h+=`</table><p>Ungefähr nötig: Umlaufbahn um Murmel ≈ 2.600 m/s · ab dort Knopf landen und zurück ≈ +1.800 m/s · Brösel ≈ +1.500 m/s · Flug zu Rosto oder Dunstia ≈ +800 m/s.</p>
     <p>TWR (Schub zu Gewicht) muss beim Start über 1 liegen, besser 1,4 bis 2.</p>
     <p>Grenzen: ${bldV('vab')} Teile (Montagehalle), ${fmtNum(bldV('pad'))} t (Startrampe).</p>`;
   openSheet('info','Werte deiner Rakete',h);
@@ -3898,7 +3903,7 @@ function flightUI(force){
   if(!ob){
     if(V.landed&&V.nc>0||V.mode==='landed')ob=`${V.splashed?'Schwimmt':'Gelandet'} · ${esc(vBiome(V))}`;
     else{const o=vOrbit(V);const ap=o.e<1?apo(o)-B.R:Infinity,pe=peri(o)-B.R;
-      ob=`Ap <b>${isFinite(ap)&&apo(o)<B.soi?fmtDist(ap):'—'}</b> · Pe <b>${fmtDist(pe)}</b>`}
+      ob=`Ap <b>${isFinite(ap)&&apo(o)<B.soi?fmtDist(ap):'—'}</b> · Pe <b>${pe<-B.R*.02?'—':fmtDist(pe)}</b>`}
     const g=nodeGuide();if(g&&F.nodes.length)ob=`Man. <b>${fmtNum(g.rem)} m/s</b>${g.dt>0?' · '+fmtT(g.dt):''}`;
   }
   setHTML('#fOrb',ob);
@@ -4132,7 +4137,7 @@ function flightFrame(dt){
     for(const i of X.d.eng){const q=X.parts[i];if(!(q.fl>0))continue;const t=P[q.t];
       const nP=rho>0?2:1;for(let k=0;k<nP;k++)if(R()<(rho>0?.95:.3)*Math.min(1,q.fl*1.5)){const w=l2w(X,q.x,q.y-pH(q)/2*sgnY(q)-t.w*(.4+R()*.8)),a=X.th+Math.PI+(R()-.5)*.5,sp=(rho>0?10:60)*(.5+R());
         addP({k:rho>0?'smoke':'fire',x:w.x+(X.vx*R()*.016),y:w.y+(X.vy*R()*.016),vx:Math.cos(a)*sp+(rho>0?0:X.vx),vy:Math.sin(a)*sp+(rho>0?0:X.vy),t:0,life:rho>0?1.6+R()*2.4*Math.min(1,rho*2):.4,s:t.w*.3,g:rho>0?t.w*(1+R()):t.w*2,drag:rho>0?.8:0,a0:rho>0?Math.min(.45,.15+rho*.5):.5,col:t.eng.fu==='sf'?'#e2e2e2':'#c4c8d0'})}}
-    if(X.heatMax>120&&R()<.5){const w=l2w(X,X.d.cx,X.d.cy);addP({k:'fire',x:w.x,y:w.y,vx:X.vx*.2,vy:X.vy*.2,t:0,life:.5,s:X.d.bR*.4,g:X.d.bR,a0:.5})}
+    if(X.heatMax>40&&R()<.6){const w=l2w(X,X.d.cx,X.d.cy);addP({k:'fire',x:w.x,y:w.y,vx:X.vx*.2,vy:X.vy*.2,t:0,life:.5,s:X.d.bR*.4,g:X.d.bR,a0:.5})}
   }
   stepParticles(warp<=4?dt*warp:dt);
   if(V){
