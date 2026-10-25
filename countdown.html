@@ -4241,7 +4241,7 @@ function loadWorld(){
   VESSELS=[];
   for(const o of S.vessels){try{VESSELS.push(desV(o))}catch(_){}}
 }
-function saveNow(){
+function saveNow(force){
   if(!S)return;
   if(MODE==='flight'&&WS.act){S.t=WS.t;WS.act.nodes=F.nodes.map(n=>({t:n.t,dp:n.dp,dr:n.dr}));S.act=WS.act.id}
   else if(MODE!=='flight')S.act=null;
@@ -4249,7 +4249,7 @@ function saveNow(){
   S.savedAt=Date.now();
   const js=JSON.stringify(S);
   try{localStorage.setItem(KEYP+S.mode,js)}catch(_){}
-  pushCloud(js);
+  pushCloud(js,force);
   return js;
 }
 function saveSet(){try{localStorage.setItem(SETKEY,JSON.stringify(SET))}catch(_){}}
@@ -4295,14 +4295,18 @@ async function checkUpdate(){
   }catch(_){}
 }
 /* Speichern im Konto, wenn das Spiel als Claude-Artifact läuft */
-let DB=null,USERID=null,cloudBusy=false,cloudAgain=null;
-async function pushCloud(js){
+let DB=null,USERID=null,cloudBusy=false,cloudAgain=null,cloudT=0;
+async function zipStr(js){try{if(window.CompressionStream){const st=new Blob([js]).stream().pipeThrough(new CompressionStream('deflate-raw'));return b64(new Uint8Array(await new Response(st).arrayBuffer()))}}catch(_){}return null}
+async function unzipStr(z){const st=new Blob([unb64(z)]).stream().pipeThrough(new DecompressionStream('deflate-raw'));return await new Response(st).text()}
+/* höchstens alle 30 s ins Konto (und beim Verlassen der Seite) */
+async function pushCloud(js,force){
   if(!DB||!USERID||!S)return;
+  if(!force&&Date.now()-cloudT<30000)return;
   if(cloudBusy){cloudAgain=js;return}
-  cloudBusy=true;
-  try{await DB.doc('data/users/'+USERID+'/countdown-'+S.mode).set({v:1,savedAt:S.savedAt,json:js})}catch(_){}
+  cloudBusy=true;cloudT=Date.now();
+  try{const z=await zipStr(js);await DB.doc('data/users/'+USERID+'/countdown-'+S.mode).set(z?{v:2,savedAt:S.savedAt,z}:{v:1,savedAt:S.savedAt,json:js})}catch(_){}
   cloudBusy=false;
-  if(cloudAgain){const j=cloudAgain;cloudAgain=null;pushCloud(j)}
+  if(cloudAgain){const j=cloudAgain;cloudAgain=null;pushCloud(j,true)}
 }
 async function connectCloud(){
   try{
@@ -4311,9 +4315,9 @@ async function connectCloud(){
     if(!db||!user)return;const uid=await user.id();if(!uid)return;DB=db;USERID=uid;
     for(const m of['karriere','frei']){
       const snap=await db.doc('data/users/'+uid+'/countdown-'+m).get();
-      if(!snap.exists)continue;const d=snap.data();if(!d||!d.json)continue;
+      if(!snap.exists)continue;const d=snap.data();if(!d||!d.json&&!d.z)continue;
       const loc=loadSlot(m);
-      if(!loc||(d.savedAt||0)>(loc.savedAt||0)+1500){try{localStorage.setItem(KEYP+m,d.json)}catch(_){}}
+      if(!loc||(d.savedAt||0)>(loc.savedAt||0)+1500){try{const js=d.z?await unzipStr(d.z):d.json;if(validSave(JSON.parse(js)))localStorage.setItem(KEYP+m,js)}catch(_){}}
     }
     if(MODE==='title')goTitle();
   }catch(_){}
@@ -4343,8 +4347,8 @@ addEventListener('orientationchange',()=>setTimeout(resize,300));
 addEventListener('pageshow',()=>setTimeout(resize,100));
 addEventListener('scroll',()=>{if(scrollX||scrollY)scrollTo(0,0)});
 document.addEventListener('touchmove',e=>{if(!e.target.closest('#sheetBody,#edParts,#edCats,#fChips,textarea'))e.preventDefault()},{passive:false});
-document.addEventListener('visibilitychange',()=>{if(document.hidden){for(const k in HOLD)HOLD[k]=0;saveNow()}else checkUpdate()});
-addEventListener('pagehide',()=>saveNow());
+document.addEventListener('visibilitychange',()=>{if(document.hidden){for(const k in HOLD)HOLD[k]=0;saveNow(true)}else checkUpdate()});
+addEventListener('pagehide',()=>saveNow(true));
 /* Leinwand-Eingaben je Bildschirm */
 let cvDn=null;
 cv.addEventListener('pointerdown',e=>{audioUnlock();try{cv.setPointerCapture(e.pointerId)}catch(_){}
