@@ -370,7 +370,7 @@ textarea{min-height:90px;font:12px ui-monospace,monospace;resize:vertical}
    12. Speichern, Cloud, Selbst-Update, Hauptschleife
    Der Teil zwischen LOGIK-ANFANG und LOGIK-ENDE kommt ohne DOM aus (tools/countdown-sim.mjs nutzt ihn).
    ===================================================================== */
-const BUILD='2026.10.25-1';
+const BUILD='2026.10.26-1';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const dc=(v,n)=>v.toFixed(n).replace('.',',');
@@ -3023,8 +3023,14 @@ function bldRow(k){
   return`<div class="row"><div class="rt"><b>${B.n} · Stufe ${l}</b><small>Jetzt: ${now}<br>Stufe ${l+1}: ${nx}</small></div>
     <button class="btn ${S.money>=k2?'acc':''} sm" data-a="upg" data-v="${k}" ${S.money>=k2?'':'disabled'}>Ausbauen<br>${fmtM(k2)}</button></div>`;
 }
-ACT.upg=k=>{if(upgrade(k)){sfx('buy');toast(BLD[k].n+' ausgebaut!','good');ICONS.clear();({lab:openLab,mc:openMC,ac:openAC,ts:openTS,vab:()=>openBld('vab'),pad:openPad})[k]();hubUI();saveNow()}};
-function openBld(k){openSheet('bld',BLD[k].n,bldRow(k))}
+ACT.upg=k=>{if(!upgrade(k))return;sfx('buy');toast(BLD[k].n+' ausgebaut!','good');ICONS.clear();
+  if(SH.kind==='info')ACT.edInfo();else if(SH.kind==='bld')openBld(k);else({lab:openLab,mc:openMC,ac:openAC,ts:openTS,pad:openPad})[k]();
+  if(MODE==='edit')statsUI();else hubUI();saveNow()};
+function openBld(k){
+  let h=bldRow(k);
+  if(k==='vab')h+=`<p>In der Montagehalle baust du deine Raketen. Je höher die Stufe, desto mehr Teile darf eine Rakete haben.</p><div class="btns"><button class="btn acc big" data-a="vab">Montagehalle betreten</button></div>`;
+  openSheet('bld',BLD[k].n,h);
+}
 
 /* ---------- Forschungslabor ---------- */
 ACT.lab=()=>openLab();
@@ -3157,13 +3163,14 @@ function showRecovery(r,V){
 /* =====================================================================
    11. OBERFLÄCHE – Teil 3: Montagehalle
    ===================================================================== */
-const E={cx:0,cy:0,z:30,cat:'cmd',sel:-1,drag:null,sym:1,hist:[],ptr:new Map(),pinch:null,cand:null,top:120,bot:300,vy:300,stats:null,dirty:true};
+const E={cx:0,cy:0,z:30,cat:'cmd',sel:-1,lsel:-1,drag:null,sym:1,hist:[],ptr:new Map(),pinch:null,cand:null,top:120,bot:300,vy:300,stats:null,dirty:true};
 const D=()=>S.cur;
+const LO=()=>D().loose||(D().loose=[]);           // lose Teile in der Halle (fliegen nicht mit)
 function goEdit(){
   if(MODE==='flight')leaveFlight();
   MODE='edit';show('ed');closeSheet();
   if(!S.cur)S.cur={n:'Rakete 1',parts:[]};
-  E.sel=-1;E.drag=null;E.hist=[];buildCats();buildPal();edLayout();edFit();edChanged(true);
+  E.sel=-1;E.lsel=-1;E.drag=null;E.hist=[];buildCats();buildPal();edLayout();edFit();edChanged(true);
   tip('edit');
 }
 ACT.edBack=()=>{saveNow();goHub()};
@@ -3172,7 +3179,7 @@ const d2s=(x,y,o)=>{o=o||{};o.x=VW/2+(x-E.cx)*E.z;o.y=E.vy-(y-E.cy)*E.z;return o
 const s2d=(x,y)=>({x:E.cx+(x-VW/2)/E.z,y:E.cy-(y-E.vy)/E.z});
 function bbox(ps){let a=1e9,b=-1e9,c=1e9,d=-1e9;for(const q of ps){const t=P[q.t];a=Math.min(a,q.x-t.w/2);b=Math.max(b,q.x+t.w/2);c=Math.min(c,q.y-t.h/2);d=Math.max(d,q.y+t.h/2)}return{x0:a,x1:b,y0:c,y1:d}}
 function edFit(){
-  const ps=D().parts;edLayout();
+  const ps=D().parts.concat(...LO());edLayout();
   if(!ps.length){E.cx=0;E.cy=0;E.z=48;return}
   const b=bbox(ps),bw=Math.max(2,b.x1-b.x0),bh=Math.max(2,b.y1-b.y0);
   E.z=clamp(Math.min((VW-110)/bw,(E.bot-E.top-40)/bh),3,70);E.cx=(b.x0+b.x1)/2;E.cy=(b.y0+b.y1)/2;
@@ -3210,12 +3217,20 @@ document.addEventListener('pointerup',e=>{
 document.addEventListener('pointercancel',e=>{if(palDn&&e.pointerId===palDn.id)palDn=null;if(E.drag&&e.pointerId===E.drag.pid){E.drag=null;setCls('#edTrash','on',false)}});
 
 /* ---------- Bauplan-Werkzeuge ---------- */
-function snap(){return JSON.stringify(D().parts)}
+function snap(){return JSON.stringify({p:D().parts,l:LO()})}
 function pushHist(){E.hist.push(snap());if(E.hist.length>40)E.hist.shift()}
-ACT.undo=()=>{const h=E.hist.pop();if(!h){toast('Nichts zum Rückgängigmachen');return}D().parts=JSON.parse(h);E.sel=-1;edChanged()};
+ACT.undo=()=>{const h=E.hist.pop();if(!h){toast('Nichts zum Rückgängigmachen');return}const o=JSON.parse(h);if(Array.isArray(o)){D().parts=o}else{D().parts=o.p;D().loose=o.l}E.sel=-1;E.lsel=-1;edChanged()};
+/* Teil i samt allem, was daran hängt, aus einer Teile-Liste herauslösen → {sub, rest} */
+function cutFrom(arr,i){
+  const kids=kidsOf(arr),idx=subtree(kids,i),inS=new Set(idx),m1=new Map(idx.map((j,k)=>[j,k]));
+  const sub=idx.map((j,k)=>{const q=Object.assign({},arr[j]);q.p=k===0?-1:m1.get(q.p);q.sy=-1;if(k===0){q.a=q.n=undefined}return q});
+  const keep=[],m2=new Map();arr.forEach((q,j)=>{if(!inS.has(j)){m2.set(j,keep.length);keep.push(Object.assign({},q))}});
+  for(const q of keep){if(q.p>=0)q.p=m2.has(q.p)?m2.get(q.p):-1;q.sy=-1}
+  return{sub,rest:keep};
+}
 ACT.sym=()=>{E.sym=E.sym===1?2:1;setTxt('#bSym',E.sym+'×');toast(E.sym===2?'Spiegeln an: seitliche Teile kommen paarweise':'Spiegeln aus')};
-ACT.edNew=(v,b)=>{if(D().parts.length&&b.dataset.sure!=='1'){b.dataset.sure='1';toast('Nochmal tippen: alles abreißen und neu anfangen');setTimeout(()=>{b.dataset.sure=''},2500);return}
-  pushHist();S.cur={n:nextName(),parts:[]};E.sel=-1;edChanged(true);edFit()};
+ACT.edNew=(v,b)=>{if((D().parts.length||LO().length)&&b.dataset.sure!=='1'){b.dataset.sure='1';toast('Nochmal tippen: alles abreißen und neu anfangen');setTimeout(()=>{b.dataset.sure=''},2500);return}
+  pushHist();S.cur={n:nextName(),parts:[]};E.sel=-1;E.lsel=-1;edChanged(true);edFit()};
 function nextName(){let i=1;const n=new Set([S.cur&&S.cur.n,...S.designs.map(d=>d.n)]);while(n.has('Rakete '+i))i++;return'Rakete '+i}
 function partHalfW(q,y){
   const t=P[q.t],f=clamp((y-(q.y-t.h/2))/t.h,0,1);
@@ -3349,10 +3364,20 @@ function startPartDrag(i,sx,sy,pid){
   pushHist();
   const q=ps[i],sub=cutSub(i),tw=q.sy;
   const p0=s2d(sx,sy);
-  E.drag={sub,sx,sy,pid,isNew:false,offX:q.x-p0.x,offY:q.y-p0.y,snapC:null};
-  const rem=[i];if(tw!==undefined&&tw>=0&&tw<ps.length)rem.push(tw);
+  const hasTw=tw!==undefined&&tw>=0&&tw<ps.length;
+  E.drag={sub,sx,sy,pid,isNew:false,offX:q.x-p0.x,offY:q.y-p0.y,snapC:null,twin:hasTw?cutSub(tw):null,mirror:hasTw};
+  const rem=[i];if(hasTw)rem.push(tw);
   removeIdx(rem);E.sel=-1;edChanged(true);
   setCls('#edTrash','on',true);dragSnap();return true;
+}
+/* lose Teile aufnehmen */
+function startLooseDrag(h,sx,sy,pid){
+  pushHist();
+  const L=LO(),grp=L[h.g],q=grp[h.i],r=cutFrom(grp,h.i);
+  if(r.rest.length)L[h.g]=r.rest;else L.splice(h.g,1);
+  const p0=s2d(sx,sy);
+  E.drag={sub:r.sub,sx,sy,pid,isNew:false,offX:q.x-p0.x,offY:q.y-p0.y,snapC:null};
+  E.sel=-1;E.lsel=-1;selUI();setCls('#edTrash','on',true);dragSnap();
 }
 function dragSnap(){
   const g=E.drag;if(!g)return;
@@ -3373,13 +3398,19 @@ function dragSnap(){
 function dropDrag(){
   const g=E.drag;E.drag=null;setCls('#edTrash','on',false);
   if(!g)return;
-  const trash=g.sy>E.bot-10;
-  if(trash||!g.snapC){if(!g.isNew){toast(trash?'Entfernt':'Hier passt es nicht dran – entfernt',trash?'':'bad')}else if(!trash)toast('Zieh das Teil an einen freien Anschluss','bad');edChanged();return}
+  const trash=g.sy>E.bot-10,root=g.sub[0];
+  if(trash){if(!g.isNew)toast('Entfernt');edChanged();return}
+  if(!g.snapC){
+    if(g.isNew){toast('Zieh das Teil an einen freien Anschluss','bad');return}
+    // nichts in der Nähe: lose in der Halle ablegen, damit nichts verloren geht
+    const dx=g.fx-root.x,dy=g.fy-root.y;LO().push(g.sub.map(q=>Object.assign({},q,{x:q.x+dx,y:q.y+dy,sy:-1})));
+    if(g.twin)LO().push(g.twin.map(q=>Object.assign({},q,{sy:-1})));
+    toast('Lose abgelegt – zieh es wieder an einen Anschluss. Zum Löschen unten auf die Teileleiste ziehen.');edChanged();sfx('click');return}
   if(g.isNew)pushHist();
-  const c=g.snapC,root=g.sub[0];
-  if(c.free){addSub(g.sub,-1,undefined,undefined,c.x-root.x,c.y-root.y);E.sel=0;edChanged(true);sfx('stage');return}
-  if(c.k==='s'){const b=addSub(g.sub,c.i,c.a,c.n,c.x-root.x,c.y-root.y);E.sel=b;twinCopy(c.i,b);edChanged();sfx('stage');return}
-  placeSide(g.sub,c.i,c.y,c.side<0?D().parts[c.i].x-1:D().parts[c.i].x+1,E.sym===2);sfx('stage');
+  const c=g.snapC;
+  if(c.free){addSub(g.sub,-1,undefined,undefined,c.x-root.x,c.y-root.y);E.sel=0;if(g.twin)LO().push(g.twin);edChanged(true);sfx('stage');return}
+  if(c.k==='s'){const b=addSub(g.sub,c.i,c.a,c.n,c.x-root.x,c.y-root.y);E.sel=b;const tw=D().parts[c.i].sy;if(tw!==undefined&&tw>=0)twinCopy(c.i,b);else if(g.twin)LO().push(g.twin);edChanged();sfx('stage');return}
+  placeSide(g.sub,c.i,c.y,c.side<0?D().parts[c.i].x-1:D().parts[c.i].x+1,E.sym===2||g.mirror);sfx('stage');
 }
 /* ---------- Leinwand-Gesten ---------- */
 function edPointer(e,kind){
@@ -3388,20 +3419,29 @@ function edPointer(e,kind){
     E.ptr.set(e.pointerId,{x,y});
     if(E.ptr.size===2){const[a,b]=[...E.ptr.values()];E.pinch={d:Math.hypot(a.x-b.x,a.y-b.y),z:E.z,mx:(a.x+b.x)/2,my:(a.y+b.y)/2,cx:E.cx,cy:E.cy};E.cand=null;return}
     if(y>E.bot)return;
-    const hit=edHit(x,y);
-    E.cand={i:hit,x,y,pid:e.pointerId,cx:E.cx,cy:E.cy,moved:false};
+    const hit=edHit(x,y),lh=hit<0?looseHit(x,y):null;
+    E.cand={i:hit,lh,x,y,pid:e.pointerId,cx:E.cx,cy:E.cy,moved:false};
   }else if(kind==='move'){
     if(!E.ptr.has(e.pointerId))return;E.ptr.set(e.pointerId,{x,y});
     if(E.pinch&&E.ptr.size>=2){const[a,b]=[...E.ptr.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);E.z=clamp(E.pinch.z*d/E.pinch.d,2,90);
       const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;E.cx=E.pinch.cx-(mx-E.pinch.mx)/E.z;E.cy=E.pinch.cy+(my-E.pinch.my)/E.z;return}
     const c=E.cand;if(!c||c.pid!==e.pointerId||E.drag)return;
-    if(!c.moved&&Math.hypot(x-c.x,y-c.y)>10){c.moved=true;if(c.i>=0&&startPartDrag(c.i,x,y,e.pointerId)){E.cand=null;return}}
+    if(!c.moved&&Math.hypot(x-c.x,y-c.y)>10){c.moved=true;if(c.i>=0&&startPartDrag(c.i,x,y,e.pointerId)){E.cand=null;return}
+      if(c.lh){startLooseDrag(c.lh,x,y,e.pointerId);E.cand=null;return}}
     if(c.moved){E.cx=c.cx-(x-c.x)/E.z;E.cy=c.cy+(y-c.y)/E.z}
   }else{
     E.ptr.delete(e.pointerId);if(E.ptr.size<2)E.pinch=null;
     const c=E.cand;E.cand=null;
-    if(c&&c.pid===e.pointerId&&!c.moved){E.sel=c.i===E.sel?-1:c.i;selUI();if(E.sel>=0)sfx('click')}
+    if(c&&c.pid===e.pointerId&&!c.moved){
+      if(c.lh){E.sel=-1;E.lsel=E.lsel===c.lh.g?-1:c.lh.g;selUI();sfx('click');return}
+      E.lsel=-1;E.sel=c.i===E.sel?-1:c.i;selUI();if(E.sel>=0)sfx('click')}
   }
+}
+function looseHit(x,y){
+  const p=s2d(x,y),L=LO();let best=null,ba=1e9;
+  L.forEach((grp,g)=>grp.forEach((q,i)=>{const t=P[q.t],m=Math.max(.2,12/E.z);
+    if(Math.abs(p.x-q.x)<=t.w/2+m&&Math.abs(p.y-q.y)<=t.h/2+m){const a=t.w*t.h;if(a<ba){ba=a;best={g,i}}}}));
+  return best;
 }
 function edHit(x,y){
   const ps=D().parts,p=s2d(x,y);let best=-1,ba=1e9;
@@ -3414,6 +3454,7 @@ function edChanged(){
   const d=D();
   if(d.parts.length)autoStage(d,!!d.ms);
   if(E.sel>=d.parts.length)E.sel=-1;
+  if(E.lsel>=LO().length)E.lsel=-1;
   // Crew automatisch in die erste Kapsel
   assignDefaultCrew(d);
   E.stats=designStats(d,G0);
@@ -3444,6 +3485,11 @@ function statsUI(){
 /* ---------- Auswahl-Leiste ---------- */
 function selUI(){
   const el=$('#edSel'),ps=D().parts,i=E.sel;
+  const L=LO();if(E.lsel>=L.length)E.lsel=-1;
+  if(i<0&&E.lsel>=0){const grp=L[E.lsel],names=[...new Set(grp.map(q=>P[q.t].n))].join(', ');
+    el.innerHTML=`<div class="nm">Lose Teile <span class="tag">${grp.length}</span></div><div class="ds">${esc(names)}<br>Fliegen nicht mit. Zieh sie an einen freien Anschluss der Rakete – oder lösche sie.</div>
+      <div class="row2"><button class="red" data-a="delL">🗑 Löschen</button><button data-a="desel">✕</button></div>`;
+    el.style.bottom=($('#edPal').offsetHeight+6)+'px';el.classList.add('on');return}
   if(i<0||!ps[i]){el.classList.remove('on');return}
   const q=ps[i],t=P[q.t];
   let info=[];
@@ -3459,7 +3505,8 @@ function selUI(){
   el.style.bottom=($('#edPal').offsetHeight+6)+'px';
   el.classList.add('on');
 }
-ACT.desel=()=>{E.sel=-1;selUI()};
+ACT.desel=()=>{E.sel=-1;E.lsel=-1;selUI()};
+ACT.delL=()=>{const L=LO();if(E.lsel<0||!L[E.lsel])return;pushHist();L.splice(E.lsel,1);E.lsel=-1;selUI();sfx('pop')};
 ACT.delP=()=>{const ps=D().parts,i=E.sel;if(i<0)return;pushHist();const rem=[i];if(ps[i].sy>=0)rem.push(ps[i].sy);removeIdx(rem);E.sel=-1;edChanged();sfx('pop')};
 ACT.stgM=v=>{const ps=D().parts,q=ps[E.sel];if(!q)return;pushHist();D().ms=1;const tw=q.sy;q.s=Math.max(0,q.s+(+v));if(tw>=0&&ps[tw])ps[tw].s=q.s;edChanged()};
 /* ---------- Stufen ---------- */
@@ -3489,7 +3536,7 @@ ACT.edInfo=()=>{
   for(let s=0;s<st.stages.length;s++){const x=st.stages[s];if(!x)continue;h+=`<tr><td>${s+1}</td><td>${fmtNum(x.dv)}</td><td>${fmtNum(x.dvA||0)}</td><td>${dc(x.twrA||0,2)}</td><td>${Math.round(x.t)} s</td></tr>`}
   h+=`</table><p>Ungefähr nötig: Umlaufbahn um Murmel ≈ 2.600 m/s · ab dort Knopf landen und zurück ≈ +1.800 m/s · Brösel ≈ +1.500 m/s · Flug zu Rosto oder Dunstia ≈ +800 m/s.</p>
     <p>TWR (Schub zu Gewicht) muss beim Start über 1 liegen, besser 1,4 bis 2.</p>
-    <p>Grenzen: ${bldV('vab')} Teile (Montagehalle), ${fmtNum(bldV('pad'))} t (Startrampe).</p>`;
+    <h4>Grenzen</h4>`+bldRow('vab')+bldRow('pad');
   openSheet('info','Werte deiner Rakete',h);
 };
 /* ---------- Farbe ---------- */
@@ -3538,7 +3585,7 @@ function openFiles(){
 ACT.fSave=()=>{const d=JSON.parse(JSON.stringify(D()));const i=S.designs.findIndex(x=>x.n===d.n);if(i>=0)S.designs[i]=d;else S.designs.unshift(d);toast('Gespeichert','good');openFiles();saveNow()};
 ACT.fLoad=i=>{const d=S.designs[+i];if(!d)return;pushHist();S.cur=JSON.parse(JSON.stringify(d));
   for(const q of S.cur.parts)if(!partOK(q.t)){toast('Achtung: Diese Rakete enthält noch nicht erforschte Teile','bad');break}
-  closeSheet();E.sel=-1;edChanged(true);edFit()};
+  closeSheet();E.sel=-1;E.lsel=-1;edChanged(true);edFit()};
 ACT.fDel=(i,b)=>{if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='Sicher?';return}S.designs.splice(+i,1);openFiles();saveNow()};
 
 /* ---------- Zeichnen ---------- */
@@ -3560,6 +3607,8 @@ function drawEditor(c){
     drawPart(c,Object.assign({r:Object.assign({},P[q.t].res||{}),T:290,uid:1,dep:P[q.t].leg?.6:0},q,{crew:q.crew||[]}),o);c.restore()}c.globalAlpha=1;
     if(tint){for(const q of arr){const t=P[q.t],s=d2s(q.x+dx-t.w/2,q.y+dy+t.h/2);c.fillStyle=tint;c.fillRect(s.x,s.y,t.w*E.z,t.h*E.z)}}};
   drawSet(ps,1,0,0);
+  // lose Teile halb durchsichtig, gestrichelt umrandet
+  LO().forEach((grp,g)=>{drawSet(grp,.55,0,0);const b=bbox(grp),a=d2s(b.x0,b.y1),z=d2s(b.x1,b.y0);c.setLineDash([5,5]);c.strokeStyle=g===E.lsel?'#5ce1ff':'rgba(255,210,122,.6)';c.lineWidth=g===E.lsel?2.5:1.5;c.strokeRect(a.x-4,a.y-4,z.x-a.x+8,z.y-a.y+8);c.setLineDash([])});
   // Auswahl
   if(E.sel>=0&&ps[E.sel]){const q=ps[E.sel],t=P[q.t],s=d2s(q.x-t.w/2,q.y+t.h/2);c.strokeStyle='#5ce1ff';c.lineWidth=2.5;c.setLineDash([6,4]);c.strokeRect(s.x-3,s.y-3,t.w*E.z+6,t.h*E.z+6);c.setLineDash([]);
     if(q.sy>=0&&ps[q.sy]){const w=ps[q.sy],s2=d2s(w.x-t.w/2,w.y+t.h/2);c.strokeStyle='rgba(92,225,255,.5)';c.strokeRect(s2.x-3,s2.y-3,t.w*E.z+6,t.h*E.z+6)}}
@@ -4005,8 +4054,9 @@ function openSci(){
   let h=`<p>Situation: <b>${esc(SITN[sit])}</b> ${['boden','wasser','tief'].includes(sit)?'· '+esc(vBiome(V)):''} bei ${esc(vB(V).n)}</p>`;
   if(!xs.length)h+='<p>Keine Experimente an Bord. Baue Messgeräte (Kategorie „Technik“) an deine Rakete.</p>';
   xs.forEach((x,k)=>{const v=x.s?subjLeft(x.s):0;
-    h+=`<div class="row"><div class="rt"><b>${esc(EXP[x.e].n)}</b><small>${x.s?(x.have?'Daten schon an Bord':x.used?'schon benutzt':'bringt etwa 🔬 '+fmtSci(v)):'hier nicht möglich'}</small></div>
-      ${x.s&&!x.used&&!x.have&&v>.05?`<button class="btn cy sm" data-a="sciRun" data-v="${k}">Messen</button>`:''}</div>`});
+    const done=v<=.05,forCon=x.s&&S.con.act.some(c=>c.k==='sci'&&c.p.e===x.e&&c.b===V.body&&sciKey(c.p.s)===sciKey(sit));
+    h+=`<div class="row${forCon?' hi':''}"><div class="rt"><b>${esc(EXP[x.e].n)}</b><small>${x.s?(x.have?'Daten schon an Bord':x.used?'schon benutzt':done?'schon erforscht – bringt keine Punkte mehr, zählt aber für Aufträge':'bringt etwa 🔬 '+fmtSci(v)):'hier nicht möglich'}${forCon?' · <b style="color:var(--acc2)">für deinen Auftrag</b>':''}</small></div>
+      ${x.s&&!x.used&&!x.have?`<button class="btn cy sm" data-a="sciRun" data-v="${k}">Messen</button>`:''}</div>`});
   if(V.data.length){const cs=canSend(V);
     h+=`<h4>Daten an Bord</h4>`+V.data.map((d,i)=>`<div class="row"><div class="rt"><b>${esc(d.n)}</b><small>heimbringen: 🔬 ${fmtSci(dataValue(d,false))} · senden: 🔬 ${fmtSci(dataValue(d,true))}</small></div>
       ${cs?'':`<button class="btn sm" data-a="sciSend" data-v="${i}">Senden</button>`}</div>`).join('')+(cs?`<p>${esc(cs)}</p>`:'');}
@@ -4355,7 +4405,7 @@ cv.addEventListener('pointerdown',e=>{audioUnlock();try{cv.setPointerCapture(e.p
   if(MODE==='edit')edPointer(e,'down');else if(MODE==='flight')flPointer(e,'down');else cvDn={x:e.clientX,y:e.clientY,t:performance.now()}});
 cv.addEventListener('pointermove',e=>{if(MODE==='edit')edPointer(e,'move');else if(MODE==='flight')flPointer(e,'move')});
 const cvUp=e=>{if(MODE==='edit')edPointer(e,'up');else if(MODE==='flight')flPointer(e,'up');
-  else if(MODE==='hub'&&cvDn&&e.type==='pointerup'&&Math.hypot(e.clientX-cvDn.x,e.clientY-cvDn.y)<12&&!sheetOpen()){const k=hubHit(e.clientX,e.clientY);if(k&&ACT[k]){sfx('click');ACT[k]()}}
+  else if(MODE==='hub'&&cvDn&&e.type==='pointerup'&&Math.hypot(e.clientX-cvDn.x,e.clientY-cvDn.y)<12&&!sheetOpen()){const k=hubHit(e.clientX,e.clientY);if(k==='vab'){sfx('click');openBld('vab')}else if(k&&ACT[k]){sfx('click');ACT[k]()}}
   cvDn=null};
 cv.addEventListener('pointerup',cvUp);cv.addEventListener('pointercancel',cvUp);
 cv.addEventListener('wheel',e=>{if(MODE==='flight')flWheel(e);else if(MODE==='edit'){E.z=clamp(E.z*Math.exp(-e.deltaY*.0015),2,90)}e.preventDefault()},{passive:false});
