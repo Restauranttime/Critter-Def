@@ -370,7 +370,7 @@ textarea{min-height:90px;font:12px ui-monospace,monospace;resize:vertical}
    12. Speichern, Cloud, Selbst-Update, Hauptschleife
    Der Teil zwischen LOGIK-ANFANG und LOGIK-ENDE kommt ohne DOM aus (tools/countdown-sim.mjs nutzt ihn).
    ===================================================================== */
-const BUILD='2026.10.26-1';
+const BUILD='2026.10.26-2';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const dc=(v,n)=>v.toFixed(n).replace('.',',');
@@ -724,76 +724,98 @@ function bodyIn(b,f,t,o){
 
 function orbitFrom(mu,x,y,vx,vy,t){
   const r=Math.hypot(x,y),v2=vx*vx+vy*vy,h=x*vy-y*vx,rv=x*vx+y*vy;
-  const en=v2/2-mu/r;
+  let en=v2/2-mu/r;
   const o={mu,s:h>=0?1:-1,h:Math.abs(h)};
   o.p=h*h/mu;
-  o.a=Math.abs(en)<1e-12?1e30:-mu/(2*en);
+  // fast Parabel: Energie minimal verschieben, damit a endlich bleibt (p passend dazu, sonst stimmt die Lage nicht mehr)
+  const emin=1e-8*mu/r;if(Math.abs(en)<emin){en=en<0?-emin:emin;o.a=-mu/(2*en);o.p=Math.max(0,2*r-rv*rv/mu-r*r/o.a)}
+  o.a=-mu/(2*en);
   let e=Math.sqrt(Math.max(0,1-o.p/o.a));
-  if(o.a>1e29){e=1+1e-7;o.a=o.p/(1-e*e)}          // Parabel → knapp Hyperbel
-  else if(o.a>0)e=Math.min(e,1-1e-7);else e=Math.max(e,1+1e-7);
-  // Richtung der Periapsis
-  const ex=((v2-mu/r)*x-rv*vx)/mu,ey=((v2-mu/r)*y-rv*vy)/mu;
-  if(e<1e-7){e=0;o.w=Math.atan2(y,x)}else o.w=Math.atan2(ey,ex);
-  o.e=e;
+  if(o.a>0)e=Math.min(e,1-1e-15);else e=Math.max(e,1+1e-15);   // genau senkrecht: e knapp neben 1 (Ellipse bleibt Ellipse)
   o.n=Math.sqrt(mu/Math.pow(Math.abs(o.a),3));
-  const nu=wrapA(o.s*(Math.atan2(y,x)-o.w));
-  o.tp=t-meanFromNu(o,nu)/o.n;
+  const an=Math.atan2(y,x);
+  if(e<1e-7){o.e=0;o.w=an;o.tp=t;return o}
+  o.e=e;
+  // Anomalie aus Abstand und Radialgeschwindigkeit: bleibt auch bei fast senkrechten Bahnen (e ≈ 1) genau
+  const c=(1-r/o.a)/e,sn=rv/(Math.sqrt(mu*Math.abs(o.a))*e);
+  let E,M;
+  if(e<1){E=Math.atan2(sn,c);M=E-e*Math.sin(E)}else{E=Math.asinh(sn);M=e*Math.sinh(E)-E}
+  const q=perifocal(o,E,{});
+  o.w=an-o.s*Math.atan2(q.y,q.x);
+  o.tp=t-M/o.n;
   return o;
 }
-function meanFromNu(o,nu){
-  const e=o.e;
-  if(e<1){const E=2*Math.atan2(Math.sqrt(1-e)*Math.sin(nu/2),Math.sqrt(1+e)*Math.cos(nu/2));return E-e*Math.sin(E)}
-  const lim=Math.acos(-1/e)-1e-9;nu=clamp(nu,-lim,lim);
-  const H=2*Math.atanh(Math.sqrt((e-1)/(e+1))*Math.tan(nu/2));
-  return e*Math.sinh(H)-H;
-}
-function nuFromMean(o,M){
-  const e=o.e;
+/* Exzentrische Anomalie E (Ellipse) bzw. hyperbolische Anomalie H zur Zeit t */
+function anomAt(o,t){
+  const e=o.e;let M=o.n*(t-o.tp);
   if(e<1){
-    M=wrapA(M);
+    if(M>Math.PI||M<-Math.PI)M=wrapA(M);          // nur wenn nötig: wrapA kostet bei kleinem M Genauigkeit
     let E=e<.8?M:(M<0?-Math.PI:Math.PI);
-    for(let i=0;i<40;i++){const d=(E-e*Math.sin(E)-M)/(1-e*Math.cos(E));E-=d;if(Math.abs(d)<1e-13)break}
-    return 2*Math.atan2(Math.sqrt(1+e)*Math.sin(E/2),Math.sqrt(1-e)*Math.cos(E/2));
+    for(let i=0;i<60;i++){const d=(E-e*Math.sin(E)-M)/(1-e*Math.cos(E));E-=d;if(!(Math.abs(d)>1e-13))break}
+    return E;
   }
-  let H=M===0?0:Math.sign(M)*Math.log(2*Math.abs(M)/e+1.8);
-  for(let i=0;i<60;i++){const d=(e*Math.sinh(H)-H-M)/(e*Math.cosh(H)-1);H-=d;if(Math.abs(d)<1e-12)break}
-  return 2*Math.atan(Math.sqrt((e+1)/(e-1))*Math.tanh(H/2));
+  if(M===0)return 0;
+  // Startwert oberhalb der Lösung → Newton läuft sicher von oben heran
+  const m=Math.abs(M);let H=Math.cbrt(6*m);if(m>3)H=Math.min(H,Math.asinh(2*m/e));
+  for(let i=0;i<100;i++){const d=(e*Math.sinh(H)-H-m)/(e*Math.cosh(H)-1);H-=d;if(!(Math.abs(d)>1e-13*Math.max(1,H)))break}
+  return M<0?-H:H;
 }
+/* Lage und Tempo im Bahnsystem (x zur Periapsis) zur Anomalie E; out.r = Abstand */
+function perifocal(o,E,out){
+  const e=o.e,A=Math.abs(o.a),k=Math.sqrt(o.mu*A),b=Math.sqrt(o.p*A);   // b = kleine Halbachse (genau, auch bei e ≈ 1)
+  let c,s,r;
+  if(e<1){c=Math.cos(E);s=Math.sin(E);r=A*(1-e*c);out.x=A*(c-e)}
+  else{c=Math.cosh(E);s=Math.sinh(E);r=A*(e*c-1);out.x=A*(e-c)}
+  out.y=b*s;out.vx=-k*s/r;out.vy=b*Math.sqrt(o.mu/A)*c/r;out.r=r;
+  return out;
+}
+function stateE(o,E,out){
+  const q=perifocal(o,E,{}),cw=Math.cos(o.w),sw=Math.sin(o.w),y=o.s*q.y,vy=o.s*q.vy;
+  out.x=q.x*cw-y*sw;out.y=q.x*sw+y*cw;out.vx=q.vx*cw-vy*sw;out.vy=q.vx*sw+vy*cw;out.r=q.r;
+  return out;
+}
+/* mittlere Anomalie zur Anomalie E */
+const meanFromE=(o,E)=>o.e<1?E-o.e*Math.sin(E):o.e*Math.sinh(E)-E;
 const period=o=>o.e<1?TAU/o.n:Infinity;
 const apo=o=>o.e<1?o.a*(1+o.e):Infinity;
 const peri=o=>o.p/(1+o.e);
-const radAt=(o,nu)=>o.p/(1+o.e*Math.cos(nu));
-/* Zustand zur Wahren Anomalie nu */
-function stateNu(o,nu,out){
-  const r=radAt(o,nu),ph=o.w+o.s*nu,c=Math.cos(ph),s=Math.sin(ph),k=Math.sqrt(o.mu/o.p);
-  const vr=k*o.e*Math.sin(nu),vt=k*(1+o.e*Math.cos(nu));
-  out.x=r*c;out.y=r*s;out.vx=vr*c-o.s*vt*s;out.vy=vr*s+o.s*vt*c;out.nu=nu;out.r=r;return out;
+function orbitAt(o,t,out){return stateE(o,anomAt(o,t),out)}
+/* Anomalie, bei der die Bahn den Abstand r hat (out=true nach außen, sonst nach innen) */
+function anomAtR(o,r,out){
+  const c=(1-r/o.a)/o.e;
+  const E=o.e<1?Math.acos(clamp(c,-1,1)):Math.acosh(Math.max(1,c));
+  return out?E:-E;
 }
-function orbitAt(o,t,out){return stateNu(o,nuFromMean(o,o.n*(t-o.tp)),out)}
 /* nächste Zeit ab t0, zu der die Bahn den Abstand r erreicht (out=true nach außen, sonst nach innen) */
 function timeToR(o,r,t0,out){
   const pe=peri(o);if(r<pe)return Infinity;
   if(o.e<1&&r>apo(o))return Infinity;
   if(o.e<1e-9)return Infinity;
-  const c=clamp((o.p/r-1)/o.e,-1,1),nu=Math.acos(c)*(out?1:-1);
-  let tt=o.tp+meanFromNu(o,nu)/o.n;
-  if(o.e<1){const T=period(o);tt=t0+(((tt-t0)%T)+T)%T;return tt}
+  let tt=o.tp+meanFromE(o,anomAtR(o,r,out))/o.n;
+  if(o.e<1){const T=period(o);let d=tt-t0;if(d<0||d>=T)d=((d%T)+T)%T;return t0+d}   // ohne Umweg über T: bei riesigen Umlaufzeiten sonst ungenau
   return tt>=t0?tt:Infinity;
 }
 /* Nächstes Ereignis einer Bahn um Körper b: Verlassen der Einflusssphäre, Eintritt bei einem Mond, Lufthülle/Boden */
 function nextEvent(b,o,t0,tMax){
   let best={t:tMax,k:'none'};
+  const s0=orbitAt(o,t0,{}),r0=Math.hypot(s0.x,s0.y),rv0=s0.x*s0.vx+s0.y*s0.vy;
+  // schon draußen (sollte nicht vorkommen): sofort wechseln statt endlos weiterzufliegen
+  if(b.par&&r0>b.soi*1.001)return{t:t0,k:'exit'};
   // Boden oder Lufthülle
   const top=b.R+Math.max(b.ah,b.hmax+(b.ah?0:500));
-  if(peri(o)<top){const tt=timeToR(o,top,t0,false);if(tt<best.t)best={t:tt,k:b.ah?'atmo':'ground'}}
+  if(peri(o)<top){
+    // schon darunter und es geht nicht mehr hinauf: sofort
+    if(r0<top&&(rv0<=0||apo(o)<top))return{t:t0,k:b.ah?'atmo':'ground'};
+    const tt=timeToR(o,top,t0,false);if(tt<best.t)best={t:tt,k:b.ah?'atmo':'ground'}}
   if(b.par&&(o.e>=1||apo(o)>b.soi)){const tt=timeToR(o,b.soi,t0,true);if(tt<best.t)best={t:tt,k:'exit'}}
   const pe=peri(o),ap=apo(o);
   const vmax=Math.sqrt(o.mu*(2/Math.max(pe,1)-1/o.a));
   const st={},cs={};
   for(const c of b.kids){
     if(pe>c.a+c.soi||ap<c.a-c.soi)continue;
-    let t=t0,tp=t0,n=0;const end=best.t,minS=Math.max(1,(end-t0)/3000);
-    while(t<end&&n<4000){
+    // kleinster Schritt: höchstens ein Viertel der Zeit, die man zum Durchqueren der Einflusssphäre braucht
+    let t=t0,tp=t0,n=0;const end=best.t,minS=Math.max(1,Math.min((end-t0)/3000,.25*c.soi/(vmax+c.v)));
+    while(t<end&&n<8000){
       n++;orbitAt(o,t,st);bodyRel(c,t,cs);
       const d=Math.hypot(st.x-cs.x,st.y-cs.y)-c.soi;
       if(d<=0){
@@ -1501,6 +1523,8 @@ function rtcCheck(N){
 function toRails(V){
   if(V.mode==='rails'||V.mode==='landed')return;
   if(V.rest||V.landed&&V.nc>0&&Math.hypot(V.vx,V.vy)<.3){V.mode='landed';V.vx=V.vy=V.om=0;return}
+  // rollt oder rutscht noch über den Boden: dort abstellen (eine Bahn würde durch den Boden führen)
+  if(V.landed&&V.nc>0&&Math.hypot(V.vx,V.vy)<30){landPlace(V);return}
   V.o=vOrbit(V);V.ev=nextEvent(vB(V),V.o,WS.t,WS.t+Math.min(period(V.o),1e9));V.mode='rails';V.om=0;
 }
 function toPhys(V){
@@ -1581,7 +1605,7 @@ function railsBlock(V){
   const B=vB(V),alt=vAlt(V);
   if(V.thrusting||V.d.eng.some(i=>V.parts[i].on&&P[V.parts[i].t].eng.fu==='sf'&&V.parts[i].r.sf>0))return'Nicht während ein Triebwerk läuft';
   if(B.atm&&alt<B.ah)return'Schneller Zeitraffer nur über der Lufthülle';
-  if(!B.atm&&vRadar(V)<Math.max(500,B.hmax*.3))return'Zu nah am Boden';
+  if(!B.atm&&(vRadar(V)<Math.max(500,B.hmax*.3)||Math.hypot(V.x,V.y)<B.R+B.hmax+500))return'Zu nah am Boden';
   const h=Math.abs(V.x*V.vy-V.y*V.vx);if(h<1e3)return'Bahn zu steil';
   return'';
 }
@@ -2525,34 +2549,33 @@ const PCOL=['#5ce1ff','#ffb547','#d58bff','#7dff8a','#ff7a9a'];
 function m2s(x,y,o){o.x=VW/2+(x-M.ox)*M.z;o.y=VH*M.cy-(y-M.oy)*M.z;return o}
 function s2m(sx,sy){return{x:M.ox+(sx-VW/2)/M.z,y:M.oy-(sy-VH*M.cy)/M.z}}
 const FB=()=>BODIES[M.f];
-/* Bahn als Linie: von nu0 bis nu1 (Bahn o um Körper mit Lage bx,by im Kartensystem) */
-function orbitPath(c,o,bx,by,nu0,nu1,tStart,store){
-  const n=Math.max(24,Math.min(320,Math.ceil(Math.abs(nu1-nu0)/TAU*240))),q={};
+/* Bahn als Linie: Anomalie E0 bis E1 (Bahn o um Körper mit Lage bx,by im Kartensystem) */
+function orbitPath(c,o,bx,by,E0,E1,tStart,store){
+  const n=Math.max(24,Math.min(320,Math.ceil(Math.abs(E1-E0)/TAU*240))),q={};
   c.beginPath();
   let lastT=tStart,first=true;
   for(let i=0;i<=n;i++){
-    const nu=nu0+(nu1-nu0)*i/n;stateNu(o,nu,q);
+    const E=E0+(E1-E0)*i/n;stateE(o,E,q);
     m2s(bx+q.x,by+q.y,SP);
     if(first){c.moveTo(SP.x,SP.y);first=false}else c.lineTo(SP.x,SP.y);
-    if(store){let tt=o.tp+meanFromNu(o,wrapA(nu))/o.n;if(o.e<1){const T=period(o);while(tt<lastT-1)tt+=T}lastT=tt;store.push(SP.x,SP.y,tt)}
+    if(store){let tt=o.tp+meanFromE(o,o.e<1?wrapA(E):E)/o.n;if(o.e<1){const T=period(o);while(tt<lastT-1)tt+=T}lastT=tt;store.push(SP.x,SP.y,tt)}
   }
   c.stroke();
 }
-function nuAt(o,t){return nuFromMean(o,o.n*(t-o.tp))}
 /* einen Bahnabschnitt zeichnen */
 function drawPatch(c,pt,col,isFirst,store,dash){
   const b=pt.b,o=pt.o,ref=isFirst?WS.t:pt.t0,bp=bodyIn(b,FB(),ref,{});
-  let nu0=nuAt(o,pt.t0),nu1;
+  let nu0=anomAt(o,pt.t0),nu1;
   const T=period(o);
   if(o.e<1&&pt.t1-pt.t0>=T-1){nu1=nu0+TAU}
-  else{nu1=nuAt(o,pt.t1);if(o.e<1){while(nu1<nu0)nu1+=TAU}else if(nu1<nu0)nu1=nu0}
+  else{nu1=anomAt(o,pt.t1);if(o.e<1){while(nu1<nu0)nu1+=TAU}else if(nu1<nu0)nu1=nu0}
   c.strokeStyle=col;c.lineWidth=2.2;c.setLineDash(dash||[]);
   orbitPath(c,o,bp.x,bp.y,nu0,nu1,pt.t0,store);
   // Absturz: Rest der Bahn bis zum Boden rot gestrichelt
   if(pt.k==='atmo'||pt.k==='ground'){
-    const pe=peri(o);if(pe<b.R){const nuG=-Math.acos(clamp((o.p/b.R-1)/o.e,-1,1));let nuA=nuAt(o,pt.t1),ng=nuG;while(ng<nuA)ng+=TAU;
+    const pe=peri(o);if(pe<b.R){let nuA=anomAt(o,pt.t1),ng=anomAtR(o,b.R,false);if(o.e<1)while(ng<nuA)ng+=TAU;
       c.strokeStyle='#ff5d5d';c.setLineDash([5,5]);orbitPath(c,o,bp.x,bp.y,nuA,ng,pt.t1,null);
-      const q=stateNu(o,ng,{});m2s(bp.x+q.x,bp.y+q.y,SP);mark(c,SP.x,SP.y,'✕ Aufschlag','#ff5d5d')}
+      const q=stateE(o,ng,{});m2s(bp.x+q.x,bp.y+q.y,SP);mark(c,SP.x,SP.y,'✕ Aufschlag','#ff5d5d')}
     else{const q=orbitAt(o,pt.t1,{});m2s(bp.x+q.x,bp.y+q.y,SP);mark(c,SP.x,SP.y,b.atm?'Eintritt':'Bodennähe','#ffb547')}
   }
   c.setLineDash([]);
@@ -2600,7 +2623,7 @@ function drawMap(c){
   // Ziel-Bahn
   const A=F.V;
   if(WS.tgt){const T=VESSELS.find(v=>v.id===WS.tgt);if(T&&(T.mode==='rails'||T.mode==='phys')&&(!A||T.body===A.body)){const p=vPos(T);const o=orbitFrom(vB(T).mu,p.x,p.y,p.vx,p.vy,t);
-    const bp=bodyIn(vB(T),f,t,{});c.strokeStyle='rgba(255,107,214,.6)';c.lineWidth=1.6;const n0=nuAt(o,t);
+    const bp=bodyIn(vB(T),f,t,{});c.strokeStyle='rgba(255,107,214,.6)';c.lineWidth=1.6;const n0=anomAt(o,t);
     if(o.e<1)orbitPath(c,o,bp.x,bp.y,n0,n0+TAU,t,null)}}
   // eigene Bahn
   if(A&&F.pred){
