@@ -228,6 +228,10 @@ table.st{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric
 table.st td,table.st th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:right}
 table.st th{color:var(--dim);font-weight:700;font-size:11.5px}
 table.st td:first-child,table.st th:first-child{text-align:left}
+.ach{display:flex;align-items:center;gap:10px;background:var(--panel2);border-radius:12px;padding:8px 11px;margin-bottom:6px}
+.ach i{font-style:normal;font-size:26px;width:36px;text-align:center;flex:none}
+.ach b{display:block;font-size:14.5px}.ach small{color:var(--dim);font-size:12.5px}
+.ach.no{opacity:.45}.ach.no i{filter:grayscale(1)}
 textarea,input[type=text]{width:100%;border-radius:10px;border:1px solid var(--line);background:#0b1224;color:var(--text);padding:9px;font:15px system-ui;user-select:text;-webkit-user-select:text}
 textarea{min-height:90px;font:12px ui-monospace,monospace;resize:vertical}
 .tog{display:flex;align-items:center;justify-content:space-between;background:var(--panel2);border-radius:12px;padding:8px 10px 8px 12px;margin-bottom:6px;min-height:52px;gap:8px}
@@ -277,6 +281,7 @@ textarea{min-height:90px;font:12px ui-monospace,monospace;resize:vertical}
     <button class="ib" data-a="title" aria-label="Zum Titel">⌂</button>
     <div class="chip" id="hMoney"></div><div class="chip" id="hSci"></div>
     <div class="sp"></div>
+    <button class="ib" data-a="ach" id="bAch" aria-label="Erfolge und Statistik">🏆</button>
     <button class="ib" data-a="settings" aria-label="Einstellungen">⚙</button>
   </div>
   <div id="hubBtns">
@@ -370,7 +375,7 @@ textarea{min-height:90px;font:12px ui-monospace,monospace;resize:vertical}
    12. Speichern, Cloud, Selbst-Update, Hauptschleife
    Der Teil zwischen LOGIK-ANFANG und LOGIK-ENDE kommt ohne DOM aus (tools/countdown-sim.mjs nutzt ihn).
    ===================================================================== */
-const BUILD='2026.10.26-2';
+const BUILD='2026.10.26-3';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const dc=(v,n)=>v.toFixed(n).replace('.',',');
@@ -393,6 +398,8 @@ function fmtT(s){
   if(h>0)return`${h}:${String(m).padStart(2,'0')}:${String(x).padStart(2,'0')}`;
   return`${m}:${String(x).padStart(2,'0')}`;
 }
+/* „in 3,2 Tagen“ */
+const fmtIn=s=>'in '+fmtTs(s).replace(/ Tage$/,' Tagen');
 function fmtTs(s){s=Math.max(0,s);if(s<90)return Math.round(s)+' s';if(s<5400)return Math.round(s/60)+' min';if(s<172800)return dc(s/3600,1)+' Std.';return dc(s/86400,1)+' Tage'}
 // ==LOGIK-ANFANG==
 /* =====================================================================
@@ -515,6 +522,13 @@ function rhoAt(b,alt){
   return r*f;
 }
 const pressAt=(b,alt)=>rhoAt(b,alt)/1.225;
+/* Erzgehalt in % (je Körper verschieden, wechselt mit der Gegend; im Meer und auf Körpern ohne Boden keins) */
+const ORE={murmel:.8,dunstia:3,knopf:5,broesel:8,rosto:4,kiesel:10,brocken:12,glut:6,flocke:7,frosto:5};
+function oreAt(b,a){
+  const base=ORE[b.id]||0;if(!base||(b.ocean&&terH(b,a)<0))return 0;const s=b.ter?b.ter.seed:1;
+  const v=.55*Math.sin(3*a+s)+.3*Math.sin(7*a+s*2.3)+.15*Math.sin(17*a+s*.7);
+  return Math.max(0,base*(1+.8*v));
+}
 
 /* ---------- Experimente ---------- */
 const SITN={boden:'auf dem Boden',wasser:'im Wasser',tief:'tief in der Luft',hoch:'hoch in der Luft',nah:'nah im All',fern:'fern im All'};
@@ -561,6 +575,7 @@ const PDEF=[
   {id:'tankM3',n:'Tank M lang',c:'tank',k:3000,m:2,w:2.5,h:7.2,nd:'tb',srf:1,res:{lf:16},sh:'tank',tech:'schwer',d:'Großer breiter Tank.'},
   {id:'tankL1',n:'Tank L',c:'tank',k:4000,m:2.2,w:3.75,h:3.6,nd:'tb',srf:1,res:{lf:18},sh:'tank',tech:'riesen',d:'Riesiger Tank.'},
   {id:'tankL2',n:'Tank L lang',c:'tank',k:7500,m:4.4,w:3.75,h:7.2,nd:'tb',srf:1,res:{lf:36},sh:'tank',tech:'riesen',d:'Riesiger langer Tank.'},
+  {id:'oretank',n:'Erztank',c:'tank',k:900,m:.15,w:1.25,h:1.2,nd:'tb',srf:1,res:{ore:1.5},sh:'oretank',tech:'abbau',d:'Lagert das Erz aus dem Bohrer.'},
   {id:'xet',n:'Xenontank',c:'tank',k:2500,m:.1,w:1.25,h:.9,nd:'tb',srf:1,res:{xe:.3},sh:'xet',tech:'ion',d:'Xenon für Ionentriebwerke.'},
   {id:'mpt',n:'Steuergastank',c:'tank',k:300,m:.03,w:1.25,h:.6,nd:'tb',srf:1,res:{mp:.15},sh:'mpt',tech:'dock',d:'Gas für die Steuerdüsen.'},
   // Antrieb
@@ -634,6 +649,9 @@ const PDEF=[
   {id:'sol2',n:'Solarflügel',c:'util',k:800,m:.05,w:.35,h:.9,rad:1,sol:{ec:2.5,dep:1},maxT:1200,sh:'sol2',tech:'strom',d:'Klappt im All aus und macht viel Strom. In der Luft zerbricht er!'},
   {id:'ant',n:'Antenne',c:'util',k:150,m:.005,w:.2,h:1,rad:1,ant:1,maxT:1400,sh:'ant',tech:'raum',d:'Sendet Forschungsdaten nach Hause – rund um Murmel und Monde.'},
   {id:'dish',n:'Parabolantenne',c:'util',k:1500,m:.1,w:.9,h:.9,rad:1,ant:2,maxT:1400,sh:'dish',tech:'fern',d:'Sendet von überall im Sonnensystem.'},
+  {id:'rtg',n:'Atombatterie',c:'util',k:6000,m:.08,w:.5,h:.6,rad:1,gen:{ec:.75},maxT:1500,sh:'rtg',tech:'fern',d:'Liefert Tag und Nacht ein bisschen Strom – auch im Schatten und weit weg von der Sonne.'},
+  {id:'drill',n:'Bohrer',c:'util',k:2600,m:.25,w:.6,h:1.6,rad:1,drill:{r:.004,ec:1.5},tol:10,sh:'drill',tech:'abbau',d:'Bohrt Erz aus dem Boden, wenn das Fahrzeug steht. Braucht Strom und einen Erztank.'},
+  {id:'refinery',n:'Raffinerie',c:'util',k:5200,m:.9,w:1.25,h:1.5,nd:'tb',srf:1,refine:{r:.03,ec:2.5},sh:'refinery',tech:'abbau',d:'Macht aus Erz Treibstoff. Braucht viel Strom.'},
   {id:'rtc',n:'Rückkehr-Computer',c:'util',k:1500,m:.05,w:.4,h:.4,rad:1,rtc:1,sh:'rtc',tech:'rueck',
    d:'An eine Stufe mit Triebwerk, Treibstoff und Landebeinen: nach dem Abtrennen landet sie von selbst und du bekommst Geld zurück.'},
   {id:'thermo',n:'Thermometer',c:'util',k:300,m:.005,w:.22,h:.45,rad:1,exp:'thermo',sh:'thermo',tech:'start',d:'Misst die Temperatur.'},
@@ -670,6 +688,7 @@ const TECH=[
   {id:'stat',n:'Raumstationen',tier:5,k:150,req:['dock']},
   {id:'rueck',n:'Rückkehrtechnik',tier:5,k:150,req:['schwer']},
   {id:'wiss2',n:'Feldforschung',tier:5,k:150,req:['wiss']},
+  {id:'abbau',n:'Bergbau',tier:5,k:150,req:['rover','strom']},
   {id:'riesen',n:'Riesenraketen',tier:6,k:280,req:['schwer']},
   {id:'ion',n:'Ionenantrieb',tier:6,k:280,req:['praez']},
   {id:'fern',n:'Fernerkundung',tier:6,k:280,req:['praez']},
@@ -853,13 +872,126 @@ function hohmann(mu,r1,r2){
   const tt=Math.PI*Math.sqrt(at*at*at/mu);
   return{dv1:vp-v1,dv2:v2-va,t:tt,phase:Math.PI-Math.sqrt(mu/(r2*r2*r2))*tt};
 }
+
+/* ---------- Kreisbahn, Startfenster und Übergangs-Manöver ---------- */
+/* Δv am höchsten (k='ap') und tiefsten Punkt (k='pe'), damit die Bahn rund wird. Bahnabschnitt pt aus predict(), frühestens ab t0 */
+function circNodes(pt,t0){
+  const o=pt.o,b=pt.b,top=b.R+Math.max(b.ah,b.hmax+500),out=[];
+  const at=(k,t)=>{
+    if(!(t<pt.t1-1)&&!(pt.k==='none'&&o.e<1))return out.push({k,why:pt.k==='exit'?'Vorher verlässt du den Einflussbereich':pt.k==='enter'?'Vorher kommst du zu '+pt.c.n:'Vorher geht es hinunter'});
+    const st=orbitAt(o,t,{}),r=Math.hypot(st.x,st.y),v=Math.hypot(st.vx,st.vy);
+    if(r<top)return out.push({k,why:b.atm?'Liegt in der Lufthülle':'Liegt zu nah am Boden'});
+    out.push({k,t,r,dv:Math.sqrt(b.mu/r)-v});
+  };
+  if(o.e<1){
+    const T=period(o),next=t=>t+Math.ceil((t0-t)/T)*T;
+    at('ap',next(o.tp+T/2));at('pe',next(o.tp));
+  }else{
+    out.push({k:'ap',why:'Deine Bahn hat keinen höchsten Punkt'});
+    if(o.tp>t0)at('pe',o.tp);else out.push({k:'pe',why:'Der tiefste Punkt liegt schon hinter dir'});
+  }
+  return out;
+}
+/* Startfenster zwischen zwei Körpern mit demselben Mutterkörper (Kreisbahnen gegen den Uhrzeigersinn) */
+function planetWindow(from,to,t){
+  const h=hohmann(from.par.mu,from.a,to.a),w=to.mm-from.mm;
+  const ph=wrapA(to.M0+to.mm*t-(from.M0+from.mm*t));
+  let dt=wrapA(h.phase-ph)/w;if(dt<0)dt+=TAU/Math.abs(w);
+  return{t:t+dt,dt,syn:TAU/Math.abs(w),tt:h.t,vinf:Math.abs(h.dv1),out:to.a>from.a};
+}
+/* Δv, um aus einer Kreisbahn mit Radius r0 um Körper b mit Restgeschwindigkeit vinf zu entkommen */
+const ejectDv=(b,r0,vinf)=>Math.sqrt(vinf*vinf+2*b.mu/r0)-Math.sqrt(b.mu/r0);
+/* erste Nullstelle von g zwischen t0 und t1 (n Proben, Sprünge über ±π zählen nicht) */
+function findZero(g,t0,t1,n){
+  let tp=t0,gp=g(t0);const dt=(t1-t0)/n;
+  for(let i=1;i<=n;i++){const t=t0+i*dt,gv=g(t);
+    if(Math.abs(gv-gp)<Math.PI&&(gp<=0)!==(gv<=0)){let lo=tp,hi=t,glo=gp;for(let k=0;k<50&&hi-lo>.01;k++){const m=(lo+hi)/2,gm=g(m);if((gm<=0)===(glo<=0)){lo=m;glo=gm}else hi=m}return(lo+hi)/2}
+    tp=t;gp=gv}
+  return null;
+}
+/* Manöver auf der Bahn o um Planet b zu einem anderen Planeten: Zündung so, dass die Fluchtrichtung zum Übergang passt */
+function ejectNode(b,o,to,t0){
+  const T=period(o);if(!isFinite(T))return null;
+  const win=planetWindow(b,to,t0),st={};
+  const g=t=>{orbitAt(o,t,st);const r=Math.hypot(st.x,st.y),e=1+r*win.vinf*win.vinf/b.mu;
+    const pa=b.M0+b.mm*t+Math.PI/2+(win.out?0:Math.PI);    // gewünschte Fluchtrichtung: mit oder gegen die Bewegung des Planeten
+    return wrapA(Math.atan2(st.y,st.x)-(pa-o.s*Math.acos(-1/e)))};
+  const ts=Math.max(t0,win.t-T*.5),t=findZero(g,ts,ts+T*1.5,240);if(t===null)return null;
+  orbitAt(o,t,st);const r=Math.hypot(st.x,st.y);
+  return{t,dp:Math.sqrt(win.vinf*win.vinf+2*b.mu/r)-Math.hypot(st.vx,st.vy),dr:0,win};
+}
+/* Manöver auf der Bahn o um Körper b zu dessen Mond m (Hohmann ab dem Abstand beim Zünden, in Flugrichtung) */
+function moonNode(b,o,m,t0){
+  const T=period(o);if(!isFinite(T))return null;
+  const st={},mp={},tr=r=>{const at=(r+m.a)/2;return Math.PI*Math.sqrt(at*at*at/b.mu)};
+  const g=t=>{orbitAt(o,t,st);bodyRel(m,t,mp);const need=o.s*Math.PI-m.mm*tr(Math.hypot(st.x,st.y));
+    return wrapA(Math.atan2(mp.y,mp.x)-Math.atan2(st.y,st.x)-need)};
+  const w=Math.abs(m.mm-o.s*TAU/T),span=Math.min(TAU/Math.max(w,1e-12)*1.1+T,T*80);
+  const t=findZero(g,t0,t0+span,Math.min(6000,Math.ceil(span/T*120)));if(t===null)return null;
+  orbitAt(o,t,st);const r=Math.hypot(st.x,st.y);
+  return{t,dp:Math.sqrt(b.mu*(2/r-2/(r+m.a)))-Math.hypot(st.vx,st.vy),dr:0,tt:tr(r)};
+}
+/* Zustand direkt nach einem Manöver n (Schub nur nach vorn/hinten) */
+function nodeState(o,n){const st=orbitAt(o,n.t,{}),sp=Math.hypot(st.vx,st.vy);return{x:st.x,y:st.y,vx:st.vx+st.vx/sp*n.dp,vy:st.vy+st.vy/sp*n.dp}}
+/* gewünschter tiefster Punkt beim Ziel: über Lufthülle und Bergen */
+const aimAlt=c=>c.atm?c.ah+(c.atm.crush?60e3:15e3):Math.max(c.hmax+4e3,c.R*.12);
+/* Wie gut trifft das Manöver n das Ziel c? Kleiner ist besser: getroffen → Abweichung vom Wunsch-Pe, sonst 100 + Abstand in Einflussradien.
+   Rechnet nur mit Start- und Zielkörper (andere Monde stören die Suche nicht). */
+function aimScore(b,o,n,c,tt){
+  const s0=nodeState(o,n);let fr=b,t=n.t,ob=orbitFrom(b.mu,s0.x,s0.y,s0.vx,s0.vy,t);
+  if(c.par!==b){                                  // zu einem Planeten: erst aus dem Einflussbereich heraus
+    if(ob.e<1&&apo(ob)<b.soi)return{s:1000+100*(1-apo(ob)/b.soi),hit:false};
+    const te=timeToR(ob,b.soi,t,true);if(!isFinite(te))return{s:5000,hit:false};
+    const p=toParent(orbitAt(ob,te,{}),b,te);fr=b.par;t=te;ob=orbitFrom(fr.mu,p.x,p.y,p.vx,p.vy,te);
+  }
+  const t1=t+tt*1.6,a={},q={},d=u=>{orbitAt(ob,u,a);bodyRel(c,u,q);return Math.hypot(a.x-q.x,a.y-q.y)};
+  const N=240,h=(t1-t)/N;let bt=t,bd=1e99,ti=-1;
+  for(let k=0;k<=N;k++){const u=t+h*k,v=d(u);if(v<bd){bd=v;bt=u}if(ti<0&&v<c.soi)ti=k}
+  if(ti<0){let lo=Math.max(t,bt-h),hi=Math.min(t1,bt+h);for(let k=0;k<30;k++){const m1=lo+(hi-lo)*.382,m2=lo+(hi-lo)*.618;if(d(m1)<d(m2))hi=m2;else lo=m1}
+    bd=Math.min(bd,d((lo+hi)/2));if(bd>=c.soi)return{s:100+bd/c.soi,hit:false};
+    ti=Math.round(((lo+hi)/2-t)/h)}
+  // Eintritt in den Einflussbereich suchen und dort den tiefsten Punkt ausrechnen
+  let lo=t+h*Math.max(0,ti-1),hi=t+h*ti;if(d(lo)<c.soi)lo=t;
+  for(let k=0;k<40&&hi-lo>.05;k++){const m=(lo+hi)/2;if(d(m)<c.soi)hi=m;else lo=m}
+  orbitAt(ob,hi,a);bodyRel(c,hi,q);const oc=orbitFrom(c.mu,a.x-q.x,a.y-q.y,a.vx-q.vx,a.vy-q.vy,hi),pe=peri(oc)-c.R;
+  return{s:Math.abs(pe-aimAlt(c))/c.R,hit:true,pe};
+}
+/* Manöver nachbessern (Zündzeit und Schub), bis es das Ziel gut trifft */
+function refineNode(b,o,n,c,tt,t0){
+  let x={t:n.t,dp:n.dp},best=aimScore(b,o,x,c,tt);const st=[period(o)/12,Math.max(4,Math.abs(n.dp)*.03)];
+  const D=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]];
+  for(let it=0;it<300;it++){
+    let up=false;
+    for(const[i,j]of D){const y={t:x.t+i*st[0],dp:x.dp+j*st[1]};if(y.t<t0)continue;
+      const s=aimScore(b,o,y,c,tt);if(s.s<best.s){best=s;x=y;up=true;break}}
+    if(up){st[0]*=1.3;st[1]*=1.3}else{st[0]/=2;st[1]/=2;if(st[0]<.02&&st[1]<.001)break}
+    if(best.hit&&best.s<.01)break;
+  }
+  return{t:x.t,dp:x.dp,dr:0,hit:best.hit,pe:best.pe};
+}
+/* Übergang von der Bahn o um Körper b zum Ziel c (Mond von b oder anderer Planet) planen. Kommt unterwegs ein anderer Mond dazwischen,
+   wird eine Umlaufbahn früher oder später probiert. Ergebnis: Manöver {t,dp,dr}, ok = trifft laut Vorhersage, via = Körper, der stört */
+function planTransfer(b,o,c,t0){
+  const moon=c.par===b,n=moon?moonNode(b,o,c,t0):ejectNode(b,o,c,t0);if(!n)return null;
+  const T=period(o),tt=moon?n.tt:n.win.tt;let first=null;
+  for(const k of[0,1,-1,2,-2,3,4]){
+    const t=n.t+k*T;if(t<t0)continue;
+    const f=refineNode(b,o,{t,dp:n.dp},c,tt,t0);if(!f.hit)continue;
+    const P=predict(b,nodeState(o,f),f.t,4,3e8),e=P.find(p=>p.k==='enter');
+    f.tt=tt;f.ok=!!(e&&e.c===c);f.via=e&&e.c!==c?e.c:null;
+    if(f.ok)return f;if(!first)first=f;
+  }
+  return first||Object.assign(n,{tt,ok:false,via:null});
+}
 /* =====================================================================
    4. FAHRZEUGE: Bauplan, Verbindungen, Stufen, Werte (Masse, Schub, Δv)
    ---------------------------------------------------------------------
    Ein Teil q: t Typ, x/y Mitte im Bauplan (m, y nach oben), fx/fy gespiegelt/umgedreht, p Elternteil, a Knoten am Elternteil
    ('top','bot','L','R','dock'), n eigener Knoten ('top','bot','side','dock'), s Stufe, col Farbe/Muster
    ===================================================================== */
-const RESM={lf:1,sf:1,xe:1,mp:1,ab:1,ec:0};      // Masse je Einheit (t) – Strom wiegt nichts
+const RESM={lf:1,sf:1,xe:1,mp:1,ab:1,ore:1,ec:0};      // Masse je Einheit (t) – Strom wiegt nichts
+/* Vorräte beim Start: alles voll, nur Erztanks sind leer */
+function resStart(t){const r=Object.assign({},P[t].res||{});if(r.ore)r.ore=0;return r}
 const CREWM=.09;
 function partMass(q){
   let m=P[q.t].m;const r=q.r;
@@ -955,11 +1087,11 @@ function ispAt(e,pr){return Math.max(e.iv*.05,e.iv-(e.iv-e.ia)*pr)}
 function designStats(D,gB,live){
   const ps=D.parts,n=ps.length,res={m:0,k:0,n,stages:[],dv:0,dvA:0};
   if(!n)return res;
-  for(const q of ps){const d=P[q.t];res.k+=d.k;res.m+=d.m;const rs=live?q.r:d.res;if(rs)for(const k in rs)res.m+=rs[k]*(RESM[k]||0)}
+  for(const q of ps){const d=P[q.t];res.k+=d.k;res.m+=d.m;const rs=live?q.r:resStart(q.t);if(rs)for(const k in rs)res.m+=rs[k]*(RESM[k]||0)}
   const ms=maxStage(ps),k0=live?Math.max(0,live.stg-1):0;
   for(const pr of[0,1]){
     const kids=kidsOf(ps),grp=fuelGroups(ps),gone=new Uint8Array(n),lit=new Uint8Array(n);
-    const fuel=ps.map(q=>Object.assign({},live?q.r:P[q.t].res||{}));
+    const fuel=ps.map(q=>live?Object.assign({},q.r):resStart(q.t));
     if(live)for(let i=0;i<n;i++)if(ps[i].on&&P[ps[i].t].eng&&!P[ps[i].t].rcs)lit[i]=1;
     const mass=()=>{let m=0;for(let i=0;i<n;i++)if(!gone[i]){const d=P[ps[i].t];m+=d.m;for(const k in fuel[i])m+=fuel[i][k]*(RESM[k]||0)}return m};
     const gFuel=(g,fu)=>{let s=0;for(let i=0;i<n;i++)if(!gone[i]&&grp[i]===g&&fuel[i][fu])s+=fuel[i][fu];return s};
@@ -1009,7 +1141,7 @@ function designStats(D,gB,live){
 let UID=1;
 function newPartState(q){
   const d=P[q.t];
-  q.r=Object.assign({},d.res||{});q.T=290;q.on=0;q.dep=0;q.arm=0;q.brk=0;q.used=0;q.uid=UID++;
+  q.r=resStart(q.t);q.T=290;q.on=0;q.dep=0;q.arm=0;q.brk=0;q.used=0;q.uid=UID++;
   if(d.crew&&!q.crew)q.crew=[];
   return q;
 }
@@ -1027,7 +1159,7 @@ function vCalc(V){
   for(let i=0;i<n;i++){const q=ps[i];if(q.p<0)continue;
     if(q.a==='top'||q.a==='bot')d.occ[q.p][q.a]=1;else if(q.a==='dock')d.occ[q.p][dockFace(ps,d.kids,q.p)]=1;
     if(q.n==='top'||q.n==='bot')d.occ[i][q.n]=1;else if(q.n==='dock')d.occ[i][dockFace(ps,d.kids,i)]=1;}
-  d.eng=[];d.chutes=[];d.cmdP=[];d.seats=0;d.crew=[];d.legs=[];d.wheels=[];d.sol=[];d.ant=0;d.rcs=[];d.exp=[];d.docks=[];d.rtc=0;d.fins=[];
+  d.eng=[];d.chutes=[];d.cmdP=[];d.seats=0;d.crew=[];d.legs=[];d.wheels=[];d.sol=[];d.ant=0;d.rcs=[];d.exp=[];d.docks=[];d.rtc=0;d.fins=[];d.drills=[];d.refs=[];d.gen=0;
   for(let i=0;i<n;i++){
     const q=ps[i],t=P[q.t];
     if(t.eng&&!t.rcs)d.eng.push(i);
@@ -1036,6 +1168,7 @@ function vCalc(V){
     if(t.crew){d.seats+=t.crew;if(q.crew)for(const c of q.crew)d.crew.push(c)}
     if(t.leg)d.legs.push(i);if(t.wheel)d.wheels.push(i);if(t.sol)d.sol.push(i);if(t.ant)d.ant=Math.max(d.ant,t.ant);
     if(t.rcs)d.rcs.push(i);if(t.exp)d.exp.push(i);if(t.dock)d.docks.push(i);if(t.rtc)d.rtc=1;if(t.fin)d.fins.push(i);
+    if(t.drill)d.drills.push(i);if(t.refine)d.refs.push(i);if(t.gen)d.gen+=t.gen.ec;
   }
   massProps(V);
   contactPts(V);
@@ -1089,7 +1222,9 @@ function ctlInfo(V){
   if(crewCtl)sas=Math.max(sas,0);
   if(crewCtl&&pilot>=0)sas=Math.max(sas,Math.min(3,pilot+1));
   if(!(ec>0))tq*=crewCtl?.5:0;
-  return{ok:crewCtl||probe,tq,sas,ing,sci,pilot,ec};
+  // Sonde ohne Crew braucht Funkkontakt (V.link wird im Flug regelmäßig neu bestimmt)
+  const noLink=probe&&!crewCtl&&commReq()&&!!V.link&&!V.link.ok;
+  return{ok:(crewCtl||probe)&&!noLink,tq,sas,ing,sci,pilot,ec,noLink};
 }
 /* Platzhalter, wird von der Karriere ersetzt */
 let crewById=id=>null;
@@ -1112,6 +1247,7 @@ function w2l(V,wx,wy,o){
 /* Vorräte aufteilen */
 function resSum(V,k,g){let s=0;const ps=V.parts,G=V.d.grp;for(let i=0;i<ps.length;i++){const r=ps[i].r;if(r[k]&&(g===undefined||G[i]===g))s+=r[k]}return s}
 function resCap(V,k){let s=0;for(const q of V.parts){const d=P[q.t].res;if(d&&d[k])s+=d[k]}return s}
+const resRoom=(V,k)=>Math.max(0,resCap(V,k)-resSum(V,k));
 function resTake(V,k,amt,g){
   if(amt<=0)return 0;const tot=resSum(V,k,g);if(tot<=0)return 0;
   const f=Math.min(1,amt/tot),ps=V.parts,G=V.d.grp;
@@ -1129,6 +1265,9 @@ function sunLight(V,t){
     if(along<0&&Math.abs(V.x*uy-V.y*ux)<B.R)return 0}
   return clamp(Math.pow(1.2e9/ds,2),.08,4);
 }
+/* Körper ohne festen Boden und die Tiefe, ab der nichts mehr heil bleibt */
+const noGround=B=>!B.ter;
+const crushAlt=B=>B.atm&&B.atm.crush?20e3:0;
 /* Lage-Regler (SAS): liefert Drehbefehl −1…1 */
 function sasTarget(V,mode,tgt){
   const B=BODIES[V.body],r=Math.hypot(V.x,V.y),up=Math.atan2(V.y,V.x);
@@ -1166,6 +1305,8 @@ function physStep(V,dt,C){
   const ox=d.cx,oy=d.cy;massProps(V);
   if(ox!==d.cx||oy!==d.cy){const a=V.th-Math.PI/2,c=Math.cos(a),s=Math.sin(a),dx=d.cx-ox,dy=d.cy-oy;V.x+=c*dx-s*dy;V.y+=s*dx+c*dy}
   const m=d.m,I=d.I,r=Math.hypot(V.x,V.y),alt=r-B.R,rho=rhoAt(B,alt),pr=rho/1.225;
+  // ohne festen Boden (Sonne, Gasriese): wer zu tief kommt, verglüht oder wird zerdrückt
+  if(noGround(B)&&alt<crushAlt(B)){for(const q of ps)if(!q.dead){q.dead=1;q.why=B.atm?'crush':'heat'}return}
   const a0=V.th-Math.PI/2,ca=Math.cos(a0),sa=Math.sin(a0);
   const ci=V.ci||ctlInfo(V);
   let Fx=0,Fy=0,Tq=0,thrustOn=false,gimTq=0,TFx=0,TFy=0;
@@ -1262,7 +1403,7 @@ function physStep(V,dt,C){
     if(V.landed&&q.dep>0&&sp<1.5){q.cut=(q.cut||0)+dt;if(q.cut>2.5){q.dep=0;q.arm=0;q.brk=1;q.why='cut'}}
   }
   // ---- Strom-Haushalt ----
-  let ecIn=0;
+  let ecIn=d.gen;
   if(d.sol.length){const sl=V.light!==undefined?V.light:1;for(const i of d.sol){const q=ps[i],t=P[q.t];if(q.brk||q.dead)continue;if(t.sol.dep&&q.dep<.9)continue;ecIn+=t.sol.ec*sl}}
   resAdd(V,'ec',ecIn*dt);resTake(V,'ec',ecUse*dt);
   const wake=thrustOn||C.rot||C.drive||C.tx||C.ty||V.wake>0;
@@ -1290,7 +1431,7 @@ const CT=[];
 function contactSolve(V,B,dt,C,ca,sa){
   const d=V.d,pts=d.pts,m=d.m,I=d.I;
   const r=Math.hypot(V.x,V.y);
-  if(r-B.R-B.hmax>d.bR+5){V.landed=false;V.nc=0;for(const p of pts)p.c=0;return 0}
+  if(noGround(B)||r-B.R-B.hmax>d.bR+5){V.landed=false;V.nc=0;for(const p of pts)p.c=0;return 0}
   let n=0,water=0;CT.length=0;
   for(const p of pts){
     const q=V.parts[p.i];
@@ -1554,6 +1695,54 @@ function vPos(V){
   if(V.mode==='rails'){railsSync(V);if(V.mode==='rails'){const s=orbitAt(V.o,WS.t,{});return s}}
   return{x:V.x,y:V.y,vx:V.vx,vy:V.vy};
 }
+/* ---------- Bergbau: Bohrer fördern Erz (nur am Boden), Raffinerien machen daraus Treibstoff ----------
+   Läuft auch im Zeitraffer und für Fahrzeuge, die gerade nicht gesteuert werden. phys: Strom aus Sonne/Atombatterie kommt schon aus physStep */
+function mineStep(V,dt,phys){
+  const d=V.d;if(!d||dt<=0||!(d.drills.length&&V.flags.drill||d.refs.length&&V.flags.refine)){if(V.mineOn)mineOff(V);return}
+  const ps=V.parts,ground=V.mode==='landed'||V.landed&&V.nc>0,B=vB(V);
+  const nd=V.flags.drill?d.drills.filter(i=>!ps[i].brk&&!ps[i].dead).length:0,nr=V.flags.refine?d.refs.length:0;
+  const conc=nd&&ground?oreAt(B,Math.atan2(V.y,V.x)):0;
+  const drillOn=conc>0&&resRoom(V,'ore')>1e-6,refOn=nr>0&&resSum(V,'ore')>1e-6&&resRoom(V,'lf')>1e-6;
+  const need=(drillOn?nd*P.drill.drill.ec:0)+(refOn?nr*P.refinery.refine.ec:0);
+  if(need<=0){mineOff(V);return}
+  for(const i of d.drills)ps[i].on=drillOn?1:0;for(const i of d.refs)ps[i].on=refOn?1:0;
+  let gen=0;
+  if(!phys){gen=d.gen;const sl=sunLight(V,WS.t);for(const i of d.sol){const q=ps[i],t=P[q.t];if(q.brk||q.dead||t.sol.dep&&q.dep<.9)continue;gen+=t.sol.ec*sl}}
+  const f=clamp((gen+resSum(V,'ec')/dt)/need,0,1);
+  if(gen)resAdd(V,'ec',gen*dt);resTake(V,'ec',need*f*dt);
+  V.mineOn=f||.001;
+  if(drillOn){const a=Math.min(resRoom(V,'ore'),nd*P.drill.drill.r*conc*f*dt);resAdd(V,'ore',a);
+    V.mineB=V.mineB||{};V.mineB[B.id]=(V.mineB[B.id]||0)+a;if(S&&a>0){S.st.ore+=a;achGive('ore')}}
+  if(refOn){const a=Math.min(resSum(V,'ore'),resRoom(V,'lf'),nr*P.refinery.refine.r*f*dt);resTake(V,'ore',a);resAdd(V,'lf',a)}
+}
+function mineOff(V){V.mineOn=0;for(const i of V.d.drills)V.parts[i].on=0;for(const i of V.d.refs)V.parts[i].on=0}
+/* Tankschlauch: Vorrat k von A nach B umfüllen, so viel passt */
+function pumpRes(A,B,k){const a=Math.min(resSum(A,k),resRoom(B,k));if(a<=1e-6)return 0;resTake(A,k,a);resAdd(B,k,a);A.wake=B.wake=1;A.rest=B.rest=false;return a}
+
+/* ---------- Funkverbindung ----------
+   Reichweite: Sonde ohne Antenne 800 km, Antenne 12.000 km, Parabolantenne unbegrenzt. Murmel ist rundum Bodenstation.
+   Zwei Stellen funken, wenn beide weit genug reichen und kein Himmelskörper dazwischen liegt. Fahrzeuge mit Antenne und Strom leiten weiter. */
+const ANTR=[8e5,1.2e7,Infinity];
+let commReq=()=>false;                           // von der Karriere ersetzt (Einstellung je Spielstand)
+const canRelay=V=>V.kind!=='debris'&&V.kind!=='flag'&&V.kind!=='eva'&&V.d&&V.d.ant>0&&ecTotal(V)>0;
+function commLink(V){
+  if(!V.d)vCalc(V);
+  const t=WS.t,M=BODIES.murmel,bp=BLIST.map(c=>bodyAbs(c,t,{})),home=bp[BLIST.indexOf(M)];
+  const nodes=[V,...VESSELS.filter(X=>X!==V&&canRelay(X))];
+  const pos=nodes.map(X=>{const p=vPos(X),o=bp[BLIST.indexOf(vB(X))];return{x:o.x+p.x,y:o.y+p.y}}),rng=nodes.map(X=>ANTR[X.d.ant||0]);
+  // liegt ein Himmelskörper zwischen a und b? (Berührt die Strecke ihn nur am Ende, zählt das nicht: z. B. gelandet auf der Vorderseite)
+  const blocked=(a,b,skip)=>{const dx=b.x-a.x,dy=b.y-a.y,L2=dx*dx+dy*dy;if(L2<1)return false;
+    for(let k=0;k<BLIST.length;k++){const c=BLIST[k];if(c===skip)continue;const p=bp[k],s=((p.x-a.x)*dx+(p.y-a.y)*dy)/L2;
+      if(s>0&&s<1&&Math.hypot(a.x+s*dx-p.x,a.y+s*dy-p.y)<c.R*.995)return true}return false};
+  const homeOK=i=>Math.hypot(pos[i].x-home.x,pos[i].y-home.y)-M.R<=rng[i]&&!blocked(pos[i],home,M);
+  const prev=new Int32Array(nodes.length).fill(-2),q=[0];prev[0]=-1;
+  while(q.length){const i=q.shift();
+    if(homeOK(i)){const path=[];for(let k=i;k>0;k=prev[k])path.unshift(nodes[k]);return{ok:true,hops:path.length,path}}
+    for(let j=1;j<nodes.length;j++){if(prev[j]!==-2)continue;
+      if(Math.hypot(pos[i].x-pos[j].x,pos[i].y-pos[j].y)<=Math.min(rng[i],rng[j])&&!blocked(pos[i],pos[j],null)){prev[j]=i;q.push(j)}}
+  }
+  return{ok:false,hops:0,path:[]};
+}
 /* Hintergrund-Flug durch die Luft (entfernte Fahrzeuge mit Steuerung): Punktmasse mit Luftwiderstand */
 function bgStep(V,dt){
   const B=vB(V);if(!V.d)vCalc(V);
@@ -1562,6 +1751,7 @@ function bgStep(V,dt){
   const n=Math.min(400,Math.ceil(dt/.05)),h=dt/n,m=V.d.m;
   for(let k=0;k<n;k++){
     const r=Math.hypot(V.x,V.y),alt=r-B.R,rho=rhoAt(B,alt),sp=Math.hypot(V.vx,V.vy);
+    if(noGround(B)&&alt<crushAlt(B)){bgCrash(V);return}
     const cda=area+(sp<300?chute:0);
     const dr=rho>0?.5*rho*sp*cda/1000/m:0,g=-B.mu/(r*r*r);
     const f=Math.min(dr*h,.9);
@@ -1588,6 +1778,14 @@ function bgCrash(V){
   killVessel(V);
 }
 
+/* Sicherheitsnetz: steckt ein Fahrzeug tief im Boden (sollte nie vorkommen), wird es auf die Oberfläche gestellt statt zu zerschellen */
+function underCheck(V){
+  const B=vB(V);if(noGround(B)||!V.d||V.mode!=='phys')return false;
+  if(vRadar(V)>-(V.d.bR+30))return false;
+  landPlace(V);V.mode='phys';V.wake=0;
+  emit('msg',{t:V.name+' steckte im Boden und wurde auf die Oberfläche gestellt.',c:'bad'});
+  return true;
+}
 /* ---------- Einflusssphäre im Physik-Modus ---------- */
 function soiCheck(V){
   const B=vB(V),r=Math.hypot(V.x,V.y);
@@ -1635,10 +1833,12 @@ function worldStep(dtR,ctlFn){
       if(A.mode==='rails'&&A.ev&&WS.t>=A.ev.t-1e-6){const k=A.ev.k;railsSync(A);if(A.mode!=='rails')break;if(k==='enter'&&WS.wi>6)WS.wi=6}
     }
     if(A.mode==='rails'){const s=orbitAt(A.o,WS.t,{});A.x=s.x;A.y=s.y;A.vx=s.vx;A.vy=s.vy}
+    if(VESSELS.includes(A))mineStep(A,dtR*warp,false);
     others(dtR*warp);
     return;
   }
   if(A&&A.mode!=='phys')toPhys(A);
+  for(const V of A?[A,...WS.near]:WS.near)if(V.mode==='phys')underCheck(V);
   const sim=dtR*warp;
   const nearG=A&&vRadar(A)<200;
   const h=nearG?1/240:1/120;
@@ -1654,6 +1854,7 @@ function worldStep(dtR,ctlFn){
     if(!WS.act)break;
   }
   if(WS.act)dockCheck();
+  for(const V of A?[A,...WS.near]:WS.near)if(V.mode==='phys'&&VESSELS.includes(V))mineStep(V,sim,true);
   others(sim);
 }
 /* alles außer dem aktiven Fahrzeug: Nähe prüfen, Hintergrundflüge, Bahnen */
@@ -1665,6 +1866,7 @@ function others(sim){
     if(V.rtc&&WS.t>=V.rtc.t){emit('rtc',{V,ok:V.rtc.ok,why:V.rtc.why,val:V.rtc.val});killVessel(V);continue}
     if(V.mode==='bg')bgStep(V,sim);
     else if(V.mode==='rails')railsSync(V);
+    if(V.mode==='rails'||V.mode==='landed')mineStep(V,sim,false);
   }
   // Nähe neu bestimmen
   if(WS.nearT<=0||!A){WS.nearT=.5;
@@ -1699,11 +1901,13 @@ const SANDBOX=()=>S&&S.mode==='frei';
 function newState(mode){
   const s={v:1,mode,money:mode==='frei'?0:25000,sci:0,t:0,bld:{vab:1,pad:1,lab:1,mc:1,ts:1,ac:1},tech:['start'],
     designs:[],cur:{n:'Rakete 1',parts:[]},crew:[],vessels:[],act:null,con:{off:[],act:[],n:0},ms:{},subj:{},tips:{},
-    st:{launch:0,lost:0,rec:0,crewLost:0,maxAlt:0,time:0},app:[],nid:1,flags:0,gerda:[],memo:[]};
+    st:{launch:0,lost:0,rec:0,crewLost:0,maxAlt:0,time:0,boom:0,dock:0,eva:0,ore:0,fuel:0,sciTot:0,maxSpd:0,maxDist:0,lands:{}},
+    app:[],nid:1,flags:0,gerda:[],memo:[],ach:{},comm:mode==='karriere'};
   if(mode==='frei'){s.tech=TECH.map(t=>t.id);s.bld={vab:3,pad:3,lab:3,mc:3,ts:3,ac:3}}
   return s;
 }
 const bldV=k=>BLD[k].lv[(S.bld[k]||1)-1].v;
+commReq=()=>!!(S&&S.comm);
 const hasTech=id=>S.tech.includes(id);
 const partOK=t=>SANDBOX()||hasTech(P[t].tech);
 crewById=id=>S&&S.crew.find(c=>c.id===id)||null;
@@ -1785,13 +1989,14 @@ function dataValue(d,send){const left=Math.max(0,d.cap-(S.subj[d.id]||0));return
 function creditData(d,send){
   const v=dataValue(d,send);
   S.subj[d.id]=(S.subj[d.id]||0)+v/(d.f||1);
-  if(!SANDBOX())S.sci+=v;
+  if(!SANDBOX())S.sci+=v;S.st.sciTot+=v;
   conEvent('sci',{id:d.id,e:d.e,b:d.id.split('|')[1],s:d.id.split('|')[2]});
   return v;
 }
 function canSend(V){
   if(!V.d.ant)return'Keine Antenne';
   if(ecTotal(V)<10)return'Zu wenig Strom';
+  if(commReq())return commLink(V).ok?'':'Kein Funkkontakt nach Hause – ein Satellit mit Antenne kann weiterleiten';
   if(V.d.ant<2){let b=vB(V);while(b&&b.id!=='murmel'&&b.par&&b.par.id!=='sonne')b=b.par;if(!b||b.id!=='murmel')return'Zu weit weg – dafür braucht es eine Parabolantenne'}
   return'';
 }
@@ -1813,7 +2018,7 @@ function msDef(k){
 function milestone(k){
   if(S.ms[k])return;const d=msDef(k);if(!d)return;
   S.ms[k]=S.t;
-  if(!SANDBOX()){S.money+=d.k;S.sci+=d.s}
+  if(!SANDBOX()){S.money+=d.k;S.sci+=d.s;S.st.sciTot+=d.s}
   emit('ms',{k,n:d.n,m:d.k,s:d.s});
 }
 
@@ -1827,11 +2032,20 @@ function track(V){
     if(alt>B.ah){milestone('space');h.space=1}
     S.st.maxAlt=Math.max(S.st.maxAlt,alt);
   }
+  const st=S.st,flown=V.met0!==null&&V.met0!==undefined;
+  if(flown){st.maxSpd=Math.max(st.maxSpd,Math.hypot(V.vx,V.vy));
+    const ab=bodyAbs(B,WS.t,{}),hm=bodyAbs(BODIES.murmel,WS.t,{}),ax=ab.x+V.x,ay=ab.y+V.y;
+    st.maxDist=Math.max(st.maxDist,Math.hypot(ax-hm.x,ay-hm.y));
+    const ds=Math.hypot(ax,ay);if(ds<4e8)achGive('sun');if(ds>8e9)achGive('far');
+    if(V.parts.some(q=>q.T>2000&&!q.dead))achGive('hot');}
   if(B.id!=='sonne'&&B.id!=='murmel'){h[B.id+'_fly']=1;milestone(B.id+'_fly')}
   if(B.id==='sonne'){h.sonne_fly=1;milestone('sonne_fly')}
   // Umlaufbahn: Periapsis über Lufthülle/Gelände und nicht gelandet
-  if(V.mode!=='landed'&&!V.landed){const o=vOrbit(V);if(o.e<1&&peri(o)>B.R+Math.max(B.ah,B.hmax+500)&&apo(o)<B.soi){h[B.id+'_orbit']=1;if(B.id==='murmel')milestone('orbit');else milestone(B.id+'_orbit')}}
+  if(V.mode!=='landed'&&!V.landed){const o=vOrbit(V);if(o.e<1&&peri(o)>B.R+Math.max(B.ah,B.hmax+500)&&apo(o)<B.soi){h[B.id+'_orbit']=1;if(B.id==='murmel')milestone('orbit');else milestone(B.id+'_orbit');
+    if(o.e<.005)achGive('circle');if(V.d.seats>=6)achGive('station6')}}
   if((sit==='boden'||sit==='wasser')&&B.id!=='murmel'&&V.kind!=='flag'){h[B.id+'_land']=1;milestone(B.id+'_land')}
+  if((sit==='boden'||sit==='wasser')&&flown&&V.kind!=='flag'){st.lands[B.id]=1;
+    if(B.id==='murmel'&&sit==='wasser')achGive('splash');if(B.id==='murmel'&&sit==='boden'&&vBiome(V)==='Berge')achGive('peak')}
   if(V.kind==='eva'&&sit!=='boden'&&sit!=='wasser')milestone('eva');
   // Rover: Strecke auf fremden Körpern
   if(V.d.wheels.length&&V.landed&&V.nc>0){
@@ -1839,7 +2053,36 @@ function track(V){
     V.rv={b:B.id,a,d:(V.rv&&V.rv.b===B.id?V.rv.d:0)};
     if(V.rv.d>1000&&B.id!=='murmel'){milestone('rover');conEvent('rover',{b:B.id,d:V.rv.d})}
   }
-  conCheck(V);
+  conCheck(V);achCheck();
+}
+
+/* ---------- Erfolge (zusätzlich zu den Rekorden) ---------- */
+const ACH=[
+  ['boom1','💥','Erster Knall','Ein Teil ist explodiert.'],['boom50','🎆','Feuerwerk','50 Teile sind explodiert.'],
+  ['launch10','🚀','Vielflieger','10 Starts.'],['launch50','🏭','Raketenfabrik','50 Starts.'],['rec10','♻️','Schrottsammler','10 Fahrzeuge geborgen.'],
+  ['alt1000','🏔️','Hoch hinaus','1.000 km über Murmel.'],['v5k','⚡','Flott','5.000 m/s schnell.'],['v15k','☄️','Blitzschnell','15.000 m/s schnell.'],
+  ['circle','⭕','Kreisrund','Eine fast perfekt runde Umlaufbahn.'],['station6','🏠','Großes Zuhause','Eine Umlaufbahn mit Platz für 6 Knubbel.'],
+  ['moons','🌗','Mondhüpfer','Auf Knopf und Brösel gelandet.'],['land5','🧭','Weltenbummler','Auf 5 fremden Himmelskörpern gelandet.'],
+  ['landall','🌍','Überall gewesen','Auf jedem Himmelskörper mit Boden gelandet.'],['splash','🌊','Wasserratte','Auf dem Meer von Murmel gewassert.'],
+  ['peak','⛰️','Gipfelstürmer','In den Bergen von Murmel gelandet.'],['sun','☀️','Sonnenbad','Der Sonne näher als 400.000 km.'],
+  ['far','🛰️','Ganz weit draußen','Mehr als 8 Mio. km von der Sonne entfernt.'],['hot','🔥','Glühwürmchen','Ein Teil war über 2.000 K heiß – und blieb heil.'],
+  ['sci1000','🔬','Wissbegierig','1.000 Forschungspunkte gesammelt.'],['million','💰','Millionär','1 Million € auf dem Konto.'],
+  ['crew10','👨‍🚀','Großes Team','10 Astronauten im Team.'],['star5','⭐','Profi','Ein Knubbel mit 5 Sternen.'],
+  ['dock5','🔗','Andock-Ass','5 Mal angedockt.'],['flag5','🚩','Fahnenträger','5 Flaggen gesetzt.'],['eva10','🧑‍🚀','Spaziergänger','10 Mal ausgestiegen.'],
+  ['ore','⛏️','Bergmann','Zum ersten Mal Erz gefördert.'],['fuel','⛽','Tankwart','Mit dem Tankschlauch Treibstoff umgefüllt.'],
+  ['relay','📡','Funkturm','Eine Sonde über ein Relais gesteuert.'],['year','📅','Langzeitmission','Ein Jahr Spielzeit ist vergangen.']];
+const ACHM={};for(const[k,ic,n,d]of ACH)ACHM[k]={k,ic,n,d};
+let onAch=k=>{};                                 // Meldung, von der Oberfläche gesetzt
+function achGive(k){if(!S||!ACHM[k]||S.ach[k])return;S.ach[k]=S.t||1;onAch(k)}
+function achCheck(){
+  if(!S)return;const st=S.st,g=achGive,L=Object.keys(st.lands).filter(b=>b!=='murmel');
+  if(st.boom>=1)g('boom1');if(st.boom>=50)g('boom50');if(st.launch>=10)g('launch10');if(st.launch>=50)g('launch50');if(st.rec>=10)g('rec10');
+  if(st.maxAlt>=1e6)g('alt1000');if(st.maxSpd>=5000)g('v5k');if(st.maxSpd>=15000)g('v15k');
+  if(st.lands.knopf&&st.lands.broesel)g('moons');if(L.length>=5)g('land5');if(BLIST.every(b=>!b.ter||b.id==='murmel'||st.lands[b.id]))g('landall');
+  if(st.sciTot>=1000)g('sci1000');if(!SANDBOX()&&S.money>=1e6)g('million');
+  if(crewAlive().length>=10)g('crew10');if(S.crew.some(c=>c.st!=='tot'&&lvOf(c.xp)>=5))g('star5');
+  if(st.dock>=5)g('dock5');if(S.flags>=5)g('flag5');if(st.eva>=10)g('eva10');
+  if(st.ore>0)g('ore');if(st.fuel>0)g('fuel');if((S.t||0)>=365*86400)g('year');
 }
 
 /* ---------- Bergung auf Murmel ---------- */
@@ -1900,6 +2143,7 @@ function genContract(){
   if(m('knopf_land')||m('broesel_land'))types.push('flag','land');
   if(hasTech('rover'))types.push('rover');
   if(hasTech('rueck'))types.push('rtcl');
+  if(hasTech('abbau'))types.push('mine');
   for(let g=0;g<20;g++){
     const k=pick(types),c={id:'k'+(S.con.n++),k,st:'off'};
     let b=k==='hoch'||k==='rtcl'?'murmel':pick(far.length&&R()<.75?far:bodies);
@@ -1929,6 +2173,8 @@ function genContract(){
       const alt=Math.round((B2.R*(b==='murmel'?.3:.4)+Math.max(B2.ah,B2.hmax+2000)+R()*B2.R*.3)/1e3);c.p={alt:alt*1e3};
       const who=newCrew();who.n=who.n;c.p.crew=who;c.n=`Rettung: ${who.n.split(' ')[0]}`;c.d=`${who.n} sitzt in einer Kapsel ohne Treibstoff in ${alt} km Höhe um ${B2.n} fest. Hol ${who.n.split(' ')[0]} (Kapsel ranfliegen, auf „An Bord holen“ tippen) und bring alle heil nach Murmel.`;
       c.rew=Math.round((10000+8000*BODIES[b].xp)/100)*100;c.sci=3}
+    else if(k==='mine'){if(!ORE[b]||b==='murmel')continue;const tt=pick([.5,1,1.5]);c.p={t:tt};c.n=`Bergbau auf ${B.n}`;
+      c.d=`Lande auf ${B.n} und fördere ${String(tt).replace('.',',')} t Erz (Bohrer, Erztank und Strom).`;c.rew=Math.round((8000+7000*x)/100)*100;c.sci=Math.round(3*x)}
     else if(k==='rtcl'){c.n='Booster-Landung';c.d='Lande eine abgetrennte Stufe mit Rückkehr-Computer wieder auf Murmel.';c.rew=12000;c.sci=4}
     if(!c.n)continue;
     if(S.con.off.some(o=>o.n===c.n)||S.con.act.some(o=>o.n===c.n))continue;
@@ -1951,7 +2197,7 @@ function acceptCon(id){
 function declineCon(id){S.con.off=S.con.off.filter(c=>c.id!==id);fillOffers()}
 function conDone(c){
   c.st='done';S.con.act=S.con.act.filter(x=>x!==c);
-  S.money+=c.rew;S.sci+=c.sci||0;S.con.done=(S.con.done||0)+1;
+  S.money+=c.rew;S.sci+=c.sci||0;S.st.sciTot+=c.sci||0;S.con.done=(S.con.done||0)+1;
   emit('con',{c});fillOffers();
 }
 /* Rettungs-Kapsel erzeugen */
@@ -1983,6 +2229,7 @@ function conCheck(V){
   for(const c of S.con.act.slice()){
     if(c.k==='hoch'&&B.id==='murmel'&&alt>=c.p.alt)conDone(c);
     if(V.met0<c.t0)continue;                     // nur Fahrzeuge, die nach dem Annehmen gestartet sind
+    if(c.k==='mine'&&V.mineB&&(V.mineB[c.b]||0)>=c.p.t-1e-6)conDone(c);
     if(c.b!==B.id)continue;
     if(c.k==='land'&&(sit==='boden'||sit==='wasser')&&(!c.p.crew||vCrew(V).length))conDone(c);
     if((c.k==='sat'||c.k==='station')&&V.mode!=='landed'&&!V.landed){
@@ -2002,7 +2249,7 @@ function conCheck(V){
    8. SPIELSTAND-DATEN: Fahrzeuge in reine Daten verwandeln und zurück
    ===================================================================== */
 const PKEYS=['t','x','y','fx','fy','p','a','n','s','col','r','T','on','dep','arm','brk','used','crew','fo'];
-const VKEYS=['id','name','body','x','y','vx','vy','th','om','mode','stg','thr','sas','sasT','data','flags','kind','hist','met0','wreck','o','rv','nodes','landed','splashed','rest','pad'];
+const VKEYS=['id','name','body','x','y','vx','vy','th','om','mode','stg','thr','sas','sasT','data','flags','kind','hist','met0','wreck','o','rv','nodes','landed','splashed','rest','pad','mineB'];
 function serV(V){
   const o={};for(const k of VKEYS)if(V[k]!==undefined&&V[k]!==null)o[k]=V[k];
   o.parts=V.parts.map(q=>{const r={};for(const k of PKEYS){const v=q[k];if(v===undefined||v===null)continue;if(v===0&&(k==='fx'||k==='fy'||k==='on'||k==='dep'||k==='arm'||k==='brk'||k==='used'||k==='fo'))continue;r[k]=v}return r});
@@ -2038,7 +2285,7 @@ function shade(c,f){
 const DEFC={tank:[0,'none',2],srb:[0,'rings',2],pod:[9,'none',0],pod3:[9,'none',0],lander:[9,'none',4],probe:[9,'none',4],probe2:[9,'none',4],cabin:[0,'stripe',6],
   bellL:[1],bellV:[1],nose:[0,'none',2],fin:[2],fin2:[3],adapter:[0],beam:[9],plate:[9],dock:[9],chute:[3],chuteR:[3],heat:[10],leg:[9],wheel:[1],
   bat:[4],batm:[4],sol:[6],sol2:[6],ant:[9],dish:[0],rtc:[5],thermo:[0],baro:[0],goo:[5],mat:[0],sniff:[0],seis:[4],grav:[7],les:[2],xet:[7,'none',0],mpt:[4,'none',0],
-  tankR:[0,'none',2],atom:[5],ion:[6],spider:[1],rcs:[9],dec:[1],decR:[1],eva:[0],flag:[2]};
+  tankR:[0,'none',2],oretank:[3,'rings',1],drill:[4],refinery:[9,'stripe',3],rtg:[1],atom:[5],ion:[6],spider:[1],rcs:[9],dec:[1],decR:[1],eva:[0],flag:[2]};
 function colOf(q){
   const d=DEFC[P[q.t].sh]||[0],c=q.col;
   return{c:PAL[c&&c.c!==undefined?c.c:d[0]],c2:PAL[c&&c.c2!==undefined?c.c2:(d[2]!==undefined?d[2]:2)],pat:c&&c.p?c.p:(d[1]||'none'),dec:c&&c.d||''};
@@ -2122,9 +2369,10 @@ function drawPart(c,q,o){
   c.lineWidth=lw;c.strokeStyle=ol;c.lineJoin='round';
   const crew=q.crew||[];
   switch(t.sh){
-    case'tank':case'tankR':case'xet':case'mpt':{
+    case'tank':case'tankR':case'xet':case'mpt':case'oretank':{
       c.fillStyle=cylFill(c,-w/2,w/2,co.c);rr(c,-w/2,-h/2,w,h,Math.min(w*.12,.14));c.fill();
       pattern(c,w,h,co);
+      if(t.sh==='oretank'){c.fillStyle='rgba(70,45,20,.55)';for(const[x,y,r]of[[-.22,.12,.1],[.16,.2,.07],[.04,-.12,.11],[-.18,-.28,.06],[.27,-.08,.06]]){c.beginPath();c.arc(x*w,y*h,r*w,0,TAU);c.fill()}}
       if(t.sh==='xet'){c.fillStyle='rgba(255,255,255,.5)';c.beginPath();c.arc(0,0,w*.28,0,TAU);c.fill()}
       if(t.sh==='mpt'){c.fillStyle='rgba(0,0,0,.25)';c.fillRect(-w/2,-h*.08,w,h*.16)}
       c.fillStyle='#596273';const cap=Math.min(.12,h*.08);c.fillRect(-w/2,h/2-cap,w,cap);c.fillRect(-w/2,-h/2,w,cap);
@@ -2235,6 +2483,24 @@ function drawPart(c,q,o){
     case'ant':{c.strokeStyle='#c9ced8';c.lineWidth=Math.max(lw*1.4,.05);c.beginPath();c.moveTo(-w*.3,-h/2);c.lineTo(0,h*.45);c.stroke();c.fillStyle='#e8423a';c.beginPath();c.arc(0,h*.45,Math.max(.06,w*.3),0,TAU);c.fill();c.strokeStyle=ol;c.lineWidth=lw;break}
     case'dish':{c.fillStyle='#596273';c.fillRect(-w/2,-h*.1,w*.3,h*.2);c.fillStyle=co.c;c.beginPath();c.moveTo(-w*.1,-h/2);c.quadraticCurveTo(w*.4,0,-w*.1,h/2);c.quadraticCurveTo(w*.15,0,-w*.1,-h/2);c.fill();c.stroke();
       c.strokeStyle='#9aa3ad';c.beginPath();c.moveTo(w*.05,0);c.lineTo(w*.5,0);c.stroke();break}
+    case'drill':{
+      c.fillStyle=cylFill(c,-w/2,w/2,co.c);rr(c,-w/2,h*.02,w,h*.46,.05);c.fill();c.stroke();
+      c.fillStyle='#3d434e';c.fillRect(-w*.14,-h*.3,w*.28,h*.34);
+      c.fillStyle='#9aa3ad';poly(c,[-w*.24,-h*.05,w*.24,-h*.05,0,-h/2]);c.fill();c.stroke();
+      const off=q.on?(TIME*6)%1:0;c.strokeStyle='#596273';c.lineWidth=lw*1.3;c.beginPath();
+      for(let k=0;k<3;k++){const f=(k+off)/3,y=-h*.08-f*h*.36,hw=w*.22*(1-f*.9);c.moveTo(-hw,y);c.lineTo(hw,y-h*.035)}c.stroke();
+      c.fillStyle=q.on?'#5fe08a':'#1e4a2e';c.beginPath();c.arc(w*.25,h*.36,Math.min(w,h)*.07,0,TAU);c.fill();
+      c.strokeStyle=ol;c.lineWidth=lw;break}
+    case'refinery':{
+      c.fillStyle=cylFill(c,-w/2,w/2,co.c);rr(c,-w/2,-h/2,w,h,.08);c.fill();pattern(c,w,h,co);c.stroke();
+      c.fillStyle='#596273';c.fillRect(-w*.46,h*.18,w*.92,h*.07);c.fillRect(-w*.46,-h*.3,w*.92,h*.07);
+      c.fillStyle='#3d434e';c.fillRect(w*.12,h*.25,w*.16,h*.25);
+      c.fillStyle=q.on?'#ffd23f':'#5a4a1a';c.beginPath();c.arc(-w*.22,-h*.02,w*.1,0,TAU);c.fill();c.stroke();break}
+    case'rtg':{
+      c.fillStyle='#596273';for(const y of[-.3,0,.3])c.fillRect(-w/2,y*h-h*.06,w,h*.12);
+      c.fillStyle=cylFill(c,-w*.28,w*.28,co.c);rr(c,-w*.28,-h/2,w*.56,h,.05);c.fill();c.stroke();
+      c.fillStyle='#ffd23f';c.beginPath();c.arc(0,0,w*.14,0,TAU);c.fill();
+      c.fillStyle='#2b2f38';for(let k=0;k<3;k++){const a=Math.PI/2+k*TAU/3;c.beginPath();c.moveTo(0,0);c.arc(0,0,w*.12,a-.45,a+.45);c.closePath();c.fill()}break}
     case'rtc':{c.fillStyle='#3d434e';rr(c,-w/2,-h/2,w,h,.04);c.fill();c.stroke();c.fillStyle='#5fe08a';c.fillRect(-w*.3,-h*.2,w*.6,h*.4);c.fillStyle='#0a3a1a';c.fillRect(-w*.2,-h*.05,w*.4,h*.1);break}
     case'thermo':case'baro':case'sniff':case'seis':case'grav':case'goo':case'mat':{
       c.fillStyle=cylFill(c,-w/2,w/2,t.sh==='mat'?co.c:'#9aa3ad');rr(c,-w/2,-h/2,w,h,Math.min(w,h)*.15);c.fill();c.stroke();
@@ -2591,7 +2857,7 @@ function apsides(c,pt,bp,isFirst){
   const pe=peri(o);
   // Periapsis
   let tP=o.tp;if(o.e<1){const T=period(o);while(tP<pt.t0)tP+=T}
-  if(inRange(tP)||isFirst&&o.e<1){const q=orbitAt(o,tP,{});m2s(bp.x+q.x,bp.y+q.y,SP);mark(c,SP.x,SP.y,'Pe '+fmtDist(pe-b.R),'#8fd0ff');M.hits.push({x:SP.x,y:SP.y,r:16,k:'ap',t:tP})}
+  if((inRange(tP)||isFirst&&o.e<1)&&pe>b.R*.98){const q=orbitAt(o,tP,{});m2s(bp.x+q.x,bp.y+q.y,SP);mark(c,SP.x,SP.y,'Pe '+fmtDist(pe-b.R),'#8fd0ff');M.hits.push({x:SP.x,y:SP.y,r:16,k:'ap',t:tP})}
   if(o.e<1&&apo(o)<b.soi){let tA=o.tp+period(o)/2;while(tA<pt.t0)tA+=period(o);if(inRange(tA)||isFirst){const q=orbitAt(o,tA,{});m2s(bp.x+q.x,bp.y+q.y,SP);mark(c,SP.x,SP.y,'Ap '+fmtDist(apo(o)-b.R),'#ffd27a',true);M.hits.push({x:SP.x,y:SP.y,r:16,k:'ap',t:tA})}}
 }
 function drawMap(c){
@@ -2641,6 +2907,10 @@ function drawMap(c){
       c.save();c.translate(SP.x,SP.y);c.rotate(Math.PI/4);c.fillStyle=i===F.nsel?'#5ce1ff':'#2fa8d8';c.strokeStyle='#fff';c.lineWidth=2;c.fillRect(-7,-7,14,14);c.strokeRect(-7,-7,14,14);c.restore();
       M.hits.push({x:SP.x,y:SP.y,r:22,k:'node',i})}
   });
+  // Funkweg über Relais nach Hause
+  if(A&&A.link&&A.link.ok&&A.link.hops>0){
+    const pts=[A,...A.link.path].map(X=>{const p=vPos(X),bp=bodyIn(vB(X),f,t,{});return m2s(bp.x+p.x,bp.y+p.y,{})}),hm=bodyIn(BODIES.murmel,f,t,{});pts.push(m2s(hm.x,hm.y,{}));
+    c.strokeStyle='rgba(95,224,138,.6)';c.lineWidth=1.5;c.setLineDash([4,5]);c.beginPath();pts.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.stroke();c.setLineDash([])}
   // Fahrzeuge
   for(const V of VESSELS){
     if(V.kind==='debris')continue;
@@ -2946,7 +3216,9 @@ const TIPS={
   knopf:'Zum Mond Knopf: In der Umlaufbahn einen Manöverpunkt setzen und nach vorne ziehen, bis die Bahn Knopf trifft.',
   lostcrew:'Wir haben jemanden verloren … Wir werden das nie vergessen. Baut sicherer, bitte.',
   dock:'Zum Andocken brauchst du zwei Andockstutzen gleicher Größe. Ganz langsam ranfliegen – unter 1 m/s!',
-  eva:'Ausgestiegen! Mit den Pfeilen bewegst du dich. Auf dem Boden kannst du eine Flagge setzen oder eine Probe nehmen.'
+  eva:'Ausgestiegen! Mit den Pfeilen bewegst du dich. Auf dem Boden kannst du eine Flagge setzen oder eine Probe nehmen.',
+  mine:'Bohrer laufen nur am Boden und brauchen Strom. Das Erz kommt in den Erztank – eine Raffinerie macht daraus Treibstoff.',
+  comm:'Sonden brauchen Funkkontakt nach Hause. Hinter Monden und Planeten bricht er ab – Satelliten mit Antenne leiten ihn weiter.'
 };
 let tipQ=[],tipOn=null,tipT=0;
 function tip(k,force){
@@ -3006,6 +3278,7 @@ function hubUI(){
   setCls('#bLab','dot',!SANDBOX()&&TECH.some(t=>techState(t)==='buy'));
   setCls('#bMc','dot',!SANDBOX()&&S.con.off.length>0&&S.con.act.length<bldV('mc'));
   setCls('#bTs','dot',VESSELS.some(v=>v.kind==='ship'&&v.body==='murmel'&&v.mode==='landed'));
+  achCheck();
 }
 
 /* ---------- Einstellungen ---------- */
@@ -3016,7 +3289,9 @@ function openSettings(){
     <div class="tog"><span>Vibration</span><button class="sw${SET.vib?' on':''}" data-a="setT" data-v="vib"></button></div>
     <div class="tog"><span>Bildschirm-Wackeln</span><button class="sw${SET.shake?' on':''}" data-a="setT" data-v="shake"></button></div>
     <div class="tog"><span>Lenken im Flug</span><div class="seg"><button class="${SET.ctrl==='btn'?'on':''}" data-a="setCtl" data-v="btn">Tasten</button><button class="${SET.ctrl==='tilt'?'on':''}" data-a="setCtl" data-v="tilt">Kippen</button></div></div>
-    ${S?`<h4>Spielstand</h4><p>Wird automatisch auf diesem Gerät gespeichert. Mit dem Code nimmst du ihn auf ein anderes Gerät mit.</p>
+    ${S?`<h4>Spiel</h4><div class="tog"><span>Sonden brauchen Funkkontakt</span><button class="sw${S.comm?' on':''}" data-a="setComm"></button></div>
+    <p>Ohne Funk nach Hause lässt sich eine Sonde (ohne Crew) nicht steuern. Antennen reichen verschieden weit, Satelliten leiten weiter.</p>
+    <h4>Spielstand</h4><p>Wird automatisch auf diesem Gerät gespeichert. Mit dem Code nimmst du ihn auf ein anderes Gerät mit.</p>
     <div class="btns"><button class="btn cy" data-a="export">Code erzeugen</button><button class="btn" data-a="copy">Kopieren</button></div><textarea id="exTxt" readonly placeholder="Hier erscheint dein Code."></textarea>
     <h4>Importieren</h4><textarea id="imTxt" placeholder="Code hier einfügen"></textarea><div class="btns"><button class="btn" data-a="import">Spielstand laden</button></div>
     <h4>Neu anfangen</h4><div class="btns"><button class="btn red" data-a="reset">${SANDBOX()?'Freies Spiel':'Karriere'} zurücksetzen</button></div>`:''}
@@ -3028,6 +3303,7 @@ function openSettings(){
 }
 ACT.setT=(v,b)=>{SET[v]=SET[v]?0:1;b.classList.toggle('on',!!SET[v]);
   if(SFXG)SFXG.gain.value=SET.sound?1:0;if(MUSG)MUSG.gain.value=SET.music?.32:0;if(v==='vib'&&SET.vib)vib(40);saveSet()};
+ACT.setComm=(v,b)=>{S.comm=!S.comm;b.classList.toggle('on',S.comm);if(F.V){F.V.link=null;F.V.ci=null}saveNow()};
 ACT.setCtl=v=>{SET.ctrl=v;if(v==='tilt')askTilt();saveSet();openSettings()};
 let TILT=0,TILTOK=false;
 function askTilt(){
@@ -3152,6 +3428,10 @@ function openTS(){
   }
   const flags=VESSELS.filter(v=>v.kind==='flag');
   if(flags.length)h+=`<h4>Flaggen</h4>`+flags.map(f=>`<p>🚩 ${esc(f.name)} auf ${vB(f).n}</p>`).join('');
+  const M=BODIES.murmel;
+  h+='<h4>Startfenster von Murmel</h4>'+BLIST.filter(p=>p.par&&p.par.id==='sonne'&&p!==M).map(p=>{const w=planetWindow(M,p,S.t),dv=ejectDv(M,lowR(M),w.vinf);
+    return`<div class="row"><div class="rt"><b>${esc(p.n)}</b><small>${w.dt<3600?'jetzt':fmtIn(w.dt)} · etwa ${fmtNum(dv)} m/s aus der Umlaufbahn · Flug ${fmtTs(w.tt)}</small></div></div>`}).join('')
+    +'<p>Im Flug zeigt „🪐 Startfenster“ das Gleiche – und setzt dir auf Wunsch gleich das passende Manöver.</p>';
   openSheet('ts','Verfolgungsstation',h,{keepScroll:true});
 }
 ACT.tsFly=id=>{const V=VESSELS.find(v=>v.id===id);if(!V)return;closeSheet();enterFlight(V,true)};
@@ -3173,6 +3453,27 @@ function openPad(){
 }
 ACT.padGo=i=>{const all=[S.cur,...S.designs].filter(d=>d&&d.parts.length);const d=all[+i];if(!d)return;closeSheet();launch(d)};
 ACT.vab=()=>{closeSheet();goEdit()};
+
+/* ---------- Erfolge und Statistik ---------- */
+ACT.ach=()=>openAch('ach');
+TABF.ach=v=>openAch(v);
+function openAch(tab){
+  achCheck();let h='';
+  if(tab==='ach'){
+    const n=ACH.filter(a=>S.ach[a[0]]).length;h+=`<p class="lead">${n} von ${ACH.length} Erfolgen</p>`;
+    for(const[k,ic,nm,d]of ACH){const ok=!!S.ach[k];h+=`<div class="ach${ok?'':' no'}"><i>${ic}</i><div><b>${esc(nm)}</b><small>${esc(d)}</small></div></div>`}
+  }else{
+    const st=S.st,L=Object.keys(st.lands).map(b=>BODIES[b]?BODIES[b].n:b);
+    const rows=[['Starts',fmtNum(st.launch)],['Geborgene Fahrzeuge',fmtNum(st.rec)],['Explodierte Teile',fmtNum(st.boom)],['Verlorene Knubbel',fmtNum(st.crewLost)],
+      ['Höchste Höhe über Murmel',fmtDist(st.maxAlt)],['Höchstes Tempo',fmtV(st.maxSpd)],['Weiteste Entfernung von Murmel',fmtDist(st.maxDist)],
+      ['Gelandet auf',L.length?L.join(', '):'–'],['Angedockt',fmtNum(st.dock)],['Ausgestiegen',fmtNum(st.eva)],['Flaggen',fmtNum(S.flags)],
+      ['Erz gefördert',dc(st.ore,1)+' t'],['Treibstoff umgefüllt',dc(st.fuel,1)+' t'],['Forschung gesammelt','🔬 '+fmtSci(Math.round(st.sciTot))],
+      ['Aufträge erledigt',fmtNum(S.con.done||0)],['Rekorde',fmtNum(Object.keys(S.ms).length)],['Zeit im Spiel',fmtTs(S.t||0)],['Gespielt',fmtT(st.time)]];
+    h+=`<table class="st">${rows.map(([a,b])=>`<tr><td>${a}</td><td>${esc(String(b))}</td></tr>`).join('')}</table>`;
+  }
+  openSheet('ach','Erfolge',h,{tab,tabs:[['ach','Erfolge'],['st','Statistik']],keepScroll:true});
+}
+onAch=k=>{const a=ACHM[k];toast('🏆 Erfolg: '+a.n,'gold',3500);sfx('ms')};
 
 /* ---------- Bergung: Zusammenfassung ---------- */
 function showRecovery(r,V){
@@ -3517,9 +3818,12 @@ function selUI(){
   const q=ps[i],t=P[q.t];
   let info=[];
   if(t.eng)info.push(`Schub ${fmtNum(t.eng.f)} kN · Isp ${t.eng.ia}–${t.eng.iv} s`);
-  if(t.res){if(t.res.lf)info.push(`Treibstoff ${dc(t.res.lf,2)} t`);if(t.res.sf)info.push(`Feststoff ${dc(t.res.sf,2)} t`);if(t.res.xe)info.push(`Xenon ${dc(t.res.xe,2)} t`);if(t.res.ec&&!t.crew&&!t.ctl)info.push(`Strom ${t.res.ec}`)}
+  if(t.res){if(t.res.lf)info.push(`Treibstoff ${dc(t.res.lf,2)} t`);if(t.res.sf)info.push(`Feststoff ${dc(t.res.sf,2)} t`);if(t.res.xe)info.push(`Xenon ${dc(t.res.xe,2)} t`);if(t.res.ore)info.push(`Erz ${dc(t.res.ore,2)} t`);if(t.res.ec&&!t.crew&&!t.ctl)info.push(`Strom ${t.res.ec}`)}
+  if(t.sol)info.push(`Strom +${dc(t.sol.ec,1)}/s im Licht`);if(t.gen)info.push(`Strom +${dc(t.gen.ec,2)}/s immer`);
+  if(t.ant)info.push(t.ant>1?'Funk: überall':'Funk: 12.000 km');if(t.ctl&&t.ctl.probe&&!t.ant)info.push('Funk eingebaut: 800 km');
+  if(t.drill)info.push(`Strom −${dc(t.drill.ec,1)}/s`);if(t.refine)info.push(`${dc(t.refine.r*60,1)} t Erz → Treibstoff je Minute · Strom −${dc(t.refine.ec,1)}/s`);
   if(t.crew)info.push(`${t.crew} Sitz${t.crew>1?'e':''}`);
-  info.push(`${dc(partMass({t:q.t,r:Object.assign({},t.res||{})}),2)} t`);if(!SANDBOX())info.push(fmtM(t.k));
+  info.push(`${dc(partMass({t:q.t,r:resStart(q.t)}),2)} t`);if(!SANDBOX())info.push(fmtM(t.k));
   const stg=stageable(q.t);
   let crew='';if(t.crew){const names=(q.crew||[]).map(id=>{const c=crewById(id);return c?c.n.split(' ')[0]:''}).filter(Boolean);crew=`<button data-a="crewE">👤 ${names.length?esc(names.join(', ')):'leer'}</button>`}
   el.innerHTML=`<div class="nm">${esc(t.n)}${q.sy>=0?' <span class="tag">gespiegelt</span>':''}</div><div class="ds">${esc(t.d||'')}<br>${info.join(' · ')}</div>
@@ -3636,7 +3940,7 @@ function drawEditor(c){
   if(E.sel>=0&&ps[E.sel]){const q=ps[E.sel],t=P[q.t],s=d2s(q.x-t.w/2,q.y+t.h/2);c.strokeStyle='#5ce1ff';c.lineWidth=2.5;c.setLineDash([6,4]);c.strokeRect(s.x-3,s.y-3,t.w*E.z+6,t.h*E.z+6);c.setLineDash([]);
     if(q.sy>=0&&ps[q.sy]){const w=ps[q.sy],s2=d2s(w.x-t.w/2,w.y+t.h/2);c.strokeStyle='rgba(92,225,255,.5)';c.strokeRect(s2.x-3,s2.y-3,t.w*E.z+6,t.h*E.z+6)}}
   // Schwerpunkt
-  if(ps.length){let m=0,x=0,y=0;for(const q of ps){const pm=partMass({t:q.t,r:Object.assign({},P[q.t].res||{}),crew:q.crew});m+=pm;x+=pm*q.x;y+=pm*q.y}
+  if(ps.length){let m=0,x=0,y=0;for(const q of ps){const pm=partMass({t:q.t,r:resStart(q.t),crew:q.crew});m+=pm;x+=pm*q.x;y+=pm*q.y}
     const s=d2s(x/m,y/m),r=9;c.fillStyle='#ffd23f';c.beginPath();c.arc(s.x,s.y,r,0,TAU);c.fill();c.fillStyle='#222';c.beginPath();c.moveTo(s.x,s.y);c.arc(s.x,s.y,r,0,Math.PI/2);c.closePath();c.fill();c.beginPath();c.moveTo(s.x,s.y);c.arc(s.x,s.y,r,Math.PI,Math.PI*1.5);c.closePath();c.fill();
     c.strokeStyle='#222';c.lineWidth=1.5;c.beginPath();c.arc(s.x,s.y,r,0,TAU);c.stroke()}
   // Ziehen
@@ -3779,6 +4083,7 @@ ACT.stage=()=>{
     if(F.cd>0){F.cd=.01;return}                  // nochmal tippen: sofort
     F.cd=3.99;sfx('beep');if(V.thr===0)V.thr=1;return;
   }
+  const ci=V.ci||ctlInfo(V);if(ci.noLink){toast('📵 Kein Funkkontakt – die Sonde reagiert nicht','bad');return}
   doStage(V);
 };
 function doStage(V){
@@ -3863,8 +4168,11 @@ function recalcNodes(){
   for(const n of F.nodes){
     if(n.lock){base=n.pred;continue}            // wird gerade geflogen: nicht mehr verändern
     n.pred=null;n.pos=null;
-    if(base&&base.length){const last=base[base.length-1];if(n.t>last.t1-1&&isFinite(last.t1))n.t=Math.max(base[0].t0+1,last.t1-1);if(n.t<base[0].t0+1)n.t=base[0].t0+1}
-    const pt=base&&base.find(p=>n.t>=p.t0-1e-6&&n.t<=p.t1+1e-6);if(!pt){continue}
+    let closed=false;
+    if(base&&base.length){const last=base[base.length-1];closed=last.k==='none'&&last.o.e<1;
+      if(n.t>last.t1-1&&isFinite(last.t1)&&!closed)n.t=Math.max(base[0].t0+1,last.t1-1);if(n.t<base[0].t0+1)n.t=base[0].t0+1}
+    // eine geschlossene Bahn wiederholt sich: Punkte nach mehr als einer Runde liegen auf dem letzten Abschnitt
+    const pt=base&&(base.find(p=>n.t>=p.t0-1e-6&&n.t<=p.t1+1e-6)||(closed&&n.t>base[base.length-1].t0?base[base.length-1]:null));if(!pt){continue}
     const st=orbitAt(pt.o,n.t,{});n.b=pt.b.id;n.pos={x:st.x,y:st.y};
     const sp=Math.hypot(st.vx,st.vy)||1,px=st.vx/sp,py=st.vy/sp;let rx=-py,ry=px;if(rx*st.x+ry*st.y<0){rx=-rx;ry=-ry}
     n.dvx=n.dp*px+n.dr*rx;n.dvy=n.dp*py+n.dr*ry;n.dv=Math.hypot(n.dp,n.dr);
@@ -3966,8 +4274,8 @@ function flightUI(force){
   if(force)$('#fInfo').innerHTML='<div><b id="fAlt">0 m</b><small id="fAltL">Höhe</small></div><div><b id="fSpd">0 m/s</b><small id="fSpdL">Tempo</small></div><div><b id="fVs">0</b><small id="fVsL">steigt m/s</small></div>';
   const B=vB(V),p=vPos(V),r=Math.hypot(p.x,p.y),alt=r-B.R,rad=vRadar(V);
   const vs=(p.x*p.vx+p.y*p.vy)/r,sp=Math.hypot(p.vx,p.vy);
-  if(rad<4000&&alt<B.R){setTxt('#fAlt',fmtDist(rad));setTxt('#fAltL','über Grund')}else{setTxt('#fAlt',fmtDist(alt));setTxt('#fAltL','Höhe · '+B.n)}
-  setTxt('#fSpd',fmtV(sp));setTxt('#fVs',(vs>=0?'↑':'↓')+fmtNum(Math.abs(vs)));setTxt('#fVsL',vs>=0?'steigt m/s':'sinkt m/s');
+  if(rad<4000&&alt<B.R){fitB('#fAlt',fmtDist(rad));setTxt('#fAltL','über Grund')}else{fitB('#fAlt',fmtDist(alt));setTxt('#fAltL','Höhe · '+B.n)}
+  fitB('#fSpd',fmtV(sp));setTxt('#fVs',(vs>=0?'↑':'↓')+fmtNum(Math.abs(vs)));setTxt('#fVsL',vs>=0?'steigt m/s':'sinkt m/s');
   // Bahn
   let ob='';
   const T=WS.tgt?VESSELS.find(x=>x.id===WS.tgt):null;
@@ -3980,9 +4288,10 @@ function flightUI(force){
   }
   setHTML('#fOrb',ob);
   setTxt('#wv',WARPS[WS.wi]+'×');setCls('#warp','on',WS.wi>0);
-  setTxt('#fMet',V.met0===null||V.met0===undefined?'Bereit':'T+ '+fmtT(WS.t-V.met0));
+  const lk=V.link&&(V.d.ant||!vCrew(V).length)?(V.link.ok?(V.link.hops?'📡 ':'📶 '):'📵 '):'';   // nur wo Funk zählt: Sonden und Fahrzeuge mit Antenne
+  setTxt('#fMet',lk+(V.met0===null||V.met0===undefined?'Bereit':'T+ '+fmtT(WS.t-V.met0)));
   // Vorräte
-  const rs=[['lf','Treibstoff','#ffb547'],['sf','Feststoff','#ff7a5a'],['xe','Xenon','#9a8aff'],['mp','Steuergas','#ffe58a'],['ec','Strom','#7dff8a']];
+  const rs=[['lf','Treibstoff','#ffb547'],['sf','Feststoff','#ff7a5a'],['xe','Xenon','#9a8aff'],['ore','Erz','#c9a27a'],['mp','Steuergas','#ffe58a'],['ec','Strom','#7dff8a']];
   let rh='';for(const[k,n,c]of rs){const cap=resCap(V,k);if(cap<=0)continue;const f=resSum(V,k)/cap;rh+=`<div class="rb" style="--c:${c}"><i style="width:${Math.round(f*100)}%"></i><span>${n} ${Math.round(f*100)} %</span></div>`}
   if(F.dv)rh+=`<div class="rb" style="--c:#5ce1ff"><i style="width:100%;opacity:.25"></i><span>Δv ${fmtNum(F.dv.dv)} m/s</span></div>`;
   setHTML('#fRes',rh);
@@ -4000,6 +4309,8 @@ function flightUI(force){
   $('#rotL').style.display=eva?'none':'';$('#rotR').style.display=eva?'none':'';$('#stageB').style.display=eva?'none':'';
   chipsUI();sasUI(force);nodeUI();
 }
+/* Wert oben: lange Texte etwas kleiner, damit sie nicht in die Nachbarspalte laufen */
+function fitB(id,t){const el=$(id);if(!el||el.textContent===t)return;el.textContent=t;const n=t.length;el.style.fontSize=n<=8?'':n<=10?'14px':n<=12?'12px':'11px'}
 /* ---------- Knopfleiste ---------- */
 function chipsUI(){
   const V=F.V;if(!V)return;const d=V.d,ch=[];
@@ -4015,6 +4326,10 @@ function chipsUI(){
     const pre=V.met0===null||V.met0===undefined;
     if(pre)ch.push(['padBack','↩ Zurück in die Halle']);
     else if(recoverable(V))ch.push(['recover','✅ Bergen','gold']);
+    if(inSpace(V)&&nodesOK())ch.push(['circOpen','⭕ Kreisbahn']);
+    if(vB(V).id!=='sonne')ch.push(['winOpen','🪐 Startfenster']);
+    if(d.drills.length||d.refs.length)ch.push(['mineOpen','⛏ Bergbau',V.mineOn?'on':'']);
+    if(hoseTargets(V).length)ch.push(['hoseOpen','⛽ Tanken']);
     if(d.legs.length)ch.push(['legs','🦵 Beine',V.flags.legs?'on':'']);
     if(d.sol.some(i=>P[V.parts[i].t].sol.dep))ch.push(['solar','☀ Solar',V.flags.sol?'on':'']);
     if(d.rcs.length)ch.push(['rcs','🎯 RCS',V.flags.rcs?'on':'']);
@@ -4069,6 +4384,119 @@ ACT.swOpen=()=>{
   openSheet('sw','Fahrzeug wechseln',h||'<p>Niemand in der Nähe.</p>');
 };
 ACT.swGo=id=>{const X=VESSELS.find(v=>v.id===id);if(!X)return;closeSheet();F.V.nodes=F.nodes.map(n=>({t:n.t,dp:n.dp,dr:n.dr}));WS.act=X;F.V=X;F.cam=X;F.nodes=(X.nodes||[]).map(n=>Object.assign({},n));F.nsel=-1;F.pred=null;S.act=X.id;flFit(true);recalcNodes();flightUI(true)};
+/* ---------- Kreisbahn und Startfenster ---------- */
+const nodesOK=()=>SANDBOX()||bldV('ts')>=2;
+function inSpace(V){const B=vB(V);return V.kind==='ship'&&V.met0!==null&&V.met0!==undefined&&V.mode!=='landed'&&!(V.landed&&V.nc>0)&&!(B.atm&&vAlt(V)<B.ah)}
+/* stabile Umlaufbahn um den jetzigen Körper? */
+function stableOrbit(V){if(!inSpace(V))return null;const B=vB(V),p=vPos(V),o=orbitFrom(B.mu,p.x,p.y,p.vx,p.vy,WS.t);
+  return o.e<1&&peri(o)>B.R+Math.max(B.ah,B.hmax+500)&&apo(o)<B.soi?o:null}
+/* Manöverpunkt aus einem Planer übernehmen und auf der Karte zeigen */
+function addNode(n,msg,cls){
+  if(F.nodes.length>=3){toast('Höchstens 3 Manöverpunkte – lösch erst einen','bad');return false}
+  F.nodes.push({t:n.t,dp:n.dp,dr:n.dr||0});F.nodes.sort((a,b)=>a.t-b.t);
+  closeSheet();if(!F.map)ACT.map();F.pred=null;recalcNodes();F.nsel=F.nodes.findIndex(x=>x.t===n.t);nodeUI();sasUI(true);sfx('click');
+  if(msg)toast(msg,cls||'good',4000);return true;
+}
+function circBase(){const last=F.nodes[F.nodes.length-1];if(!F.pred)updPred(true);return{base:last?last.pred:F.pred,t0:Math.max(WS.t+10,last?last.t+10:0)}}
+function circOpts(){
+  const{base,t0}=circBase();if(!base||!base.length)return null;
+  const pt=base[0],r={b:pt.b,list:circNodes(pt,t0)};
+  const i=base.findIndex(p=>p.k==='enter');
+  if(i>=0&&base[i+1]){const p2=base[i+1];r.arr={b:p2.b,o:circNodes(p2,p2.t0).find(x=>x.k==='pe')}}
+  return r;
+}
+ACT.circOpen=()=>openCirc();
+function openCirc(){
+  const c=circOpts();if(!c){openSheet('circ','Kreisbahn','<p>Gerade gibt es keine Bahn zum Rechnen.</p>');return}
+  const row=(o,b,lbl,v)=>!o?'':o.why?`<div class="row done"><div class="rt"><b>${lbl}</b><small>${esc(o.why)}</small></div></div>`
+    :`<div class="row"><div class="rt"><b>${lbl} · ${fmtDist(o.r-b.R)}</b><small>Δv ${fmtNum(Math.abs(o.dv))} m/s${o.dv<0?' (bremsen)':''} · in ${fmtT(o.t-WS.t)}</small></div><button class="btn cy sm" data-a="circGo" data-v="${v}">Setzen</button></div>`;
+  let h='<p>Setzt einen Manöverpunkt, der deine Bahn rund macht. Danach auf der Karte „⏩ Hin“ tippen und in Richtung des blauen Manöver-Zeichens Gas geben.</p>';
+  if(F.nodes.length)h+='<p>Gerechnet ab deinem letzten Manöverpunkt.</p>';
+  h+=`<h4>Um ${esc(c.b.n)}</h4>`+row(c.list.find(x=>x.k==='ap'),c.b,'Am höchsten Punkt','ap')+row(c.list.find(x=>x.k==='pe'),c.b,'Am tiefsten Punkt','pe');
+  if(c.arr)h+=`<h4>Bei der Ankunft an ${esc(c.arr.b.n)}</h4>`+row(c.arr.o,c.arr.b,'Einfangen am tiefsten Punkt','arr');
+  openSheet('circ','Kreisbahn',h);
+}
+ACT.circGo=v=>{const c=circOpts();if(!c)return;const o=v==='arr'?c.arr&&c.arr.o:c.list.find(x=>x.k===v);if(!o||o.why)return;
+  addNode({t:o.t,dp:o.dv,dr:0},'Manöver gesetzt: danach fliegst du im Kreis um '+(v==='arr'?c.arr.b:c.b).n)};
+const lowR=b=>b.R+Math.max(b.ah,b.hmax+1000)*1.3+20e3;
+ACT.winOpen=()=>openWin();
+function openWin(){
+  const V=F.V;if(!V)return;const B=vB(V);
+  let h='<p>Ein Startfenster ist der Moment, in dem ein Flug zu einem anderen Himmelskörper am wenigsten Treibstoff kostet.</p>';
+  if(B.id==='sonne'){openSheet('win','Startfenster',h+'<p>Startfenster gibt es von einem Planeten oder Mond aus.</p>');return}
+  const pl=B.par.id==='sonne'?B:B.par,o=stableOrbit(V),can=nodesOK()&&o&&B===pl,t=WS.t;
+  if(B===pl&&B.kids.length){
+    h+=`<h4>Monde von ${esc(B.n)}</h4>`;
+    for(const m of B.kids){
+      const n=o?moonNode(B,o,m,t+30):null,r1=o?Math.hypot(V.x,V.y):lowR(B),hh=hohmann(B.mu,r1,m.a);
+      const sub=n?`Zünden in ${fmtT(n.t-t)} · etwa ${fmtNum(Math.abs(n.dp))} m/s · Flug ${fmtTs(n.tt)}`:`etwa ${fmtNum(Math.abs(hh.dv1))} m/s aus niedriger Umlaufbahn · Flug ${fmtTs(hh.t)}`;
+      h+=`<div class="row"><div class="rt"><b>${esc(m.n)}</b><small>${sub}</small></div>${can&&n?`<button class="btn cy sm" data-a="winGo" data-v="${m.id}">Manöver setzen</button>`:''}</div>`;
+    }
+  }
+  h+='<h4>Planeten</h4>';
+  for(const p of BLIST){if(!p.par||p.par.id!=='sonne'||p===pl)continue;
+    const w=planetWindow(pl,p,t),dv=ejectDv(pl,o&&B===pl?Math.hypot(V.x,V.y):lowR(pl),w.vinf);
+    const now=w.dt<3600||w.syn-w.dt<3600;
+    h+=`<div class="row${now?' hi':''}"><div class="rt"><b>${esc(p.n)}</b><small>Startfenster ${now?'<b style="color:var(--acc2)">jetzt</b>':fmtIn(w.dt)} · etwa ${fmtNum(dv)} m/s ab ${esc(pl.n)} · Flug ${fmtTs(w.tt)}</small></div>
+      ${can?`<button class="btn cy sm" data-a="winGo" data-v="${p.id}">Manöver setzen</button>`:inSpace(V)&&!now&&w.dt>600?`<button class="btn sm" data-a="winWait" data-v="${p.id}">⏩ Warten</button>`:''}</div>`;
+  }
+  if(!nodesOK())h+='<p>Manöver setzt der Planer, sobald die Verfolgungsstation ausgebaut ist.</p>';
+  else if(!can)h+=B!==pl?`<p>Zum Planen der Flüge zu anderen Planeten musst du in einer Umlaufbahn um ${esc(pl.n)} sein.</p>`:`<p>Zum Manöver-Setzen musst du in einer stabilen Umlaufbahn um ${esc(B.n)} sein.</p>`;
+  openSheet('win','Startfenster',h,{keepScroll:true});
+}
+ACT.winGo=id=>{
+  const V=F.V,B=vB(V),c=BODIES[id],o=stableOrbit(V);if(!o||!c)return;
+  const f=planTransfer(B,o,c,WS.t+30);
+  if(!f){toast('Kein passender Zeitpunkt gefunden','bad');return}
+  const ok=addNode(f,f.ok?`Manöver zu ${c.n} gesetzt – auf der Karte siehst du, ob die Bahn trifft.`:f.via?`Achtung: Unterwegs kommt ${f.via.n} in die Quere. Prüf die Bahn auf der Karte.`:`Manöver gesetzt – feinjustieren auf der Karte.`,f.ok?'good':'gold');
+  if(ok&&c.par!==B)mapFocus(c.par.id);           // zu einem Planeten: ganze Reise im Sonnensystem zeigen
+};
+ACT.winWait=id=>{const V=F.V,B=vB(V),pl=B.par.id==='sonne'?B:B.par,w=planetWindow(pl,BODIES[id],WS.t);closeSheet();
+  WS.wto=w.t-300;setWarp(WARPS.length-1);if(WS.wi<4){WS.wto=null;return}toast('Zeitraffer bis zum Startfenster nach '+BODIES[id].n)};
+/* ---------- Bergbau und Tankschlauch ---------- */
+const onGround=V=>V.mode==='landed'||V.landed&&V.nc>0;
+function hoseTargets(V){if(!V.d||!onGround(V))return[];
+  return WS.near.filter(X=>X!==V&&X.d&&VESSELS.includes(X)&&X.kind!=='flag'&&X.kind!=='eva'&&onGround(X)&&Math.hypot(X.x-V.x,X.y-V.y)<50+(X.d.bR+V.d.bR)*.5&&resCap(X,'lf')+resCap(X,'ore')>0)}
+ACT.mineOpen=()=>openMine();
+function openMine(){
+  const V=F.V;if(!V)return;const d=V.d,B=vB(V),g=onGround(V),conc=g?oreAt(B,Math.atan2(V.y,V.x)):0;
+  let h=`<p>${g?`Erz hier: <b style="color:var(--acc2)">${dc(conc,1)} %</b> · ${esc(B.n)}, ${esc(vBiome(V))}`:'Bohrer arbeiten nur, wenn das Fahrzeug auf dem Boden steht.'}</p>`;
+  if(g&&d.drills.length&&conc<=0)h+='<p>Hier gibt es kein Erz.</p>';
+  if(d.drills.length)h+=`<div class="tog"><span>⛏ Bohrer${d.drills.length>1?' ('+d.drills.length+')':''}</span><button class="sw${V.flags.drill?' on':''}" data-a="mineT" data-v="drill"></button></div>`;
+  if(d.refs.length)h+=`<div class="tog"><span>🏭 Raffinerie${d.refs.length>1?' ('+d.refs.length+')':''}</span><button class="sw${V.flags.refine?' on':''}" data-a="mineT" data-v="refine"></button></div>`;
+  const oc=resCap(V,'ore');
+  h+=`<div class="sum"><div><small>Erz</small><b>${dc(resSum(V,'ore'),2)} / ${dc(oc,1)} t</b></div><div><small>Treibstoff</small><b>${dc(resSum(V,'lf'),2)} / ${dc(resCap(V,'lf'),1)} t</b></div></div>`;
+  if(d.drills.length&&!oc)h+='<p>Ohne Erztank kann der Bohrer nichts lagern.</p>';
+  if(d.refs.length&&!resCap(V,'lf'))h+='<p>Die Raffinerie braucht einen Treibstofftank.</p>';
+  const need=d.drills.length*P.drill.drill.ec+d.refs.length*P.refinery.refine.ec;
+  h+=`<p>Strombedarf bei voller Arbeit: ${dc(need,1)} pro Sekunde. ${V.mineOn?V.mineOn<.99?`<b style="color:#ff9a9a">Zu wenig Strom – läuft mit ${Math.round(V.mineOn*100)} %.</b>`:'<b style="color:var(--ok)">Läuft.</b>':''}</p>`;
+  h+='<p>Bohrer und Raffinerie arbeiten weiter – auch im Zeitraffer und wenn du ein anderes Fahrzeug fliegst. Solarzellen liefern nur im Sonnenlicht Strom, die Atombatterie immer.</p>';
+  openSheet('mine','Bergbau',h,{keepScroll:true});tip('mine');
+}
+ACT.mineT=v=>{const V=F.V;if(!V)return;V.flags[v]=V.flags[v]?0:1;V.wake=1;openMine()};
+ACT.hoseOpen=()=>openHose();
+function openHose(){
+  const V=F.V;if(!V)return;const list=hoseTargets(V);
+  let h='<p>Fahrzeuge, die nah beieinander auf dem Boden stehen, können Vorräte umfüllen.</p>';
+  for(const X of list){h+=`<h4>${esc(X.name)} · ${fmtDist(Math.hypot(X.x-V.x,X.y-V.y))}</h4>`;
+    for(const[k,n]of[['lf','Treibstoff'],['ore','Erz']]){const ca=resCap(V,k),cb=resCap(X,k);if(!ca||!cb)continue;
+      h+=`<div class="row"><div class="rt"><b>${n}</b><small>hier ${dc(resSum(V,k),2)} / ${dc(ca,1)} t · dort ${dc(resSum(X,k),2)} / ${dc(cb,1)} t</small></div>
+        <button class="btn sm" data-a="hoseGo" data-v="${X.id}|${k}|in">⬅ Holen</button><button class="btn sm" data-a="hoseGo" data-v="${X.id}|${k}|out">Geben ➡</button></div>`}}
+  if(!list.length)h+='<p>Gerade steht niemand nah genug (unter 50 m).</p>';
+  openSheet('hose','Tankschlauch',h,{keepScroll:true});
+}
+ACT.hoseGo=v=>{const[id,k,dir]=v.split('|'),V=F.V,X=WS.near.find(x=>x.id===id);if(!V||!X)return;
+  const a=dir==='in'?pumpRes(X,V,k):pumpRes(V,X,k);
+  if(a>0){if(k==='lf'){S.st.fuel+=a;achGive('fuel')}toast(`${dc(a,2)} t ${k==='lf'?'Treibstoff':'Erz'} umgefüllt`,'good');sfx('dock')}
+  else toast('Nichts umgefüllt – voll oder leer','bad');openHose()};
+/* ---------- Funkverbindung im Flug ---------- */
+function updLink(A){
+  if(!commReq()||A.kind!=='ship'){A.link=null;return}
+  const was=A.link;A.link=commLink(A);
+  const probeOnly=A.d.cmdP.some(i=>P[A.parts[i].t].ctl.probe)&&!vCrew(A).length;
+  if(probeOnly&&was&&was.ok!==A.link.ok){toast(A.link.ok?'📶 Funkkontakt wieder da':'📵 Funkkontakt verloren – die Sonde reagiert nicht mehr',A.link.ok?'good':'bad',3500);if(!A.link.ok)tip('comm')}
+  if(probeOnly&&A.link.ok&&A.link.hops>0)achGive('relay');
+}
 /* ---------- Forschung im Flug ---------- */
 ACT.sciOpen=()=>openSci();
 function openSci(){
@@ -4128,7 +4556,7 @@ ACT.evaGo=id=>{
   vCalc(K);VESSELS.push(K);WS.near.push(V);
   closeSheet();F.V.nodes=F.nodes.map(n=>({t:n.t,dp:n.dp,dr:n.dr}));WS.act=K;F.V=K;F.cam=K;F.nodes=[];F.pred=null;S.act=K.id;flFit(true);flightUI(true);
   if(vSit(V)!=='boden'&&vSit(V)!=='wasser')milestone('eva');
-  tip('eva');
+  S.st.eva++;tip('eva');
 };
 function boardTarget(K){
   for(const X of WS.near){if(X===K||X.kind!=='ship')continue;if(X.d.seats-X.d.crew.length<=0)continue;
@@ -4154,10 +4582,12 @@ function handleEvents(){
   for(const e of q){
     switch(e.k){
       case'boom':{
+        S.st.boom++;
         if(F.camB===e.b){explode(e.x,e.y,Math.min(3,e.s*.8),'#9aa3ad',e.vx*.7,e.vy*.7)}
         const near=F.V&&F.V.body===e.b&&Math.hypot(e.x-F.V.x,e.y-F.V.y)<3000;
         if(near){sfx('boom',e.s);vib(60);F.shk=Math.min(18,F.shk+6+e.s*3);if(F.V)F.V.boomT=1.5}
         if(e.why==='heat'&&near)toast(P[e.t].n+' ist verglüht!','bad');
+        if(e.why==='crush'&&near)toast(P[e.t].n+' wurde vom Druck zerdrückt!','bad');
         break;
       }
       case'crewlost':{const c=crewById(e.id);crewLost(e.id);if(c){toast(c.n+' ist verloren gegangen …','bad',4000);sfx('sad')}tip('lostcrew',true);S.st.lost++;break}
@@ -4175,7 +4605,7 @@ function handleEvents(){
       case'ms':toast(`Rekord: ${e.n}! ${SANDBOX()?'':'+'+fmtM(e.m)+' · 🔬 +'+e.s}`,'gold',4000);sfx('ms');if(e.k==='space')tip('space');if(e.k==='orbit'){say('Umlaufbahn! Du fällst jetzt ständig um Murmel herum. Glückwunsch!')}if(e.k==='knopf_fly')tip('knopf');break;
       case'con':toast('Auftrag erfüllt: '+e.c.n+(SANDBOX()?'':' · +'+fmtM(e.c.rew)),'gold',4000);sfx('con');break;
       case'rtc':if(e.ok){if(!SANDBOX())S.money+=e.val;toast(`Booster gelandet! +${fmtM(e.val)}`,'gold',3500);milestone('rtc');conEvent('rtc',{});sfx('con')}else toast('Booster-Landung gescheitert: '+e.why,'bad');break;
-      case'dock':toast('Angedockt!','good');sfx('dock');vib(50);F.pred=null;break;
+      case'dock':S.st.dock++;toast('Angedockt!','good');sfx('dock');vib(50);F.pred=null;break;
       case'bgland':toast((e.V.name||'Fahrzeug')+' ist sicher gelandet','good');break;
       case'bgcrash':toast((e.name||'Fahrzeug')+' ist abgestürzt'+(e.crew?' – mit Crew an Bord …':''),'bad',4000);break;
       case'stage':break;
@@ -4190,7 +4620,7 @@ function flightFrame(dt){
   cdTick(dt);
   if(A&&(A.met0===null||A.met0===undefined)&&F.cd<=0){A.rest=true}  // auf der Rampe: warten
   // Lage-Werte gelegentlich neu
-  WS.ciT-=dt;if(WS.ciT<=0){WS.ciT=.25;for(const V of[A,...WS.near])if(V&&V.d){V.ci=ctlInfo(V);V.light=sunLight(V,WS.t)}}
+  WS.ciT-=dt;if(WS.ciT<=0){WS.ciT=.25;if(A&&A.d)updLink(A);for(const V of[A,...WS.near])if(V&&V.d){V.ci=ctlInfo(V);V.light=sunLight(V,WS.t)}}
   if(A){const T=WS.tgt&&VESSELS.find(v=>v.id===WS.tgt);A.tgtState=T&&T.body===A.body?vPos(T):null}
   if(A&&(A.met0===null||A.met0===undefined)){WS.t+=dt;others(dt)}
   else worldStep(dt,ctlFn);
