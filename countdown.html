@@ -375,7 +375,7 @@ textarea{min-height:90px;font:12px ui-monospace,monospace;resize:vertical}
    12. Speichern, Cloud, Selbst-Update, Hauptschleife
    Der Teil zwischen LOGIK-ANFANG und LOGIK-ENDE kommt ohne DOM aus (tools/countdown-sim.mjs nutzt ihn).
    ===================================================================== */
-const BUILD='2026.10.26-3';
+const BUILD='2026.10.26-4';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const dc=(v,n)=>v.toFixed(n).replace('.',',');
@@ -2874,18 +2874,20 @@ function drawMap(c){
   for(const b of f.kids){const p=bodyIn(b,f,t,{});m2s(p.x,p.y,SP);const r=b.soi*M.z;if(r>12&&r<4e6){c.strokeStyle='rgba(180,200,255,.18)';c.beginPath();c.arc(SP.x,SP.y,r,0,TAU);c.stroke()}}
   c.setLineDash([]);
   // Körper
-  const placed=[];
+  const labels=[];
   for(const b of BLIST){
     const p=bodyIn(b,f,t,q);m2s(p.x,p.y,SP);
     const r=Math.max(b.R*M.z,b===f?6:b.id==='sonne'?7:3.5);
     if(SP.x<-r-40||SP.x>VW+r+40||SP.y<-r-40||SP.y>VH+r+40)continue;
     drawBodyDisc(c,b,SP.x,SP.y,r);
     M.hits.push({x:SP.x,y:SP.y,r:Math.max(r,18),k:'body',b:b.id});
-    if(!placed.some(([x,y])=>Math.hypot(x-SP.x,y-SP.y)<34)||b===f){
-      c.font='bold 12px system-ui';c.textAlign='center';c.lineWidth=3;c.strokeStyle='rgba(0,0,0,.75)';c.fillStyle=b===f?'#fff':'#c8d4f0';
-      c.strokeText(b.n,SP.x,SP.y-r-6);c.fillText(b.n,SP.x,SP.y-r-6);placed.push([SP.x,SP.y]);
-    }
+    labels.push({b,x:SP.x,y:SP.y-r-6,y2:SP.y+r+15,pr:b===f?0:b.id==='murmel'?1:b.par===f?2:b.par&&b.par.id==='sonne'?3:4});
   }
+  // Namen: wichtige zuerst (gezeigter Körper, Murmel, Planeten); Planeten weichen nach unten aus, sonst fällt der Name weg
+  labels.sort((x,y)=>x.pr-y.pr);const placed=[],free=(x,y)=>!placed.some(([px,py])=>Math.abs(px-x)<48&&Math.abs(py-y)<15);
+  c.font='bold 12px system-ui';c.textAlign='center';c.lineWidth=3;c.strokeStyle='rgba(0,0,0,.75)';
+  for(const L of labels){let y=L.y;if(L.pr&&!free(L.x,y)){if(L.pr<=3&&free(L.x,L.y2))y=L.y2;else continue}
+    c.fillStyle=L.b===f?'#fff':'#c8d4f0';c.strokeText(L.b.n,L.x,y);c.fillText(L.b.n,L.x,y);placed.push([L.x,y])}
   // Ziel-Bahn
   const A=F.V;
   if(WS.tgt){const T=VESSELS.find(v=>v.id===WS.tgt);if(T&&(T.mode==='rails'||T.mode==='phys')&&(!A||T.body===A.body)){const p=vPos(T);const o=orbitFrom(vB(T).mu,p.x,p.y,p.vx,p.vy,t);
@@ -2947,7 +2949,7 @@ function mapFitAll(){
 }
 function mapFocus(id){
   M.f=id;M.ox=M.oy=0;const B=BODIES[id];
-  let r=B.kids.length?Math.max(...B.kids.map(k=>k.a))*1.15:B.R*6;if(B.id==='sonne')r=4.8e9;
+  let r=B.kids.length?Math.max(...B.kids.map(k=>k.a))*1.15:B.R*6;if(B.id==='sonne')r=7.9e9;
   M.z=Math.min(VW,VH*.75)*.45/r;
 }
 /* =====================================================================
@@ -3439,7 +3441,8 @@ ACT.tsRec=id=>{const V=VESSELS.find(v=>v.id===id);if(!V)return;const r=recover(V
 ACT.tsDel=(id,b)=>{const V=VESSELS.find(v=>v.id===id);if(!V)return;
   const n=vCrew(V).length;if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent=n?'Crew geht verloren! Sicher?':'Wirklich aufgeben?';return}
   for(const c of vCrew(V))crewLost(c);killVessel(V);openTS();saveNow()};
-ACT.tsMap=()=>{closeSheet();TSMAP=true;F.V=null;F.pred=null;F.nodes=[];mapFit();show('fl');setCls('#fl','tsmap',true);flightUI(true)};
+ACT.tsMap=()=>{closeSheet();MODE='flight';TSMAP=true;WS.t=S.t;WS.act=null;WS.near=[];WS.wi=0;F.V=null;F.cam=null;F.map=true;F.pred=null;F.nodes=[];F.nsel=-1;
+  show('fl');fitCanvas();mapFocus('sonne');setCls('#fl','tsmap',true);flightUI(true)};
 
 /* ---------- Startrampe ---------- */
 ACT.pad=()=>openPad();
@@ -4366,6 +4369,7 @@ ACT.fexit=(v,b)=>{
 ACT.fmenu=()=>{
   const V=F.V;
   let h='';
+  if(TSMAP)h+='<p>Sonnensystem-Karte: Mit einem Finger verschieben, mit zwei Fingern zoomen, auf Planeten und Fahrzeuge tippen. 🗺 oben rechts bringt dich zurück ins Raumfahrtzentrum.</p><div class="btns"><button class="btn" data-a="settings">⚙ Einstellungen</button></div>';
   if(V){h+=`<p class="lead">${esc(V.name)}</p><p>${esc(vStatus(V))}</p>`;
     if(SANDBOX()&&V.met0!==null&&V.met0!==undefined)h+=`<div class="btns"><button class="btn cy" data-a="revert">↺ Flug neu starten</button></div>`;
     h+=`<div class="btns"><button class="btn" data-a="fit">⌖ Ansicht</button><button class="btn" data-a="renameV">✏️ Umbenennen</button><button class="btn" data-a="settings">⚙ Einstellungen</button></div>`;
