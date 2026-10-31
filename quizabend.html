@@ -310,7 +310,7 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:18px;margin:0;color:var(-
 
 <script>
 'use strict';
-const BUILD='2026-10-31-2';
+const BUILD='2026-10-31-3';
 /* ==========================================================================
    FRAGEN
    Multiple Choice: [Kategorie, Stufe 1–3, Frage, RICHTIG, falsch, falsch, falsch, Info]
@@ -1575,45 +1575,101 @@ function selectText(el){try{const r=document.createRange();r.selectNodeContents(
 ACT.chCopy=()=>{const t=chalText();try{navigator.clipboard.writeText(t).then(()=>toast('Kopiert. Jetzt im Chat einfügen.'),()=>{selectText($('#chTxt'));toast('Bitte den markierten Text kopieren.')})}catch(_){selectText($('#chTxt'));toast('Bitte den markierten Text kopieren.')}};
 ACT.chShare=async()=>{const t=chalText();if(navigator.share){try{await navigator.share({text:t});return}catch(e){if(e&&e.name==='AbortError')return}}ACT.chCopy()};
 /* ==========================================================================
-   ONLINE: jeder am eigenen Handy. Läuft über die Live-Räume des Claude-Artifacts.
-   Der Gastgeber hält den Spielstand in seiner Presence (g), alle anderen
-   melden dort Name (n) und Antwort (a). Keine Daten werden gespeichert.
+   ONLINE: jeder am eigenen Handy.
+   Zwei Wege, gleiche Spiellogik: im Claude-Artifact über dessen Live-Räume,
+   als Webseite/App über ein eigenes Firebase-Projekt (Realtime Database).
+   Jeder Spieler hat einen Eintrag mit Name (n) und Antwort (a); der Gastgeber
+   führt dort zusätzlich den Spielstand (g).
    ========================================================================== */
-let ROOMP=null,O=null;
+/* Zugangsdaten aus der Firebase-Konsole (Projekteinstellungen → Web-App). Diese Werte sind
+   für Web-Apps öffentlich gedacht, geschützt wird über die Datenbank-Regeln. */
+const FIREBASE_CONFIG=null;
+const FB_VER='10.12.2';
+let O=null,NETP=null,FB=null;
 const OCODE='ABCDEFGHJKLMNPQRSTUVWXYZ';
-function roomNS(){
-  if(!ROOMP)ROOMP=(window.claude&&typeof window.claude.use==='function')?Promise.resolve(window.claude.use('room')).catch(()=>null):Promise.resolve(null);
-  return ROOMP;
+const IN_CLAUDE=!!(window.claude&&typeof window.claude.use==='function');
+function loadScript(src){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=()=>no(new Error('load '+src));document.head.appendChild(s)})}
+function withTimeout(p,ms){return Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms))])}
+async function fbLoad(){
+  if(FB)return FB;
+  const base='https://www.gstatic.com/firebasejs/'+FB_VER+'/';
+  if(!window.firebase)await loadScript(base+'firebase-app-compat.js');
+  await Promise.all([loadScript(base+'firebase-auth-compat.js'),loadScript(base+'firebase-database-compat.js')]);
+  if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
+  const auth=firebase.auth();
+  /* gespeicherte anonyme Anmeldung abwarten, sonst neu anmelden */
+  const user=await new Promise(res=>{const un=auth.onAuthStateChanged(u=>{un();res(u)})});
+  const uid=user?user.uid:(await auth.signInAnonymously()).user.uid;
+  FB={db:firebase.database(),uid};
+  return FB;
 }
-roomNS().then(ns=>{const m=$('#modeOnline');if(!ns&&m){m.classList.add('off');m.querySelector('span').textContent='Nur im Claude-Artifact: alle öffnen den Link und spielen live.'}});
+/* Firebase-Spielraum mit derselben Schnittstelle wie ein Claude-Live-Raum */
+function fbRoom(code,host){
+  const db=FB.db,uid=FB.uid,base=db.ref('games/'+code+'/players'),me=base.child(uid),con=db.ref('.info/connected');
+  let mine={},peers=[],dead=false;const hs=new Set(),errs=new Set();
+  const emit=()=>{for(const h of hs)h({peers,joined:[],left:[],updated:[]})};
+  /* Bei Verbindungsabbruch: Gastgeber bleibt als „kurz weg“ stehen, Mitspieler verschwinden bis zur Rückkehr */
+  const onCon=s=>{if(dead||s.val()!==true)return;(host?me.onDisconnect().update({on:false}):me.onDisconnect().remove()).catch(()=>{});
+    if(Object.keys(mine).length)me.set(Object.assign({},mine,{on:true})).catch(()=>{})};
+  const onVal=s=>{const v=s.val()||{};peers=Object.keys(v).map(k=>Object.freeze({peer:k,by:k,isMe:k===uid,sameTab:k===uid,kind:'viewer',guest:false,presence:v[k]||{},updatedAt:Date.now()}));emit()};
+  const onErr=e=>{for(const f of errs)f({code:e&&e.code==='PERMISSION_DENIED'?'not_permitted':'upstream_error',message:String(e&&e.message||e)})};
+  con.on('value',onCon);base.on('value',onVal,onErr);
+  return{
+    presence(patch){for(const k in patch){if(patch[k]===null)delete mine[k];else mine[k]=patch[k]}
+      mine=JSON.parse(JSON.stringify(mine));return me.set(Object.assign({},mine,{on:true}))},
+    onPeers(h,err){hs.add(h);if(err)errs.add(err);if(peers.length)setTimeout(()=>h({peers,joined:[],left:[],updated:[]}),0);return()=>{hs.delete(h);if(err)errs.delete(err)}},
+    leave(){dead=true;base.off('value',onVal);con.off('value',onCon);hs.clear();errs.clear();return me.onDisconnect().cancel().then(()=>me.remove()).catch(()=>{})}
+  };
+}
+function netNS(){
+  if(!NETP)NETP=(async()=>{
+    if(IN_CLAUDE){try{const r=await window.claude.use('room');if(r)return{kind:'claude',async enter(code){return r.join('quizabend-'+code.toLowerCase())},async free(){return true}}}catch(_){}return null}
+    if(!FIREBASE_CONFIG)return null;
+    try{await withTimeout(fbLoad(),15000)}catch(e){NETP=null;throw e}
+    return{kind:'fb',async enter(code,host){return fbRoom(code,host)},
+      async free(code){const s=await FB.db.ref('games/'+code+'/players').get();return !s.exists()}};
+  })();
+  return NETP;
+}
+function onlineAvailable(){return IN_CLAUDE||!!FIREBASE_CONFIG}
+if(!onlineAvailable()){const m=$('#modeOnline');if(m){m.classList.add('off');m.querySelector('span').textContent='Noch nicht eingerichtet.'}}
+else if(IN_CLAUDE)netNS().then(ns=>{const m=$('#modeOnline');if(!ns&&m){m.classList.add('off');m.querySelector('span').textContent='Nur im Claude-Artifact: alle öffnen den Link und spielen live.'}}).catch(()=>{});
 function onlineStart(){
   page(topBar('Online')+
     '<h2>Live gegen Freunde</h2><p class="lead">Jeder spielt am eigenen Handy. Einer eröffnet das Spiel und nennt den Code, die anderen treten bei. Alle bekommen gleichzeitig dieselbe Frage. Wer richtig und schnell antwortet, holt die meisten Punkte.</p>'+
-    '<div id="oBox"><p class="note">Verbindung wird geprüft …</p></div>');
-  roomNS().then(ns=>{const b=$('#oBox');if(!b)return;
-    if(!ns){b.innerHTML='<p class="note">Online-Spiele funktionieren nur, wenn Quiz Abend als Claude-Artifact geöffnet ist. Teile das Artifact mit deinen Freunden (sie brauchen ein Claude-Konto), dann öffnen alle denselben Link. Ohne Artifact könnt ihr Duell, Party oder die Challenge spielen.</p>';return}
+    '<div id="oBox"><p class="note">Verbindung wird aufgebaut …</p></div>');
+  const fail=msg=>{const b=$('#oBox');if(b)b.innerHTML='<p class="note">'+msg+'</p><button class="btn ghost" data-act="go" data-v="online">Nochmal versuchen</button>'};
+  if(!onlineAvailable())return fail('Online-Spiele sind für diese Version noch nicht eingerichtet. Bis dahin könnt ihr Duell, Party, Quizmaster oder die Challenge spielen.');
+  netNS().then(ns=>{const b=$('#oBox');if(!b)return;
+    if(!ns){b.innerHTML='<p class="note">Online-Spiele funktionieren hier nur, wenn alle das geteilte Claude-Artifact geöffnet haben (jeder braucht ein Claude-Konto). Oder ihr nutzt die installierte App bzw. die Webseite.</p>';return}
     b.innerHTML='<div style="display:flex;flex-direction:column;gap:16px">'+
       '<div class="card"><span class="lbl">Dein Name</span><input class="inp" id="oName" maxlength="14" placeholder="Wie sollen dich die anderen sehen?" value="'+esc(SET.nick)+'"></div>'+
       '<div class="card"><span class="lbl">Spiel eröffnen</span><button class="btn" data-act="oHost">Neues Spiel</button></div>'+
       '<div class="card"><span class="lbl">Einem Spiel beitreten</span><input class="inp code" id="oCode" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="CODE"><button class="btn ghost" data-act="oJoin">Beitreten</button></div></div>';
-  });
+  }).catch(()=>fail('Keine Verbindung zum Spiele-Server. Bist du online? Dann bitte gleich nochmal versuchen.'));
 }
 function oName(){const v=($('#oName')&&$('#oName').value||'').trim().slice(0,14);if(!v){toast('Gib zuerst deinen Namen ein.');return null}SET.nick=v;saveSet();return v}
+let oBusy=false;
 async function oEnter(code,host){
-  const name=oName();if(!name)return;const ns=await roomNS();if(!ns)return;
-  let rm;try{rm=await ns.join('quizabend-'+code.toLowerCase())}catch(e){toast(e&&e.code==='not_permitted'?'Online-Spiele sind für dich hier nicht freigegeben.':'Verbindung fehlgeschlagen. Bitte nochmal versuchen.');return}
-  onlineLeave();
-  O={code,host,rm,name,peers:[],me:null,ep:-1,g:null,qi:-1,ans:null,unsub:[],sawHost:false};
-  O.unsub.push(rm.onPeers(oPeers,e=>{if(O&&O.rm===rm){toast('Verbindung zum Spiel verloren.');oGone('Die Verbindung ist abgerissen.')}}));
-  if(host){O.qs=[];O.g={ph:'lobby',b:BUILD,n:SET.onN,i:-1,sc:{},nm:{},ep:0};rm.presence({k:'h',n:name,g:O.g}).catch(()=>{})}
-  else{rm.presence({k:'p',n:name}).catch(()=>{});later(8000,()=>{if(O&&!O.host&&!O.sawHost)oGone('Unter dem Code '+code+' läuft gerade kein Spiel. Stimmt der Code?')})}
-  GAME='online';wake(true);oRender();
+  const name=oName();if(!name||oBusy)return;oBusy=true;
+  try{
+    const ns=await netNS();if(!ns)return;
+    if(host){for(let i=0;i<6&&!(await ns.free(code));i++){code='';for(let j=0;j<4;j++)code+=pickOne(OCODE.split(''))}}
+    let rm;try{rm=await ns.enter(code,host)}catch(e){toast(e&&e.code==='not_permitted'?'Online-Spiele sind für dich hier nicht freigegeben.':'Verbindung fehlgeschlagen. Bitte nochmal versuchen.');return}
+    onlineLeave();
+    O={code,host,rm,name,peers:[],me:null,ep:-1,g:null,qi:-1,ans:null,unsub:[],sawHost:false};
+    O.unsub.push(rm.onPeers(oPeers,e=>{if(O&&O.rm===rm)oGone(e&&e.code==='not_permitted'?'Der Spiele-Server hat den Zugriff abgelehnt. Sind die Datenbank-Regeln eingetragen?':'Die Verbindung ist abgerissen.')}));
+    if(host){O.qs=[];O.g={ph:'lobby',b:BUILD,n:SET.onN,i:-1,sc:{},nm:{},ep:0};rm.presence({k:'h',n:name,g:O.g}).catch(()=>{})}
+    else{rm.presence({k:'p',n:name}).catch(()=>{});later(8000,()=>{if(O&&!O.host&&!O.sawHost)oGone('Unter dem Code '+code+' läuft gerade kein Spiel. Stimmt der Code?')})}
+    GAME='online';wake(true);oRender();
+  }catch(_){toast('Keine Verbindung zum Spiele-Server. Bitte nochmal versuchen.')}
+  finally{oBusy=false}
 }
 ACT.oHost=()=>{let c='';for(let i=0;i<4;i++)c+=pickOne(OCODE.split(''));oEnter(c,true)};
 ACT.oJoin=()=>{const c=($('#oCode').value||'').toUpperCase().replace(/[^A-Z]/g,'');if(c.length!==4)return toast('Der Code hat vier Buchstaben.');oEnter(c,false)};
 function onlineLeave(){if(!O)return;const o=O;O=null;for(const u of o.unsub)try{u()}catch(_){}try{o.rm.leave()}catch(_){}}
 function oGone(msg){onlineLeave();clearLater();stopTimer();GAME=null;wake(false);page(topBar('Online')+'<h2>Spiel vorbei</h2><p class="note">'+esc(msg)+'</p><button class="btn" data-act="go" data-v="online">Zurück zur Online-Lobby</button><button class="btn ghost" data-act="home">Zum Menü</button>')}
-function oPlayers(){return O.peers.filter(p=>p.kind==='viewer'&&p.presence&&(p.presence.k==='p'||p.presence.k==='h'))}
+function oPlayers(){return O.peers.filter(p=>p.kind==='viewer'&&p.presence&&(p.presence.k==='p'||p.presence.k==='h')&&p.presence.on!==false)}
 function pName(p){return String(p.presence&&p.presence.n||'Gast').slice(0,14)}
 function oPeers(ch){
   if(!O)return;O.peers=ch.peers;const meP=ch.peers.find(p=>p.sameTab);if(meP)O.me=meP.peer;
@@ -1627,6 +1683,7 @@ function oPeers(ch){
   const h=ch.peers.find(p=>p.presence&&p.presence.k==='h'&&p.kind==='viewer');
   if(!h){if(O.sawHost){O.hostMiss=O.hostMiss||Date.now();later(3500,()=>{if(O&&O.hostMiss&&!O.peers.some(p=>p.presence&&p.presence.k==='h'))oGone('Der Gastgeber hat das Spiel verlassen.')})}return}
   O.hostMiss=0;O.sawHost=true;O.hostName=pName(h);
+  const away=h.presence.on===false;if(away&&!O.hostAway)toast(O.hostName+' ist kurz weg. Es geht weiter, sobald er oder sie zurück ist.',3500);O.hostAway=away;
   const g=h.presence.g;if(!g||typeof g!=='object')return;
   if(g.b&&g.b!==BUILD){O.g=g;return oVersion()}
   const changed=g.ep!==O.ep;O.g=g;O.ep=g.ep;oRender(!changed);

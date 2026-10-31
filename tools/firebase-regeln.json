@@ -1,0 +1,15 @@
+{
+  "rules": {
+    "games": {
+      "$code": {
+        ".read": "auth != null && $code.length === 4",
+        "players": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.child('n').isString() && newData.child('n').val().length <= 20"
+          }
+        }
+      }
+    }
+  }
+}
