@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Kopfball</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<!--pwa-->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kopfball">
+<meta name="theme-color" content="#0b2418">
+<link rel="apple-touch-icon" href="kopfball-icon-180.png">
+<link rel="icon" type="image/png" href="kopfball-icon-192.png">
+<link rel="manifest" href="kopfball.webmanifest">
+<!--/pwa-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Flutlichtspiel bei Nacht: gemähter Rasen als Grund, Kreidelinien als Struktur,
+   die Anzeigetafel (schmale Stadionschrift, gelbes Flutlicht) trägt Spielstand und Uhr. */
+:root{
+  --rasen:#0b2418; --rasen2:#0f2e1f; --tafel:#06110b; --tafel2:#0c1d14;
+  --kreide:#eef3ea; --kreide2:#a8bcad; --kreide3:#6f8a78; --linie:rgba(238,243,234,.16);
+  --flut:#ffd447; --flut2:#fff0b3; --ok:#5fe08a; --bad:#ff5b4f;
+  --rot:#ff5b4f; --blau:#4aa8ff;
+  --f-disp:"Big Shoulders Display","Arial Narrow","Roboto Condensed",Impact,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --r:14px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none;background:var(--rasen)}
+body{font-family:var(--f-body);color:var(--kreide);font-size:16px;line-height:1.35;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation;border:0;background:none;padding:0}
+button:focus-visible,input:focus-visible{outline:3px solid var(--flut);outline-offset:2px}
+input{font:inherit;color:inherit;-webkit-user-select:text;user-select:text}
+[hidden]{display:none!important}
+
+/* Rasen mit Mähstreifen */
+#app{position:fixed;inset:0;overflow:hidden;
+  background:
+    radial-gradient(120% 60% at 50% -10%,rgba(255,240,180,.16),transparent 60%),
+    repeating-linear-gradient(180deg,var(--rasen) 0 56px,var(--rasen2) 56px 112px)}
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding-top:calc(env(safe-area-inset-top,0px) + 12px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 18px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{width:100%;max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:16px;flex:1}
+
+/* Typografie */
+.disp{font-family:var(--f-disp);font-weight:900;text-transform:uppercase;letter-spacing:.01em;line-height:.9}
+h2{font-family:var(--f-disp);font-weight:800;text-transform:uppercase;font-size:34px;line-height:1;margin:0;letter-spacing:.01em;text-wrap:balance}
+h3{font-family:var(--f-disp);font-weight:800;text-transform:uppercase;font-size:20px;margin:0;letter-spacing:.04em;color:var(--kreide2)}
+.lead{color:var(--kreide2);margin:0;font-size:15px}
+.lbl{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--kreide2)}
+.num{font-variant-numeric:tabular-nums}
+
+/* Kopfzeile der Unterseiten */
+.bar{display:flex;align-items:center;gap:10px;min-height:44px}
+.bar .grow{flex:1;min-width:0}
+.icon-btn{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;border:1px solid var(--linie);background:rgba(6,17,11,.55);flex:none}
+.icon-btn svg{width:22px;height:22px;stroke:var(--kreide);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+/* Knöpfe */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:54px;padding:12px 18px;border-radius:var(--r);
+  background:var(--flut);color:#1d1600;font-family:var(--f-disp);font-weight:900;font-size:24px;text-transform:uppercase;letter-spacing:.03em;
+  box-shadow:0 4px 0 #b8901a,0 10px 24px rgba(0,0,0,.35);transition:transform .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #b8901a,0 6px 14px rgba(0,0,0,.35)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btn.ghost{background:rgba(6,17,11,.6);color:var(--kreide);border:1.5px solid var(--linie);box-shadow:none;font-size:20px}
+.btn.small{min-height:44px;font-size:18px;padding:8px 14px}
+.row{display:flex;gap:10px}
+.row>*{flex:1;min-width:0}
+
+/* Startseite */
+.brand{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:14px 0 6px}
+.brand svg{width:84px;height:84px;filter:drop-shadow(0 8px 18px rgba(0,0,0,.45));animation:hop 2.6s ease-in-out infinite}
+@keyframes hop{0%,100%{transform:translateY(0) rotate(0)}45%{transform:translateY(-12px) rotate(25deg)}}
+.brand h1{margin:6px 0 0;font-family:var(--f-disp);font-weight:900;font-size:clamp(64px,19vw,104px);line-height:.82;text-transform:uppercase;color:var(--flut);
+  text-shadow:0 0 28px rgba(255,212,71,.35),0 4px 0 #8a6a08}
+.brand p{margin:4px 0 0;color:var(--kreide2);font-size:16px;font-weight:500}
+.modes{display:grid;gap:10px}
+.mode{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 12px;text-align:left;padding:14px 16px;border-radius:var(--r);
+  background:rgba(6,17,11,.72);border:1.5px solid var(--linie);transition:transform .08s,border-color .15s}
+.mode:active{transform:scale(.985)}
+.mode b{font-family:var(--f-disp);font-weight:900;font-size:30px;text-transform:uppercase;line-height:1;letter-spacing:.02em}
+.mode span{grid-column:1;color:var(--kreide2);font-size:14.5px}
+.mode i{grid-column:2;grid-row:1/span 2;font-style:normal;font-family:var(--f-disp);font-weight:800;font-size:15px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--tafel);background:var(--kreide);border-radius:8px;padding:5px 8px;white-space:nowrap}
+.mode.m-duel{border-left:6px solid var(--rot)}
+.mode.m-party{border-left:6px solid var(--flut)}
+.mode.m-online{border-left:6px solid var(--blau)}
+.mode.m-chal{border-left:6px solid var(--ok)}
+.mode.off{opacity:.55}
+.foot{text-align:center;color:var(--kreide3);font-size:13px;margin-top:auto;padding-top:8px}
+
+/* Formulare */
+.card{background:rgba(6,17,11,.72);border:1.5px solid var(--linie);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:12px}
+.inp{width:100%;min-height:50px;border-radius:12px;border:1.5px solid var(--linie);background:var(--tafel);padding:10px 14px;font-size:18px;font-weight:600}
+.inp::placeholder{color:var(--kreide3);font-weight:500}
+.inp.code{font-family:var(--f-disp);font-weight:900;font-size:32px;letter-spacing:.18em;text-transform:uppercase;text-align:center}
+.seg{display:flex;background:var(--tafel);border:1.5px solid var(--linie);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;min-height:42px;border-radius:9px;font-weight:700;font-size:15px;color:var(--kreide2)}
+.seg button.on{background:var(--kreide);color:var(--tafel)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:flex;align-items:center;gap:7px;min-height:38px;padding:6px 12px 6px 10px;border-radius:99px;border:1.5px solid var(--linie);font-weight:600;font-size:14px;color:var(--kreide3)}
+.chip::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--c);opacity:.35}
+.chip.on{color:var(--kreide);border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}
+.chip.on::before{opacity:1}
+.plist{display:flex;flex-direction:column;gap:8px}
+.prow{display:flex;gap:8px;align-items:center}
+.prow .dot{width:14px;height:14px;border-radius:50%;flex:none}
+.prow .inp{flex:1;min-width:0;min-height:46px;font-size:17px}
+.prow .icon-btn{width:46px;height:46px}
+
+/* Frage */
+.cat{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--kreide2)}
+.cat::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--c,var(--flut))}
+.diff{display:inline-flex;gap:3px;margin-left:6px}
+.diff u{width:7px;height:7px;border-radius:2px;background:var(--kreide3);opacity:.4}
+.diff u.on{background:var(--flut);opacity:1}
+.qtext{font-size:clamp(20px,5.6vw,26px);font-weight:700;line-height:1.22;margin:0;text-wrap:balance}
+.answers{display:grid;gap:9px}
+.ans{display:flex;align-items:center;gap:12px;min-height:58px;padding:10px 14px;border-radius:13px;text-align:left;font-weight:600;font-size:17.5px;line-height:1.2;
+  background:var(--kreide);color:var(--tafel);box-shadow:0 3px 0 #9fb0a2;transition:transform .08s,background .15s,opacity .2s}
+.ans:active{transform:translateY(2px);box-shadow:0 1px 0 #9fb0a2}
+.ans .k{flex:none;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-family:var(--f-disp);font-weight:900;font-size:19px;background:var(--tafel);color:var(--kreide)}
+.ans.ok{background:var(--ok);box-shadow:0 3px 0 #2c9b55}
+.ans.bad{background:var(--bad);color:#fff;box-shadow:0 3px 0 #a5302a}
+.ans.bad .k{background:rgba(0,0,0,.35)}
+.ans.sel{outline:4px solid var(--flut);outline-offset:2px}
+.ans.dim{opacity:.35}
+.ans.gone{display:none}
+.answers.lock .ans{pointer-events:none}
+.timer{height:8px;border-radius:99px;background:rgba(238,243,234,.12);overflow:hidden}
+.timer i{display:block;height:100%;width:100%;background:var(--flut);border-radius:99px;transform-origin:left center}
+.timer.hurry i{background:var(--bad)}
+.info{font-size:15px;color:var(--kreide2);background:rgba(6,17,11,.7);border-left:4px solid var(--flut);border-radius:0 10px 10px 0;padding:10px 12px;margin:0}
+.verdict{font-family:var(--f-disp);font-weight:900;font-size:40px;text-transform:uppercase;line-height:1;margin:0}
+.verdict.ok{color:var(--ok)}.verdict.bad{color:var(--bad)}
+
+/* Schätzfrage */
+.est{display:flex;flex-direction:column;gap:10px}
+.est-val{display:flex;align-items:baseline;justify-content:center;gap:8px;font-family:var(--f-disp);font-weight:900;font-size:54px;line-height:1;color:var(--flut);font-variant-numeric:tabular-nums}
+.est-val small{font-size:20px;color:var(--kreide2);font-weight:800;text-transform:uppercase}
+.est-row{display:flex;gap:8px;align-items:center}
+.est-row button{width:48px;height:48px;border-radius:12px;background:var(--kreide);color:var(--tafel);font-family:var(--f-disp);font-weight:900;font-size:28px;flex:none}
+.est-row input[type=range]{flex:1;min-width:0;accent-color:var(--flut);height:36px}
+.est-scale{display:flex;justify-content:space-between;font-size:12px;color:var(--kreide3);font-variant-numeric:tabular-nums}
+
+/* Anzeigetafel */
+.board{display:flex;align-items:stretch;background:var(--tafel);border:2px solid #23382b;border-radius:12px;overflow:hidden;box-shadow:inset 0 0 0 1px #000,0 6px 18px rgba(0,0,0,.4)}
+.board .side{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:6px 10px;font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.board .side.r{justify-content:flex-end;text-align:right}
+.board .score{font-family:var(--f-disp);font-weight:900;font-size:34px;color:var(--flut);padding:0 10px;display:flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums;text-shadow:0 0 12px rgba(255,212,71,.5)}
+.board .clock{font-family:var(--f-disp);font-weight:800;font-size:15px;color:var(--tafel);background:var(--flut);padding:0 8px;display:flex;align-items:center;font-variant-numeric:tabular-nums}
+
+/* Duell: zwei Hälften, die obere gedreht */
+#s-duel{padding:0;gap:0}
+.half{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;padding:10px max(12px,env(safe-area-inset-left,0px)) 10px max(12px,env(safe-area-inset-right,0px));position:relative}
+.half.top{transform:rotate(180deg);padding-bottom:calc(env(safe-area-inset-top,0px) + 10px)}
+.half.bot{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 10px)}
+.half .hd{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.half .who{font-family:var(--f-disp);font-weight:900;font-size:22px;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.half .qtext{font-size:clamp(16px,4.6vw,21px)}
+.half .answers{grid-template-columns:1fr 1fr;gap:7px;margin-top:auto}
+.half .ans{min-height:52px;font-size:15.5px;padding:8px 10px;gap:8px}
+.half .ans .k{width:24px;height:24px;font-size:16px}
+.half .est-val{font-size:40px}
+.half .msg{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.half.red{background:linear-gradient(0deg,rgba(255,91,79,.16),transparent 70%)}
+.half.blue{background:linear-gradient(0deg,rgba(74,168,255,.16),transparent 70%)}
+.half.red .who{color:#ff8c83}.half.blue .who{color:#8cc8ff}
+.mid{flex:none;display:flex;align-items:center;gap:8px;padding:6px max(10px,env(safe-area-inset-left,0px));background:var(--tafel);border-block:2px solid #23382b}
+.mid .board{flex:1;border:0;box-shadow:none;border-radius:0}
+.mid .icon-btn{width:40px;height:40px}
+.stamp{font-family:var(--f-disp);font-weight:900;font-size:26px;text-transform:uppercase;padding:6px 14px;border-radius:10px;background:var(--tafel);border:2px solid currentColor;transform:rotate(-4deg)}
+.stamp.ok{color:var(--ok)}.stamp.bad{color:var(--bad)}.stamp.flut{color:var(--flut)}
+
+/* Party */
+.pick{display:grid;gap:10px}
+.pcard{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4px 14px;padding:14px 16px;border-radius:var(--r);text-align:left;background:rgba(6,17,11,.75);border:1.5px solid var(--linie);transition:transform .08s}
+.pcard:active{transform:scale(.985)}
+.pcard .pts{grid-row:1/span 2;font-family:var(--f-disp);font-weight:900;font-size:44px;color:var(--flut);line-height:1;width:34px;text-align:center}
+.pcard b{font-family:var(--f-disp);font-weight:900;font-size:24px;text-transform:uppercase;line-height:1}
+.pcard .cat{grid-column:2}
+.pcard .go{grid-column:3;grid-row:1/span 2;color:var(--kreide3);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.hand{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px}
+.hand .big{font-family:var(--f-disp);font-weight:900;font-size:clamp(48px,15vw,84px);line-height:.9;text-transform:uppercase;overflow-wrap:anywhere}
+.joker{display:flex;gap:8px}
+.joker button{flex:1;min-height:42px;border-radius:11px;border:1.5px dashed var(--flut);color:var(--flut);font-weight:700;font-size:15px}
+.joker button[disabled]{opacity:.3;border-style:solid}
+
+/* Tabellen & Siegertreppchen */
+.table{display:flex;flex-direction:column;gap:6px}
+.trow{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:10px;padding:9px 12px;border-radius:11px;background:rgba(6,17,11,.72);border:1px solid var(--linie)}
+.trow .pl{font-family:var(--f-disp);font-weight:900;font-size:22px;color:var(--kreide2);text-align:center}
+.trow .nm{font-weight:700;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:8px;min-width:0}
+.trow .nm .dot{width:11px;height:11px;border-radius:50%;flex:none}
+.trow .pt{font-family:var(--f-disp);font-weight:900;font-size:26px;color:var(--flut);font-variant-numeric:tabular-nums}
+.trow .plus{font-size:13px;font-weight:700;color:var(--ok);margin-right:6px}
+.trow.me{border-color:var(--flut)}
+.podium{display:grid;grid-template-columns:1fr 1fr 1fr;align-items:end;gap:8px;padding-top:10px}
+.pod{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;min-width:0}
+.pod .nm{font-weight:700;font-size:15px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pod .blk{width:100%;border-radius:10px 10px 0 0;background:var(--kreide);color:var(--tafel);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:8px;font-family:var(--f-disp);font-weight:900}
+.pod .blk b{font-size:34px;line-height:1}
+.pod .blk small{font-size:16px}
+.pod.p1 .blk{height:130px;background:var(--flut)}
+.pod.p2 .blk{height:96px}
+.pod.p3 .blk{height:72px;background:#d8a77a}
+
+/* Online */
+.codebox{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px;border-radius:var(--r);background:var(--tafel);border:2px solid #23382b}
+.codebox b{font-family:var(--f-disp);font-weight:900;font-size:64px;letter-spacing:.2em;color:var(--flut);line-height:1;padding-left:.2em}
+.codebox.long b{font-size:clamp(36px,12vw,56px);letter-spacing:.08em;padding-left:.08em;white-space:nowrap}
+.people{display:flex;flex-wrap:wrap;gap:8px}
+.person{display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:99px;background:rgba(6,17,11,.72);border:1.5px solid var(--linie);font-weight:700}
+.person .dot{width:10px;height:10px;border-radius:50%}
+.person.done{border-color:var(--ok)}
+.note{font-size:14px;color:var(--kreide2);background:rgba(6,17,11,.6);border:1px dashed var(--linie);border-radius:12px;padding:10px 12px;margin:0}
+
+/* Großer Einblender */
+#ovl{position:fixed;inset:0;display:grid;place-items:center;pointer-events:none;z-index:50}
+#ovl .t{font-family:var(--f-disp);font-weight:900;text-transform:uppercase;font-size:clamp(72px,24vw,150px);line-height:.85;text-align:center;color:var(--flut);
+  text-shadow:0 0 40px rgba(255,212,71,.55),0 6px 0 #8a6a08;animation:boom 1.5s cubic-bezier(.2,.9,.2,1) forwards}
+#ovl .t small{display:block;font-size:.3em;color:var(--kreide);text-shadow:0 2px 8px rgba(0,0,0,.6);margin-top:.25em;letter-spacing:.04em}
+#ovl.rot180 .t{rotate:180deg}
+@keyframes boom{0%{transform:scale(.3);opacity:0}18%{transform:scale(1.08);opacity:1}30%{transform:scale(1)}80%{opacity:1}100%{transform:scale(1.05);opacity:0}}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translateX(-50%);max-width:calc(100% - 32px);z-index:60;
+  background:var(--kreide);color:var(--tafel);font-weight:700;padding:11px 16px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.45);transition:opacity .25s;opacity:0;pointer-events:none}
+#toast.on{opacity:1}
+.fade-in{animation:fin .25s ease-out}
+@keyframes fin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition:none!important}}
+@media (min-height:760px){.half .ans{min-height:60px}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<section class="scr" id="s-home">
+  <div class="wrap">
+    <div class="bar"><span class="grow"></span><button class="icon-btn" id="btnSound" data-act="sound" aria-label="Ton ein- oder ausschalten"></button></div>
+    <header class="brand">
+      <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" fill="#f5f7f2" stroke="#0b1a12" stroke-width="4"/><path d="M50 31 68 44 61 65H39L32 44Z" fill="#0b1a12"/><path d="M50 31V8M68 44 90 37M61 65 75 84M39 65 25 84M32 44 10 37" stroke="#0b1a12" stroke-width="4" fill="none"/><path d="M50 8 36 6 22 14M50 8 64 6 78 14M90 37 92 52 87 66M10 37 8 52 13 66M75 84 62 93 50 96M25 84 38 93 50 96" stroke="#0b1a12" stroke-width="3" fill="none" opacity=".55"/></svg>
+      <h1>Kopfball</h1>
+      <p>Das Fußball-Quiz gegen deine Freunde</p>
+    </header>
+    <nav class="modes">
+      <button class="mode m-duel" data-act="go" data-v="duelSetup"><b>Duell</b><span>Zu zweit an einem Handy. Wer zuerst richtig tippt, trifft.</span><i>2 Spieler</i></button>
+      <button class="mode m-party" data-act="go" data-v="partySetup"><b>Party</b><span>Reihum: Schwierigkeit wählen, Frage beantworten, Handy weitergeben.</span><i>2–8</i></button>
+      <button class="mode m-online" id="modeOnline" data-act="go" data-v="online"><b>Online</b><span>Jeder am eigenen Handy, alle bekommen dieselbe Frage.</span><i>live</i></button>
+      <button class="mode m-chal" data-act="go" data-v="chal"><b>Challenge</b><span>Zehn Fragen allein, dann den Code an Freunde schicken.</span><i>1 + Code</i></button>
+    </nav>
+    <p class="foot" id="bankInfo"></p>
+  </div>
+</section>
+
+<section class="scr" id="s-page" hidden><div class="wrap" id="page"></div></section>
+
+<section class="scr" id="s-duel" hidden>
+  <div class="half top red" id="dTop"></div>
+  <div class="mid">
+    <div class="board" id="dBoard"></div>
+    <button class="icon-btn" data-act="quit" aria-label="Spiel beenden"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="half bot blue" id="dBot"></div>
+</section>
+
+</div>
+<div id="ovl"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+const BUILD='2026-10-31-1';
+/* ==========================================================================
+   FRAGEN
+   Multiple Choice: [Kategorie, Stufe 1–3, Frage, RICHTIG, falsch, falsch, falsch, Info]
+   Schätzfrage:     [Kategorie, Stufe, Frage, Wert, von, bis, Einheit, Toleranz, Info]
+   ========================================================================== */
+const Q_RAW=[
+/* ---- Weltmeisterschaft ---- */
+['wm',1,'Welches Land gewann die WM 2014 in Brasilien?','Deutschland','Argentinien','Niederlande','Brasilien','Mario Götze schoss im Finale gegen Argentinien in der Verlängerung das 1:0.'],
+['wm',1,'Wer schoss Deutschland im WM-Finale 2014 zum Titel?','Mario Götze','Thomas Müller','Miroslav Klose','André Schürrle','Nach einer Flanke von André Schürrle traf Götze in der 113. Minute.'],
+['wm',1,'Wo fand die WM 2006 statt?','Deutschland','Frankreich','Japan und Südkorea','Südafrika','Das „Sommermärchen“: Deutschland wurde Dritter.'],
+['wm',1,'Welches Land gewann die WM 2022 in Katar?','Argentinien','Frankreich','Kroatien','Marokko','Argentinien gewann das Finale gegen Frankreich nach 3:3 im Elfmeterschießen.'],
+['wm',1,'Mit welchem Ergebnis gewann Deutschland 2014 das Halbfinale gegen Brasilien?','7:1','4:0','3:1','5:2','Gespielt in Belo Horizonte. Zur Pause stand es schon 5:0.'],
+['wm',1,'Welches Land wurde als erstes fünfmal Weltmeister?','Brasilien','Italien','Deutschland','Argentinien','Titel 1958, 1962, 1970, 1994 und 2002.'],
+['wm',1,'Wer wurde 2018 Weltmeister?','Frankreich','Kroatien','Belgien','England','Frankreich schlug Kroatien im Finale in Moskau mit 4:2.'],
+['wm',1,'Wie wird der deutsche WM-Sieg von 1954 genannt?','Das Wunder von Bern','Das Wunder von Wembley','Die Nacht von Sevilla','Das Sommermärchen','Deutschland schlug im Finale die favorisierten Ungarn mit 3:2.'],
+['wm',1,'Welches Land gewann 2010 in Südafrika seinen ersten WM-Titel?','Spanien','Niederlande','Deutschland','Uruguay','Andrés Iniesta traf im Finale gegen die Niederlande in der Verlängerung.'],
+['wm',1,'Wer war Bundestrainer beim WM-Titel 2014?','Joachim Löw','Jürgen Klinsmann','Hansi Flick','Jupp Heynckes','Löw war von 2006 bis 2021 Bundestrainer.'],
+['wm',1,'Der wievielte WM-Titel war 2014 für Deutschland?','Der vierte','Der dritte','Der fünfte','Der zweite','Nach 1954, 1974 und 1990.'],
+['wm',1,'Gegen welches Team schied Deutschland bei der WM 2018 nach einem 0:2 in der Vorrunde aus?','Südkorea','Mexiko','Schweden','Japan','Zum ersten Mal war Deutschland in einer WM-Gruppenphase gescheitert.'],
+['wm',2,'Wer erzielte im WM-Finale 1954 das Siegtor zum 3:2?','Helmut Rahn','Fritz Walter','Max Morlock','Ottmar Walter','„Aus dem Hintergrund müsste Rahn schießen …“, kommentierte Herbert Zimmermann.'],
+['wm',2,'Wie viele Tore schoss Miroslav Klose insgesamt bei Weltmeisterschaften?','16','14','15','12','Mit seinem 16. Tor überholte er 2014 den Brasilianer Ronaldo.'],
+['wm',2,'Welches Tier sagte bei der WM 2010 alle Spiele der Deutschen richtig voraus?','Ein Krake','Ein Papagei','Ein Erdmännchen','Ein Pinguin','Krake Paul lebte im Sea Life Oberhausen.'],
+['wm',2,'Wie hieß das Maskottchen der WM 2006 in Deutschland?','Goleo','Footix','Zakumi','Fuleco','Ein Löwe, begleitet von einem sprechenden Ball namens Pille.'],
+['wm',2,'Wer wurde mit Deutschland als Spieler und später als Teamchef Weltmeister?','Franz Beckenbauer','Berti Vogts','Jupp Derwall','Joachim Löw','Kapitän 1974, Teamchef beim Titel 1990 in Rom.'],
+['wm',2,'Wer verwandelte den Elfmeter zum 1:0 im WM-Finale 1990 gegen Argentinien?','Andreas Brehme','Lothar Matthäus','Rudi Völler','Jürgen Klinsmann','Matthäus überließ den Strafstoß Brehme, der mit rechts schoss.'],
+['wm',2,'Wie heißt das umstrittene Tor von Geoff Hurst im WM-Finale 1966?','Wembley-Tor','Hand Gottes','Phantomtor','Geistertor','Der Ball sprang von der Latte auf oder vor die Linie. Der Linienrichter gab das Tor.'],
+['wm',2,'Gegen welches Land erzielte Diego Maradona 1986 sein Tor mit der „Hand Gottes“?','England','Deutschland','Italien','Belgien','Im Viertelfinale in Mexiko-Stadt. Minuten später folgte sein Solo zum „Tor des Jahrhunderts“.'],
+['wm',2,'Welcher Spieler wurde als einziger dreimal Weltmeister?','Pelé','Cafu','Ronaldo','Diego Maradona','Pelé gewann 1958, 1962 und 1970.'],
+['wm',2,'Wer erzielte im WM-Finale 2022 einen Hattrick und verlor trotzdem?','Kylian Mbappé','Lionel Messi','Olivier Giroud','Antoine Griezmann','Vor ihm hatte nur Geoff Hurst 1966 dreimal in einem WM-Finale getroffen.'],
+['wm',2,'Wo fand die erste Fußball-Weltmeisterschaft statt?','Uruguay','Italien','Brasilien','Frankreich','Gastgeber Uruguay gewann 1930 auch das Finale gegen Argentinien mit 4:2.'],
+['wm',2,'Welche Technik kam bei der WM 2018 zum ersten Mal zum Einsatz?','Videobeweis (VAR)','Torlinientechnik','Freistoßspray','Gelbe und Rote Karten','Torlinientechnik und Freistoßspray gab es schon 2014, Karten seit 1970.'],
+['wm',2,'Welche Länder waren 2002 die ersten gemeinsamen WM-Gastgeber?','Japan und Südkorea','USA und Kanada','Belgien und Niederlande','Österreich und Schweiz','Deutschland verlor das Finale in Yokohama gegen Brasilien mit 0:2.'],
+['wm',2,'Wie endete die „Schmach von Córdoba“ 1978 für Deutschland gegen Österreich?','2:3','0:1','1:1','2:4','Hans Krankl traf doppelt, Reporter Edi Finger rief „I wer’ narrisch!“.'],
+['wm',2,'Wer wurde 1998 als Spieler und 2018 als Trainer Weltmeister?','Didier Deschamps','Zinédine Zidane','Laurent Blanc','Thierry Henry','1998 war er Kapitän, 2018 Nationaltrainer Frankreichs.'],
+['wm',2,'Wofür sah Zinédine Zidane im WM-Finale 2006 die Rote Karte?','Einen Kopfstoß','Ein Handspiel','Schiedsrichterbeleidigung','Eine Schwalbe','Er stieß Marco Materazzi in der Verlängerung den Kopf vor die Brust. Italien gewann im Elfmeterschießen.'],
+['wm',2,'Gegen wen verlor Deutschland 2022 das erste WM-Spiel mit 1:2?','Japan','Costa Rica','Spanien','Südkorea','Deutschland schied danach erneut in der Gruppenphase aus.'],
+['wm',2,'Wer schoss das Siegtor für Deutschland im WM-Finale 1974?','Gerd Müller','Paul Breitner','Franz Beckenbauer','Uli Hoeneß','Breitner hatte zuvor per Elfmeter zum 1:1 ausgeglichen.'],
+['wm',2,'Wie viele Mannschaften spielen seit 2026 bei einer WM mit?','48','32','40','64','Die WM 2026 in den USA, Kanada und Mexiko war die erste mit 48 Teams.'],
+['wm',2,'Wer gewann bei der WM 2010 den Goldenen Schuh?','Thomas Müller','David Villa','Wesley Sneijder','Diego Forlán','Alle vier hatten fünf Tore. Müller gewann durch die meisten Vorlagen.'],
+['wm',2,'Wie heißt der Pokal, den der Weltmeister seit 1974 bekommt?','FIFA-WM-Pokal','Coupe Jules Rimet','Henri-Delaunay-Pokal','Meisterschale','Der alte Coupe Jules Rimet ging 1970 für immer an Brasilien.'],
+['wm',2,'Welcher Torhüter hielt 2006 im Viertelfinale gegen Argentinien zwei Elfmeter mit einem Spickzettel im Stutzen?','Jens Lehmann','Oliver Kahn','Timo Hildebrand','Robert Enke','Der Zettel liegt heute im Haus der Geschichte in Bonn.'],
+['wm',2,'In welchem Jahr fand die erste Fußball-WM statt?',1930,1880,1960,'Jahr',2,'Uruguay war 1930 Gastgeber und Weltmeister.'],
+['wm',3,'Wie viele Tore erzielte der Franzose Just Fontaine bei der WM 1958?','13','11','9','15','Er traf in allen sechs Spielen Frankreichs.'],
+['wm',3,'Wie hieß der Hund, der 1966 den gestohlenen WM-Pokal in London fand?','Pickles','Rover','Lucky','Bobby','Der Coupe Jules Rimet war vor dem Turnier aus einer Ausstellung gestohlen worden.'],
+['wm',3,'Wer wurde bei der WM 2002 als bester Spieler des Turniers ausgezeichnet?','Oliver Kahn','Ronaldo','Michael Ballack','Rivaldo','Er ist der einzige Torwart, der den Goldenen Ball einer WM bekam.'],
+['wm',3,'Welches Land gewann 1950 das entscheidende Spiel im Maracanã gegen Brasilien?','Uruguay','Argentinien','Schweden','Spanien','Der „Maracanaço“ gilt in Brasilien bis heute als nationales Trauma.'],
+['wm',3,'In welchem Stadion fand das WM-Finale 1974 statt?','Olympiastadion München','Olympiastadion Berlin','Neckarstadion Stuttgart','Waldstadion Frankfurt','Deutschland schlug die Niederlande mit 2:1.'],
+['wm',3,'Wer war Bundestrainer beim WM-Titel 1954?','Sepp Herberger','Helmut Schön','Otto Nerz','Dettmar Cramer','Von ihm stammt der Satz „Der Ball ist rund“.'],
+['wm',3,'Welches Land erreichte 2022 als erstes afrikanisches Team ein WM-Halbfinale?','Marokko','Senegal','Kamerun','Ghana','Marokko schaltete unter anderem Spanien und Portugal aus.'],
+['wm',3,'Welches WM-Finale wurde als erstes im Elfmeterschießen entschieden?','1994: Brasilien gegen Italien','1990: Deutschland gegen Argentinien','2006: Italien gegen Frankreich','1982: Italien gegen Deutschland','Roberto Baggio schoss den letzten Elfmeter über das Tor.'],
+['wm',3,'Wer war mit 42 Jahren der älteste Torschütze der WM-Geschichte?','Roger Milla','Dino Zoff','Miroslav Klose','Peter Shilton','Der Kameruner traf 1994 gegen Russland.'],
+['wm',3,'Wer schoss das erste Tor der WM-Geschichte?','Lucien Laurent','Guillermo Stábile','Pedro Cea','Bert Patenaude','Der Franzose traf 1930 gegen Mexiko.'],
+['wm',3,'Wie viele Tore fielen bei der WM 2022 in Katar insgesamt?',172,80,260,'Tore',10,'Ein Rekord für eine WM mit 32 Mannschaften.'],
+['wm',3,'Wer kommentierte das WM-Finale 1954 im Radio mit „Aus! Aus! Das Spiel ist aus!“?','Herbert Zimmermann','Heinz Florian Oertel','Rudi Michel','Werner Hansch','Seine Reportage ist eines der bekanntesten Tondokumente der Nachkriegszeit.'],
+
+/* ---- EM & Turniere ---- */
+['em',1,'Wer wurde 2024 Europameister?','Spanien','England','Frankreich','Deutschland','Spanien schlug England im Finale in Berlin mit 2:1.'],
+['em',1,'Wo fand die EM 2024 statt?','Deutschland','England','Frankreich','Italien','Das Finale stieg im Berliner Olympiastadion.'],
+['em',1,'Welche Mannschaft gewann 2008 und 2012 die EM?','Spanien','Deutschland','Italien','Frankreich','2008 schlug Spanien Deutschland im Finale in Wien mit 1:0.'],
+['em',1,'Wie wurde Deutschland 1996 im Finale gegen Tschechien Europameister?','Durch ein Golden Goal','Im Elfmeterschießen','Durch ein Eigentor','In der regulären Spielzeit','Oliver Bierhoff traf im Wembley-Stadion in der Verlängerung zum 2:1.'],
+['em',1,'Welcher deutsche Trainer wurde 2004 mit Griechenland Europameister?','Otto Rehhagel','Ottmar Hitzfeld','Berti Vogts','Felix Magath','In Griechenland nannte man ihn „Rehakles“.'],
+['em',1,'Welches Land unterlag Spanien im EM-Finale 2024?','England','Frankreich','Niederlande','Italien','Es war Englands zweites verlorenes EM-Finale in Folge.'],
+['em',2,'Gegen wen schied Deutschland bei der Heim-EM 2024 im Viertelfinale aus?','Spanien','Frankreich','England','Niederlande','1:2 nach Verlängerung. Mikel Merino köpfte kurz vor dem Elfmeterschießen.'],
+['em',2,'Mit welchem Ergebnis gewann Deutschland das Eröffnungsspiel der EM 2024 gegen Schottland?','5:1','2:0','3:1','4:0','Florian Wirtz erzielte in München das erste Tor des Turniers.'],
+['em',2,'Wer wurde bei der EM 2024 als bester junger Spieler ausgezeichnet?','Lamine Yamal','Jamal Musiala','Jude Bellingham','Kobbie Mainoo','Gegen Frankreich wurde er mit 16 Jahren der jüngste Torschütze der EM-Geschichte.'],
+['em',2,'Welches Land wurde 1992 Europameister, obwohl es sich gar nicht qualifiziert hatte?','Dänemark','Schweden','Griechenland','Norwegen','Dänemark rückte für Jugoslawien nach und schlug im Finale Deutschland mit 2:0.'],
+['em',2,'Wie heißt ein Elfmeter, der lässig in die Mitte gelupft wird?','Panenka','Cruyff','Zidane','Maradona','Antonín Panenka entschied so 1976 das EM-Finale gegen Deutschland.'],
+['em',2,'Welches Land wurde 2016 Europameister?','Portugal','Frankreich','Wales','Deutschland','Éder traf im Finale in Paris in der Verlängerung.'],
+['em',2,'Wer gewann die EM 2020, die erst 2021 gespielt wurde?','Italien','England','Spanien','Dänemark','Im Finale im Wembley-Stadion setzte sich Italien im Elfmeterschießen durch.'],
+['em',2,'In welchen Jahren wurde Deutschland Europameister?','1972, 1980, 1996','1974, 1990, 2014','1976, 1988, 2002','1972, 1984, 2008','Dazu kommen drei verlorene Finals: 1976, 1992 und 2008.'],
+['em',2,'Wer ist Rekordtorschütze der EM-Geschichte?','Cristiano Ronaldo','Michel Platini','Antoine Griezmann','Alan Shearer','Ronaldo traf bei fünf verschiedenen Europameisterschaften.'],
+['em',2,'Welches Land hat die meisten Titel bei der Copa América?','Argentinien','Brasilien','Uruguay','Chile','Zuletzt gewann Argentinien 2021 und 2024.'],
+['em',2,'Wie oft wurde die deutsche Frauen-Nationalmannschaft Europameisterin?','8-mal','5-mal','3-mal','10-mal','Zwischen 1989 und 2013 gewann sie acht von neun Turnieren.'],
+['em',2,'Welches Land gewann 2023 die Frauen-WM?','Spanien','England','USA','Schweden','Spanien schlug England im Finale in Sydney mit 1:0.'],
+['em',2,'Wer gewann 2025 die Frauen-EM in der Schweiz?','England','Spanien','Deutschland','Frankreich','England verteidigte den Titel im Finale gegen Spanien im Elfmeterschießen.'],
+['em',2,'Wen besiegte Deutschland im Finale des Confed-Cups 2017?','Chile','Mexiko','Portugal','Australien','Eine junge Mannschaft gewann 1:0 durch ein Tor von Lars Stindl.'],
+['em',2,'Welcher Verein gewann 2025 die erste Klub-WM mit 32 Mannschaften?','FC Chelsea','Paris Saint-Germain','Real Madrid','FC Bayern','Chelsea besiegte im Finale in New Jersey Paris Saint-Germain mit 3:0.'],
+['em',2,'Wie hieß das Maskottchen der EM 2024?','Albärt','Goleo','Skillzy','Berni','Ein Teddybär, dessen Name von Kindern ausgewählt wurde.'],
+['em',2,'Wer gewann 2016 Olympia-Gold, nachdem Deutschland das Finale im Elfmeterschießen verlor?','Brasilien','Argentinien','Nigeria','Spanien','Neymar verwandelte in Rio den entscheidenden Elfmeter.'],
+['em',2,'Wie viele Mannschaften spielten bei der EM 2024 mit?','24','16','32','20','Seit 2016 nehmen 24 Teams an einer EM teil.'],
+['em',3,'Wie heißt der Pokal für den Europameister?','Henri-Delaunay-Pokal','Coupe Jules Rimet','Jacques-Goddet-Pokal','Pokal der Pokalsieger','Henri Delaunay war der erste Generalsekretär der UEFA und Ideengeber der EM.'],
+['em',3,'Wie viele Tore schoss Michel Platini bei der EM 1984?','9','6','7','5','Frankreich wurde im eigenen Land Europameister.'],
+['em',3,'Wer schoss beide deutschen Tore im EM-Finale 1980 gegen Belgien?','Horst Hrubesch','Karl-Heinz Rummenigge','Klaus Allofs','Bernd Schuster','Den Siegtreffer köpfte er kurz vor Schluss nach einer Ecke.'],
+['em',3,'Welche zwei Länder richten die EM 2032 gemeinsam aus?','Italien und Türkei','Spanien und Portugal','Österreich und Ungarn','Polen und Tschechien','Die EM 2028 findet in Großbritannien und Irland statt.'],
+['em',3,'Welches Land ist Rekordsieger des Afrika-Cups?','Ägypten','Kamerun','Nigeria','Ghana','Die „Pharaonen“ gewannen 2006, 2008 und 2010 drei Titel in Folge.'],
+['em',3,'In welchen Jahren wurde die deutsche Frauen-Nationalmannschaft Weltmeisterin?','2003 und 2007','1995 und 2011','2007 und 2015','1999 und 2003','2007 blieb sie das ganze Turnier ohne Gegentor.'],
+['em',3,'Welche Mannschaft holte 1976 bei den Olympischen Spielen Gold im Fußball?','DDR','BRD','Polen','Sowjetunion','In Montreal schlug die DDR im Finale Polen mit 3:1.'],
+['em',3,'Welches Land gewann 2019 die erste Austragung der Nations League?','Portugal','Niederlande','Frankreich','Spanien','Portugal schlug im Finale in Porto die Niederlande mit 1:0.'],
+['em',3,'Wer schoss das Siegtor im EM-Finale 2024?','Mikel Oyarzabal','Nico Williams','Dani Olmo','Álvaro Morata','Der eingewechselte Stürmer traf in der 86. Minute zum 2:1.'],
+['em',3,'Gegen welches Land verlor Deutschland das EM-Finale 1976 im Elfmeterschießen?','Tschechoslowakei','Niederlande','Sowjetunion','Jugoslawien','Uli Hoeneß schoss seinen Elfmeter in den Nachthimmel von Belgrad.'],
+['em',3,'Welches Land war 1960 der erste Europameister?','Sowjetunion','Spanien','Jugoslawien','Frankreich','Im Finale in Paris stand Lew Jaschin im Tor der Sowjetunion.'],
+['em',3,'In welchem Jahr wurde Deutschland zum ersten Mal Europameister?',1972,1950,2000,'Jahr',3,'Im Finale in Brüssel gab es ein 3:0 gegen die Sowjetunion, Gerd Müller traf doppelt.'],
+/* ---- Bundesliga & DFB ---- */
+['bl',1,'Welcher Verein ist deutscher Rekordmeister?','FC Bayern München','Borussia Dortmund','1. FC Nürnberg','Hamburger SV','Lange war der 1. FC Nürnberg Rekordmeister, bis Bayern ihn 1987 überholte.'],
+['bl',1,'In welchem Jahr startete die Bundesliga?','1963','1949','1954','1970','Erster Meister wurde in der Saison 1963/64 der 1. FC Köln.'],
+['bl',1,'Welcher Verein wurde 2024 erstmals deutscher Meister, ohne ein Saisonspiel zu verlieren?','Bayer 04 Leverkusen','VfB Stuttgart','RB Leipzig','Borussia Dortmund','Trainer war Xabi Alonso. Dazu kam der DFB-Pokal.'],
+['bl',1,'Wie heißt die Trophäe für den deutschen Meister?','Meisterschale','Meisterpokal','Goldener Teller','Viktoria','Fans nennen sie liebevoll „Salatschüssel“.'],
+['bl',1,'Wie viele Mannschaften spielen in der Bundesliga?','18','16','20','22','Jedes Team bestreitet 34 Spiele pro Saison.'],
+['bl',1,'Wie nennt man das Duell zwischen Borussia Dortmund und Schalke 04?','Revierderby','Nordderby','Klassiker','Rheinderby','Beide Vereine liegen im Ruhrgebiet, nur rund 30 Kilometer voneinander entfernt.'],
+['bl',1,'Wo findet das DFB-Pokalfinale seit 1985 statt?','Olympiastadion Berlin','Allianz Arena München','Signal Iduna Park','Volksparkstadion Hamburg','„Berlin, Berlin, wir fahren nach Berlin“ singen die Fans in jeder Pokalrunde.'],
+['bl',1,'Wer hat die meisten Bundesligatore geschossen?','Gerd Müller','Robert Lewandowski','Klaus Fischer','Jupp Heynckes','365 Tore in 427 Spielen für den FC Bayern.'],
+['bl',1,'Welcher Verein trägt den Spitznamen „Die Fohlen“?','Borussia Mönchengladbach','Hertha BSC','1. FC Köln','VfL Wolfsburg','Der Name stammt aus den 1960er-Jahren, als eine sehr junge Mannschaft die Liga aufmischte.'],
+['bl',1,'Welcher Verein spielt im Stadion An der Alten Försterei?','1. FC Union Berlin','Hertha BSC','FC St. Pauli','Dynamo Dresden','Tausende Fans halfen beim Umbau des Stadions mit.'],
+['bl',1,'Welcher Verein ist als „Die Knappen“ bekannt?','FC Schalke 04','VfL Bochum','Borussia Dortmund','MSV Duisburg','Der Name erinnert an die Bergbau-Geschichte von Gelsenkirchen.'],
+['bl',1,'Welcher Verein wurde von 2013 bis 2023 elfmal in Folge deutscher Meister?','FC Bayern München','Borussia Dortmund','RB Leipzig','VfL Wolfsburg','Erst Bayer Leverkusen beendete 2024 die Serie.'],
+['bl',1,'Welcher Verein spielt in der Allianz Arena?','FC Bayern München','Borussia Dortmund','VfB Stuttgart','FC Augsburg','Die Arena wurde 2005 eröffnet und kann ihre Außenhülle in verschiedenen Farben leuchten lassen.'],
+['bl',1,'Welcher Stürmer kam 2023 von Tottenham Hotspur zum FC Bayern?','Harry Kane','Son Heung-min','Dele Alli','Christian Eriksen','In seiner ersten Bundesliga-Saison traf er 36-mal.'],
+['bl',2,'Welcher Verein wurde 1964 erster Bundesliga-Meister?','1. FC Köln','FC Bayern München','Hamburger SV','1. FC Nürnberg','Der FC Bayern spielte in der ersten Bundesliga-Saison noch gar nicht mit.'],
+['bl',2,'Wer brach 2021 den Rekord von Gerd Müller mit 41 Toren in einer Bundesliga-Saison?','Robert Lewandowski','Erling Haaland','Harry Kane','Pierre-Emerick Aubameyang','Sein 41. Tor fiel in der letzten Minute des letzten Spieltags gegen Augsburg.'],
+['bl',2,'Welcher Verein ist der „Dino“, der 2018 zum ersten Mal aus der Bundesliga abstieg?','Hamburger SV','1. FC Kaiserslautern','Werder Bremen','1. FC Köln','Der HSV hatte seit 1963 ununterbrochen in der Bundesliga gespielt.'],
+['bl',2,'Wer hält den Rekord für die meisten Bundesligaspiele?','Charly Körbel','Manfred Kaltz','Oliver Kahn','Thomas Müller','602 Spiele, alle für Eintracht Frankfurt.'],
+['bl',2,'Welcher Verein wurde 1998 als Aufsteiger direkt deutscher Meister?','1. FC Kaiserslautern','VfL Wolfsburg','Werder Bremen','VfB Stuttgart','Trainer Otto Rehhagel war mit den Roten Teufeln gerade aus der 2. Liga gekommen.'],
+['bl',2,'Welcher Verein ist als „Meister der Herzen“ von 2001 bekannt?','FC Schalke 04','Bayer Leverkusen','Borussia Dortmund','Hamburger SV','Schalke feierte schon, als Bayern in Hamburg in der Nachspielzeit noch ausglich und Meister wurde.'],
+['bl',2,'Welcher Trainer wurde mit Borussia Dortmund 2011 und 2012 Meister?','Jürgen Klopp','Thomas Tuchel','Ottmar Hitzfeld','Lucien Favre','2012 holte der BVB sogar das Double.'],
+['bl',2,'Wer wurde 2009 überraschend deutscher Meister?','VfL Wolfsburg','Hertha BSC','TSG Hoffenheim','Hamburger SV','Unter Felix Magath trafen Grafite und Edin Džeko zusammen 54-mal.'],
+['bl',2,'Welcher Verein gewann 2025 den DFB-Pokal gegen den Drittligisten Arminia Bielefeld?','VfB Stuttgart','Bayer Leverkusen','Eintracht Frankfurt','RB Leipzig','Stuttgart gewann das Finale in Berlin mit 4:2.'],
+['bl',2,'Wer erzielte das erste Tor der Bundesliga-Geschichte?','Timo Konietzka','Uwe Seeler','Gerd Müller','Lothar Emmerich','Der Dortmunder traf im August 1963 in Bremen nach weniger als einer Minute.'],
+['bl',2,'Welcher Verein trägt den Spitznamen „Die Geißböcke“?','1. FC Köln','1. FC Kaiserslautern','Eintracht Braunschweig','SC Freiburg','Das Maskottchen ist ein echter Geißbock namens Hennes.'],
+['bl',2,'Welcher Verein wird „Die Werkself“ genannt?','Bayer 04 Leverkusen','VfL Wolfsburg','Carl Zeiss Jena','RB Leipzig','Der Verein wurde 1904 von Mitarbeitern des Bayer-Werks gegründet.'],
+['bl',2,'Welcher Verein ist als „Die Roten Teufel“ bekannt?','1. FC Kaiserslautern','FC Bayern München','VfB Stuttgart','Rot-Weiss Essen','Sie spielen auf dem Betzenberg im Fritz-Walter-Stadion.'],
+['bl',2,'Welcher Bundesligist wird „Die Alte Dame“ genannt?','Hertha BSC','Hamburger SV','1. FC Nürnberg','Werder Bremen','Der Berliner Verein wurde schon 1892 gegründet.'],
+['bl',2,'Wer ist Rekordnationalspieler Deutschlands?','Lothar Matthäus','Miroslav Klose','Thomas Müller','Manuel Neuer','150 Länderspiele zwischen 1980 und 2000.'],
+['bl',2,'Wer ist Rekordtorschütze der deutschen Nationalmannschaft?','Miroslav Klose','Gerd Müller','Thomas Müller','Rudi Völler','71 Tore in 137 Länderspielen.'],
+['bl',2,'Wer war Bundestrainer zwischen Joachim Löw und Julian Nagelsmann?','Hansi Flick','Ralf Rangnick','Jürgen Klinsmann','Matthias Sammer','Nach Flicks Entlassung 2023 betreute Rudi Völler die Mannschaft für ein Spiel.'],
+['bl',2,'Mit welchem Spitznamen ist Horst Hrubesch bekannt?','Kopfball-Ungeheuer','Bomber der Nation','Der Kaiser','Tante Käthe','Seine Kopfbälle entschieden unter anderem das EM-Finale 1980.'],
+['bl',2,'Wer wurde „Der Bomber der Nation“ genannt?','Gerd Müller','Horst Hrubesch','Rudi Völler','Klaus Fischer','Für Deutschland traf er 68-mal in 62 Länderspielen.'],
+['bl',2,'Welcher Spieler wurde „Tante Käthe“ genannt?','Rudi Völler','Jürgen Klinsmann','Andreas Möller','Thomas Häßler','Den Spitznamen bekam er wegen seiner früh ergrauten Locken.'],
+['bl',2,'Welcher Trainer holte mit dem FC Bayern 2013 das erste Triple?','Jupp Heynckes','Pep Guardiola','Louis van Gaal','Hansi Flick','2020 gelang Hansi Flick das zweite Triple.'],
+['bl',2,'Wie heißt die riesige Stehplatztribüne im Dortmunder Stadion?','Gelbe Wand','Schwarze Wand','Nordkurve','Block Gelb','Auf der Südtribüne stehen rund 25.000 Fans.'],
+['bl',2,'In welcher Stadt spielt die TSG Hoffenheim ihre Heimspiele?','Sinsheim','Heidelberg','Mannheim','Karlsruhe','Hoffenheim ist ein Ortsteil von Sinsheim.'],
+['bl',2,'Welcher Verein gewann 2022 die Europa League?','Eintracht Frankfurt','Bayer Leverkusen','RB Leipzig','SC Freiburg','Im Finale in Sevilla setzte sich die Eintracht im Elfmeterschießen gegen die Glasgow Rangers durch.'],
+['bl',2,'Wie viele Bundesligatore erzielte Gerd Müller?',365,150,500,'Tore',15,'In nur 427 Spielen, alle für den FC Bayern.'],
+['bl',3,'Wer wurde jüngster Torschütze der Bundesliga-Geschichte?','Youssoufa Moukoko','Florian Wirtz','Jamal Musiala','Nuri Şahin','Er traf im Dezember 2020 für Dortmund bei Union Berlin, 16 Jahre und 28 Tage alt.'],
+['bl',3,'Mit welchem Ergebnis gewann Gladbach 1978 gegen Dortmund, bis heute der höchste Bundesliga-Sieg?','12:0','10:1','9:0','11:2','Gladbach brauchte am letzten Spieltag viele Tore, wurde aber trotzdem nur Zweiter hinter Köln.'],
+['bl',3,'Welcher Verein gewann 1974 als einziger DDR-Klub einen Europapokal?','1. FC Magdeburg','Dynamo Dresden','Carl Zeiss Jena','BFC Dynamo','Im Finale des Pokalsieger-Wettbewerbs schlug Magdeburg den AC Mailand mit 2:0.'],
+['bl',3,'Welcher Drittligist warf 2023/24 Bayern, Frankfurt und Gladbach aus dem DFB-Pokal?','1. FC Saarbrücken','1. FC Kaiserslautern','Arminia Bielefeld','Preußen Münster','Erst im Halbfinale war gegen Kaiserslautern Schluss.'],
+['bl',3,'In welcher Stadt wurde der Deutsche Fußball-Bund im Jahr 1900 gegründet?','Leipzig','Berlin','Frankfurt','Karlsruhe','Heute sitzt der DFB auf dem DFB-Campus in Frankfurt am Main.'],
+['bl',3,'Seit welcher Saison gibt es in der Bundesliga den Videobeweis?','2017/18','2014/15','2019/20','2021/22','Die Videoassistenten sitzen im „Kölner Keller“.'],
+['bl',3,'Seit welcher Saison gibt es die eingleisige 3. Liga?','2008/09','1994/95','2000/01','2012/13','Vorher war die Regionalliga die dritthöchste Spielklasse.'],
+['bl',3,'Welcher Verein gewann 2004 das Double aus Meisterschaft und Pokal?','Werder Bremen','FC Bayern München','VfB Stuttgart','FC Schalke 04','Trainer war Thomas Schaaf, Ailton wurde Torschützenkönig.'],
+['bl',3,'Wer hielt fast 50 Jahre lang den Rekord von 40 Toren in einer Bundesliga-Saison?','Gerd Müller','Klaus Fischer','Dieter Müller','Lothar Emmerich','Aufgestellt in der Saison 1971/72.'],
+['bl',3,'Wie heißt das Stadion von Eintracht Frankfurt heute offiziell?','Deutsche Bank Park','Commerzbank-Arena','Main-Arena','Hessen-Stadion','Früher hieß es Waldstadion, später Commerzbank-Arena.'],
+['bl',3,'Wie viele Bundesligaspiele bestritt Rekordspieler Charly Körbel?',602,300,800,'Spiele',20,'Er spielte von 1972 bis 1991 für Eintracht Frankfurt.'],
+
+/* ---- Stars & Legenden ---- */
+['leg',1,'Wie oft hat Lionel Messi den Ballon d’Or gewonnen?','8-mal','5-mal','6-mal','7-mal','So oft wie kein anderer Spieler, zuletzt 2023.'],
+['leg',1,'Bei welchem Verein spielte Cristiano Ronaldo, bevor er zu Manchester United wechselte?','Sporting Lissabon','Benfica Lissabon','FC Porto','Real Madrid','2003 holte ihn Alex Ferguson als 18-Jährigen nach England.'],
+['leg',1,'Aus welchem Land kommt Erling Haaland?','Norwegen','Schweden','Dänemark','Island','Geboren wurde er im englischen Leeds, wo sein Vater Alf-Inge spielte.'],
+['leg',1,'Welcher Spieler wurde „Der Kaiser“ genannt?','Franz Beckenbauer','Lothar Matthäus','Uwe Seeler','Günter Netzer','Er wurde als Spieler und als Teamchef Weltmeister.'],
+['leg',1,'Wie lautet der Spitzname von Torhüter Oliver Kahn?','Der Titan','Der Kaiser','Der Bomber','Die Katze','„Die Katze von Anzing“ war Sepp Maier.'],
+['leg',1,'Zu welchem Verein wechselte Kylian Mbappé 2024?','Real Madrid','FC Barcelona','Manchester City','FC Liverpool','Er kam ablösefrei von Paris Saint-Germain.'],
+['leg',1,'Für welchen Verein spielte Lionel Messi von der Jugend bis 2021?','FC Barcelona','Real Madrid','Paris Saint-Germain','Atlético Madrid','Er kam als 13-Jähriger aus Argentinien nach Barcelona.'],
+['leg',1,'Zu welchem Verein wechselte Lionel Messi 2023?','Inter Miami','Al-Hilal','LA Galaxy','New York City FC','Miteigentümer des Klubs aus Florida ist David Beckham.'],
+['leg',1,'Welcher Spieler hat die meisten Tore für den FC Barcelona erzielt?','Lionel Messi','Luis Suárez','Samuel Eto’o','Ronaldinho','672 Pflichtspieltore zwischen 2004 und 2021.'],
+['leg',1,'Mit welchem Jubel wurde Cristiano Ronaldo berühmt?','„Siuuu“ mit Sprung','Daumenlutschen','Ein Salto','Die Eckfahnen-Gitarre','Er springt, dreht sich in der Luft und landet breitbeinig.'],
+['leg',1,'Bei welchem deutschen Verein wurde Erling Haaland vor seinem Wechsel nach Manchester berühmt?','Borussia Dortmund','RB Leipzig','FC Bayern München','Eintracht Frankfurt','2022 wechselte er zu Manchester City und schoss in seiner ersten Saison 36 Ligatore.'],
+['leg',2,'Wie heißt der Brasilianer mit dem bürgerlichen Namen Edson Arantes do Nascimento?','Pelé','Garrincha','Zico','Romário','Er wurde dreimal Weltmeister.'],
+['leg',2,'Welcher Torwart gewann als einziger den Ballon d’Or?','Lew Jaschin','Oliver Kahn','Gianluigi Buffon','Manuel Neuer','Er gewann ihn 1963. Der Preis für den besten Torwart heißt heute Jaschin-Trophäe.'],
+['leg',2,'Wer war der letzte Deutsche, der den Ballon d’Or gewann?','Matthias Sammer','Lothar Matthäus','Michael Ballack','Manuel Neuer','Sammer gewann ihn 1996 nach dem EM-Titel.'],
+['leg',2,'Wer gewann 2025 den Ballon d’Or?','Ousmane Dembélé','Lamine Yamal','Kylian Mbappé','Mohamed Salah','Der Franzose hatte mit Paris Saint-Germain die Champions League gewonnen.'],
+['leg',2,'Wer gewann 2024 den Ballon d’Or?','Rodri','Vinícius Júnior','Jude Bellingham','Harry Kane','Der Spanier war mit Manchester City Meister und mit Spanien Europameister geworden.'],
+['leg',2,'Wie oft gewann Cristiano Ronaldo den Ballon d’Or?','5-mal','4-mal','6-mal','3-mal','2008, 2013, 2014, 2016 und 2017.'],
+['leg',2,'Bei welchem italienischen Verein wurde Diego Maradona zur Legende?','SSC Neapel','Juventus Turin','AC Mailand','AS Rom','Mit ihm gewann Neapel 1987 und 1990 die Meisterschaft. Das Stadion trägt heute seinen Namen.'],
+['leg',2,'Gegen welchen Verein traf Zinédine Zidane 2002 mit seinem berühmten Volley im Champions-League-Finale?','Bayer Leverkusen','FC Bayern München','Borussia Dortmund','FC Valencia','Real Madrid gewann in Glasgow mit 2:1.'],
+['leg',2,'Wer erzielte als erster Spieler offiziell 900 Karrieretore?','Cristiano Ronaldo','Lionel Messi','Pelé','Robert Lewandowski','Das 900. Tor schoss er im September 2024 für Portugal.'],
+['leg',2,'Für wie viel Geld wechselte Neymar 2017 vom FC Barcelona zu Paris Saint-Germain?','222 Millionen Euro','105 Millionen Euro','160 Millionen Euro','300 Millionen Euro','Damit wurde er mit großem Abstand zum teuersten Spieler der Welt.'],
+['leg',2,'Wie viele Champions-League-Titel gewann Toni Kroos?','6','4','5','3','Einen mit dem FC Bayern 2013, fünf mit Real Madrid.'],
+['leg',2,'In welcher Stadt wurde Jamal Musiala geboren?','Stuttgart','München','Hamburg','Berlin','Er wuchs teilweise in England auf und spielte für Englands Jugendteams, bevor er sich für Deutschland entschied.'],
+['leg',2,'Zu welchem Klub wechselte Thomas Müller 2025 nach 25 Jahren beim FC Bayern?','Vancouver Whitecaps','Inter Miami','LA Galaxy','Los Angeles FC','Ein Klub aus Kanada, der in der nordamerikanischen MLS spielt.'],
+['leg',2,'Nach welchem Spieler ist der FIFA-Preis für das schönste Tor des Jahres benannt?','Ferenc Puskás','Pelé','Johan Cruyff','Alfredo Di Stéfano','Der Ungar spielte für Honvéd Budapest und Real Madrid.'],
+['leg',2,'Welche Spielidee verbindet man mit Johan Cruyff und den Niederlanden der 1970er?','Totaler Fußball','Catenaccio','Kick and Rush','Tiki-Taka','Jeder Spieler sollte jede Position übernehmen können.'],
+['leg',2,'Für welchen Verein spielte Paolo Maldini seine gesamte Profikarriere?','AC Mailand','Inter Mailand','Juventus Turin','AS Rom','25 Jahre lang, von 1985 bis 2009.'],
+['leg',2,'Für welchen Verein spielte Francesco Totti seine gesamte Karriere?','AS Rom','Lazio Rom','AC Mailand','SSC Neapel','„Il Capitano“ blieb der Roma bis zum Karriereende 2017 treu.'],
+['leg',2,'Welcher Trainer gewann mit dem FC Liverpool 2019 die Champions League und 2020 die Meisterschaft?','Jürgen Klopp','Arne Slot','Rafael Benítez','Brendan Rodgers','Es war Liverpools erster Meistertitel seit 1990.'],
+['leg',2,'Welcher Trainer hat die meisten Champions-League-Titel gewonnen?','Carlo Ancelotti','Pep Guardiola','Zinédine Zidane','José Mourinho','Zwei mit dem AC Mailand, drei mit Real Madrid.'],
+['leg',2,'Welcher deutsche Trainer übernahm 2025 die englische Nationalmannschaft?','Thomas Tuchel','Jürgen Klopp','Ralf Rangnick','Hansi Flick','Zuvor hatte er unter anderem Dortmund, Paris, Chelsea und den FC Bayern trainiert.'],
+['leg',2,'Zu welchem saudi-arabischen Verein wechselte Cristiano Ronaldo Anfang 2023?','Al-Nassr','Al-Hilal','Al-Ittihad','Al-Ahli','Er kam von Manchester United.'],
+['leg',2,'Welcher Nordire bildete mit Bobby Charlton und Denis Law Manchester Uniteds Sturm der 1960er?','George Best','Roy Keane','Ryan Giggs','Eric Cantona','Best gewann 1968 den Europapokal und den Ballon d’Or.'],
+['leg',3,'Welcher Spieler erzielte 2015 für den FC Bayern fünf Tore in nur neun Minuten?','Robert Lewandowski','Thomas Müller','Arjen Robben','Mario Götze','Er war gegen Wolfsburg zur Halbzeit eingewechselt worden.'],
+['leg',3,'Welchen Spitznamen trug Eusébio, der Star von Benfica Lissabon?','Der schwarze Panther','Der Zauberer','Die Perle','Der Pfeil','Er wurde Torschützenkönig der WM 1966.'],
+['leg',3,'Wie viele Länderspiele bestritt Lothar Matthäus?','150','132','121','175','Er spielte bei fünf Weltmeisterschaften.'],
+['leg',3,'Welcher Deutsche wurde 1991 als erster Spieler überhaupt FIFA-Weltfußballer?','Lothar Matthäus','Jürgen Klinsmann','Andreas Brehme','Rudi Völler','Er spielte damals bei Inter Mailand.'],
+['leg',3,'Welche Spielerin wurde dreimal Weltfußballerin und erzielte 128 Länderspieltore für Deutschland?','Birgit Prinz','Alexandra Popp','Nadine Angerer','Steffi Jones','Sie wurde 2003 und 2007 Weltmeisterin.'],
+['leg',3,'Wer schoss im Champions-League-Finale 2013 das Siegtor für den FC Bayern?','Arjen Robben','Thomas Müller','Mario Mandžukić','Franck Ribéry','In der 89. Minute gegen Borussia Dortmund im Wembley-Stadion.'],
+['leg',3,'Wer gewann 2018 den Ballon d’Or und durchbrach damit die Serie von Messi und Ronaldo?','Luka Modrić','Antoine Griezmann','Mohamed Salah','Kylian Mbappé','Er hatte Kroatien ins WM-Finale geführt.'],
+['leg',3,'Welcher Schwede traf 2012 gegen England per Fallrückzieher aus rund 30 Metern?','Zlatan Ibrahimović','Henrik Larsson','Fredrik Ljungberg','Alexander Isak','Das Tor gewann den Puskás-Preis.'],
+['leg',3,'Mit welcher Rückennummer wurde Johan Cruyff berühmt?','14','10','9','7','Bei Ajax trug er die 14, ungewöhnlich in einer Zeit, in der die Startelf die Nummern 1 bis 11 trug.'],
+['leg',3,'Wie viele Pflichtspieltore erzielte Lionel Messi für den FC Barcelona?',672,300,900,'Tore',20,'In 778 Spielen zwischen 2004 und 2021.'],
+/* ---- Vereine & Stadien ---- */
+['club',1,'Wie heißt das Stadion des FC Barcelona?','Camp Nou','Santiago Bernabéu','Mestalla','Metropolitano','Seit dem großen Umbau trägt es den Sponsornamen Spotify Camp Nou.'],
+['club',1,'In welchem Stadion spielt Real Madrid?','Santiago Bernabéu','Camp Nou','Vicente Calderón','La Cartuja','Benannt nach dem früheren Präsidenten des Vereins.'],
+['club',1,'Welche Hymne singen die Fans des FC Liverpool vor jedem Spiel?','You’ll Never Walk Alone','We Will Rock You','Sweet Caroline','Glory Glory','Das Lied stammt aus einem Musical und wurde durch Gerry & the Pacemakers bekannt.'],
+['club',1,'Wie heißt das Stadion von Manchester United?','Old Trafford','Anfield','Etihad Stadium','Goodison Park','Bobby Charlton nannte es das „Theater der Träume“.'],
+['club',1,'Welche beiden Vereine teilen sich das Stadion San Siro?','AC Mailand und Inter Mailand','Juventus und FC Turin','AS Rom und Lazio Rom','SSC Neapel und Salernitana','Offiziell heißt es Stadio Giuseppe Meazza.'],
+['club',1,'Wie nennt man das Spiel zwischen Real Madrid und dem FC Barcelona?','El Clásico','Derbi','Superclásico','Old Firm','Eines der meistgesehenen Vereinsspiele der Welt.'],
+['club',1,'Wie heißt das Stadion des FC Liverpool?','Anfield','Goodison Park','Old Trafford','Stamford Bridge','Die berühmte Heimtribüne heißt „The Kop“.'],
+['club',1,'In welcher Stadt spielt der FC Porto?','Porto','Lissabon','Braga','Coimbra','Sein Stadion heißt Estádio do Dragão. Der Drache ist das Wappentier.'],
+['club',2,'Wie hieß der Signal Iduna Park früher?','Westfalenstadion','Ruhrstadion','Parkstadion','Glückauf-Kampfbahn','Er wurde für die WM 1974 gebaut.'],
+['club',2,'Welche Vereine treffen im „Old Firm“ aufeinander?','Celtic und Rangers','Liverpool und Everton','Arsenal und Tottenham','Benfica und Sporting','Das große Derby aus Glasgow.'],
+['club',2,'Welche Vereine spielen das „Superclásico“?','Boca Juniors und River Plate','Flamengo und Fluminense','Peñarol und Nacional','Corinthians und Palmeiras','Das große Derby von Buenos Aires.'],
+['club',2,'Wie heißt das Stadion der Boca Juniors?','La Bombonera','El Monumental','Maracanã','Estadio Azteca','Der Spitzname bedeutet „Pralinenschachtel“.'],
+['club',2,'Wie heißt das Stadion von Benfica Lissabon?','Estádio da Luz','Estádio do Dragão','Estádio José Alvalade','Estádio do Bessa','Übersetzt: Stadion des Lichts.'],
+['club',2,'Welcher italienische Verein wird „Die Alte Dame“ genannt?','Juventus Turin','AC Mailand','Inter Mailand','AS Rom','Auf Italienisch „La Vecchia Signora“.'],
+['club',2,'Welcher Verein wird „Rossoneri“ genannt?','AC Mailand','Inter Mailand','AS Rom','Juventus Turin','Die Rot-Schwarzen. Inter heißt nach seinen Farben „Nerazzurri“.'],
+['club',2,'In welchem Stadion spielt Ajax Amsterdam?','Johan Cruijff ArenA','Philips Stadion','De Kuip','Abe Lenstra Stadion','Benannt nach der größten Legende des Vereins.'],
+['club',2,'Wofür stehen die Buchstaben PSV beim Klub aus Eindhoven?','Philips Sport Vereniging','Profi Sport Verein','Provinciale Sport Vereniging','Prins Stad Voetbal','Der Verein wurde 1913 für Mitarbeiter von Philips gegründet.'],
+['club',2,'In welchem Stadion spielt Schalke 04 heute?','Veltins-Arena','Parkstadion','Glückauf-Kampfbahn','Ruhrstadion','Bei der Eröffnung 2001 hieß sie Arena AufSchalke.'],
+['club',2,'Welcher Verein spielt im Millerntor-Stadion?','FC St. Pauli','Hamburger SV','Holstein Kiel','Hansa Rostock','Der Kiezklub mit dem Totenkopf als Symbol.'],
+['club',2,'Wie heißt das Stadion des FC Chelsea?','Stamford Bridge','Craven Cottage','Selhurst Park','White Hart Lane','Es liegt im Londoner Stadtteil Fulham.'],
+['club',2,'Wonach ist Borussia Dortmund benannt?','Nach einer Brauerei','Nach einem Fluss','Nach dem Gründer','Nach einem Stadtteil','Die Gründer tranken 1909 gern Bier der Borussia-Brauerei.'],
+['club',2,'Welcher Verein spielt in Gelsenkirchen?','FC Schalke 04','Rot-Weiss Essen','VfL Bochum','MSV Duisburg','Gegründet 1904 im Stadtteil Schalke.'],
+['club',2,'Welcher Verein ist Rekordmeister in Spanien?','Real Madrid','FC Barcelona','Atlético Madrid','Athletic Bilbao','Real Madrid hat mehr als 35 Meistertitel gewonnen.'],
+['club',3,'Welcher Verein spielt im Max-Morlock-Stadion?','1. FC Nürnberg','SpVgg Greuther Fürth','FC Augsburg','Würzburger Kickers','Max Morlock schoss 1954 im WM-Finale das erste deutsche Tor.'],
+['club',3,'In welchem Stadion spielt der SC Freiburg seit 2021?','Europa-Park Stadion','Dreisamstadion','Schwarzwald-Stadion','Breisgau-Arena','Das alte Stadion lag direkt am Fluss Dreisam.'],
+['club',3,'In welchem Jahr wurde der FC Bayern München gegründet?','1900','1888','1909','1923','Gegründet im Februar 1900 in einem Café in Schwabing.'],
+['club',3,'Wie wird das Stadion von Celtic Glasgow im Volksmund genannt?','Paradise','Fortress','Cathedral','Heaven','Offiziell heißt es Celtic Park.'],
+['club',3,'Welcher spanische Verein setzt traditionell nur Spieler aus dem Baskenland ein?','Athletic Bilbao','Real Sociedad','CA Osasuna','Deportivo Alavés','Trotzdem ist der Klub nie aus der ersten Liga abgestiegen.'],
+['club',3,'Welcher Verein spielt im Fritz-Walter-Stadion auf dem Betzenberg?','1. FC Kaiserslautern','1. FSV Mainz 05','SV Waldhof Mannheim','1. FC Saarbrücken','Fritz Walter war Kapitän der Weltmeister von 1954 und spielte nur für Kaiserslautern.'],
+['club',3,'In welcher Stadt steht das Stadion „La Cartuja“, in dem 2021 EM-Spiele stattfanden?','Sevilla','Madrid','Bilbao','Valencia','Es wurde für die Leichtathletik-WM 1999 gebaut.'],
+['club',3,'Welcher Londoner Verein spielt seit 2019 in einem neuen Stadion an der Stelle der White Hart Lane?','Tottenham Hotspur','FC Arsenal','West Ham United','FC Fulham','Das Stadion hat ein ausfahrbares Spielfeld, unter dem ein Kunstrasen für American Football liegt.'],
+['club',3,'Welcher Verein trägt das älteste Gründungsjahr im Namen?','TSV 1860 München','FC Schalke 04','Hannover 96','1. FSV Mainz 05','Die „Löwen“ waren 1963 auch Gründungsmitglied der Bundesliga.'],
+
+/* ---- Europa & Welt ---- */
+['int',1,'Welcher Verein gewann 2025 zum ersten Mal die Champions League?','Paris Saint-Germain','Inter Mailand','FC Arsenal','Manchester City','Im Finale in München gab es ein 5:0 gegen Inter Mailand.'],
+['int',1,'Wie heißt die höchste englische Liga?','Premier League','Championship','Super League','League One','Sie startete 1992 und löste die alte First Division ab.'],
+['int',1,'Wie heißt die höchste italienische Liga?','Serie A','La Liga','Ligue 1','Primeira Liga','La Liga ist Spanien, Ligue 1 Frankreich, Primeira Liga Portugal.'],
+['int',1,'In welchem Land spielt Galatasaray?','Türkei','Griechenland','Ägypten','Italien','Der Klub aus Istanbul gewann im Jahr 2000 den UEFA-Pokal.'],
+['int',1,'In welchem Land wird die Eredivisie gespielt?','Niederlande','Belgien','Dänemark','Portugal','Rekordmeister ist Ajax Amsterdam.'],
+['int',1,'Welcher Verein gewann 2025 die Europa League gegen Manchester United?','Tottenham Hotspur','FC Chelsea','Athletic Bilbao','AS Rom','Im Finale in Bilbao reichte ein 1:0.'],
+['int',1,'Welcher englische Verein holte 2016 sensationell die Meisterschaft?','Leicester City','Aston Villa','FC Everton','West Ham United','Wettanbieter hatten die Chance vor der Saison mit 5000 zu 1 angegeben.'],
+['int',2,'Welche Mannschaft blieb 2003/04 die ganze Premier-League-Saison ungeschlagen?','FC Arsenal','FC Chelsea','Manchester United','FC Liverpool','Die „Invincibles“ um Thierry Henry holten 26 Siege und 12 Unentschieden.'],
+['int',2,'Wer wurde 2025 englischer Meister?','FC Liverpool','FC Arsenal','Manchester City','FC Chelsea','Arne Slot holte den Titel in seiner ersten Saison als Nachfolger von Jürgen Klopp.'],
+['int',2,'Welcher Verein wurde von 2021 bis 2024 viermal in Folge englischer Meister?','Manchester City','FC Liverpool','FC Arsenal','Manchester United','Das hatte vorher noch kein Verein geschafft.'],
+['int',2,'Wie heißt der südamerikanische Wettbewerb, der der Champions League entspricht?','Copa Libertadores','Copa América','Copa Sudamericana','Recopa','Benannt nach den Befreiern Südamerikas.'],
+['int',2,'In welcher Stadt hat die FIFA ihren Sitz?','Zürich','Genf','Paris','Nyon','Die UEFA sitzt in Nyon am Genfersee.'],
+['int',2,'Welcher Verein drehte 2005 im Champions-League-Finale ein 0:3 gegen den AC Mailand?','FC Liverpool','FC Chelsea','FC Barcelona','Manchester United','Das „Wunder von Istanbul“ endete im Elfmeterschießen.'],
+['int',2,'Wie endete das Champions-League-Finale 1999 zwischen Manchester United und dem FC Bayern?','2:1 für Manchester United','1:0 für den FC Bayern','1:1, Elfmeterschießen','3:1 für Manchester United','Bayern führte bis zur Nachspielzeit, dann trafen Sheringham und Solskjær.'],
+['int',2,'Gegen welchen Verein verlor der FC Bayern 2012 das „Finale dahoam“?','FC Chelsea','Inter Mailand','Real Madrid','FC Barcelona','In der eigenen Arena unterlag Bayern im Elfmeterschießen.'],
+['int',2,'Welcher Verein gewann 2024 das Champions-League-Finale gegen Borussia Dortmund?','Real Madrid','Manchester City','FC Bayern München','Paris Saint-Germain','Carvajal und Vinícius Júnior trafen im Wembley-Stadion zum 2:0.'],
+['int',2,'Gegen welchen Verein gewann Borussia Dortmund 1997 das Champions-League-Finale?','Juventus Turin','Ajax Amsterdam','AC Mailand','Manchester United','Lars Ricken traf in München mit seinem ersten Ballkontakt per Heber.'],
+['int',2,'Welcher Verein ist Rekordsieger der Champions League und des Europapokals der Landesmeister?','Real Madrid','AC Mailand','FC Bayern München','FC Liverpool','Real gewann die ersten fünf Ausgaben ab 1956 in Folge.'],
+['int',2,'Welcher Verein gewann 2023 die erste italienische Meisterschaft seit den Zeiten Maradonas?','SSC Neapel','Lazio Rom','Atalanta Bergamo','AS Rom','Davor war Neapel zuletzt 1990 Meister geworden.'],
+['int',2,'Welcher Verein ist Rekordsieger der Europa League samt UEFA-Pokal?','FC Sevilla','Inter Mailand','FC Liverpool','Atlético Madrid','Sevilla gewann den Wettbewerb siebenmal, zuletzt 2023.'],
+['int',2,'Wer gewann 2024 die Copa América?','Argentinien','Kolumbien','Uruguay','Brasilien','Lautaro Martínez traf im Finale in Miami in der Verlängerung.'],
+['int',2,'Welcher Verein gewann im Jahr 2000 den UEFA-Pokal gegen den FC Arsenal?','Galatasaray','Fenerbahçe','Beşiktaş','Olympiakos Piräus','Das Finale in Kopenhagen wurde im Elfmeterschießen entschieden.'],
+['int',3,'Mit welchem Ergebnis schlug der FC Bayern 2020 den FC Barcelona im Champions-League-Viertelfinale?','8:2','5:1','6:0','7:3','Das Turnier wurde wegen Corona in Lissabon ausgespielt.'],
+['int',3,'Wer schoss den FC Bayern 2020 im Champions-League-Finale gegen Paris zum Sieg?','Kingsley Coman','Robert Lewandowski','Thomas Müller','Serge Gnabry','Ausgerechnet ein früherer Pariser traf zum 1:0.'],
+['int',3,'Wie viele Mannschaften spielen seit 2024 in der Ligaphase der Champions League?','36','32','40','48','Jedes Team spielt acht Partien gegen verschiedene Gegner.'],
+['int',3,'Welche Mannschaft schlug Inter Mailand im Champions-League-Finale 2023?','Manchester City','Real Madrid','FC Bayern München','Paris Saint-Germain','Rodri traf in Istanbul zum 1:0. Es war Citys erster Titel in diesem Wettbewerb.'],
+['int',3,'In welcher Stadt wurde die FIFA 1904 gegründet?','Paris','Zürich','London','Brüssel','England trat erst ein Jahr später bei.'],
+['int',3,'Welche Liga gilt als älteste Profiliga der Welt?','Englische Football League','Schottische Football League','Argentinische Primera División','Niederländische Eredivisie','Die Football League startete 1888 mit zwölf Vereinen.'],
+['int',3,'Welcher englische Verein gewann 1979 und 1980 den Europapokal der Landesmeister?','Nottingham Forest','Aston Villa','Leeds United','Derby County','Trainer war Brian Clough.'],
+['int',3,'Welcher deutsche Verein gewann 1983 den Europapokal der Landesmeister gegen Juventus?','Hamburger SV','FC Bayern München','1. FC Köln','Borussia Mönchengladbach','Felix Magath traf in Athen zum 1:0.'],
+['int',3,'Welche Mannschaft gewann 1986 als erste aus Osteuropa den Europapokal der Landesmeister?','Steaua Bukarest','Roter Stern Belgrad','Dynamo Kiew','Legia Warschau','Torwart Helmuth Duckadam hielt im Finale gegen Barcelona alle vier Elfmeter.'],
+['int',3,'Welche Nationalmannschaft gewann 2001 ein WM-Qualifikationsspiel mit 31:0 gegen Amerikanisch-Samoa?','Australien','Neuseeland','Fidschi','Tonga','Archie Thompson schoss allein 13 Tore. Bis heute der höchste Sieg in einem offiziellen Länderspiel.'],
+['int',3,'Wie viele Mitgliedsverbände hat die FIFA ungefähr?',211,120,260,'Verbände',8,'Damit hat die FIFA mehr Mitglieder als die Vereinten Nationen.'],
+/* ---- Regeln ---- */
+['regel',1,'Wie viele Spieler stehen pro Mannschaft auf dem Platz?','11','10','12','9','Darunter ein Torwart.'],
+['regel',1,'Wie lange dauert eine Halbzeit im Profifußball?','45 Minuten','40 Minuten','50 Minuten','30 Minuten','Dazu kommt die Nachspielzeit.'],
+['regel',1,'Was folgt auf zwei Gelbe Karten im selben Spiel?','Gelb-Rot und Platzverweis','Eine Zeitstrafe','Gar nichts','Ein Elfmeter für den Gegner','Der Spieler muss vom Platz und ist meist im nächsten Spiel gesperrt.'],
+['regel',1,'Aus welcher Entfernung wird ein Elfmeter geschossen?','11 Meter','9 Meter','12 Meter','16 Meter','Genau genommen 12 Yards, also 10,97 Meter.'],
+['regel',1,'Wie lange dauert eine Verlängerung insgesamt?','30 Minuten','20 Minuten','15 Minuten','45 Minuten','Zweimal 15 Minuten.'],
+['regel',1,'Wie muss ein Einwurf ausgeführt werden?','Mit beiden Händen über den Kopf','Mit einer Hand','Mit dem Fuß','Von unten mit beiden Händen','Beide Füße müssen dabei den Boden berühren.'],
+['regel',1,'Wann ist ein Tor gültig?','Wenn der Ball die Torlinie vollständig überquert','Wenn der Ball die Linie berührt','Wenn der halbe Ball hinter der Linie ist','Wenn der Torwart den Ball nicht festhält','Torlinientechnik misst das auf wenige Millimeter genau.'],
+['regel',1,'Welche Farbe hat die Karte für einen Platzverweis?','Rot','Gelb','Blau','Schwarz','Gelb ist eine Verwarnung.'],
+['regel',1,'Was gibt es, wenn ein Verteidiger den Ball zuletzt berührt und er neben dem eigenen Tor ins Aus geht?','Eckstoß','Abstoß','Einwurf','Freistoß','Berührt ein Angreifer den Ball zuletzt, gibt es Abstoß.'],
+['regel',2,'Wie breit ist ein Fußballtor?','7,32 Meter','6,50 Meter','8,00 Meter','7,00 Meter','Die Maße kommen aus dem Englischen: 8 Yards breit, 8 Fuß hoch.'],
+['regel',2,'Wie weit muss die Mauer bei einem Freistoß vom Ball entfernt sein?','9,15 Meter','8 Meter','10 Meter','11 Meter','Das sind 10 Yards. Der Schiedsrichter markiert es mit Freistoßspray.'],
+['regel',2,'Bei welcher Spielfortsetzung kann ein Spieler nicht im Abseits stehen?','Einwurf','Freistoß','Schiedsrichterball','Pass aus dem eigenen Strafraum','Auch bei Abstoß und Eckstoß gibt es kein Abseits.'],
+['regel',2,'Wie oft darf ein Team in einem Pflichtspiel normalerweise auswechseln?','5-mal','3-mal','4-mal','7-mal','Seit 2022 dauerhaft erlaubt, in höchstens drei Unterbrechungen plus Halbzeit.'],
+['regel',2,'Was gibt es seit 2025, wenn der Torwart den Ball länger als acht Sekunden in den Händen hält?','Eckstoß für den Gegner','Indirekter Freistoß für den Gegner','Gelbe Karte','Elfmeter','Vorher galt eine Sechs-Sekunden-Regel mit indirektem Freistoß, die kaum gepfiffen wurde.'],
+['regel',2,'Darf der Torwart einen absichtlichen Rückpass mit dem Fuß in die Hand nehmen?','Nein, sonst gibt es indirekten Freistoß','Ja, immer','Nur im Torraum','Nur in der Nachspielzeit','Die Rückpassregel gibt es seit 1992.'],
+['regel',2,'Wie nennt man ein Tor, das direkt aus einer Ecke erzielt wird?','Olympisches Tor','Goldenes Tor','Eckentor','Bogenlampe','Der Name geht auf ein solches Tor Argentiniens gegen Olympiasieger Uruguay im Jahr 1924 zurück.'],
+['regel',2,'Kann man direkt aus einem Einwurf ein Tor erzielen?','Nein','Ja','Nur von der Mittellinie aus','Nur in der Verlängerung','Fliegt der Ball ohne Berührung ins Tor, gibt es Abstoß.'],
+['regel',2,'Seit welcher WM gibt es Gelbe und Rote Karten?','1970','1954','1982','1966','Schiedsrichter Ken Aston kam an einer Ampel auf die Idee.'],
+['regel',2,'Was zeigt ein Schiedsrichter an, wenn er einen Arm senkrecht nach oben hebt?','Indirekter Freistoß','Abseits','Vorteil','Elfmeter','Er hält den Arm oben, bis ein zweiter Spieler den Ball berührt hat.'],
+['regel',2,'Wie heißt es, wenn der Schiedsrichter nach einem Foul weiterspielen lässt, weil das gefoulte Team im Angriff ist?','Vorteil','Fairplay','Nachspiel','Freilauf','Er zeigt es mit beiden Armen nach vorn an.'],
+['regel',2,'Wie tief ist der Strafraum, gemessen von der Torlinie ins Feld?','16,5 Meter','11 Meter','20 Meter','5,5 Meter','Darum heißt er auch „Sechzehner“.'],
+['regel',2,'Wie viele Spieler muss ein Team mindestens auf dem Feld haben, damit das Spiel weitergeht?','7','8','6','9','Fällt ein Team darunter, wird das Spiel abgebrochen.'],
+['regel',2,'Wie lange darf die Halbzeitpause höchstens dauern?','15 Minuten','10 Minuten','20 Minuten','30 Minuten','Die Wettbewerbe dürfen das festlegen, aber nicht länger als 15 Minuten.'],
+['regel',2,'Ein Stürmer berührt den Ball zufällig mit der Hand und schießt direkt danach ein Tor. Was gilt?','Das Tor zählt nicht','Das Tor zählt','Es gibt Elfmeter','Das Spiel wird wiederholt','Bei Handspiel des Torschützen unmittelbar vor dem Tor zählt der Treffer nie, auch wenn es keine Absicht war.'],
+['regel',2,'Was passiert, wenn der Ball den Schiedsrichter trifft und dadurch der Ballbesitz wechselt?','Schiedsrichterball','Das Spiel läuft weiter','Freistoß','Einwurf','So steht es seit 2019 in den Regeln.'],
+['regel',3,'Wie hoch ist ein Fußballtor?','2,44 Meter','2,20 Meter','2,50 Meter','2,40 Meter','Das sind genau 8 Fuß.'],
+['regel',3,'Was gilt seit 2019 beim Abstoß?','Der Ball darf schon im Strafraum angenommen werden','Er muss aus dem Torraum herausrollen','Er muss die Mittellinie überqueren','Nur der Torwart darf ihn ausführen','Früher musste der Ball erst den Strafraum verlassen.'],
+['regel',3,'Welche Körperteile zählen bei der Abseitsstellung nicht?','Arme und Hände','Kopf','Schulter','Füße','Es zählen nur Körperteile, mit denen man regelgerecht ein Tor erzielen darf.'],
+['regel',3,'Welchen Umfang hat ein offizieller Fußball?','68 bis 70 Zentimeter','58 bis 60 Zentimeter','75 bis 78 Zentimeter','62 bis 64 Zentimeter','Das ist Ballgröße 5, die Größe für Erwachsene.'],
+['regel',3,'Bei welcher WM gab es zum ersten Mal Torlinientechnik?','2014','2010','2018','2006','Bei der WM in Brasilien wurde sie erstmals eingesetzt.'],
+['regel',3,'Was muss der Torwart beim Elfmeter beachten?','Mindestens ein Fuß auf oder über der Torlinie','Beide Hände an den Pfosten','Er darf sich nicht bewegen','Er muss genau in der Tormitte stehen','Er darf sich auf der Linie bewegen, aber nicht vorher nach vorne kommen.'],
+['regel',3,'Wie lang darf ein Spielfeld bei internationalen Spielen sein?','100 bis 110 Meter','90 bis 100 Meter','110 bis 120 Meter','Genau 105 Meter','Die Breite liegt dabei zwischen 64 und 75 Metern.'],
+['regel',3,'Was ist ein Schiedsrichterball?','Der Schiedsrichter lässt den Ball fallen','Ein Freistoß für den Schiedsrichter','Ein Ball, der den Schiedsrichter trifft','Der Ball, mit dem angestoßen wird','Seit 2019 bekommt den Ball ein Spieler des Teams, das zuletzt am Ball war.'],
+['regel',3,'Seit wann darf man direkt vom Anstoß ein Tor erzielen?','Seit 1997','Schon immer','Seit 2016','Seit 1970','2016 kam dazu, dass der Ball beim Anstoß auch nach hinten gespielt werden darf.'],
+
+/* ---- Zahlen & Rekorde ---- */
+['zahl',1,'Wie viele Spiele bestreitet ein Bundesligist pro Saison?',34,20,50,'Spiele',0,'Bei 18 Teams spielt jeder zweimal gegen jeden.'],
+['zahl',1,'Wie viele Schützen hat jedes Team im Elfmeterschießen zunächst?',5,1,11,'Schützen',0,'Steht es danach unentschieden, geht es Schuss um Schuss weiter.'],
+['zahl',1,'Wie viele Tore fielen im WM-Halbfinale 2014 zwischen Brasilien und Deutschland?',8,2,15,'Tore',0,'7:1 für Deutschland.'],
+['zahl',1,'Wie oft in Folge wurde der FC Bayern von 2013 bis 2023 Meister?',11,5,15,'Titel',0,'Bayer Leverkusen beendete die Serie 2024.'],
+['zahl',2,'Wie viele Zuschauer passen in den Signal Iduna Park in Dortmund?',81365,40000,120000,'Plätze',3000,'Das größte Stadion Deutschlands, mit vielen Stehplätzen.'],
+['zahl',2,'Wie viele Zuschauer passen ins Wembley-Stadion?',90000,50000,130000,'Plätze',3000,'Das größte Stadion Großbritanniens.'],
+['zahl',2,'Wie viele Zuschauer fasst die Allianz Arena bei Bundesligaspielen?',75000,40000,110000,'Plätze',3000,'Bei internationalen Spielen sind es ohne Stehplätze etwas weniger.'],
+['zahl',2,'Wie viele Tore schoss Lionel Messi im Kalenderjahr 2012?',91,40,130,'Tore',5,'Damit brach er den Rekord von Gerd Müller, der 1972 auf 85 Tore kam.'],
+['zahl',2,'Wie breit ist ein Fußballtor in Zentimetern?',732,500,900,'cm',15,'8 Yards, also 7,32 Meter. Hoch ist es 2,44 Meter.'],
+['zahl',2,'Wie viele Tore schoss Robert Lewandowski in der Bundesliga-Saison 2020/21?',41,20,60,'Tore',2,'Ein Tor mehr als Gerd Müller 1971/72.'],
+['zahl',2,'In welchem Jahr wurde die FIFA gegründet?',1904,1850,1950,'Jahr',3,'Gegründet in Paris von sieben europäischen Verbänden.'],
+['zahl',2,'Wie viele Kilometer läuft ein Feldspieler im Profifußball im Schnitt pro Spiel?',11,3,20,'km',2,'Laufstarke Mittelfeldspieler kommen auch auf über 13 Kilometer.'],
+['zahl',2,'Wie viele Spieler darf ein Land für eine WM nominieren?',26,18,35,'Spieler',0,'Seit 2022 sind es 26 statt 23 Spieler.'],
+['zahl',2,'Wie viele Tore schoss Harry Kane in seiner ersten Bundesliga-Saison?',36,15,50,'Tore',2,'Ein Rekord für einen Neuling in der Bundesliga.'],
+['zahl',2,'Wie schwer ist ein Fußball ungefähr?',430,200,800,'Gramm',25,'Erlaubt sind 410 bis 450 Gramm.'],
+['zahl',2,'Wie viele Elfmeter hielt Steaua-Torwart Helmuth Duckadam im Landesmeister-Finale 1986?',4,0,6,'Elfmeter',0,'Barcelona verwandelte keinen einzigen.'],
+['zahl',3,'Nach wie vielen Sekunden traf Hakan Şükür bei der WM 2002 gegen Südkorea?',11,1,60,'Sekunden',2,'Das schnellste Tor der WM-Geschichte, im Spiel um Platz drei.'],
+['zahl',3,'Wie viele Länderspiele bestritt Miroslav Klose?',137,80,180,'Spiele',6,'Dabei schoss er 71 Tore.'],
+['zahl',3,'Wie viele Spiele hatte die WM 2026 mit 48 Mannschaften?',104,64,140,'Spiele',6,'Bei 32 Teams waren es noch 64 Spiele.'],
+['zahl',3,'Wie viele Mannschaften spielten bei der ersten WM 1930 mit?',13,8,32,'Teams',2,'Alle Teilnehmer waren eingeladen, eine Qualifikation gab es nicht.'],
+['zahl',3,'Wie viele Jahre war Sir Alex Ferguson Trainer von Manchester United?',26,10,40,'Jahre',1,'Von 1986 bis 2013.'],
+['zahl',3,'Wie viele englische Meistertitel gewann Sir Alex Ferguson mit Manchester United?',13,5,20,'Titel',1,'Dazu kamen zwei Champions-League-Siege, 1999 und 2008.'],
+['zahl',3,'Wie viele Tore schoss Erling Haaland in seiner ersten Premier-League-Saison 2022/23?',36,15,50,'Tore',2,'Ein Rekord für eine Premier-League-Saison mit 38 Spieltagen.'],
+['zahl',3,'Wie viele Zuschauer passen ins Berliner Olympiastadion?',74475,40000,110000,'Plätze',3000,'Hier finden jedes Jahr das DFB-Pokalfinale und die Heimspiele von Hertha BSC statt.'],
+['zahl',3,'In welchem Jahr wurde der Vorläufer des Hamburger SV gegründet?',1887,1850,1950,'Jahr',3,'Der HSV führt sein Gründungsjahr auf den SC Germania zurück.'],
+['zahl',3,'Mit wie vielen Punkten Vorsprung wurde Bayer Leverkusen 2024 Meister?',17,1,30,'Punkte',2,'Leverkusen holte 90 Punkte, der VfB Stuttgart als Zweiter 73.'],
+['zahl',3,'Wie viele Punkte holte der FC Bayern in der Rekordsaison 2012/13?',91,60,105,'Punkte',3,'Am Ende lag Bayern 25 Punkte vor Borussia Dortmund.'],
+['zahl',3,'Wie viele Tore schoss Archie Thompson 2001 beim 31:0 Australiens gegen Amerikanisch-Samoa?',13,3,25,'Tore',1,'Ein Weltrekord für ein Länderspiel.'],
+['zahl',3,'Wie viele Länderspieltore erzielte Gerd Müller für Deutschland?',68,30,100,'Tore',3,'In nur 62 Länderspielen.'],
+['zahl',3,'Wie viele Tore schoss Gerd Müller im Kalenderjahr 1972?',85,40,120,'Tore',4,'Der Rekord hielt 40 Jahre, bis Lionel Messi 2012 auf 91 Tore kam.'],
+];
+const CATS={
+  wm:{n:'Weltmeisterschaft',c:'#ffd447'},
+  em:{n:'EM & Turniere',c:'#4aa8ff'},
+  bl:{n:'Bundesliga & DFB',c:'#ff5b4f'},
+  leg:{n:'Stars & Legenden',c:'#c58bff'},
+  club:{n:'Vereine & Stadien',c:'#3fe0d0'},
+  int:{n:'Europa & Welt',c:'#9be15d'},
+  regel:{n:'Regeln',c:'#ff9a3c'},
+  zahl:{n:'Zahlen & Rekorde',c:'#ff7ac8'}
+};
+const CAT_KEYS=Object.keys(CATS);
+const Q=Q_RAW.map((r,id)=>typeof r[3]==='number'
+  ?{id,c:r[0],d:r[1],q:r[2],est:true,v:r[3],lo:r[4],hi:r[5],u:r[6]||'',tol:r[7],info:r[8]||''}
+  :{id,c:r[0],d:r[1],q:r[2],opts:[r[3],r[4],r[5],r[6]].filter(x=>x!=null),info:r[7]||''});
+/* Challenge-Codes: Buchstabe = Fragen-Stand. Neue Fragen nur hinten anhängen, dann bleiben alte Codes gültig. */
+const CH_VER={A:Q.length};const CH_CUR='A';
+const PCOL=['#ff5b4f','#4aa8ff','#ffd447','#5fe08a','#c58bff','#ff9a3c','#3fe0d0','#ff7ac8'];
+
+/* ---------- Hilfen ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const R=Math.random;
+function rng(seed){let s=seed>>>0;return()=>{s=(s+0x6D2B79F5)>>>0;let t=s;t=Math.imul(t^t>>>15,1|t);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function shuffle(a,r=R){for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const pickOne=(a,r=R)=>a[Math.floor(r()*a.length)];
+function fmtN(n,q){return q&&q.u==='Jahr'?String(n):Number(n).toLocaleString('de-DE')}
+function estStep(q){const span=q.hi-q.lo;return span<=200?1:Math.pow(10,Math.floor(Math.log10(span/200)))}
+function estStart(q){const st=estStep(q);return Math.round((q.lo+(q.hi-q.lo)/2)/st)*st}
+function vib(ms){try{navigator.vibrate&&navigator.vibrate(ms)}catch(_){}}
+const ST={get(k,d){try{const v=localStorage.getItem('kb-'+k);return v==null?d:JSON.parse(v)}catch(_){return d}},set(k,v){try{localStorage.setItem('kb-'+k,JSON.stringify(v))}catch(_){}}};
+const SET=Object.assign({sound:true,cats:CAT_KEYS.slice(),duel:['',''],duelN:10,party:['',''],partyR:5,nick:'',onN:10},ST.get('set',{}));
+SET.cats=SET.cats.filter(c=>CATS[c]);if(!SET.cats.length)SET.cats=CAT_KEYS.slice();
+function saveSet(){ST.set('set',SET)}
+const SEEN=new Set(ST.get('seen',[]));
+let USED=new Set();
+function saveSeen(){ST.set('seen',[...SEEN])}
+let toastT=0;
+function toast(t,ms=2200){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),ms)}
+function ovl(html,rot){const o=$('#ovl');o.className=rot?'rot180':'';o.innerHTML='<div class="t">'+html+'</div>';clearTimeout(ovl.t);ovl.t=setTimeout(()=>{o.innerHTML=''},1600)}
+const later=(ms,f)=>{const t=setTimeout(f,ms);TIMEOUTS.push(t);return t};
+let TIMEOUTS=[];
+function clearLater(){for(const t of TIMEOUTS)clearTimeout(t);TIMEOUTS=[]}
+
+/* ---------- Ton ---------- */
+let AC=null;
+function audio(){if(!SET.sound)return null;try{if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume()}catch(_){return null}return AC}
+function tone(a,f,t,dur,type,vol,f2){const o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||.15,t+.012);g.gain.exponentialRampToValueAtTime(.0008,t+dur);o.connect(g).connect(a.destination);o.start(t);o.stop(t+dur+.02)}
+function whistle(a,t,dur){const o=a.createOscillator(),l=a.createOscillator(),lg=a.createGain(),g=a.createGain();o.type='sine';o.frequency.value=2750;l.frequency.value=32;lg.gain.value=170;
+  l.connect(lg).connect(o.frequency);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.11,t+.02);g.gain.setValueAtTime(.11,t+dur-.04);g.gain.linearRampToValueAtTime(0,t+dur);
+  o.connect(g).connect(a.destination);o.start(t);l.start(t);o.stop(t+dur+.02);l.stop(t+dur+.02)}
+function crowd(a,t,dur,vol){const n=Math.floor(a.sampleRate*dur),b=a.createBuffer(1,n,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;
+  const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=b;f.type='bandpass';f.frequency.value=900;f.Q.value=.7;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.25);g.gain.exponentialRampToValueAtTime(.001,t+dur);s.connect(f).connect(g).connect(a.destination);s.start(t)}
+function sfx(k){const a=audio();if(!a)return;const t=a.currentTime+.01;
+  if(k==='tap')tone(a,540,t,.05,'triangle',.07);
+  else if(k==='ok'){tone(a,660,t,.14,'triangle',.16);tone(a,990,t+.09,.22,'triangle',.14)}
+  else if(k==='tor'){crowd(a,t,1.6,.22);tone(a,523,t,.18,'square',.06);tone(a,659,t+.08,.18,'square',.06);tone(a,784,t+.16,.4,'square',.07)}
+  else if(k==='bad'){tone(a,200,t,.22,'sawtooth',.09,140);tone(a,150,t+.12,.28,'sawtooth',.08,100)}
+  else if(k==='tick')tone(a,1100,t,.04,'square',.04);
+  else if(k==='pfiff')whistle(a,t,.45);
+  else if(k==='abpfiff'){whistle(a,t,.35);whistle(a,t+.48,.35);whistle(a,t+.96,.8);crowd(a,t+.9,1.8,.16)}
+  else if(k==='lock')tone(a,420,t,.08,'square',.06);
+}
+const SND_ON='<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9Z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
+const SND_OFF='<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9Z"/><path d="m17 9 5 6M22 9l-5 6"/></svg>';
+function soundIcon(){$('#btnSound').innerHTML=SET.sound?SND_ON:SND_OFF}
+
+/* ---------- Bildschirm-Wachhalten ---------- */
+let WAKE=null;
+async function wake(on){try{if(on&&!WAKE&&navigator.wakeLock){WAKE=await navigator.wakeLock.request('screen');WAKE.addEventListener('release',()=>{WAKE=null})}else if(!on&&WAKE){await WAKE.release();WAKE=null}}catch(_){WAKE=null}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&GAME)wake(true)});
+
+/* ---------- Fragen ziehen ---------- */
+function drawQ(pred){
+  let c=Q.filter(q=>pred(q)&&!USED.has(q.id)&&!SEEN.has(q.id));
+  if(!c.length){c=Q.filter(q=>pred(q)&&!USED.has(q.id));for(const q of c)SEEN.delete(q.id)}
+  if(!c.length)return null;
+  const q=pickOne(c);USED.add(q.id);SEEN.add(q.id);saveSeen();return q;
+}
+/* n Fragen, Kategorien möglichst verteilt, Schwierigkeit steigt leicht an */
+function diffPlan(n,r=R){const a=[];for(let i=0;i<n;i++){const p=i/Math.max(1,n-1);a.push(p<.3?1:p<.72?2:3)}
+  for(let i=0;i<a.length-1;i++)if(r()<.3)[a[i],a[i+1]]=[a[i+1],a[i]];return a}
+function drawSet(n,cats){
+  const plan=diffPlan(n);let cyc=[];const out=[];
+  for(let i=0;i<n;i++){
+    if(!cyc.length)cyc=shuffle(cats.slice());
+    const c=cyc.pop(),d=plan[i];
+    const q=drawQ(x=>x.c===c&&x.d===d)||drawQ(x=>x.c===c)||drawQ(x=>cats.includes(x.c)&&x.d===d)||drawQ(x=>cats.includes(x.c))||drawQ(()=>true);
+    if(q)out.push(q);
+  }
+  return out;
+}
+
+/* ---------- Bausteine für Fragen ---------- */
+function qHead(q,extra){return '<div class="hd-cat"><span class="cat" style="--c:'+CATS[q.c].c+'">'+CATS[q.c].n+'</span><span class="diff" aria-label="Schwierigkeit '+q.d+' von 3">'+[1,2,3].map(i=>'<u class="'+(i<=q.d?'on':'')+'"></u>').join('')+'</span>'+(extra||'')+'</div>'}
+function ansHTML(q,order,attr){return '<div class="answers">'+order.map((oi,k)=>'<button class="ans" '+attr+'="'+oi+'"><span class="k">'+'ABCD'[k]+'</span><span>'+esc(q.opts[oi])+'</span></button>').join('')+'</div>'}
+function estHTML(q,key,btnAttr){const st=estStep(q),v=estStart(q);
+  return '<div class="est" data-est="'+key+'" data-q="'+q.id+'"><div class="est-val"><span class="num">'+fmtN(v,q)+'</span>'+(q.u&&q.u!=='Jahr'?'<small>'+esc(q.u)+'</small>':'')+'</div>'+
+  '<div class="est-row"><button data-estd="-1" aria-label="weniger">−</button><input type="range" aria-label="Schätzwert" min="'+q.lo+'" max="'+q.hi+'" step="'+st+'" value="'+v+'"><button data-estd="1" aria-label="mehr">+</button></div>'+
+  '<div class="est-scale"><span>'+fmtN(q.lo,q)+'</span><span>'+fmtN(q.hi,q)+'</span></div>'+
+  '<button class="btn small" '+btnAttr+'>Tipp abgeben</button></div>'}
+function estVal(box){return +box.querySelector('input[type=range]').value}
+function estOk(q,x){return Math.abs(x-q.v)<=q.tol}
+document.addEventListener('input',e=>{if(e.target.matches('.est input[type=range]')){const box=e.target.closest('.est');const q=Q[+box.dataset.q];box.querySelector('.est-val span').textContent=fmtN(+e.target.value,q)}});
+function estNudge(btn){const box=btn.closest('.est'),inp=box.querySelector('input[type=range]'),q=Q[+box.dataset.q];if(!q||box.classList.contains('lock'))return;
+  const st=estStep(q);inp.value=Math.min(q.hi,Math.max(q.lo,+inp.value+(+btn.dataset.estd)*st));box.querySelector('.est-val span').textContent=fmtN(+inp.value,q);sfx('tap')}
+function optOrder(q,r=R){return shuffle(q.opts.map((_,i)=>i),r)}
+function correctText(q){return q.est?fmtN(q.v,q)+(q.u&&q.u!=='Jahr'?' '+q.u:''):q.opts[0]}
+
+/* ---------- Timer (ein gemeinsamer Takt) ---------- */
+let TM=null;
+function startTimer(sec,bars,onEnd){TM={t0:performance.now(),dur:sec*1000,bars,onEnd,last:99}}
+function stopTimer(){TM=null}
+function timeLeft(){return TM?Math.max(0,TM.dur-(performance.now()-TM.t0)):0}
+function loop(){
+  requestAnimationFrame(loop);
+  if(!TM)return;
+  const el=performance.now()-TM.t0,left=Math.max(0,1-el/TM.dur);
+  for(const b of TM.bars){if(!b.isConnected)continue;b.firstElementChild.style.transform='scaleX('+left+')';b.classList.toggle('hurry',left<.25)}
+  const s=Math.ceil((TM.dur-el)/1000);if(s<=3&&s>0&&s!==TM.last){TM.last=s;sfx('tick')}
+  if(el>=TM.dur){const f=TM.onEnd;TM=null;if(f)f()}
+}
+requestAnimationFrame(loop);
+
+/* ---------- Navigation ---------- */
+let GAME=null;
+const ACT={};
+function show(id){for(const s of document.querySelectorAll('.scr'))s.hidden=s.id!=='s-'+id}
+function page(html){const p=$('#page');p.innerHTML=html;p.classList.remove('fade-in');void p.offsetWidth;p.classList.add('fade-in');show('page');$('#s-page').scrollTop=0}
+const BACK='<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>';
+const XICON='<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+function topBar(title,act){return '<div class="bar"><button class="icon-btn" data-act="'+(act||'home')+'" aria-label="Zurück">'+(act==='quit'?XICON:BACK)+'</button><h3 class="grow">'+title+'</h3></div>'}
+function goHome(){clearLater();stopTimer();GAME=null;wake(false);onlineLeave();homeInfo();show('home')}
+ACT.home=goHome;
+ACT.go=v=>{({duelSetup,partySetup,online:onlineStart,chal:chalStart})[v]()};
+ACT.sound=()=>{SET.sound=!SET.sound;saveSet();soundIcon();if(SET.sound)sfx('ok')};
+ACT.quit=(v,b)=>{if(b.dataset.sure!=='1'){b.dataset.sure='1';toast('Nochmal tippen, um das Spiel zu beenden.');setTimeout(()=>{b.dataset.sure=''},2500);return}goHome()};
+ACT.cat=(v,b)=>{const i=SET.cats.indexOf(v);if(i>=0){if(SET.cats.length===1)return toast('Mindestens eine Kategorie muss an sein.');SET.cats.splice(i,1)}else SET.cats.push(v);saveSet();b.classList.toggle('on',i<0)};
+ACT.seg=(v,b)=>{const [k,val]=v.split(':');SET[k]=+val;saveSet();for(const x of b.parentNode.children)x.classList.toggle('on',x===b)};
+ACT.estd=(v,b)=>estNudge(b);
+function catChips(){return '<div class="chips">'+CAT_KEYS.map(k=>'<button class="chip'+(SET.cats.includes(k)?' on':'')+'" style="--c:'+CATS[k].c+'" data-act="cat" data-v="'+k+'">'+CATS[k].n+'</button>').join('')+'</div>'}
+function seg(key,vals,fmt){return '<div class="seg">'+vals.map(v=>'<button class="'+(SET[key]===v?'on':'')+'" data-act="seg" data-v="'+key+':'+v+'">'+fmt(v)+'</button>').join('')+'</div>'}
+document.addEventListener('click',e=>{
+  const eb=e.target.closest('[data-estd]');if(eb){estNudge(eb);return}
+  const b=e.target.closest('[data-act]');if(!b||b.disabled)return;
+  const f=ACT[b.dataset.act];if(f){audio();f(b.dataset.v,b,e)}
+});
+/* Antworten reagieren schon beim Antippen (fair im Duell, zwei Finger gleichzeitig) */
+document.addEventListener('pointerdown',e=>{
+  const b=e.target.closest('[data-tap]');if(!b||b.disabled)return;
+  e.preventDefault();audio();const f=TAP[b.dataset.tap];if(f)f(b.dataset.v,b,e);
+});
+const TAP={};
+
+/* ==========================================================================
+   DUELL: zwei Spieler, ein Handy, Buzzer-Prinzip
+   ========================================================================== */
+let D=null;
+function duelSetup(){
+  page(topBar('Duell')+
+  '<h2>Zwei Spieler, ein Handy</h2><p class="lead">Legt das Handy zwischen euch. Jeder hat seine eigene Hälfte. Wer zuerst die richtige Antwort tippt, schießt ein Tor. Wer danebentippt, ist für diese Frage gesperrt.</p>'+
+  '<div class="card"><span class="lbl">Spieler</span><div class="plist">'+
+  '<div class="prow"><span class="dot" style="background:var(--rot)"></span><input class="inp" id="dn0" maxlength="14" placeholder="Rot (oben)" value="'+esc(SET.duel[0])+'"></div>'+
+  '<div class="prow"><span class="dot" style="background:var(--blau)"></span><input class="inp" id="dn1" maxlength="14" placeholder="Blau (unten)" value="'+esc(SET.duel[1])+'"></div></div></div>'+
+  '<div class="card"><span class="lbl">Spiellänge</span>'+seg('duelN',[6,10,16],v=>v+' Fragen')+'</div>'+
+  '<div class="card"><span class="lbl">Kategorien</span>'+catChips()+'</div>'+
+  '<button class="btn" data-act="duelGo">Anpfiff</button>');
+}
+ACT.duelGo=()=>{
+  SET.duel=[$('#dn0').value.trim(),$('#dn1').value.trim()];saveSet();
+  duelBegin([SET.duel[0]||'Rot',SET.duel[1]||'Blau'],SET.duelN);
+};
+function duelBegin(names,n){
+  clearLater();USED=new Set();
+  D={names,n,score:[0,0],i:-1,qs:drawSet(n,SET.cats),sudden:0,ph:'',q:null};
+  GAME='duel';wake(true);show('duel');
+  $('#dTop').innerHTML='';$('#dBot').innerHTML='';duelBoard();
+  sfx('pfiff');ovl('Anpfiff');later(1300,duelNext);
+}
+function duelMinute(){if(D.sudden)return 'ELF';const m=Math.round(90*(D.i+1)/D.n);return m+"'"}
+function duelBoard(){
+  const rev=D.ph==='rev';
+  $('#dBoard').innerHTML='<div class="side">'+esc(D.names[0])+'</div><div class="score"><span>'+D.score[0]+'</span>:<span>'+D.score[1]+'</span></div><div class="side r">'+esc(D.names[1])+'</div><div class="clock">'+(D.i<0?"0'":duelMinute())+'</div>';
+  const mid=$('#s-duel .mid');let nb=mid.querySelector('.nextb');
+  if(rev&&!nb){nb=document.createElement('button');nb.className='btn small nextb';nb.dataset.act='duelNext';nb.textContent='Weiter';mid.insertBefore(nb,mid.lastElementChild)}
+  if(!rev&&nb)nb.remove();
+}
+ACT.duelNext=()=>{if(D&&D.ph==='rev')duelNext()};
+function duelNext(){
+  if(!D)return;
+  /* Halbzeit */
+  if(!D.sudden&&D.i+1===Math.floor(D.n/2)&&D.i>=0&&!D.half){D.half=1;sfx('pfiff');ovl('Halbzeit<small>'+D.score[0]+' : '+D.score[1]+'</small>');D.ph='pause';duelBoard();later(1700,duelNext);return}
+  D.i++;
+  if(D.i>=D.qs.length&&!D.sudden){
+    if(D.score[0]===D.score[1]){D.sudden=1;D.ph='pause';duelBoard();sfx('pfiff');ovl('Elfmeter&shy;schießen<small>Wer zuerst trifft, gewinnt</small>');later(1900,duelSudden);return}
+    return duelEnd();
+  }
+  if(D.sudden)return duelSudden();
+  duelAsk(D.qs[D.i]);
+}
+function duelSudden(){
+  if(D.score[0]!==D.score[1]||D.sudden>6)return duelEnd();
+  D.sudden++;const q=drawQ(x=>SET.cats.includes(x.c)&&!x.est)||drawQ(x=>!x.est);if(!q)return duelEnd();duelAsk(q);
+}
+function duelAsk(q){
+  D.q=q;D.ph='q';D.lock=[false,false];D.wrong=[false,false];D.order=q.est?null:optOrder(q);D.estv=[null,null];
+  duelBoard();
+  for(const p of [0,1]){
+    const h=p?$('#dBot'):$('#dTop');
+    h.innerHTML='<div class="hd"><span class="who">'+esc(D.names[p])+'</span>'+qHead(q)+'</div><div class="timer"><i></i></div><p class="qtext">'+esc(q.q)+'</p>'+
+      (q.est?estHTML(q,p,'data-tap="dEst" data-v="'+p+'"'):ansHTML(q,D.order,'data-tap="dAns" data-p="'+p+'" data-v'))+'<div class="msg"></div>';
+  }
+  startTimer(q.est?22:15,[...document.querySelectorAll('#s-duel .timer')],()=>duelReveal('time'));
+}
+function half(p){return p?$('#dBot'):$('#dTop')}
+function stamp(p,cls,txt){const m=half(p).querySelector('.msg');if(m)m.innerHTML='<span class="stamp '+cls+'">'+txt+'</span>'}
+TAP.dAns=(v,b)=>{
+  if(!D||D.ph!=='q')return;const p=+b.dataset.p,oi=+v;if(D.lock[p])return;
+  D.lock[p]=true;
+  if(oi===0){D.score[p]++;duelReveal('goal',p);return}
+  D.wrong[p]=true;sfx('bad');vib(60);
+  /* falsche Wahl auf beiden Seiten zeigen */
+  for(const q of [0,1])for(const el of half(q).querySelectorAll('.ans'))if(+el.dataset.v===oi)el.classList.add(q===p?'bad':'dim');
+  half(p).querySelector('.answers').classList.add('lock');stamp(p,'bad','Gesperrt');
+  if(D.lock[0]&&D.lock[1])duelReveal('none');
+};
+TAP.dEst=(v,b)=>{
+  if(!D||D.ph!=='q')return;const p=+v;if(D.lock[p])return;
+  const box=half(p).querySelector('.est');D.lock[p]=true;D.estv[p]=estVal(box);box.classList.add('lock');
+  box.querySelector('input').disabled=true;b.disabled=true;b.textContent='Tipp steht: '+fmtN(D.estv[p],D.q);sfx('lock');
+  if(D.lock[0]&&D.lock[1])duelReveal('est');
+};
+function duelReveal(why,p){
+  if(D.ph!=='q')return;D.ph='rev';stopTimer();const q=D.q;
+  if(q.est){
+    for(const k of [0,1])if(D.estv[k]==null)D.estv[k]=estVal(half(k).querySelector('.est'));
+    const e=D.estv.map(x=>Math.abs(x-q.v));const win=e[0]<e[1]?[0]:e[1]<e[0]?[1]:[0,1];
+    for(const k of win)D.score[k]++;
+    for(const k of [0,1]){const box=half(k).querySelector('.est');box.classList.add('lock');
+      box.innerHTML='<div class="est-val"><span class="num">'+fmtN(q.v,q)+'</span>'+(q.u&&q.u!=='Jahr'?'<small>'+esc(q.u)+'</small>':'')+'</div><p class="lead" style="text-align:center">'+
+        esc(D.names[0])+': '+fmtN(D.estv[0],q)+' · '+esc(D.names[1])+': '+fmtN(D.estv[1],q)+'</p>';
+      stamp(k,win.includes(k)?'ok':'bad',win.includes(k)?'Tor!':'Zu weit weg')}
+    sfx('tor');vib([40,40,80]);
+  }else{
+    for(const k of [0,1]){const a=half(k).querySelector('.answers');a.classList.add('lock');
+      for(const el of a.querySelectorAll('.ans'))if(+el.dataset.v===0)el.classList.add('ok');else if(!el.classList.contains('bad'))el.classList.add('dim')}
+    if(why==='goal'){sfx('tor');vib([40,40,80]);stamp(p,'ok','Tor!');stamp(1-p,'bad',D.wrong[1-p]?'Gesperrt':'Zu langsam')}
+    else{sfx('bad');for(const k of [0,1])if(!D.wrong[k])stamp(k,'flut',why==='time'?'Zeit um':'Keiner trifft')}
+  }
+  if(q.info)for(const k of [0,1]){const t=half(k).querySelector('.qtext');t.insertAdjacentHTML('afterend','<p class="info" style="font-size:13.5px;padding:7px 10px">'+esc(q.info)+'</p>')}
+  duelBoard();
+  if(D.sudden&&D.score[0]!==D.score[1])later(2600,duelEnd);
+}
+function duelEnd(){
+  stopTimer();D.ph='end';GAME=null;wake(false);sfx('abpfiff');
+  const [a,b]=D.score,w=a>b?0:b>a?1:-1;
+  page(topBar('Abpfiff')+
+    '<div class="board" style="margin-top:8px"><div class="side">'+esc(D.names[0])+'</div><div class="score"><span>'+a+'</span>:<span>'+b+'</span></div><div class="side r">'+esc(D.names[1])+'</div><div class="clock">'+(D.sudden?'n.E.':"90'")+'</div></div>'+
+    '<div class="hand" style="flex:0;padding:22px 0"><span class="lbl">'+(w<0?'Unentschieden':'Sieger')+'</span><div class="big" style="color:'+(w===0?'var(--rot)':w===1?'var(--blau)':'var(--flut)')+'">'+(w<0?'Remis':esc(D.names[w]))+'</div>'+
+    '<p class="lead">'+(w<0?'Nicht mal das Elfmeterschießen brachte eine Entscheidung.':D.sudden?'Entschieden im Elfmeterschießen.':Math.abs(a-b)>=4?'Eine klare Sache.':Math.abs(a-b)>=2?'Ein verdienter Sieg.':'Ein ganz enges Spiel.')+'</p></div>'+
+    '<button class="btn" data-act="duelAgain">Revanche</button><button class="btn ghost" data-act="home">Zum Menü</button>');
+}
+ACT.duelAgain=()=>duelBegin(D.names.slice(),D.n);
+/* ---------- gemeinsame Auflösung für Einzel-Bildschirme ---------- */
+function markAnswers(root,q,chosen){
+  const a=root.querySelector('.answers');if(!a)return;a.classList.add('lock');
+  for(const el of a.querySelectorAll('.ans')){const oi=+el.dataset.v;if(oi===0)el.classList.add('ok');else if(oi===chosen)el.classList.add('bad');else el.classList.add('dim')}
+}
+function lockEst(root,q,x){const box=root.querySelector('.est');if(!box)return;box.classList.add('lock');
+  box.innerHTML='<div class="est-val"><span class="num">'+fmtN(q.v,q)+'</span>'+(q.u&&q.u!=='Jahr'?'<small>'+esc(q.u)+'</small>':'')+'</div>'+
+  '<p class="lead" style="text-align:center">'+(x==null?'Kein Tipp abgegeben':'Dein Tipp: '+fmtN(x,q)+' · '+(x===q.v?'genau richtig!':'daneben um '+fmtN(Math.abs(x-q.v),q)))+'<br>Als richtig zählt alles bis ±'+fmtN(q.tol,q)+'</p>'}
+function resultBlock(ok,title,sub,q,btnAct,btnTxt){
+  return '<div class="fade-in" style="display:flex;flex-direction:column;gap:12px"><div><p class="verdict '+(ok?'ok':'bad')+'">'+title+'</p>'+(sub?'<p class="lead">'+sub+'</p>':'')+'</div>'+
+    (q.info?'<p class="info">'+esc(q.info)+'</p>':'')+'<button class="btn" data-act="'+btnAct+'">'+btnTxt+'</button></div>'}
+function rankList(list){const s=list.slice().sort((a,b)=>b.s-a.s);let last=null,pl=0;return s.map((p,i)=>{if(p.s!==last){pl=i+1;last=p.s}return Object.assign({pl},p)})}
+function tableHTML(list,meKey){return '<div class="table">'+rankList(list).map(p=>'<div class="trow'+(meKey!=null&&p.k===meKey?' me':'')+'"><span class="pl">'+p.pl+'</span><span class="nm"><span class="dot" style="background:'+p.c+'"></span>'+esc(p.n)+'</span><span class="pt">'+(p.plus?'<span class="plus">+'+p.plus+'</span>':'')+p.s+'</span></div>').join('')+'</div>'}
+function podiumHTML(list){const r=rankList(list);const slot=(p,k)=>p?'<div class="pod p'+k+'"><span class="nm" style="color:'+p.c+'">'+esc(p.n)+'</span><div class="blk"><b>'+p.pl+'</b><small>'+p.s+'</small></div></div>':'<div></div>';
+  return '<div class="podium">'+slot(r[1],2)+slot(r[0],1)+slot(r[2],3)+'</div>'}
+
+/* ==========================================================================
+   PARTY: reihum, Handy weitergeben
+   ========================================================================== */
+let P=null;
+const SHOTS=[null,{n:'Flachpass',d:'leicht'},{n:'Flanke',d:'mittel'},{n:'Fallrückzieher',d:'schwer'}];
+function partySetup(){
+  if(!Array.isArray(SET.party)||SET.party.length<2)SET.party=['',''];
+  page(topBar('Party')+
+  '<h2>Reihum gegen alle</h2><p class="lead">Wer dran ist, sucht sich eine von drei Fragen aus: leicht für 1 Punkt, mittel für 2, schwer für 3. Jeder hat einmal den 50:50-Joker.</p>'+
+  '<div class="card"><span class="lbl">Spieler</span><div class="plist" id="plist">'+partyRows()+'</div><button class="btn ghost small" data-act="pAdd">+ Spieler</button></div>'+
+  '<div class="card"><span class="lbl">Länge</span>'+seg('partyR',[3,5,8],v=>v+' Runden')+'</div>'+
+  '<div class="card"><span class="lbl">Kategorien</span>'+catChips()+'</div>'+
+  '<button class="btn" data-act="partyGo">Los geht\'s</button>');
+}
+function partyRows(){return SET.party.map((n,i)=>'<div class="prow"><span class="dot" style="background:'+PCOL[i]+'"></span><input class="inp" data-pi="'+i+'" maxlength="14" placeholder="Spieler '+(i+1)+'" value="'+esc(n)+'">'+
+  (SET.party.length>2?'<button class="icon-btn" data-act="pDel" data-v="'+i+'" aria-label="Spieler entfernen">'+XICON+'</button>':'')+'</div>').join('')}
+function partyRead(){for(const el of document.querySelectorAll('[data-pi]'))SET.party[+el.dataset.pi]=el.value.trim()}
+ACT.pAdd=()=>{partyRead();if(SET.party.length>=8)return toast('Höchstens 8 Spieler.');SET.party.push('');saveSet();$('#plist').innerHTML=partyRows();const l=document.querySelectorAll('[data-pi]');l[l.length-1].focus()};
+ACT.pDel=v=>{partyRead();SET.party.splice(+v,1);saveSet();$('#plist').innerHTML=partyRows()};
+ACT.partyGo=()=>{
+  partyRead();saveSet();clearLater();USED=new Set();
+  P={pl:SET.party.map((n,i)=>({k:i,n:n||'Spieler '+(i+1),c:PCOL[i],s:0,j:true,plus:0})),R:SET.partyR,r:0,t:0,q:null};
+  GAME='party';wake(true);sfx('pfiff');partyHand();
+};
+function partyHand(){
+  const p=P.pl[P.t];for(const x of P.pl)x.plus=0;
+  page(topBar('Runde '+(P.r+1)+' von '+P.R,'quit')+
+    '<div class="hand"><span class="lbl">Handy weitergeben an</span><div class="big" style="color:'+p.c+'">'+esc(p.n)+'</div>'+
+    '<p class="lead">'+p.s+(p.s===1?' Punkt':' Punkte')+(p.j?' · Joker noch da':'')+'</p><button class="btn" data-act="pReady" style="min-width:220px">Bereit</button></div>'+
+    (P.r>0||P.t>0?tableHTML(P.pl):''));
+}
+ACT.pReady=()=>{
+  const p=P.pl[P.t];const cs=shuffle(SET.cats.slice());while(cs.length<3)cs.push(pickOne(SET.cats));
+  P.cards=[1,2,3].map((d,i)=>({d,c:cs[i]}));
+  page(topBar(esc(p.n)+' ist dran','quit')+'<h2>Such dir deinen Schuss aus</h2>'+
+    '<div class="pick">'+P.cards.map((k,i)=>'<button class="pcard" data-act="pPick" data-v="'+i+'"><span class="pts">'+k.d+'</span><b>'+SHOTS[k.d].n+'</b><span class="cat" style="--c:'+CATS[k.c].c+'">'+CATS[k.c].n+'</span><span class="go">'+SHOTS[k.d].d+'</span></button>').join('')+'</div>');
+};
+ACT.pPick=v=>{
+  const k=P.cards[+v];P.pts=k.d;
+  P.q=drawQ(x=>x.c===k.c&&x.d===k.d)||drawQ(x=>x.c===k.c)||drawQ(x=>SET.cats.includes(x.c)&&x.d===k.d)||drawQ(()=>true);
+  partyAsk();
+};
+function partyAsk(){
+  const p=P.pl[P.t],q=P.q;P.done=false;
+  page(topBar(esc(p.n)+' · '+P.pts+(P.pts===1?' Punkt':' Punkte'),'quit')+
+    '<div id="qa" style="display:flex;flex-direction:column;gap:14px">'+qHead(q)+'<div class="timer"><i></i></div><p class="qtext">'+esc(q.q)+'</p>'+
+    (q.est?estHTML(q,'p','data-act="pEst"'):ansHTML(q,optOrder(q),'data-act="pAns" data-v')+
+      '<div class="joker"><button data-act="pJoker"'+(p.j?'':' disabled')+'>50:50-Joker'+(p.j?'':' (verbraucht)')+'</button></div>')+'</div>');
+  startTimer(q.est?25:20,[$('#qa .timer')],()=>partyResult(null,true));
+}
+ACT.pJoker=(v,b)=>{
+  const p=P.pl[P.t];if(!p.j||P.done)return;p.j=false;b.disabled=true;b.textContent='50:50-Joker (verbraucht)';sfx('lock');
+  const wrong=shuffle([...document.querySelectorAll('#qa .ans')].filter(el=>+el.dataset.v!==0));for(const el of wrong.slice(0,Math.max(0,wrong.length-1)))el.classList.add('gone');
+};
+ACT.pAns=v=>partyResult(+v);
+ACT.pEst=()=>partyResult(estVal($('#qa .est')));
+function partyResult(choice,timeout){
+  if(P.done)return;P.done=true;stopTimer();
+  const p=P.pl[P.t],q=P.q,root=$('#qa');let ok;
+  if(q.est){const x=timeout?estVal(root.querySelector('.est')):choice;ok=estOk(q,x);lockEst(root,q,x)}
+  else{ok=choice===0;markAnswers(root,q,choice)}
+  const j=root.querySelector('.joker');if(j)j.remove();
+  if(ok){p.s+=P.pts;p.plus=P.pts;sfx('tor');vib([40,40,80])}else{sfx('bad');vib(60)}
+  const last=P.t===P.pl.length-1&&P.r===P.R-1;
+  root.insertAdjacentHTML('beforeend',resultBlock(ok,ok?'Tor! +'+P.pts:timeout?'Zeit abgelaufen':'Daneben',
+    ok?esc(p.n)+' hat jetzt '+p.s+' Punkte.':q.est?'':'Richtig ist: '+esc(correctText(q)),q,'pNext',last?'Zum Endstand':'Weiter'));
+}
+ACT.pNext=()=>{
+  P.t++;
+  if(P.t>=P.pl.length){P.t=0;P.r++;
+    if(P.r>=P.R)return partyEnd();
+    page(topBar('Tabelle','quit')+'<h2>Nach Runde '+P.r+' von '+P.R+'</h2>'+tableHTML(P.pl)+'<button class="btn" data-act="pTab">Nächste Runde</button>');
+    return;
+  }
+  partyHand();
+};
+ACT.pTab=()=>partyHand();
+function partyEnd(){
+  GAME=null;wake(false);sfx('abpfiff');for(const x of P.pl)x.plus=0;
+  const r=rankList(P.pl),win=r.filter(x=>x.pl===1);
+  page(topBar('Endstand')+'<div class="hand" style="flex:0;padding-top:6px"><span class="lbl">'+(win.length>1?'Geteilter Sieg':'Sieger')+'</span><div class="big" style="color:'+win[0].c+'">'+win.map(x=>esc(x.n)).join(' & ')+'</div></div>'+
+    podiumHTML(P.pl)+tableHTML(P.pl)+'<button class="btn" data-act="partyGo2">Nochmal spielen</button><button class="btn ghost" data-act="home">Zum Menü</button>');
+}
+ACT.partyGo2=()=>{clearLater();USED=new Set();P={pl:P.pl.map(x=>Object.assign({},x,{s:0,j:true,plus:0})),R:P.R,r:0,t:0,q:null};GAME='party';wake(true);sfx('pfiff');partyHand()};
+
+/* ==========================================================================
+   CHALLENGE: zehn Fragen allein, Code an Freunde schicken
+   ========================================================================== */
+let C=null;
+const CH_ALPHA='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function chCode(c){let s='',x=c.seed;for(let i=0;i<4;i++){s=CH_ALPHA[x&31]+s;x>>>=5}return c.ver+s}
+function chParse(str){
+  const m=String(str||'').toUpperCase().replace(/[^A-Z0-9]/g,'').match(/^([A-Z])([A-Z0-9]{4})(\d{0,2})$/);if(!m)return null;
+  if(!CH_VER[m[1]])return{old:true};let seed=0;for(const ch of m[2]){const k=CH_ALPHA.indexOf(ch);if(k<0)return null;seed=seed*32+k}
+  const sc=m[3]===''?null:+m[3];return{ver:m[1],seed,score:sc!=null&&sc<=10?sc:null};
+}
+function chQs(ver,seed){
+  const r=rng(seed*7919+13),pool=Q.slice(0,CH_VER[ver]),out=[],cats=new Set(),ids=new Set();
+  for(const d of [1,1,1,2,2,2,2,3,3,3]){
+    let c=pool.filter(q=>q.d===d&&!ids.has(q.id)&&!cats.has(q.c));if(!c.length)c=pool.filter(q=>q.d===d&&!ids.has(q.id));
+    const q=pickOne(c,r);out.push(q);ids.add(q.id);cats.add(q.c);if(cats.size>=CAT_KEYS.length)cats.clear();
+  }
+  return out;
+}
+function chalStart(pre){
+  page(topBar('Challenge')+
+    '<h2>Zehn Fragen, ein Code</h2><p class="lead">Spiel zehn Fragen allein. Danach bekommst du einen Code, den du deinen Freunden schickst. Sie bekommen genau dieselben Fragen und sehen, ob sie dich schlagen.</p>'+
+    '<div class="card"><span class="lbl">Selbst vorlegen</span><button class="btn" data-act="chNew">Neue Challenge</button></div>'+
+    '<div class="card"><span class="lbl">Code von Freunden</span><input class="inp code" id="chIn" maxlength="9" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="A1B2C-7" value="'+esc(pre||'')+'"><button class="btn ghost" data-act="chJoin">Herausforderung annehmen</button></div>');
+}
+ACT.chNew=()=>chalBegin(CH_CUR,Math.floor(R()*1048576),null);
+ACT.chJoin=()=>{const c=chParse($('#chIn').value);if(!c)return toast('Der Code stimmt nicht. Er sieht so aus: A1B2C-7');if(c.old)return toast('Dieser Code stammt aus einer anderen Version des Spiels.');chalBegin(c.ver,c.seed,c.score)};
+function chalBegin(ver,seed,vs){C={ver,seed,vs,qs:chQs(ver,seed),i:0,right:0,res:[]};GAME='chal';wake(true);sfx('pfiff');chalAsk()}
+function chalDots(){return '<div style="display:flex;gap:5px">'+C.qs.map((_,i)=>'<span style="flex:1;height:6px;border-radius:3px;background:'+(i<C.res.length?(C.res[i]?'var(--ok)':'var(--bad)'):i===C.i?'var(--flut)':'var(--linie)')+'"></span>').join('')+'</div>'}
+function chalAsk(){
+  const q=C.qs[C.i];C.done=false;
+  page(topBar('Frage '+(C.i+1)+' von 10','quit')+chalDots()+
+    '<div id="qa" style="display:flex;flex-direction:column;gap:14px">'+qHead(q)+'<div class="timer"><i></i></div><p class="qtext">'+esc(q.q)+'</p>'+
+    (q.est?estHTML(q,'c','data-act="cEst"'):ansHTML(q,optOrder(q,rng(C.seed+C.i*101)),'data-act="cAns" data-v'))+'</div>');
+  startTimer(q.est?25:20,[$('#qa .timer')],()=>chalResult(null,true));
+}
+ACT.cAns=v=>chalResult(+v);
+ACT.cEst=()=>chalResult(estVal($('#qa .est')));
+function chalResult(choice,timeout){
+  if(C.done)return;C.done=true;stopTimer();const q=C.qs[C.i],root=$('#qa');let ok;
+  if(q.est){const x=timeout?estVal(root.querySelector('.est')):choice;ok=estOk(q,x);lockEst(root,q,x)}else{ok=choice===0;markAnswers(root,q,choice)}
+  C.res.push(ok);if(ok){C.right++;sfx('ok');vib(30)}else{sfx('bad');vib(60)}
+  root.insertAdjacentHTML('beforeend',resultBlock(ok,ok?'Richtig':timeout?'Zeit abgelaufen':'Falsch',ok||q.est?'':'Richtig ist: '+esc(correctText(q)),q,'cNext',C.i===9?'Auswertung':'Weiter'));
+}
+ACT.cNext=()=>{C.i++;if(C.i>=10)return chalEnd();chalAsk()};
+function chalCodeStr(){return chCode(C)+'-'+C.right}
+function chalText(){
+  const nm=(SET.nick||'').trim()||'Ich';let t='⚽ Kopfball-Challenge: '+nm+' hat '+C.right+' von 10 Fragen richtig. Schaffst du mehr? Code: '+chalCodeStr();
+  if(/^https?:$/.test(location.protocol)&&!window.claude)t+='\n'+location.origin+location.pathname+'#'+chCode(C)+C.right;
+  return t;
+}
+function chalEnd(){
+  GAME=null;wake(false);sfx('abpfiff');const s=C.right,vs=C.vs;
+  const say=s===10?'Perfekt. Fußballgott.':s>=8?'Stark. Das ist Weltklasse.':s>=6?'Solide Leistung, Champions-League-Niveau.':s>=4?'Mittelfeld. Da geht noch was.':'Abstiegskampf. Nächstes Mal wird es besser.';
+  let duel='';
+  if(vs!=null){const w=s>vs?'Gewonnen!':s<vs?'Verloren':'Unentschieden';
+    duel='<div class="board"><div class="side">Du</div><div class="score"><span>'+s+'</span>:<span>'+vs+'</span></div><div class="side r">Herausforderer</div></div><p class="verdict '+(s>=vs?'ok':'bad')+'" style="text-align:center">'+w+'</p>'}
+  page(topBar('Auswertung')+
+    '<div class="hand" style="flex:0;padding:10px 0 0"><span class="lbl">Dein Ergebnis</span><div class="big num" style="color:var(--flut)">'+s+' / 10</div><p class="lead">'+say+'</p></div>'+duel+
+    '<div class="card"><span class="lbl">Freunde herausfordern</span>'+
+    '<input class="inp" id="chNick" maxlength="14" placeholder="Dein Name (für die Nachricht)" value="'+esc(SET.nick)+'">'+
+    '<div class="codebox long"><span class="lbl">Dein Code</span><b>'+chalCodeStr()+'</b></div>'+
+    '<p class="note" id="chTxt" style="-webkit-user-select:text;user-select:text;white-space:pre-wrap;overflow-wrap:anywhere">'+esc(chalText())+'</p>'+
+    '<div class="row"><button class="btn" data-act="chShare">Teilen</button><button class="btn ghost" data-act="chCopy">Kopieren</button></div></div>'+
+    '<button class="btn ghost" data-act="chNew">Neue Challenge</button><button class="btn ghost" data-act="home">Zum Menü</button>');
+  $('#chNick').addEventListener('input',e=>{SET.nick=e.target.value.trim();saveSet();$('#chTxt').textContent=chalText()});
+}
+function selectText(el){try{const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r)}catch(_){}}
+ACT.chCopy=()=>{const t=chalText();try{navigator.clipboard.writeText(t).then(()=>toast('Kopiert. Jetzt im Chat einfügen.'),()=>{selectText($('#chTxt'));toast('Bitte den markierten Text kopieren.')})}catch(_){selectText($('#chTxt'));toast('Bitte den markierten Text kopieren.')}};
+ACT.chShare=async()=>{const t=chalText();if(navigator.share){try{await navigator.share({text:t});return}catch(e){if(e&&e.name==='AbortError')return}}ACT.chCopy()};
+/* ==========================================================================
+   ONLINE: jeder am eigenen Handy. Läuft über die Live-Räume des Claude-Artifacts.
+   Der Gastgeber hält den Spielstand in seiner Presence (g), alle anderen
+   melden dort Name (n) und Antwort (a). Keine Daten werden gespeichert.
+   ========================================================================== */
+let ROOMP=null,O=null;
+const OCODE='ABCDEFGHJKLMNPQRSTUVWXYZ';
+function roomNS(){
+  if(!ROOMP)ROOMP=(window.claude&&typeof window.claude.use==='function')?Promise.resolve(window.claude.use('room')).catch(()=>null):Promise.resolve(null);
+  return ROOMP;
+}
+roomNS().then(ns=>{const m=$('#modeOnline');if(!ns&&m){m.classList.add('off');m.querySelector('span').textContent='Nur im Claude-Artifact: alle öffnen den Link und spielen live.'}});
+function onlineStart(){
+  page(topBar('Online')+
+    '<h2>Live gegen Freunde</h2><p class="lead">Jeder spielt am eigenen Handy. Einer eröffnet das Spiel und nennt den Code, die anderen treten bei. Alle bekommen gleichzeitig dieselbe Frage. Wer richtig und schnell antwortet, holt die meisten Punkte.</p>'+
+    '<div id="oBox"><p class="note">Verbindung wird geprüft …</p></div>');
+  roomNS().then(ns=>{const b=$('#oBox');if(!b)return;
+    if(!ns){b.innerHTML='<p class="note">Online-Spiele funktionieren nur, wenn Kopfball als Claude-Artifact geöffnet ist. Teile das Artifact mit deinen Freunden (sie brauchen ein Claude-Konto), dann öffnen alle denselben Link. Ohne Artifact könnt ihr Duell, Party oder die Challenge spielen.</p>';return}
+    b.innerHTML='<div style="display:flex;flex-direction:column;gap:16px">'+
+      '<div class="card"><span class="lbl">Dein Name</span><input class="inp" id="oName" maxlength="14" placeholder="Wie sollen dich die anderen sehen?" value="'+esc(SET.nick)+'"></div>'+
+      '<div class="card"><span class="lbl">Spiel eröffnen</span><button class="btn" data-act="oHost">Neues Spiel</button></div>'+
+      '<div class="card"><span class="lbl">Einem Spiel beitreten</span><input class="inp code" id="oCode" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="CODE"><button class="btn ghost" data-act="oJoin">Beitreten</button></div></div>';
+  });
+}
+function oName(){const v=($('#oName')&&$('#oName').value||'').trim().slice(0,14);if(!v){toast('Gib zuerst deinen Namen ein.');return null}SET.nick=v;saveSet();return v}
+async function oEnter(code,host){
+  const name=oName();if(!name)return;const ns=await roomNS();if(!ns)return;
+  let rm;try{rm=await ns.join('kopfball-'+code.toLowerCase())}catch(e){toast(e&&e.code==='not_permitted'?'Online-Spiele sind für dich hier nicht freigegeben.':'Verbindung fehlgeschlagen. Bitte nochmal versuchen.');return}
+  onlineLeave();
+  O={code,host,rm,name,peers:[],me:null,ep:-1,g:null,qi:-1,ans:null,unsub:[],sawHost:false};
+  O.unsub.push(rm.onPeers(oPeers,e=>{if(O&&O.rm===rm){toast('Verbindung zum Spiel verloren.');oGone('Die Verbindung ist abgerissen.')}}));
+  if(host){O.qs=[];O.g={ph:'lobby',b:BUILD,n:SET.onN,i:-1,sc:{},nm:{},ep:0};rm.presence({k:'h',n:name,g:O.g}).catch(()=>{})}
+  else{rm.presence({k:'p',n:name}).catch(()=>{});later(8000,()=>{if(O&&!O.host&&!O.sawHost)oGone('Unter dem Code '+code+' läuft gerade kein Spiel. Stimmt der Code?')})}
+  GAME='online';wake(true);oRender();
+}
+ACT.oHost=()=>{let c='';for(let i=0;i<4;i++)c+=pickOne(OCODE.split(''));oEnter(c,true)};
+ACT.oJoin=()=>{const c=($('#oCode').value||'').toUpperCase().replace(/[^A-Z]/g,'');if(c.length!==4)return toast('Der Code hat vier Buchstaben.');oEnter(c,false)};
+function onlineLeave(){if(!O)return;const o=O;O=null;for(const u of o.unsub)try{u()}catch(_){}try{o.rm.leave()}catch(_){}}
+function oGone(msg){onlineLeave();clearLater();stopTimer();GAME=null;wake(false);page(topBar('Online')+'<h2>Spiel vorbei</h2><p class="note">'+esc(msg)+'</p><button class="btn" data-act="go" data-v="online">Zurück zur Online-Lobby</button><button class="btn ghost" data-act="home">Zum Menü</button>')}
+function oPlayers(){return O.peers.filter(p=>p.kind==='viewer'&&p.presence&&(p.presence.k==='p'||p.presence.k==='h'))}
+function pName(p){return String(p.presence&&p.presence.n||'Gast').slice(0,14)}
+function oPeers(ch){
+  if(!O)return;O.peers=ch.peers;const meP=ch.peers.find(p=>p.sameTab);if(meP)O.me=meP.peer;
+  if(O.host){
+    /* neue Spieler in die Tabelle aufnehmen, Namen aktuell halten */
+    let dirty=false;for(const p of oPlayers()){const n=pName(p);if(O.g.nm[p.peer]!==n){O.g.nm[p.peer]=n;dirty=true}if(O.g.sc[p.peer]==null){O.g.sc[p.peer]=0;dirty=true}}
+    if(O.g.ph==='lobby'){for(const k in O.g.sc)if(!oPlayers().some(p=>p.peer===k)){delete O.g.sc[k];delete O.g.nm[k];dirty=true}}
+    if(dirty)oPush(true);
+    oHostCheck();oRender(true);return;
+  }
+  const h=ch.peers.find(p=>p.presence&&p.presence.k==='h'&&p.kind==='viewer');
+  if(!h){if(O.sawHost){O.hostMiss=O.hostMiss||Date.now();later(3500,()=>{if(O&&O.hostMiss&&!O.peers.some(p=>p.presence&&p.presence.k==='h'))oGone('Der Gastgeber hat das Spiel verlassen.')})}return}
+  O.hostMiss=0;O.sawHost=true;O.hostName=pName(h);
+  const g=h.presence.g;if(!g||typeof g!=='object')return;
+  if(g.b&&g.b!==BUILD){O.g=g;return oVersion()}
+  const changed=g.ep!==O.ep;O.g=g;O.ep=g.ep;oRender(!changed);
+}
+function oVersion(){page(topBar('Online','quit')+'<h2>Unterschiedliche Versionen</h2><p class="note">Du und der Gastgeber habt verschiedene Versionen von Kopfball geöffnet. Ladet beide die Seite neu und tretet dem Spiel erneut bei.</p>')}
+function oPush(silent){O.g.ep=(O.g.ep||0)+1;O.rm.presence({g:O.g}).catch(()=>{});if(!silent){O.ep=O.g.ep;oRender()}}
+/* Zeichnen: refresh=true aktualisiert nur Listen, ohne die Frage neu aufzubauen */
+function oRender(refresh){
+  if(!O||!O.g)return oWait();
+  const g=O.g;
+  if(g.ph==='lobby'){if(!refresh||!$('#oLobby'))return oLobby();return oLobbyList()}
+  if(g.ph==='q'){if(O.qi!==g.i)return oQuestion();return oAnswered()}
+  if(g.ph==='r'){if(O.shown!=='r'+g.i)return oReveal();return}
+  if(g.ph==='end'){if(O.shown!=='end'+g.ep)return oEnd()}
+}
+function oWait(){page(topBar('Online','quit')+'<div class="hand"><span class="lbl">Code '+esc(O?O.code:'')+'</span><div class="big" style="font-size:44px">Suche Spiel …</div><p class="lead">Gleich geht es los.</p></div>')}
+function oLobby(){
+  const g=O.g;
+  page(topBar(O.host?'Dein Spiel':'Lobby','quit')+
+    '<div class="codebox"><span class="lbl">Spiel-Code</span><b>'+esc(O.code)+'</b><span class="lead">'+(O.host?'Sag deinen Freunden diesen Code.':'Gastgeber: '+esc(O.hostName||''))+'</span></div>'+
+    '<div class="card" id="oLobby"><span class="lbl">Dabei</span><div class="people" id="oPeople"></div></div>'+
+    (O.host?'<div class="card"><span class="lbl">Länge</span>'+seg('onN',[5,10,15],v=>v+' Fragen')+'<span class="lbl">Kategorien</span>'+catChips()+'</div><button class="btn" data-act="oStart">Anpfiff</button>'
+      :'<p class="note">Warte, bis '+esc(O.hostName||'der Gastgeber')+' das Spiel anpfeift. Lass diese Seite offen.</p>'));
+  oLobbyList();
+}
+function oColor(peer){const ks=Object.keys(O.g.sc||{}).sort();const i=ks.indexOf(peer);return PCOL[(i<0?ks.length:i)%PCOL.length]}
+function oLobbyList(){const el=$('#oPeople');if(!el)return;
+  el.innerHTML=oPlayers().map(p=>'<span class="person"><span class="dot" style="background:'+oColor(p.peer)+'"></span>'+esc(pName(p))+(p.presence.k==='h'?' · Gastgeber':'')+(p.sameTab?' (du)':'')+'</span>').join('')||'<span class="lead">Noch niemand da.</span>'}
+ACT.oStart=()=>{
+  if(!O||!O.host)return;USED=new Set();O.qs=drawSet(SET.onN,SET.cats);
+  const sc={};for(const p of oPlayers())sc[p.peer]=0;
+  O.g={ph:'q',b:BUILD,n:O.qs.length,i:0,q:O.qs[0].id,sd:Math.floor(R()*1e9),t:O.qs[0].est?25:20,sc,nm:O.g.nm,ep:O.g.ep};
+  sfx('pfiff');oPush();oHostTimer();
+};
+function oHostTimer(){clearLater();const g=O.g,i=g.i;later((g.t+2)*1000,()=>{if(O&&O.host&&O.g.ph==='q'&&O.g.i===i)oHostReveal()})}
+function oQuestion(){
+  const g=O.g,q=Q[g.q];if(!q)return;O.qi=g.i;O.ans=null;O.t0=performance.now();O.shown='';
+  page(topBar('Frage '+(g.i+1)+' von '+g.n,'quit')+
+    '<div id="qa" style="display:flex;flex-direction:column;gap:14px">'+qHead(q)+'<div class="timer"><i></i></div><p class="qtext">'+esc(q.q)+'</p>'+
+    (q.est?estHTML(q,'o','data-act="oEst"'):ansHTML(q,optOrder(q,rng(g.sd)),'data-act="oAns" data-v'))+
+    '<div id="oStat" class="people"></div></div>');
+  startTimer(g.t,[$('#qa .timer')],()=>{if(O&&O.ans==null)oSend(q.est?estVal($('#qa .est')):null)});
+  oAnswered();
+}
+function oSend(v){
+  if(!O||O.ans||O.g.ph!=='q')return;const q=Q[O.g.q];
+  O.ans={i:O.g.i,v,ms:Math.round(performance.now()-O.t0)};O.rm.presence({a:O.ans}).catch(()=>{});
+  const root=$('#qa');if(root){
+    if(q.est){const box=root.querySelector('.est');if(box){box.classList.add('lock');box.querySelector('input').disabled=true;const b=box.querySelector('.btn');b.disabled=true;b.textContent='Tipp steht: '+(v==null?'–':fmtN(v,q))}}
+    else{const a=root.querySelector('.answers');a.classList.add('lock');for(const el of a.querySelectorAll('.ans'))el.classList.add(+el.dataset.v===v?'sel':'dim')}
+  }
+  sfx('lock');stopTimer();oAnswered();if(O.host)oHostCheck();
+}
+ACT.oAns=v=>oSend(+v);
+ACT.oEst=()=>oSend(estVal($('#qa .est')));
+function oHasAns(p){if(p.sameTab)return !!O.ans;const a=p.presence&&p.presence.a;return !!a&&a.i===O.g.i}
+function oAnswered(){const el=$('#oStat');if(!el)return;
+  const ps=oPlayers();const n=ps.filter(oHasAns).length;
+  el.innerHTML='<span class="lbl" style="width:100%">'+(O.ans?'Antwort abgegeben · ':'')+n+' von '+ps.length+' haben geantwortet</span>'+ps.map(p=>'<span class="person'+(oHasAns(p)?' done':'')+'"><span class="dot" style="background:'+oColor(p.peer)+'"></span>'+esc(pName(p))+'</span>').join('')}
+function oHostCheck(){if(!O||!O.host||O.g.ph!=='q')return;const ps=oPlayers();if(ps.length&&ps.every(oHasAns))later(400,()=>{if(O&&O.g.ph==='q')oHostReveal()})}
+function oScore(q,a,t){
+  if(!a||a.v==null)return 0;
+  if(q.est){const e=Math.abs(a.v-q.v);if(e<=q.tol)return 500+Math.round(500*(1-e/Math.max(q.tol,1e-9)));if(e<=3*q.tol)return Math.round(400*(1-(e-q.tol)/(2*q.tol)));return 0}
+  if(a.v!==0)return 0;return 500+Math.round(500*Math.max(0,1-(a.ms||0)/(t*1000)));
+}
+function oHostReveal(){
+  if(!O||!O.host||O.g.ph!=='q')return;clearLater();stopTimer();
+  const g=O.g,q=Q[g.q],gain={},pick={};
+  for(const p of oPlayers()){const a=p.sameTab?O.ans:(p.presence.a&&p.presence.a.i===g.i?p.presence.a:null);const pts=oScore(q,a,g.t);gain[p.peer]=pts;g.sc[p.peer]=(g.sc[p.peer]||0)+pts;g.nm[p.peer]=pName(p);if(a&&a.v!=null&&!q.est)pick[p.peer]=a.v}
+  O.g=Object.assign({},g,{ph:'r',gain,pick});oPush();
+  later(11000,()=>{if(O&&O.host&&O.g.ph==='r'&&O.g.i===g.i)ACT.oNext()});
+}
+ACT.oNext=()=>{
+  if(!O||!O.host||O.g.ph!=='r')return;clearLater();const g=O.g,i=g.i+1;
+  if(i>=O.qs.length){O.g={ph:'end',b:BUILD,n:g.n,i:g.i,sc:g.sc,nm:g.nm,ep:g.ep};oPush();return}
+  O.g={ph:'q',b:BUILD,n:g.n,i,q:O.qs[i].id,sd:Math.floor(R()*1e9),t:O.qs[i].est?25:20,sc:g.sc,nm:g.nm,ep:g.ep};oPush();oHostTimer();
+};
+function oList(withGain){const g=O.g;return Object.keys(g.sc||{}).map(k=>({k,n:(g.nm&&g.nm[k])||'Gast',c:oColor(k),s:g.sc[k]||0,plus:withGain&&g.gain?g.gain[k]||0:0}))}
+function oReveal(){
+  const g=O.g,q=Q[g.q];if(!q)return;
+  if(O.qi!==g.i)oQuestion();
+  O.shown='r'+g.i;stopTimer();
+  const root=$('#qa');if(!root)return;const mine=g.gain?g.gain[O.me]||0:0;const ok=mine>0;
+  const my=O.ans&&O.ans.i===g.i?O.ans.v:null;
+  if(q.est)lockEst(root,q,my);else markAnswers(root,q,my);
+  const st=$('#oStat');if(st)st.remove();
+  if(!q.est){const cnt={};for(const k in (g.pick||{}))cnt[g.pick[k]]=(cnt[g.pick[k]]||0)+1;
+    for(const el of root.querySelectorAll('.ans')){const c=cnt[+el.dataset.v]||0;if(c)el.insertAdjacentHTML('beforeend','<span style="margin-left:auto;font-family:var(--f-disp);font-weight:900;font-size:20px">'+c+'×</span>')}}
+  ok?sfx('ok'):sfx('bad');vib(ok?30:60);
+  root.insertAdjacentHTML('beforeend','<div class="fade-in" style="display:flex;flex-direction:column;gap:12px"><p class="verdict '+(ok?'ok':'bad')+'">'+(ok?'+'+mine+' Punkte':my==null&&!q.est?'Keine Antwort':'Daneben')+'</p>'+
+    (!ok&&!q.est?'<p class="lead">Richtig ist: '+esc(correctText(q))+'</p>':'')+(q.info?'<p class="info">'+esc(q.info)+'</p>':'')+
+    '<span class="lbl">Zwischenstand</span>'+tableHTML(oList(true),O.me)+
+    (O.host?'<button class="btn" data-act="oNext">'+(g.i+1>=g.n?'Zum Endstand':'Nächste Frage')+'</button><p class="lead" style="text-align:center">Geht in ein paar Sekunden von selbst weiter.</p>':'<p class="lead" style="text-align:center">Gleich kommt die nächste Frage.</p>')+'</div>');
+}
+function oEnd(){
+  O.shown='end'+O.g.ep;stopTimer();sfx('abpfiff');const list=oList(false),r=rankList(list),me=r.find(x=>x.k===O.me);
+  page(topBar('Endstand','quit')+'<div class="hand" style="flex:0;padding-top:6px"><span class="lbl">Sieger</span><div class="big" style="color:var(--flut)">'+r.filter(x=>x.pl===1).map(x=>esc(x.n)).join(' & ')+'</div>'+
+    (me?'<p class="lead">Du bist auf Platz '+me.pl+' von '+r.length+'.</p>':'')+'</div>'+podiumHTML(list)+tableHTML(list,O.me)+
+    (O.host?'<button class="btn" data-act="oAgain">Neues Spiel mit allen</button>':'<p class="note">Bleib hier, falls der Gastgeber ein neues Spiel startet.</p>')+'<button class="btn ghost" data-act="home">Verlassen</button>');
+}
+ACT.oAgain=()=>{if(!O||!O.host)return;const sc={};for(const p of oPlayers())sc[p.peer]=0;O.g={ph:'lobby',b:BUILD,n:SET.onN,i:-1,sc,nm:O.g.nm,ep:O.g.ep};O.qi=-1;O.ans=null;oPush()};
+/* ---------- Start ---------- */
+function homeInfo(){const seen=Q.filter(q=>SEEN.has(q.id)).length;$('#bankInfo').textContent=Q.length+' Fragen in '+CAT_KEYS.length+' Kategorien · '+seen+' davon schon gesehen'}
+/* Selbst-Update, wenn das Spiel als Webseite läuft */
+let updating=false;
+async function checkUpdate(){
+  if(updating||window.claude||GAME||!/^https?:$/.test(location.protocol))return;
+  try{
+    const r=await fetch('kopfball.html?check='+Date.now(),{cache:'no-store'});if(!r.ok)return;
+    const m=(await r.text()).match(/const BUILD='([^']+)'/);if(!m||m[1]===BUILD)return;
+    let tried=null;try{tried=sessionStorage.getItem('kb-upd')}catch(_){}
+    if(tried===m[1])return;try{sessionStorage.setItem('kb-upd',m[1])}catch(_){}
+    updating=true;toast('Neue Version wird geladen …',3000);
+    setTimeout(()=>location.replace('kopfball.html?v='+encodeURIComponent(m[1])+location.hash),700);
+  }catch(_){}
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkUpdate()});
+function openHash(){const h=decodeURIComponent(location.hash.slice(1)).toUpperCase();const c=h&&chParse(h);if(c&&!c.old&&!GAME){chalStart(h.replace(/^([A-Z][A-Z0-9]{4})(\d{1,2})$/,'$1-$2'))}}
+addEventListener('hashchange',openHash);
+soundIcon();homeInfo();openHash();setTimeout(checkUpdate,1500);
+</script>
+</body>
+</html>
