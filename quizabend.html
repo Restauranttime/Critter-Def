@@ -1583,7 +1583,15 @@ ACT.chShare=async()=>{const t=chalText();if(navigator.share){try{await navigator
    ========================================================================== */
 /* Zugangsdaten aus der Firebase-Konsole (Projekteinstellungen → Web-App). Diese Werte sind
    für Web-Apps öffentlich gedacht, geschützt wird über die Datenbank-Regeln. */
-const FIREBASE_CONFIG=null;
+const FIREBASE_CONFIG={
+  apiKey:'AIzaSyDNI-BaWzIwxWb8LVSPwetv_hbeEI79O9M',
+  authDomain:'quizabend-28d2d.firebaseapp.com',
+  databaseURL:'https://quizabend-28d2d-default-rtdb.europe-west1.firebasedatabase.app',
+  projectId:'quizabend-28d2d',
+  storageBucket:'quizabend-28d2d.firebasestorage.app',
+  messagingSenderId:'320753306449',
+  appId:'1:320753306449:web:b2e5a6d3ad4a2db5936170'
+};
 const FB_VER='10.12.2';
 let O=null,NETP=null,FB=null;
 const OCODE='ABCDEFGHJKLMNPQRSTUVWXYZ';
