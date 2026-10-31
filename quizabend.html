@@ -334,7 +334,7 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:18px;margin:0;color:var(-
 
 <script>
 'use strict';
-const BUILD='2026-10-31-4';
+const BUILD='2026-10-31-5';
 /* ==========================================================================
    FRAGEN
    Multiple Choice: [Kategorie, Stufe 1–3, Frage, RICHTIG, falsch, falsch, falsch, Info]
@@ -1738,10 +1738,12 @@ function oLobbyList(){const el=$('#oPeople');if(!el)return;
 ACT.oStart=()=>{
   if(!O||!O.host)return;USED=new Set();O.qs=drawSet(SET.onN,SET.cats);
   const sc={};for(const p of oPlayers())sc[p.peer]=0;
-  O.g={ph:'q',b:BUILD,n:O.qs.length,i:0,q:O.qs[0].id,sd:Math.floor(R()*1e9),t:O.qs[0].est?25:20,sc,nm:O.g.nm,ep:O.g.ep};
-  sfx('start');oPush();oHostTimer();
+  O.g={ph:'q',b:BUILD,n:O.qs.length,i:0,q:O.qs[0].id,qk:qKey(),sd:Math.floor(R()*1e9),t:O.qs[0].est?25:20,sc,nm:O.g.nm,ep:O.g.ep};
+  O.qp=oPlayers().map(p=>p.peer);sfx('start');oPush();oHostTimer();
 };
-function oHostTimer(){clearLater();const g=O.g,i=g.i;later((g.t+2)*1000,()=>{if(O&&O.host&&O.g.ph==='q'&&O.g.i===i)oHostReveal()})}
+function qKey(){return Math.random().toString(36).slice(2,8)}
+/* Zeitlimit: Fragezeit plus Puffer für langsame Verbindungen */
+function oHostTimer(){clearLater();const qk=O.g.qk;later((O.g.t+4)*1000,()=>{if(O&&O.host&&O.g.ph==='q'&&O.g.qk===qk)oHostReveal()})}
 function oQuestion(){
   const g=O.g,q=Q[g.q];if(!q)return;O.qi=g.i;O.ans=null;O.t0=performance.now();O.shown='';
   page(topBar('Frage '+(g.i+1)+' von '+g.n,'quit')+
@@ -1753,7 +1755,7 @@ function oQuestion(){
 }
 function oSend(v){
   if(!O||O.ans||O.g.ph!=='q')return;const q=Q[O.g.q];
-  O.ans={i:O.g.i,v,ms:Math.round(performance.now()-O.t0)};O.rm.presence({a:O.ans}).catch(()=>{});
+  O.ans={i:O.g.i,k:O.g.qk,v,ms:Math.round(performance.now()-O.t0)};O.rm.presence({a:O.ans}).catch(()=>{});
   const root=$('#qa');if(root){
     if(q.est){const box=root.querySelector('.est');if(box){box.classList.add('lock');box.querySelector('input').disabled=true;const b=box.querySelector('.btn');b.disabled=true;b.textContent='Tipp steht: '+(v==null?'–':fmtN(v,q))}}
     else{const a=root.querySelector('.answers');a.classList.add('lock');for(const el of a.querySelectorAll('.ans'))el.classList.add(+el.dataset.v===v?'sel':'dim')}
@@ -1762,11 +1764,18 @@ function oSend(v){
 }
 ACT.oAns=v=>oSend(+v);
 ACT.oEst=()=>oSend(estVal($('#qa .est')));
-function oHasAns(p){if(p.sameTab)return !!O.ans;const a=p.presence&&p.presence.a;return !!a&&a.i===O.g.i}
+function oHasAns(p){if(p.sameTab)return !!O.ans;const a=p.presence&&p.presence.a;return !!a&&a.i===O.g.i&&a.k===O.g.qk}
 function oAnswered(){const el=$('#oStat');if(!el)return;
   const ps=oPlayers();const n=ps.filter(oHasAns).length;
   el.innerHTML='<span class="lbl" style="width:100%">'+(O.ans?'Antwort abgegeben · ':'')+n+' von '+ps.length+' haben geantwortet</span>'+ps.map(p=>'<span class="person'+(oHasAns(p)?' done':'')+'"><span class="dot" style="background:'+oColor(p.peer)+'"></span>'+esc(pName(p))+'</span>').join('')}
-function oHostCheck(){if(!O||!O.host||O.g.ph!=='q')return;const ps=oPlayers();if(ps.length&&ps.every(oHasAns))later(400,()=>{if(O&&O.g.ph==='q')oHostReveal()})}
+/* Früher auflösen nur, wenn alle, die bei Fragebeginn dabei waren, geantwortet haben.
+   Wer kurz die Verbindung verliert, wird nicht gestrichen; dann endet die Frage mit der Zeit. */
+function oHostCheck(){
+  if(!O||!O.host||O.g.ph!=='q')return;const qk=O.g.qk,by=new Map(O.peers.map(p=>[p.peer,p]));
+  const need=O.qp&&O.qp.length?O.qp:oPlayers().map(p=>p.peer);
+  if(need.length&&need.every(k=>{const p=by.get(k);return !!p&&p.presence&&p.presence.on!==false&&oHasAns(p)}))
+    later(400,()=>{if(O&&O.g.ph==='q'&&O.g.qk===qk)oHostReveal()});
+}
 function oScore(q,a,t){
   if(!a||a.v==null)return 0;
   if(q.est){const e=Math.abs(a.v-q.v);if(e<=q.tol)return 500+Math.round(500*(1-e/Math.max(q.tol,1e-9)));if(e<=3*q.tol)return Math.round(400*(1-(e-q.tol)/(2*q.tol)));return 0}
@@ -1775,14 +1784,15 @@ function oScore(q,a,t){
 function oHostReveal(){
   if(!O||!O.host||O.g.ph!=='q')return;clearLater();stopTimer();
   const g=O.g,q=Q[g.q],gain={},pick={};
-  for(const p of oPlayers()){const a=p.sameTab?O.ans:(p.presence.a&&p.presence.a.i===g.i?p.presence.a:null);const pts=oScore(q,a,g.t);gain[p.peer]=pts;g.sc[p.peer]=(g.sc[p.peer]||0)+pts;g.nm[p.peer]=pName(p);if(a&&a.v!=null&&!q.est)pick[p.peer]=a.v}
+  for(const p of O.peers.filter(p=>p.kind==='viewer'&&p.presence&&(p.presence.k==='p'||p.presence.k==='h'))){const a=p.sameTab?O.ans:(p.presence.a&&p.presence.a.i===g.i&&p.presence.a.k===g.qk?p.presence.a:null);const pts=oScore(q,a,g.t);gain[p.peer]=pts;g.sc[p.peer]=(g.sc[p.peer]||0)+pts;g.nm[p.peer]=pName(p);if(a&&a.v!=null&&!q.est)pick[p.peer]=a.v}
   O.g=Object.assign({},g,{ph:'r',gain,pick});oPush();
   later(11000,()=>{if(O&&O.host&&O.g.ph==='r'&&O.g.i===g.i)ACT.oNext()});
 }
 ACT.oNext=()=>{
   if(!O||!O.host||O.g.ph!=='r')return;clearLater();const g=O.g,i=g.i+1;
   if(i>=O.qs.length){O.g={ph:'end',b:BUILD,n:g.n,i:g.i,sc:g.sc,nm:g.nm,ep:g.ep};oPush();return}
-  O.g={ph:'q',b:BUILD,n:g.n,i,q:O.qs[i].id,sd:Math.floor(R()*1e9),t:O.qs[i].est?25:20,sc:g.sc,nm:g.nm,ep:g.ep};oPush();oHostTimer();
+  O.g={ph:'q',b:BUILD,n:g.n,i,q:O.qs[i].id,qk:qKey(),sd:Math.floor(R()*1e9),t:O.qs[i].est?25:20,sc:g.sc,nm:g.nm,ep:g.ep};
+  O.qp=oPlayers().map(p=>p.peer);oPush();oHostTimer();
 };
 function oList(withGain){const g=O.g;return Object.keys(g.sc||{}).map(k=>({k,n:(g.nm&&g.nm[k])||'Gast',c:oColor(k),s:g.sc[k]||0,plus:withGain&&g.gain?g.gain[k]||0:0}))}
 function oReveal(){
