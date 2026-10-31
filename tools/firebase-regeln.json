@@ -2,13 +2,26 @@
   "rules": {
     "games": {
       "$code": {
-        ".read": "auth != null && $code.length === 4",
+        ".read": "auth != null && auth.token.firebase.sign_in_provider === 'password' && $code.length === 4",
         "players": {
           "$uid": {
-            ".write": "auth != null && auth.uid === $uid",
+            ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider === 'password'",
             ".validate": "newData.child('n').isString() && newData.child('n').val().length <= 20"
           }
         }
+      }
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "board": {
+      ".read": "auth != null && auth.token.firebase.sign_in_provider === 'password'",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider === 'password'",
+        ".validate": "newData.child('n').isString() && newData.child('n').val().length <= 20"
       }
     }
   }

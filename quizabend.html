@@ -258,6 +258,30 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:18px;margin:0;color:var(-
 .person.done{border-color:var(--ok)}
 .note{font-size:14px;color:var(--text2);background:rgba(11,15,37,.6);border:1px dashed var(--linie);border-radius:12px;padding:10px 12px;margin:0}
 
+/* Konto, Statistik, Verlauf */
+.acct{display:flex;align-items:center;gap:8px;min-height:44px;max-width:62%;padding:0 14px 0 6px;border-radius:99px;border:1px solid var(--linie);background:rgba(11,15,37,.6);font-weight:700;font-size:15px}
+.acct .av{flex:none;width:32px;height:32px;border-radius:50%;background:var(--lampe);color:#2a1a00;display:grid;place-items:center;font-style:normal;font-family:var(--f-disp);font-weight:800;font-size:16px}
+.acct span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:rgba(11,15,37,.72);border:1.5px solid var(--linie);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.tile b{font-family:var(--f-disp);font-weight:800;font-size:32px;line-height:1.05;color:var(--text);font-variant-numeric:tabular-nums}
+.tile small{color:var(--text2);font-size:13px}
+.bars{display:flex;flex-direction:column;gap:12px}
+.barrow{display:grid;grid-template-columns:1fr auto;gap:5px 10px;align-items:baseline}
+.barrow span{font-weight:600;font-size:15px;min-width:0}
+.barrow em{font-style:normal;color:var(--text2);font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.barrow .track{grid-column:1/-1;height:8px;border-radius:4px;background:rgba(244,239,228,.1);overflow:hidden}
+.barrow .track i{display:block;height:100%;border-radius:4px;background:var(--lampe)}
+.hist{display:flex;flex-direction:column;gap:6px}
+.hrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:rgba(11,15,37,.72);border:1px solid var(--linie)}
+.hrow .d{color:var(--text3);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hrow .w{min-width:0;font-size:14.5px}
+.hrow .w b{display:block;font-weight:700}
+.hrow .w small{display:block;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hrow .v{font-family:var(--f-disp);font-weight:800;font-size:19px;color:var(--lampe);white-space:nowrap}
+.linkbtn{color:var(--lampe);font-weight:700;text-decoration:underline;align-self:flex-start;min-height:44px}
+#accForm .lbl{margin-bottom:-6px}
+
 /* Großer Einblender */
 #ovl{position:fixed;inset:0;display:grid;place-items:center;pointer-events:none;z-index:50;padding:0 16px}
 #ovl .t{font-family:var(--f-disp);font-weight:800;font-size:clamp(56px,18vw,120px);line-height:.9;letter-spacing:-.03em;text-align:center;color:var(--lampe);
@@ -279,7 +303,7 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:18px;margin:0;color:var(-
 
 <section class="scr" id="s-home">
   <div class="wrap">
-    <div class="bar"><span class="grow"></span><button class="icon-btn" id="btnSound" data-act="sound" aria-label="Ton ein- oder ausschalten"></button></div>
+    <div class="bar"><button class="acct" id="btnAcct" data-act="acct" hidden></button><span class="grow"></span><button class="icon-btn" id="btnSound" data-act="sound" aria-label="Ton ein- oder ausschalten"></button></div>
     <header class="brand"><div class="marquee"><h1>Quiz<span>Abend</span></h1></div></header>
     <p class="brand-sub">Das Quiz für dich und deine Freunde</p>
     <nav class="modes">
@@ -310,7 +334,7 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:18px;margin:0;color:var(-
 
 <script>
 'use strict';
-const BUILD='2026-10-31-3';
+const BUILD='2026-10-31-4';
 /* ==========================================================================
    FRAGEN
    Multiple Choice: [Kategorie, Stufe 1–3, Frage, RICHTIG, falsch, falsch, falsch, Info]
@@ -1076,10 +1100,10 @@ const ST={get(k,d){try{const v=localStorage.getItem('qa-'+k);return v==null?d:JS
 const SET=Object.assign({sound:true,cats:CAT_KEYS.slice(),duel:['',''],duelN:10,party:['',''],partyR:5,partyT:20,partyTeams:0,partyCat:true,partySteal:true,partyJoker:true,
   qm:['','',''],qmTeams:0,qmN:20,qmT:30,qmOpts:true,qmDiff:true,nick:'',onN:10},ST.get('set',{}));
 SET.cats=SET.cats.filter(c=>CATS[c]);if(!SET.cats.length)SET.cats=CAT_KEYS.slice();
-function saveSet(){ST.set('set',SET)}
+function saveSet(){ST.set('set',SET);syncPush()}
 const SEEN=new Set(ST.get('seen',[]));
 let USED=new Set();
-function saveSeen(){ST.set('seen',[...SEEN])}
+function saveSeen(){ST.set('seen',[...SEEN]);syncPush()}
 let toastT=0;
 function toast(t,ms=2200){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),ms)}
 function ovl(html,rot){const o=$('#ovl');o.className=rot?'rot180':'';o.innerHTML='<div class="t">'+html+'</div>';clearTimeout(ovl.t);ovl.t=setTimeout(()=>{o.innerHTML=''},1600)}
@@ -1531,7 +1555,7 @@ function chalStart(pre){
 }
 ACT.chNew=()=>chalBegin(CH_CUR,Math.floor(R()*1048576),null);
 ACT.chJoin=()=>{const c=chParse($('#chIn').value);if(!c)return toast('Der Code stimmt nicht. Er sieht so aus: A1B2C-7');if(c.old)return toast('Dieser Code stammt aus einer anderen Version des Spiels.');chalBegin(c.ver,c.seed,c.score)};
-function chalBegin(ver,seed,vs){C={ver,seed,vs,qs:chQs(ver,seed),i:0,right:0,res:[]};GAME='chal';wake(true);sfx('start');chalAsk()}
+function chalBegin(ver,seed,vs){C={ver,seed,vs,qs:chQs(ver,seed),i:0,right:0,res:[],log:[]};GAME='chal';wake(true);sfx('start');chalAsk()}
 function chalDots(){return '<div style="display:flex;gap:5px">'+C.qs.map((_,i)=>'<span style="flex:1;height:6px;border-radius:3px;background:'+(i<C.res.length?(C.res[i]?'var(--ok)':'var(--bad)'):i===C.i?'var(--lampe)':'var(--linie)')+'"></span>').join('')+'</div>'}
 function chalAsk(){
   const q=C.qs[C.i];C.done=false;
@@ -1545,18 +1569,19 @@ ACT.cEst=()=>chalResult(estVal($('#qa .est')));
 function chalResult(choice,timeout){
   if(C.done)return;C.done=true;stopTimer();const q=C.qs[C.i],root=$('#qa');let ok;
   if(q.est){const x=timeout?estVal(root.querySelector('.est')):choice;ok=estOk(q,x);lockEst(root,q,x)}else{ok=choice===0;markAnswers(root,q,choice)}
-  C.res.push(ok);if(ok){C.right++;sfx('ok');vib(30)}else{sfx('bad');vib(60)}
+  C.res.push(ok);C.log.push({c:q.c,ok});if(ok){C.right++;sfx('ok');vib(30)}else{sfx('bad');vib(60)}
   root.insertAdjacentHTML('beforeend',resultBlock(ok,ok?'Richtig':timeout?'Zeit abgelaufen':'Falsch',ok||q.est?'':'Richtig ist: '+esc(correctText(q)),q,'cNext',C.i===9?'Auswertung':'Weiter'));
 }
 ACT.cNext=()=>{C.i++;if(C.i>=10)return chalEnd();chalAsk()};
 function chalCodeStr(){return chCode(C)+'-'+C.right}
 function chalText(){
-  const nm=(SET.nick||'').trim()||'Ich';let t='Quiz-Abend-Challenge: '+nm+' hat '+C.right+' von 10 Fragen richtig. Schaffst du mehr? Code: '+chalCodeStr();
+  const nm=(SET.nick||'').trim()||(typeof ACC!=='undefined'&&ACC?ACC.name:'')||'Ich';let t='Quiz-Abend-Challenge: '+nm+' hat '+C.right+' von 10 Fragen richtig. Schaffst du mehr? Code: '+chalCodeStr();
   if(/^https?:$/.test(location.protocol)&&!window.claude)t+='\n'+location.origin+location.pathname+'#'+chCode(C)+C.right;
   return t;
 }
 function chalEnd(){
   GAME=null;wake(false);sfx('end');const s=C.right,vs=C.vs;
+  recordGame({m:'c',log:C.log,r:s,code:chalCodeStr(),vs});
   const say=s===10?'Perfekt. Alles gewusst!':s>=8?'Stark. Das war richtig gut.':s>=6?'Solide. Mehr als die Hälfte gewusst.':s>=4?'Ganz okay. Da geht noch was.':'Schwere Runde. Nächstes Mal klappt es besser.';
   let duel='';
   if(vs!=null){const w=s>vs?'Gewonnen!':s<vs?'Verloren':'Unentschieden';
@@ -1598,19 +1623,6 @@ const OCODE='ABCDEFGHJKLMNPQRSTUVWXYZ';
 const IN_CLAUDE=!!(window.claude&&typeof window.claude.use==='function');
 function loadScript(src){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=()=>no(new Error('load '+src));document.head.appendChild(s)})}
 function withTimeout(p,ms){return Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms))])}
-async function fbLoad(){
-  if(FB)return FB;
-  const base='https://www.gstatic.com/firebasejs/'+FB_VER+'/';
-  if(!window.firebase)await loadScript(base+'firebase-app-compat.js');
-  await Promise.all([loadScript(base+'firebase-auth-compat.js'),loadScript(base+'firebase-database-compat.js')]);
-  if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
-  const auth=firebase.auth();
-  /* gespeicherte anonyme Anmeldung abwarten, sonst neu anmelden */
-  const user=await new Promise(res=>{const un=auth.onAuthStateChanged(u=>{un();res(u)})});
-  const uid=user?user.uid:(await auth.signInAnonymously()).user.uid;
-  FB={db:firebase.database(),uid};
-  return FB;
-}
 /* Firebase-Spielraum mit derselben Schnittstelle wie ein Claude-Live-Raum */
 function fbRoom(code,host){
   const db=FB.db,uid=FB.uid,base=db.ref('games/'+code+'/players'),me=base.child(uid),con=db.ref('.info/connected');
@@ -1630,14 +1642,14 @@ function fbRoom(code,host){
   };
 }
 function netNS(){
-  if(!NETP)NETP=(async()=>{
-    if(IN_CLAUDE){try{const r=await window.claude.use('room');if(r)return{kind:'claude',async enter(code){return r.join('quizabend-'+code.toLowerCase())},async free(){return true}}}catch(_){}return null}
-    if(!FIREBASE_CONFIG)return null;
-    try{await withTimeout(fbLoad(),15000)}catch(e){NETP=null;throw e}
+  if(IN_CLAUDE){if(!NETP)NETP=(async()=>{try{const r=await window.claude.use('room');if(r)return{kind:'claude',async enter(code){return r.join('quizabend-'+code.toLowerCase())},async free(){return true}}}catch(_){}return null})();return NETP}
+  if(!FIREBASE_CONFIG)return Promise.resolve(null);
+  return withTimeout(fbBase(),15000).then(()=>{
+    if(!ACC)return{kind:'login'};
+    FB={db:FBA.db,uid:ACC.uid};
     return{kind:'fb',async enter(code,host){return fbRoom(code,host)},
       async free(code){const s=await FB.db.ref('games/'+code+'/players').get();return !s.exists()}};
-  })();
-  return NETP;
+  });
 }
 function onlineAvailable(){return IN_CLAUDE||!!FIREBASE_CONFIG}
 if(!onlineAvailable()){const m=$('#modeOnline');if(m){m.classList.add('off');m.querySelector('span').textContent='Noch nicht eingerichtet.'}}
@@ -1650,13 +1662,16 @@ function onlineStart(){
   if(!onlineAvailable())return fail('Online-Spiele sind für diese Version noch nicht eingerichtet. Bis dahin könnt ihr Duell, Party, Quizmaster oder die Challenge spielen.');
   netNS().then(ns=>{const b=$('#oBox');if(!b)return;
     if(!ns){b.innerHTML='<p class="note">Online-Spiele funktionieren hier nur, wenn alle das geteilte Claude-Artifact geöffnet haben (jeder braucht ein Claude-Konto). Oder ihr nutzt die installierte App bzw. die Webseite.</p>';return}
+    if(ns.kind==='login'){b.innerHTML='<div class="card"><span class="lbl">Konto nötig</span><p class="lead">Für Online-Spiele meldest du dich einmal an. Dafür werden deine Statistik, dein Verlauf und die Rangliste mit deinen Freunden gespeichert.</p><button class="btn" data-act="accOnline">Anmelden oder Konto erstellen</button></div>';return}
     b.innerHTML='<div style="display:flex;flex-direction:column;gap:16px">'+
-      '<div class="card"><span class="lbl">Dein Name</span><input class="inp" id="oName" maxlength="14" placeholder="Wie sollen dich die anderen sehen?" value="'+esc(SET.nick)+'"></div>'+
+      (ns.kind==='fb'?'<div class="card"><span class="lbl">Du spielst als</span><div class="row" style="align-items:center"><b style="font-size:19px;overflow-wrap:anywhere">'+esc(ACC.name)+'</b><button class="btn small ghost" data-act="acct" style="flex:0 0 auto">Konto</button></div></div>'
+        :'<div class="card"><span class="lbl">Dein Name</span><input class="inp" id="oName" maxlength="14" placeholder="Wie sollen dich die anderen sehen?" value="'+esc(SET.nick)+'"></div>')+
       '<div class="card"><span class="lbl">Spiel eröffnen</span><button class="btn" data-act="oHost">Neues Spiel</button></div>'+
       '<div class="card"><span class="lbl">Einem Spiel beitreten</span><input class="inp code" id="oCode" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="CODE"><button class="btn ghost" data-act="oJoin">Beitreten</button></div></div>';
   }).catch(()=>fail('Keine Verbindung zum Spiele-Server. Bist du online? Dann bitte gleich nochmal versuchen.'));
 }
-function oName(){const v=($('#oName')&&$('#oName').value||'').trim().slice(0,14);if(!v){toast('Gib zuerst deinen Namen ein.');return null}SET.nick=v;saveSet();return v}
+ACT.accOnline=()=>acctPage('online');
+function oName(){if(!$('#oName')&&ACC)return ACC.name;const v=($('#oName')&&$('#oName').value||'').trim().slice(0,14);if(!v){toast('Gib zuerst deinen Namen ein.');return null}SET.nick=v;saveSet();return v}
 let oBusy=false;
 async function oEnter(code,host){
   const name=oName();if(!name||oBusy)return;oBusy=true;
@@ -1665,7 +1680,7 @@ async function oEnter(code,host){
     if(host){for(let i=0;i<6&&!(await ns.free(code));i++){code='';for(let j=0;j<4;j++)code+=pickOne(OCODE.split(''))}}
     let rm;try{rm=await ns.enter(code,host)}catch(e){toast(e&&e.code==='not_permitted'?'Online-Spiele sind für dich hier nicht freigegeben.':'Verbindung fehlgeschlagen. Bitte nochmal versuchen.');return}
     onlineLeave();
-    O={code,host,rm,name,peers:[],me:null,ep:-1,g:null,qi:-1,ans:null,unsub:[],sawHost:false};
+    O={code,host,rm,name,kind:ns.kind,log:[],peers:[],me:null,ep:-1,g:null,qi:-1,ans:null,unsub:[],sawHost:false};
     O.unsub.push(rm.onPeers(oPeers,e=>{if(O&&O.rm===rm)oGone(e&&e.code==='not_permitted'?'Der Spiele-Server hat den Zugriff abgelehnt. Sind die Datenbank-Regeln eingetragen?':'Die Verbindung ist abgerissen.')}));
     if(host){O.qs=[];O.g={ph:'lobby',b:BUILD,n:SET.onN,i:-1,sc:{},nm:{},ep:0};rm.presence({k:'h',n:name,g:O.g}).catch(()=>{})}
     else{rm.presence({k:'p',n:name}).catch(()=>{});later(8000,()=>{if(O&&!O.host&&!O.sawHost)oGone('Unter dem Code '+code+' läuft gerade kein Spiel. Stimmt der Code?')})}
@@ -1777,6 +1792,7 @@ function oReveal(){
   const root=$('#qa');if(!root)return;const mine=g.gain?g.gain[O.me]||0:0;const ok=mine>0;
   const my=O.ans&&O.ans.i===g.i?O.ans.v:null;
   if(q.est)lockEst(root,q,my);else markAnswers(root,q,my);
+  O.log.push({c:q.c,ok:q.est?(my!=null&&estOk(q,my)):my===0});
   const st=$('#oStat');if(st)st.remove();
   if(!q.est){const cnt={};for(const k in (g.pick||{}))cnt[g.pick[k]]=(cnt[g.pick[k]]||0)+1;
     for(const el of root.querySelectorAll('.ans')){const c=cnt[+el.dataset.v]||0;if(c)el.insertAdjacentHTML('beforeend','<span style="margin-left:auto;font-family:var(--f-disp);font-weight:900;font-size:20px">'+c+'×</span>')}}
@@ -1788,11 +1804,186 @@ function oReveal(){
 }
 function oEnd(){
   O.shown='end'+O.g.ep;stopTimer();sfx('end');const list=oList(false),r=rankList(list),me=r.find(x=>x.k===O.me);
+  if(O.kind==='fb'&&me&&O.log.length)recordGame({m:'o',log:O.log,pts:me.s,pl:me.pl,of:r.length,win:me.pl===1&&r.length>1,r:O.log.filter(x=>x.ok).length,w:r.filter(x=>x.k!==O.me).map(x=>x.n).join(', ')});
+  O.log=[];
   page(topBar('Endstand','quit')+'<div class="hand" style="flex:0;padding-top:6px"><span class="lbl">Sieger</span><div class="big" style="color:var(--lampe)">'+r.filter(x=>x.pl===1).map(x=>esc(x.n)).join(' & ')+'</div>'+
     (me?'<p class="lead">Du bist auf Platz '+me.pl+' von '+r.length+'.</p>':'')+'</div>'+podiumHTML(list)+tableHTML(list,O.me)+
     (O.host?'<button class="btn" data-act="oAgain">Neues Spiel mit allen</button>':'<p class="note">Bleib hier, falls der Gastgeber ein neues Spiel startet.</p>')+'<button class="btn ghost" data-act="home">Verlassen</button>');
 }
 ACT.oAgain=()=>{if(!O||!O.host)return;const sc={};for(const p of oPlayers())sc[p.peer]=0;O.g={ph:'lobby',b:BUILD,n:SET.onN,i:-1,sc,nm:O.g.nm,ep:O.g.ep};O.qi=-1;O.ans=null;oPush()};
+/* ==========================================================================
+   KONTO: Anmeldung mit E-Mail und Passwort (Firebase). Pflicht nur für Online.
+   Gespeichert werden Statistik, Verlauf, Rangliste und Einstellungen für alle Geräte.
+   users/<uid>/{profile,stats,hist,sync} gehört nur dem Spieler, board/<uid> lesen alle Angemeldeten.
+   ========================================================================== */
+let ACC=null,FBA=null,FBP=null;
+const ACC_OK=!IN_CLAUDE&&!!FIREBASE_CONFIG;
+function fbBase(){
+  if(!FBP)FBP=(async()=>{
+    const base='https://www.gstatic.com/firebasejs/'+FB_VER+'/';
+    if(!window.firebase)await loadScript(base+'firebase-app-compat.js');
+    await Promise.all([loadScript(base+'firebase-auth-compat.js'),loadScript(base+'firebase-database-compat.js')]);
+    if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
+    const auth=firebase.auth();try{auth.languageCode='de'}catch(_){}
+    FBA={auth,db:firebase.database()};
+    await new Promise(res=>{let first=true;auth.onAuthStateChanged(u=>{acctLoad(u).then(()=>{if(first){first=false;res()}})})});
+    return FBA;
+  })().catch(e=>{FBP=null;throw e});
+  return FBP;
+}
+async function acctLoad(u){
+  if(!u||u.isAnonymous){if(ACC){ACC=null;ST.set('acct',0)}acctUI();return}
+  if(ACC&&ACC.uid===u.uid)return;
+  ACC={uid:u.uid,email:u.email||'',name:''};
+  try{const v=(await FBA.db.ref('users/'+u.uid+'/profile').get()).val()||{};ACC.name=v.n||''}catch(_){}
+  if(!ACC.name)ACC.name=(SET.nick||(u.email||'Spieler').split('@')[0]).slice(0,14);
+  ST.set('acct',1);acctUI();syncPull();
+}
+function acctUI(){
+  const b=$('#btnAcct');if(!b)return;b.hidden=!ACC_OK;
+  b.innerHTML=ACC?'<i class="av">'+esc(ACC.name.slice(0,1).toUpperCase())+'</i><span>'+esc(ACC.name)+'</span>':'<i class="av">?</i><span>Anmelden</span>';
+}
+if(ACC_OK&&ST.get('acct',0))fbBase().catch(()=>{});
+acctUI();
+
+/* ---------- Anmelden / Konto erstellen ---------- */
+const ACCV={tab:'login',back:null};
+function acctPage(back){
+  if(back!==undefined)ACCV.back=back;
+  if(!ACC_OK){page(topBar('Konto')+'<p class="note">Konten gibt es in der installierten App und auf der Webseite.</p>');return}
+  page(topBar('Konto')+'<div id="accBox" style="display:flex;flex-direction:column;gap:16px"><p class="note">Verbindung wird aufgebaut …</p></div>');
+  withTimeout(fbBase(),15000).then(acctRender).catch(()=>{const b=$('#accBox');if(b)b.innerHTML='<p class="note">Keine Verbindung zum Server. Bist du online?</p><button class="btn ghost" data-act="acct">Nochmal versuchen</button>'});
+}
+ACT.acct=()=>acctPage(null);
+function acctRender(){const b=$('#accBox');if(!b)return;if(ACC)return acctOverview(b);acctForm(b)}
+function acctForm(b){
+  const nw=ACCV.tab==='new';
+  b.innerHTML='<h2>'+(nw?'Konto erstellen':'Anmelden')+'</h2>'+
+    '<p class="lead">Mit Konto spielst du online, und deine Statistik, dein Verlauf und deine Einstellungen werden gespeichert, auch für andere Geräte.</p>'+
+    '<div class="seg"><button class="'+(nw?'':'on')+'" data-act="accTab" data-v="login">Anmelden</button><button class="'+(nw?'on':'')+'" data-act="accTab" data-v="new">Neues Konto</button></div>'+
+    '<form class="card" id="accForm" novalidate>'+
+    (nw?'<label class="lbl" for="accName">Dein Name</label><input class="inp" id="accName" maxlength="14" autocomplete="nickname" placeholder="So sehen dich die anderen" value="'+esc(SET.nick)+'">':'')+
+    '<label class="lbl" for="accMail">E-Mail</label><input class="inp" id="accMail" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="name@beispiel.de">'+
+    '<label class="lbl" for="accPw">Passwort</label><input class="inp" id="accPw" type="password" autocomplete="'+(nw?'new-password':'current-password')+'" placeholder="'+(nw?'Mindestens 6 Zeichen':'Dein Passwort')+'">'+
+    '<button class="btn" type="submit" id="accGo">'+(nw?'Konto erstellen':'Anmelden')+'</button></form>'+
+    (nw?'':'<button class="linkbtn" data-act="accReset">Passwort vergessen?</button>');
+  $('#accForm').addEventListener('submit',e=>{e.preventDefault();nw?acctCreate():acctLogin()});
+}
+ACT.accTab=v=>{ACCV.tab=v;acctRender()};
+function authErr(e){const c=e&&e.code||'';return({
+  'auth/email-already-in-use':'Zu dieser E-Mail gibt es schon ein Konto. Melde dich damit an.',
+  'auth/invalid-email':'Die E-Mail-Adresse stimmt so nicht.','auth/missing-email':'Gib deine E-Mail-Adresse ein.',
+  'auth/weak-password':'Das Passwort braucht mindestens 6 Zeichen.','auth/missing-password':'Gib ein Passwort ein.',
+  'auth/invalid-credential':'E-Mail oder Passwort stimmt nicht.','auth/invalid-login-credentials':'E-Mail oder Passwort stimmt nicht.',
+  'auth/wrong-password':'E-Mail oder Passwort stimmt nicht.','auth/user-not-found':'Zu dieser E-Mail gibt es kein Konto.',
+  'auth/too-many-requests':'Zu viele Versuche. Warte kurz und versuch es dann nochmal.',
+  'auth/network-request-failed':'Keine Verbindung. Bist du online?',
+  'auth/operation-not-allowed':'Die Anmeldung mit E-Mail ist in Firebase noch nicht eingeschaltet.'}[c]||'Das hat nicht geklappt ('+(c||'unbekannter Fehler')+').')}
+function accBusy(on){const b=$('#accGo');if(b){b.disabled=on;b.textContent=on?'Einen Moment …':(ACCV.tab==='new'?'Konto erstellen':'Anmelden')}}
+async function acctLogin(){
+  const mail=$('#accMail').value.trim(),pw=$('#accPw').value;accBusy(true);
+  try{const c=await FBA.auth.signInWithEmailAndPassword(mail,pw);await acctLoad(c.user);acctDone()}catch(e){toast(authErr(e),3500);accBusy(false)}
+}
+async function acctCreate(){
+  const name=($('#accName').value||'').trim().slice(0,14),mail=$('#accMail').value.trim(),pw=$('#accPw').value;
+  if(!name)return toast('Gib zuerst deinen Namen ein.');accBusy(true);
+  try{
+    if(FBA.auth.currentUser&&FBA.auth.currentUser.isAnonymous)await FBA.auth.signOut();
+    const c=await FBA.auth.createUserWithEmailAndPassword(mail,pw),uid=c.user.uid;
+    await FBA.db.ref('users/'+uid+'/profile').set({n:name,since:Date.now()});
+    await FBA.db.ref('board/'+uid).set({n:name,pts:0,wins:0,games:0,a:0,c:0,cb:0});
+    ACC=null;await acctLoad(c.user);SET.nick=name;saveSet();acctDone();
+  }catch(e){toast(authErr(e),3500);accBusy(false)}
+}
+function acctDone(){toast('Angemeldet als '+ACC.name+'.');if(ACCV.back==='online'){ACCV.back=null;onlineStart()}else acctRender()}
+ACT.accReset=async()=>{
+  const m=$('#accMail'),mail=m&&m.value.trim();if(!mail){toast('Gib oben deine E-Mail-Adresse ein, dann nochmal tippen.',3500);if(m)m.focus();return}
+  try{await FBA.auth.sendPasswordResetEmail(mail);toast('E-Mail ist unterwegs. Schau auch im Spam-Ordner nach.',4000)}catch(e){toast(authErr(e),3500)}
+};
+ACT.accOut=async(v,b)=>{if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='Wirklich abmelden?';return}
+  try{await FBA.auth.signOut()}catch(_){}ACC=null;ST.set('acct',0);acctUI();toast('Abgemeldet.');acctRender()};
+
+/* ---------- Übersicht: Statistik, Stärken, Verlauf ---------- */
+function pct(c,a){return a?Math.round(100*c/a):0}
+function fmtDate(t){const d=new Date(t);return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})+' · '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}
+async function acctOverview(b){
+  b.innerHTML='<div class="row" style="align-items:center"><div style="min-width:0"><h2 style="overflow-wrap:anywhere">'+esc(ACC.name)+'</h2><p class="lead">'+esc(ACC.email)+'</p></div></div>'+
+    '<div id="accStats"><p class="note">Statistik wird geladen …</p></div>'+
+    '<button class="btn" data-act="board" data-v="pts">Rangliste</button>'+
+    '<div class="card"><label class="lbl" for="accNewName">Name ändern</label><div class="row"><input class="inp" id="accNewName" maxlength="14" value="'+esc(ACC.name)+'"><button class="btn small ghost" data-act="accName" style="flex:0 0 auto">Speichern</button></div></div>'+
+    '<button class="btn ghost" data-act="accOut">Abmelden</button>';
+  let s={},h={};
+  try{const r=await Promise.all([FBA.db.ref('users/'+ACC.uid+'/stats').get(),FBA.db.ref('users/'+ACC.uid+'/hist').get()]);s=r[0].val()||{};h=r[1].val()||{}}catch(_){}
+  const box=$('#accStats');if(!box)return;
+  const cats=CAT_KEYS.filter(k=>s.cat&&s.cat[k]&&s.cat[k].a).map(k=>({k,a:s.cat[k].a,c:s.cat[k].c||0})).sort((x,y)=>pct(y.c,y.a)-pct(x.c,x.a)||y.a-x.a);
+  const hist=Object.keys(h).sort().reverse().slice(0,15).map(k=>h[k]);
+  box.outerHTML='<div style="display:flex;flex-direction:column;gap:16px">'+
+    '<div class="tiles">'+
+      '<div class="tile"><span class="lbl">Online-Spiele</span><b>'+(s.games||0)+'</b><small>davon '+(s.wins||0)+' gewonnen</small></div>'+
+      '<div class="tile"><span class="lbl">Richtig</span><b>'+(s.a?pct(s.c||0,s.a)+' %':'–')+'</b><small>'+(s.c||0)+' von '+(s.a||0)+' Fragen</small></div>'+
+      '<div class="tile"><span class="lbl">Online-Punkte</span><b>'+Number(s.pts||0).toLocaleString('de-DE')+'</b><small>insgesamt</small></div>'+
+      '<div class="tile"><span class="lbl">Challenge</span><b>'+(s.cg?(s.cb||0)+'/10':'–')+'</b><small>'+(s.cg?'Bestwert aus '+s.cg+(s.cg===1?' Runde':' Runden'):'noch nicht gespielt')+'</small></div>'+
+    '</div>'+
+    '<div class="card"><span class="lbl">Stärken und Schwächen</span>'+(cats.length?'<div class="bars">'+cats.map(x=>'<div class="barrow"><span>'+CATS[x.k].n+'</span><em>'+x.c+' von '+x.a+' · '+pct(x.c,x.a)+' %</em><div class="track" role="img" aria-label="'+CATS[x.k].n+': '+pct(x.c,x.a)+' Prozent richtig"><i style="width:'+(x.c?Math.max(2,pct(x.c,x.a)):0)+'%"></i></div></div>').join('')+'</div>'
+      :'<p class="lead">Spiel online oder eine Challenge, dann siehst du hier, in welchen Kategorien du stark bist.</p>')+'</div>'+
+    '<div class="card"><span class="lbl">Verlauf</span>'+(hist.length?'<div class="hist">'+hist.map(e=>'<div class="hrow"><span class="d">'+fmtDate(e.t)+'</span><span class="w"><b>'+(e.m==='o'?'Online · Platz '+e.pl+' von '+e.of:'Challenge'+(e.vs!=null?' gegen '+e.vs+'/10':''))+'</b><small>'+(e.m==='o'?(e.w?'mit '+esc(e.w):'allein'):'Code '+esc(e.code||''))+'</small></span><span class="v num">'+(e.m==='o'?Number(e.pts||0).toLocaleString('de-DE'):e.r+'/10')+'</span></div>').join('')+'</div>'
+      :'<p class="lead">Noch keine Spiele gespeichert.</p>')+'</div></div>';
+}
+ACT.accName=async()=>{
+  const n=($('#accNewName').value||'').trim().slice(0,14);if(!n)return toast('Der Name darf nicht leer sein.');
+  try{await FBA.db.ref('users/'+ACC.uid+'/profile/n').set(n);await FBA.db.ref('board/'+ACC.uid+'/n').set(n);ACC.name=n;SET.nick=n;saveSet();acctUI();toast('Name gespeichert.');acctRender()}catch(_){toast('Speichern hat nicht geklappt.')}
+};
+
+/* ---------- Rangliste ---------- */
+const BOARD={pts:{n:'Punkte',v:x=>x.pts||0,f:v=>Number(v).toLocaleString('de-DE')},wins:{n:'Siege',v:x=>x.wins||0,f:v=>String(v)},
+  quote:{n:'Quote',v:x=>x.a>=20?pct(x.c||0,x.a):-1,f:v=>v+' %'},cb:{n:'Challenge',v:x=>x.cb||0,f:v=>v+'/10'}};
+async function boardPage(m){
+  page(topBar('Rangliste','acct')+'<h2>Rangliste</h2>'+seg2('brd',m,Object.keys(BOARD).map(k=>[k,BOARD[k].n]))+'<div id="brdBox" style="display:flex;flex-direction:column;gap:12px"><p class="note">Wird geladen …</p></div>');
+  let all={};try{all=(await FBA.db.ref('board').get()).val()||{}}catch(_){const b=$('#brdBox');if(b)b.innerHTML='<p class="note">Die Rangliste ließ sich nicht laden. Sind die neuen Datenbank-Regeln eingetragen?</p>';return}
+  const B=BOARD[m],rows=Object.keys(all).map(k=>Object.assign({k},all[k])).filter(x=>B.v(x)>=0).sort((x,y)=>B.v(y)-B.v(x));
+  let last=null,pl=0;const box=$('#brdBox');if(!box)return;
+  box.innerHTML=(rows.length?'<div class="table">'+rows.map((x,i)=>{const v=B.v(x);if(v!==last){pl=i+1;last=v}return '<div class="trow'+(ACC&&x.k===ACC.uid?' me':'')+'"><span class="pl">'+pl+'</span><span class="nm">'+esc(String(x.n||'?').slice(0,14))+'</span><span class="pt">'+B.f(v)+'</span></div>'}).join('')+'</div>'
+    :'<p class="note">Noch niemand in dieser Wertung.</p>')+(m==='quote'?'<p class="lead">In die Quote kommt, wer mindestens 20 Fragen beantwortet hat.</p>':'')+'<p class="lead">Gezählt werden Online-Spiele und Challenges von allen mit Konto.</p>';
+}
+function seg2(act,cur,opts){return '<div class="seg">'+opts.map(([v,n])=>'<button class="'+(v===cur?'on':'')+'" data-act="'+act+'" data-v="'+v+'">'+n+'</button>').join('')+'</div>'}
+ACT.board=v=>boardPage(v||'pts');ACT.brd=v=>boardPage(v);
+
+/* ---------- Ergebnisse speichern ---------- */
+async function recordGame(r){
+  if(!ACC||!FBA)return;const db=FBA.db,base='users/'+ACC.uid;
+  try{
+    const res=await db.ref(base+'/stats').transaction(s=>{s=s||{};
+      s.a=(s.a||0)+r.log.length;s.c=(s.c||0)+r.log.filter(x=>x.ok).length;s.cat=s.cat||{};
+      for(const x of r.log){const k=s.cat[x.c]||{a:0,c:0};k.a++;if(x.ok)k.c++;s.cat[x.c]=k}
+      if(r.m==='o'){s.games=(s.games||0)+1;if(r.win)s.wins=(s.wins||0)+1;s.pts=(s.pts||0)+(r.pts||0)}else{s.cg=(s.cg||0)+1;s.cb=Math.max(s.cb||0,r.r||0)}
+      return s});
+    const s=res&&res.snapshot?res.snapshot.val()||{}:{};
+    await db.ref('board/'+ACC.uid).set({n:ACC.name,pts:s.pts||0,wins:s.wins||0,games:s.games||0,a:s.a||0,c:s.c||0,cb:s.cb||0});
+    const e={t:Date.now(),m:r.m,r:r.r||0,n:r.log.length};
+    if(r.m==='o')Object.assign(e,{pl:r.pl,of:r.of,pts:r.pts||0,w:(r.w||'').slice(0,80)});else Object.assign(e,{code:r.code||''},r.vs!=null?{vs:r.vs}:{});
+    await db.ref(base+'/hist').push().set(e);
+    const keys=Object.keys((await db.ref(base+'/hist').get()).val()||{}).sort();
+    if(keys.length>30){const up={};for(const k of keys.slice(0,keys.length-30))up[k]=null;await db.ref(base+'/hist').update(up)}
+  }catch(_){}
+}
+
+/* ---------- Einstellungen und gesehene Fragen auf allen Geräten ---------- */
+function seenEncode(){const b=new Uint8Array(Math.ceil(Q.length/8));for(const id of SEEN)if(id<Q.length)b[id>>3]|=1<<(id&7);let s='';for(const x of b)s+=String.fromCharCode(x);return btoa(s)}
+function seenDecode(str){const out=[];try{const s=atob(str);for(let i=0;i<s.length;i++){const x=s.charCodeAt(i);for(let j=0;j<8;j++)if(x&(1<<j))out.push(i*8+j)}}catch(_){}return out}
+async function syncPull(){
+  if(!ACC||!FBA)return;
+  try{
+    const v=(await FBA.db.ref('users/'+ACC.uid+'/sync').get()).val();
+    if(v&&v.set&&(v.t||0)>ST.get('synct',0)){try{const o=JSON.parse(v.set);for(const k in o)if(k in SET)SET[k]=o[k];ST.set('set',SET)}catch(_){}}
+    if(v&&v.seen){for(const id of seenDecode(v.seen))if(id<Q.length)SEEN.add(id);ST.set('seen',[...SEEN])}
+    soundIcon();homeInfo();syncPush(true);
+  }catch(_){}
+}
+function syncPush(now){
+  if(!ACC||!FBA)return;clearTimeout(syncPush.t);
+  syncPush.t=setTimeout(()=>{const t=Date.now();ST.set('synct',t);FBA.db.ref('users/'+ACC.uid+'/sync').set({t,set:JSON.stringify(SET),seen:seenEncode()}).catch(()=>{})},now?0:4000);
+}
+
 /* ---------- Start ---------- */
 function homeInfo(){const seen=Q.filter(q=>SEEN.has(q.id)).length;$('#bankInfo').textContent=Q.length+' Fragen in '+CAT_KEYS.length+' Kategorien · '+seen+' davon schon gesehen'}
 /* Selbst-Update, wenn das Spiel als Webseite läuft */
