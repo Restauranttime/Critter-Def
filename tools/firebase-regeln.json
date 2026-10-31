@@ -23,6 +23,15 @@
         ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider === 'password'",
         ".validate": "newData.child('n').isString() && newData.child('n').val().length <= 20"
       }
+    },
+    "daily": {
+      "$day": {
+        ".read": "auth != null && auth.token.firebase.sign_in_provider === 'password'",
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider === 'password' && (!data.exists() || data.child('done').val() === false)",
+          ".validate": "newData.child('n').isString() && newData.child('n').val().length <= 20 && newData.child('r').isNumber() && newData.child('r').val() >= 0 && newData.child('r').val() <= 10 && newData.child('ms').isNumber() && newData.child('done').isBoolean()"
+        }
+      }
     }
   }
 }

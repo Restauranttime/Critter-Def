@@ -282,6 +282,30 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:18px;margin:0;color:var(-
 .linkbtn{color:var(--lampe);font-weight:700;text-decoration:underline;align-self:flex-start;min-height:44px}
 #accForm .lbl{margin-bottom:-6px}
 
+/* Erfolge */
+.achs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ach{display:flex;gap:8px;align-items:flex-start;padding:9px 10px;border-radius:12px;border:1px solid var(--linie);background:rgba(11,15,37,.5);opacity:.5;min-width:0}
+.ach.on{opacity:1;border-color:color-mix(in srgb,var(--lampe) 60%,transparent)}
+.ach i{font-style:normal;font-size:20px;line-height:1.1;color:var(--text3)}
+.ach.on i{color:var(--lampe)}
+.ach span{display:flex;flex-direction:column;min-width:0}
+.ach b{font-size:14px;line-height:1.2}
+.ach small{font-size:12px;color:var(--text2);line-height:1.25}
+
+/* Abstimmung, Joker, Reaktionen */
+.catbtn em.vc{margin-left:auto;font-style:normal;font-size:13px;color:var(--text2);font-weight:700}
+.catbtn.on{background:color-mix(in srgb,var(--c) 22%,transparent);border-color:var(--c)}
+.catbtn.win{background:color-mix(in srgb,var(--c) 30%,transparent);border-color:var(--c);box-shadow:0 0 0 2px var(--c)}
+.catbtn.lose{opacity:.45}
+.joker button.on,.joker button.on[disabled]{opacity:1;background:var(--lampe);color:#2a1a00;border-style:solid}
+.reacts{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.reacts button{width:50px;height:50px;border-radius:50%;background:rgba(11,15,37,.7);border:1.5px solid var(--linie);font-size:25px;line-height:1;transition:transform .08s}
+.reacts button:active{transform:scale(.88)}
+.fly{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);z-index:55;pointer-events:none;display:flex;flex-direction:column;align-items:center;transform:translateX(-50%);animation:fly 2.6s ease-out forwards}
+.fly b{font-size:46px;line-height:1}
+.fly small{font-size:12px;font-weight:700;color:var(--text);background:rgba(11,15,37,.8);border-radius:99px;padding:2px 8px;margin-top:3px;white-space:nowrap}
+@keyframes fly{0%{translate:0 0;scale:.5;opacity:0}12%{opacity:1;translate:0 -20px;scale:1.1}100%{translate:0 -55vh;scale:1;opacity:0}}
+
 /* Pause im Online-Spiel */
 #pzOv{position:fixed;inset:0;z-index:45;display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 24px) max(16px,env(safe-area-inset-left,0px));background:rgba(12,15,36,.95);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 #pzOv .pzc{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;width:100%;max-width:360px}
@@ -317,6 +341,7 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:18px;margin:0;color:var(-
       <button class="mode" style="--c:var(--lampe)" data-act="go" data-v="partySetup"><b>Party</b><span>Das Handy geht reihum. Einzeln oder in Teams.</span><i>2–8</i></button>
       <button class="mode" style="--c:#c58bff" data-act="go" data-v="qmSetup"><b>Quizmaster</b><span>Einer liest vor, alle anderen raten. Für große Runden.</span><i>Gruppe</i></button>
       <button class="mode" style="--c:var(--p2)" id="modeOnline" data-act="go" data-v="online"><b>Online</b><span>Jeder am eigenen Handy, alle bekommen dieselbe Frage.</span><i>live</i></button>
+      <button class="mode" style="--c:#ff9a5c" data-act="go" data-v="daily"><b>Tagesquiz</b><span id="dailySub">Jeden Tag zehn neue Fragen, für alle gleich.</span><i>heute</i></button>
       <button class="mode" style="--c:var(--ok)" data-act="go" data-v="chal"><b>Challenge</b><span>Zehn Fragen allein, dann den Code an Freunde schicken.</span><i>1 + Code</i></button>
     </nav>
     <p class="foot" id="bankInfo"></p>
@@ -335,13 +360,13 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:18px;margin:0;color:var(-
 </section>
 
 </div>
-<div id="pzOv" hidden><div class="pzc"><span class="lbl">Online-Spiel</span><div id="pzBig">Pause</div><p class="lead" id="pzTxt"></p><button class="btn" id="pzGo" data-act="oGo">Weiter</button></div></div>
+<div id="pzOv" hidden><div class="pzc"><span class="lbl" id="pzLbl">Online-Spiel</span><div id="pzBig">Pause</div><p class="lead" id="pzTxt"></p><button class="btn" id="pzGo" data-act="oGo">Weiter</button></div></div>
 <div id="ovl"></div>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
 'use strict';
-const BUILD='2026-10-31-6';
+const BUILD='2026-10-31-7';
 /* ==========================================================================
    FRAGEN
    Multiple Choice: [Kategorie, Stufe 1–3, Frage, RICHTIG, falsch, falsch, falsch, Info]
@@ -1087,6 +1112,8 @@ const Q=Q_RAW.map((r,id)=>typeof r[3]==='number'
   :{id,c:r[0],d:r[1],q:r[2],opts:[r[3],r[4],r[5],r[6]].filter(x=>x!=null),info:r[7]||''});
 /* Challenge-Codes: Buchstabe = Fragen-Stand. Neue Fragen nur hinten anhängen, dann bleiben alte Codes gültig. */
 const CH_VER={A:Q.length};const CH_CUR='A';
+/* ab welchem Tag ein Fragen-Stand ins Tagesquiz kommt */
+const CH_FROM={A:'2026-01-01'};
 const PCOL=['#ff5b4f','#4aa8ff','#ffd447','#5fe08a','#c58bff','#ff9a3c','#3fe0d0','#ff7ac8'];
 
 /* ---------- Hilfen ---------- */
@@ -1105,7 +1132,7 @@ function estStart(q){const st=estStep(q),span=q.hi-q.lo,gap=Math.max(q.tol*3,spa
 function vib(ms){try{navigator.vibrate&&navigator.vibrate(ms)}catch(_){}}
 const ST={get(k,d){try{const v=localStorage.getItem('qa-'+k);return v==null?d:JSON.parse(v)}catch(_){return d}},set(k,v){try{localStorage.setItem('qa-'+k,JSON.stringify(v))}catch(_){}}};
 const SET=Object.assign({sound:true,cats:CAT_KEYS.slice(),duel:['',''],duelN:10,party:['',''],partyR:5,partyT:20,partyTeams:0,partyCat:true,partySteal:true,partyJoker:true,
-  qm:['','',''],qmTeams:0,qmN:20,qmT:30,qmOpts:true,qmDiff:true,nick:'',onN:10},ST.get('set',{}));
+  qm:['','',''],qmTeams:0,qmN:20,qmT:30,qmOpts:true,qmDiff:true,nick:'',onN:10,onD:0,onVote:true,onJoker:true,duelD:0,qmD:0},ST.get('set',{}));
 SET.cats=SET.cats.filter(c=>CATS[c]);if(!SET.cats.length)SET.cats=CAT_KEYS.slice();
 function saveSet(){ST.set('set',SET);syncPush()}
 const SEEN=new Set(ST.get('seen',[]));
@@ -1150,22 +1177,26 @@ async function wake(on){try{if(on&&!WAKE&&navigator.wakeLock){WAKE=await navigat
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&GAME)wake(true)});
 
 /* ---------- Fragen ziehen ---------- */
+/* Ausschluss: Fragen, die Mitspieler im Online-Spiel schon hatten */
+let EXCL=new Set();
 function drawQ(pred){
-  let c=Q.filter(q=>pred(q)&&!USED.has(q.id)&&!SEEN.has(q.id));
-  if(!c.length){c=Q.filter(q=>pred(q)&&!USED.has(q.id));for(const q of c)SEEN.delete(q.id)}
-  if(!c.length)return null;
+  const base=Q.filter(q=>pred(q)&&!USED.has(q.id));if(!base.length)return null;
+  let c=base.filter(q=>!SEEN.has(q.id)&&!EXCL.has(q.id));
+  if(!c.length)c=base.filter(q=>!EXCL.has(q.id));
+  if(!c.length)c=base.filter(q=>!SEEN.has(q.id));
+  if(!c.length){c=base;for(const q of base)SEEN.delete(q.id)}
   const q=pickOne(c);USED.add(q.id);SEEN.add(q.id);saveSeen();return q;
 }
-/* n Fragen, Kategorien möglichst verteilt, Schwierigkeit steigt leicht an */
+/* n Fragen, Kategorien möglichst verteilt; dl = feste Schwierigkeit (0 = gemischt, leicht ansteigend) */
 function diffPlan(n,r=R){const a=[];for(let i=0;i<n;i++){const p=i/Math.max(1,n-1);a.push(p<.3?1:p<.72?2:3)}
   for(let i=0;i<a.length-1;i++)if(r()<.3)[a[i],a[i+1]]=[a[i+1],a[i]];return a}
 function drawAny(d,pred){const c=pickOne(SET.cats);return drawQ(x=>x.c===c&&(!d||x.d===d)&&(!pred||pred(x)))||drawQ(x=>SET.cats.includes(x.c)&&(!d||x.d===d)&&(!pred||pred(x)))||drawQ(()=>true)}
-function drawSet(n,cats){
-  const plan=diffPlan(n);let cyc=[];const out=[];
+function drawSet(n,cats,dl){
+  const plan=dl?Array(n).fill(dl):diffPlan(n);let cyc=[];const out=[];
   for(let i=0;i<n;i++){
     if(!cyc.length)cyc=shuffle(cats.slice());
     const c=cyc.pop(),d=plan[i];
-    const q=drawQ(x=>x.c===c&&x.d===d)||drawQ(x=>x.c===c)||drawQ(x=>cats.includes(x.c)&&x.d===d)||drawQ(x=>cats.includes(x.c))||drawQ(()=>true);
+    const q=drawQ(x=>x.c===c&&x.d===d)||(dl?drawQ(x=>cats.includes(x.c)&&x.d===d):null)||drawQ(x=>x.c===c)||drawQ(x=>cats.includes(x.c)&&x.d===d)||drawQ(x=>cats.includes(x.c))||drawQ(()=>true);
     if(q)out.push(q);
   }
   return out;
@@ -1212,9 +1243,9 @@ function page(html){const p=$('#page');p.innerHTML=html;p.classList.remove('fade
 const BACK='<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>';
 const XICON='<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>';
 function topBar(title,act){return '<div class="bar"><button class="icon-btn" data-act="'+(act||'home')+'" aria-label="Zurück">'+(act==='quit'?XICON:BACK)+'</button><h3 class="grow">'+title+'</h3></div>'}
-function goHome(){clearLater();stopTimer();pzHide();GAME=null;wake(false);onlineLeave();homeInfo();show('home')}
+function goHome(){clearLater();stopTimer();pzHide();EXCL=new Set();GAME=null;wake(false);onlineLeave();homeInfo();show('home')}
 ACT.home=goHome;
-ACT.go=v=>{({duelSetup,partySetup,qmSetup,online:onlineStart,chal:chalStart})[v]()};
+ACT.go=v=>{({duelSetup,partySetup,qmSetup,online:onlineStart,chal:chalStart,daily:dailyStart})[v]()};
 ACT.sound=()=>{SET.sound=!SET.sound;saveSet();soundIcon();if(SET.sound)sfx('ok')};
 ACT.quit=(v,b)=>{if(b.dataset.sure!=='1'){b.dataset.sure='1';toast('Nochmal tippen, um das Spiel zu beenden.');setTimeout(()=>{b.dataset.sure=''},2500);return}goHome()};
 ACT.cat=(v,b)=>{const i=SET.cats.indexOf(v);if(i>=0){if(SET.cats.length===1)return toast('Mindestens eine Kategorie muss an sein.');SET.cats.splice(i,1)}else SET.cats.push(v);saveSet();b.classList.toggle('on',i<0)};
@@ -1244,7 +1275,7 @@ function duelSetup(){
   '<div class="card"><span class="lbl">Spieler</span><div class="plist">'+
   '<div class="prow"><span class="dot" style="background:var(--p1)"></span><input class="inp" id="dn0" maxlength="14" placeholder="Spieler oben" value="'+esc(SET.duel[0])+'"></div>'+
   '<div class="prow"><span class="dot" style="background:var(--p2)"></span><input class="inp" id="dn1" maxlength="14" placeholder="Spieler unten" value="'+esc(SET.duel[1])+'"></div></div></div>'+
-  '<div class="card"><span class="lbl">Spiellänge</span>'+seg('duelN',[5,10,15],v=>v+' Fragen')+'</div>'+
+  '<div class="card"><span class="lbl">Spiellänge</span>'+seg('duelN',[5,10,15],v=>v+' Fragen')+'<span class="lbl">Schwierigkeit</span>'+seg('duelD',[0,1,2,3],v=>DIFFN[v])+'</div>'+
   '<div class="card"><span class="lbl">Kategorien</span>'+catChips()+'</div>'+
   '<button class="btn" data-act="duelGo">Los geht\'s</button>');
 }
@@ -1254,7 +1285,7 @@ ACT.duelGo=()=>{
 };
 function duelBegin(names,n){
   clearLater();USED=new Set();
-  D={names,n,score:[0,0],i:-1,qs:drawSet(n,SET.cats),sudden:0,ph:'',q:null};
+  D={names,n,score:[0,0],i:-1,qs:drawSet(n,SET.cats,SET.duelD),sudden:0,ph:'',q:null};
   GAME='duel';wake(true);show('duel');
   $('#dTop').innerHTML='';$('#dBot').innerHTML='';duelBoard();
   sfx('start');ovl('Los!');later(1200,duelNext);
@@ -1280,7 +1311,7 @@ function duelNext(){
 }
 function duelSudden(){
   if(D.score[0]!==D.score[1]||D.sudden>6)return duelEnd();
-  D.sudden++;const q=drawAny(0,x=>!x.est);if(!q)return duelEnd();duelAsk(q);
+  D.sudden++;const q=drawAny(SET.duelD||0,x=>!x.est);if(!q)return duelEnd();duelAsk(q);
 }
 function duelAsk(q){
   D.q=q;D.ph='q';D.lock=[false,false];D.wrong=[false,false];D.order=q.est?null:optOrder(q);D.estv=[null,null];
@@ -1488,7 +1519,7 @@ function qmSetup(){
   page(topBar('Quizmaster')+
   '<h2>Einer liest vor, alle raten</h2><p class="lead">Du bist Quizmaster: Du liest die Fragen vor, die anderen rufen ihre Antwort oder schreiben sie auf. Dann löst du auf und tippst an, wer richtig lag. Die Lösung bleibt verdeckt, bis du auflöst.</p>'+
   namesCard('qm')+
-  '<div class="card"><span class="lbl">Fragen</span>'+seg('qmN',[10,20,30],v=>v+' Fragen')+'<span class="lbl">Bedenkzeit</span>'+seg('qmT',[0,15,30,60],v=>v?v+' Sek.':'Ohne')+'</div>'+
+  '<div class="card"><span class="lbl">Fragen</span>'+seg('qmN',[10,20,30],v=>v+' Fragen')+'<span class="lbl">Schwierigkeit</span>'+seg('qmD',[0,1,2,3],v=>DIFFN[v])+'<span class="lbl">Bedenkzeit</span>'+seg('qmT',[0,15,30,60],v=>v?v+' Sek.':'Ohne')+'</div>'+
   '<div class="card"><span class="lbl">Regeln</span>'+
     togHTML('qmOpts','Antwortmöglichkeiten zeigen','Aus: Nur die Frage wird vorgelesen. Das ist schwerer.')+'<div class="sep"></div>'+
     togHTML('qmDiff','Punkte nach Schwierigkeit','Leichte Fragen bringen 1 Punkt, mittlere 2, schwere 3. Aus: Jede richtige Antwort zählt 1 Punkt.')+'</div>'+
@@ -1497,10 +1528,10 @@ function qmSetup(){
 }
 ACT.qmGo=()=>{
   readNames('qm');saveSet();clearLater();USED=new Set();
-  M={pl:makePlayers('qm'),qs:drawSet(SET.qmN,SET.cats),i:0,T:SET.qmT,opts:!!SET.qmOpts,diff:!!SET.qmDiff};
+  M={pl:makePlayers('qm'),qs:drawSet(SET.qmN,SET.cats,SET.qmD),i:0,T:SET.qmT,opts:!!SET.qmOpts,diff:!!SET.qmDiff};
   GAME='qm';wake(true);sfx('start');qmAsk();
 };
-ACT.qmGo2=()=>{clearLater();USED=new Set();M=Object.assign(M,{pl:M.pl.map(x=>Object.assign({},x,{s:0,plus:0})),qs:drawSet(M.qs.length,SET.cats),i:0});GAME='qm';wake(true);sfx('start');qmAsk()};
+ACT.qmGo2=()=>{clearLater();USED=new Set();M=Object.assign(M,{pl:M.pl.map(x=>Object.assign({},x,{s:0,plus:0})),qs:drawSet(M.qs.length,SET.cats,SET.qmD),i:0});GAME='qm';wake(true);sfx('start');qmAsk()};
 function qmPts(q){return M.diff?q.d:1}
 function ptsTxt(n){return n+(n===1?' Punkt':' Punkte')}
 function qmAsk(){
@@ -1564,11 +1595,11 @@ function chalStart(pre){
 }
 ACT.chNew=()=>chalBegin(CH_CUR,Math.floor(R()*1048576),null);
 ACT.chJoin=()=>{const c=chParse($('#chIn').value);if(!c)return toast('Der Code stimmt nicht. Er sieht so aus: A1B2C-7');if(c.old)return toast('Dieser Code stammt aus einer anderen Version des Spiels.');chalBegin(c.ver,c.seed,c.score)};
-function chalBegin(ver,seed,vs){C={ver,seed,vs,qs:chQs(ver,seed),i:0,right:0,res:[],log:[]};GAME='chal';wake(true);sfx('start');chalAsk()}
+function chalBegin(ver,seed,vs,daily){C={ver,seed,vs,daily:daily||null,qs:chQs(ver,seed),i:0,right:0,res:[],log:[],ms:0};GAME='chal';wake(true);sfx('start');if(daily)dailyMark();chalAsk()}
 function chalDots(){return '<div style="display:flex;gap:5px">'+C.qs.map((_,i)=>'<span style="flex:1;height:6px;border-radius:3px;background:'+(i<C.res.length?(C.res[i]?'var(--ok)':'var(--bad)'):i===C.i?'var(--lampe)':'var(--linie)')+'"></span>').join('')+'</div>'}
 function chalAsk(){
-  const q=C.qs[C.i];C.done=false;
-  page(topBar('Frage '+(C.i+1)+' von 10','quit')+chalDots()+
+  const q=C.qs[C.i];C.done=false;SEEN.add(q.id);saveSeen();C.qt0=performance.now();
+  page(topBar((C.daily?'Tagesquiz · ':'')+'Frage '+(C.i+1)+' von 10','quit')+chalDots()+
     '<div id="qa" style="display:flex;flex-direction:column;gap:14px">'+qHead(q)+'<div class="timer"><i></i></div><p class="qtext">'+esc(q.q)+'</p>'+
     (q.est?estHTML(q,'c','data-act="cEst"'):ansHTML(q,optOrder(q,rng(C.seed+C.i*101)),'data-act="cAns" data-v'))+'</div>');
   startTimer(q.est?25:20,[$('#qa .timer')],()=>chalResult(null,true));
@@ -1576,12 +1607,13 @@ function chalAsk(){
 ACT.cAns=v=>chalResult(+v);
 ACT.cEst=()=>chalResult(estVal($('#qa .est')));
 function chalResult(choice,timeout){
-  if(C.done)return;C.done=true;stopTimer();const q=C.qs[C.i],root=$('#qa');let ok;
-  if(q.est){const x=timeout?estVal(root.querySelector('.est')):choice;ok=estOk(q,x);lockEst(root,q,x)}else{ok=choice===0;markAnswers(root,q,choice)}
-  C.res.push(ok);C.log.push({c:q.c,ok});if(ok){C.right++;sfx('ok');vib(30)}else{sfx('bad');vib(60)}
+  if(C.done)return;C.done=true;stopTimer();const q=C.qs[C.i],root=$('#qa');let ok,xv=null;
+  if(q.est){xv=timeout?estVal(root.querySelector('.est')):choice;ok=estOk(q,xv);lockEst(root,q,xv)}else{ok=choice===0;markAnswers(root,q,choice)}
+  const ms=Math.min(Math.round(performance.now()-C.qt0),30000);C.ms+=ms;
+  C.res.push(ok);C.log.push({c:q.c,ok,ms:ok?ms:null,ex:!!(q.est&&xv===q.v)});if(ok){C.right++;sfx('ok');vib(30)}else{sfx('bad');vib(60)}
   root.insertAdjacentHTML('beforeend',resultBlock(ok,ok?'Richtig':timeout?'Zeit abgelaufen':'Falsch',ok||q.est?'':'Richtig ist: '+esc(correctText(q)),q,'cNext',C.i===9?'Auswertung':'Weiter'));
 }
-ACT.cNext=()=>{C.i++;if(C.i>=10)return chalEnd();chalAsk()};
+ACT.cNext=()=>{C.i++;if(C.i>=10)return C.daily?dailyEnd():chalEnd();chalAsk()};
 function chalCodeStr(){return chCode(C)+'-'+C.right}
 function chalText(){
   const nm=(SET.nick||'').trim()||(typeof ACC!=='undefined'&&ACC?ACC.name:'')||'Ich';let t='Quiz-Abend-Challenge: '+nm+' hat '+C.right+' von 10 Fragen richtig. Schaffst du mehr? Code: '+chalCodeStr();
@@ -1691,8 +1723,8 @@ async function oEnter(code,host){
     onlineLeave();
     O={code,host,rm,name,kind:ns.kind,log:[],rqDone:new Set(),peers:[],me:null,ep:-1,g:null,qi:-1,ans:null,unsub:[],sawHost:false};
     O.unsub.push(rm.onPeers(oPeers,e=>{if(O&&O.rm===rm)oGone(e&&e.code==='not_permitted'?'Der Spiele-Server hat den Zugriff abgelehnt. Sind die Datenbank-Regeln eingetragen?':'Die Verbindung ist abgerissen.')}));
-    if(host){O.qs=[];O.g={ph:'lobby',b:BUILD,n:SET.onN,i:-1,sc:{},nm:{},ep:0};rm.presence({k:'h',n:name,g:O.g}).catch(()=>{})}
-    else{rm.presence({k:'p',n:name}).catch(()=>{});later(8000,()=>{if(O&&!O.host&&!O.sawHost)oGone('Unter dem Code '+code+' läuft gerade kein Spiel. Stimmt der Code?')})}
+    if(host){O.qs=[];O.g={ph:'lobby',b:BUILD,n:SET.onN,i:-1,sc:{},nm:{},ep:0};rm.presence({k:'h',n:name,g:O.g,sn:seenEncode()}).catch(()=>{})}
+    else{rm.presence({k:'p',n:name,sn:seenEncode()}).catch(()=>{});later(8000,()=>{if(O&&!O.host&&!O.sawHost)oGone('Unter dem Code '+code+' läuft gerade kein Spiel. Stimmt der Code?')})}
     GAME='online';wake(true);oRender();
   }catch(_){toast('Keine Verbindung zum Spiele-Server. Bitte nochmal versuchen.')}
   finally{oBusy=false}
@@ -1704,13 +1736,13 @@ function oGone(msg){onlineLeave();clearLater();stopTimer();pzHide();GAME=null;wa
 function oPlayers(){return O.peers.filter(p=>p.kind==='viewer'&&p.presence&&(p.presence.k==='p'||p.presence.k==='h')&&p.presence.on!==false)}
 function pName(p){return String(p.presence&&p.presence.n||'Gast').slice(0,14)}
 function oPeers(ch){
-  if(!O)return;O.peers=ch.peers;const meP=ch.peers.find(p=>p.sameTab);if(meP)O.me=meP.peer;
+  if(!O)return;O.peers=ch.peers;const meP=ch.peers.find(p=>p.sameTab);if(meP)O.me=meP.peer;oReacts();
   if(O.host){
     /* neue Spieler in die Tabelle aufnehmen, Namen aktuell halten */
     let dirty=false;for(const p of oPlayers()){const n=pName(p);if(O.g.nm[p.peer]!==n){O.g.nm[p.peer]=n;dirty=true}if(O.g.sc[p.peer]==null){O.g.sc[p.peer]=0;dirty=true}}
     if(O.g.ph==='lobby'){for(const k in O.g.sc)if(!oPlayers().some(p=>p.peer===k)){delete O.g.sc[k];delete O.g.nm[k];dirty=true}}
     if(dirty)oPush(true);
-    oHostRequests();oHostCheck();oRender(true);return;
+    oHostRequests();oHostCheck();oHostVoteCheck();oRender(true);return;
   }
   const h=ch.peers.find(p=>p.presence&&p.presence.k==='h'&&p.kind==='viewer');
   if(!h){if(O.sawHost){O.hostMiss=O.hostMiss||Date.now();later(3500,()=>{if(O&&O.hostMiss&&!O.peers.some(p=>p.presence&&p.presence.k==='h'))oGone('Der Gastgeber hat das Spiel verlassen.')})}return}
@@ -1728,41 +1760,113 @@ function oRender0(refresh){
   if(!O||!O.g)return oWait();
   const g=O.g;
   if(g.ph==='lobby'){if(!refresh||!$('#oLobby'))return oLobby();return oLobbyList()}
+  if(g.ph==='vote'&&g.vote){if(O.shown!=='vote'+g.vote.id)return oVote();return oVoteRefresh()}
   if(g.ph==='q'){if(O.qi!==g.i)return oQuestion();return oAnswered()}
   if(g.ph==='r'){if(O.shown!=='r'+g.i)return oReveal();return}
   if(g.ph==='end'){if(O.shown!=='end'+g.ep)return oEnd()}
 }
 function oWait(){page(topBar('Online','quit')+'<div class="hand"><span class="lbl">Code '+esc(O?O.code:'')+'</span><div class="big" style="font-size:44px">Suche Spiel …</div><p class="lead">Gleich geht es los.</p></div>')}
+const DIFFN=['Gemischt','Leicht','Mittel','Schwer'];
+const RD=5; /* Fragen pro Abstimmungsrunde */
 function oLobby(){
-  const g=O.g;
   page(topBar(O.host?'Dein Spiel':'Lobby','quit')+
     '<div class="codebox"><span class="lbl">Spiel-Code</span><b>'+esc(O.code)+'</b><span class="lead">'+(O.host?'Sag deinen Freunden diesen Code.':'Gastgeber: '+esc(O.hostName||''))+'</span></div>'+
     '<div class="card" id="oLobby"><span class="lbl">Dabei</span><div class="people" id="oPeople"></div></div>'+
-    (O.host?'<div class="card"><span class="lbl">Länge</span>'+seg('onN',[5,10,15],v=>v+' Fragen')+'<span class="lbl">Kategorien</span>'+catChips()+'</div><button class="btn" data-act="oStart">Starten</button>'
-      :'<p class="note">Warte, bis '+esc(O.hostName||'der Gastgeber')+' das Spiel startet. Lass diese Seite offen.</p>'));
+    (O.host?'<div class="card"><span class="lbl">Länge</span>'+seg('onN',[5,10,15],v=>v+' Fragen')+'<span class="lbl">Schwierigkeit</span>'+seg('onD',[0,1,2,3],v=>DIFFN[v])+'</div>'+
+      '<div class="card"><span class="lbl">Regeln</span>'+togHTML('onVote','Kategorie-Abstimmung','Alle 5 Fragen stimmen alle ab, aus welcher von drei Kategorien es weitergeht.')+'<div class="sep"></div>'+
+        togHTML('onJoker','Joker','Jeder hat einmal 50:50 und einmal doppelte Punkte.')+'</div>'+
+      '<div class="card"><span class="lbl">Kategorien</span>'+catChips()+'</div><button class="btn" data-act="oStart">Starten</button>'
+      :'<p class="note">Warte, bis '+esc(O.hostName||'der Gastgeber')+' das Spiel startet. Lass diese Seite offen.</p>')+reactBar());
   oLobbyList();
 }
 function oColor(peer){const ks=Object.keys(O.g.sc||{}).sort();const i=ks.indexOf(peer);return PCOL[(i<0?ks.length:i)%PCOL.length]}
 function oLobbyList(){const el=$('#oPeople');if(!el)return;
   el.innerHTML=oPlayers().map(p=>'<span class="person"><span class="dot" style="background:'+oColor(p.peer)+'"></span>'+esc(pName(p))+(p.presence.k==='h'?' · Gastgeber':'')+(p.sameTab?' (du)':'')+'</span>').join('')||'<span class="lead">Noch niemand da.</span>'}
-ACT.oStart=()=>{
-  if(!O||!O.host)return;USED=new Set();O.qs=drawSet(SET.onN,SET.cats);
-  const sc={};for(const p of oPlayers())sc[p.peer]=0;
-  O.g={ph:'q',b:BUILD,n:O.qs.length,i:0,q:O.qs[0].id,qk:qKey(),sd:Math.floor(R()*1e9),t:O.qs[0].est?25:20,sc,nm:O.g.nm,ep:O.g.ep};
-  O.qp=oPlayers().map(p=>p.peer);sfx('start');oPush();oHostTimer();
-};
 function qKey(){return Math.random().toString(36).slice(2,8)}
-/* Zeitlimit: Fragezeit plus Puffer für langsame Verbindungen */
-function oHostTimer(){clearLater();const qk=O.g.qk;O.deadAt=performance.now()+(O.g.t+4)*1000;later((O.g.t+4)*1000,()=>{if(O&&O.host&&O.g.ph==='q'&&O.g.qk===qk)oHostReveal()})}
+/* gemeinsamer Spielstand ohne Frage-Details */
+function oBase(){const g=O.g;return{b:BUILD,n:g.n,sc:g.sc||{},nm:g.nm||{},ep:g.ep,gid:g.gid,jk:g.jk||0,j2:g.j2||{}}}
+/* Fragen, die irgendein Mitspieler schon hatte, möglichst meiden */
+function oExclude(){EXCL=new Set();for(const p of oPlayers())if(!p.sameTab&&p.presence.sn)for(const id of seenDecode(p.presence.sn))EXCL.add(id)}
+ACT.oStart=()=>{
+  if(!O||!O.host)return;USED=new Set();O.qs=[];oExclude();
+  const sc={};for(const p of oPlayers())sc[p.peer]=0;
+  O.cfg={cats:SET.cats.slice(),dl:SET.onD||0,vote:!!SET.onVote};
+  O.g={b:BUILD,n:SET.onN,sc,nm:O.g.nm||{},ep:O.g.ep,gid:qKey(),jk:SET.onJoker?1:0,j2:{},ph:'lobby',i:0};
+  sfx('start');
+  if(O.cfg.vote)return oStartVote();
+  O.qs=drawSet(SET.onN,O.cfg.cats,O.cfg.dl);oAskQ(0);
+};
+function oAskQ(i){const q=O.qs[i];O.g=Object.assign(oBase(),{ph:'q',i,q:q.id,qk:qKey(),sd:Math.floor(R()*1e9),t:q.est?25:20});O.qp=oPlayers().map(p=>p.peer);oPush();oHostTimer()}
+/* Zeitlimit: 3 s Countdown + Fragezeit + Puffer für langsame Verbindungen */
+function oHostTimer(){clearLater();const qk=O.g.qk,ms=(O.g.t+7)*1000;O.deadAt=performance.now()+ms;later(ms,()=>{if(O&&O.host&&O.g.ph==='q'&&O.g.qk===qk)oHostReveal()})}
+
+/* ---------- Kategorie-Abstimmung ---------- */
+function oStartVote(){
+  const opts=shuffle(O.cfg.cats.slice()).slice(0,3);
+  O.g=Object.assign(oBase(),{ph:'vote',i:O.qs.length,vote:{id:qKey(),o:opts.join(',')}});O.vp=oPlayers().map(p=>p.peer);O.myVote=null;oPush();
+  clearLater();const id=O.g.vote.id;later(12000,()=>{if(O&&O.g.ph==='vote'&&O.g.vote.id===id)oEndVote()});
+}
+/* Kategorien der Abstimmung als Text (Firebase speichert Listen nicht verlässlich als Liste) */
+function vOpts(v){return String(v&&v.o||'').split(',').filter(c=>CATS[c])}
+function oMyVote(p){return p.sameTab?O.myVote:p.presence&&p.presence.vt}
+function oHostVoteCheck(){
+  if(!O||!O.host||O.g.ph!=='vote'||O.g.vote.w)return;const v=O.g.vote,by=new Map(O.peers.map(p=>[p.peer,p]));
+  if((O.vp||[]).length&&O.vp.every(k=>{const p=by.get(k);const x=p&&oMyVote(p);return x&&x.id===v.id}))later(600,()=>{if(O&&O.g.ph==='vote'&&O.g.vote.id===v.id&&!O.g.vote.w)oEndVote()});
+}
+function oEndVote(){
+  if(!O||!O.host||O.g.ph!=='vote'||O.g.vote.w)return;clearLater();const v=O.g.vote,cnt={};
+  const vo=vOpts(v);for(const p of O.peers){const x=oMyVote(p);if(x&&x.id===v.id&&vo.includes(x.c))cnt[x.c]=(cnt[x.c]||0)+1}
+  let best=-1,win=[];for(const c of vo){const n=cnt[c]||0;if(n>best){best=n;win=[c]}else if(n===best)win.push(c)}
+  const c=pickOne(win);O.qs.push(...drawSet(Math.min(RD,O.g.n-O.qs.length),[c],O.cfg.dl));
+  O.g=Object.assign({},O.g,{vote:Object.assign({},v,{w:c,cnt})});oPush();
+  later(2200,()=>{if(O&&O.host&&O.g.ph==='vote')oAskQ(O.g.i)});
+}
+function oVote(){
+  const g=O.g,v=g.vote;O.shown='vote'+v.id;O.qi=-1;O.cdPending=false;pzHide();
+  page(topBar('Abstimmung','quit')+'<h2>Welche Kategorie kommt als Nächstes?</h2><p class="lead">Die nächsten '+Math.min(RD,g.n-g.i)+' Fragen kommen aus der Kategorie mit den meisten Stimmen.</p>'+
+    '<div class="catgrid" style="grid-template-columns:1fr" id="oVoteGrid">'+vOpts(v).map(c=>'<button class="catbtn" style="--c:'+CATS[c].c+'" data-act="oVoteC" data-v="'+c+'">'+CATS[c].n+'<em class="vc"></em></button>').join('')+'</div>'+
+    '<div class="timer"><i></i></div><p class="lead" id="oVoteMsg"></p><div id="oVoteStat" class="people"></div>'+reactBar());
+  if(!v.w)startTimer(12,[$('#page .timer')],()=>{});
+  oVoteRefresh();
+}
+function oVoteRefresh(){
+  const v=O.g.vote;if(!v||!$('#oVoteGrid'))return;const mine=O.myVote&&O.myVote.id===v.id?O.myVote.c:null;
+  for(const b of document.querySelectorAll('#oVoteGrid .catbtn')){const c=b.dataset.v;b.classList.toggle('on',c===mine);b.classList.toggle('win',v.w===c);b.classList.toggle('lose',!!v.w&&v.w!==c);
+    b.querySelector('.vc').textContent=v.w?((v.cnt&&v.cnt[c])||0)+(((v.cnt&&v.cnt[c])||0)===1?' Stimme':' Stimmen'):''}
+  const ps=oPlayers(),voted=p=>{const x=oMyVote(p);return x&&x.id===v.id};
+  $('#oVoteStat').innerHTML=ps.map(p=>'<span class="person'+(voted(p)?' done':'')+'"><span class="dot" style="background:'+oColor(p.peer)+'"></span>'+esc(pName(p))+'</span>').join('');
+  $('#oVoteMsg').textContent=v.w?CATS[v.w].n+' gewinnt. Gleich geht es los.':mine?'Deine Stimme zählt. Du kannst noch umentscheiden.':'Tipp auf eine Kategorie.';
+  if(v.w&&O.voteSnd!==v.id){O.voteSnd=v.id;stopTimer();sfx('reveal')}
+}
+ACT.oVoteC=v=>{if(!O||O.g.ph!=='vote'||O.g.vote.w)return;O.myVote={id:O.g.vote.id,c:v};O.rm.presence({vt:O.myVote}).catch(()=>{});sfx('tap');oVoteRefresh();if(O.host)oHostVoteCheck()};
+
+/* ---------- Frage mit 3-2-1 vorweg ---------- */
 function oQuestion(){
-  const g=O.g,q=Q[g.q];if(!q)return;O.qi=g.i;O.ans=null;O.t0=performance.now();O.shown='';
+  const g=O.g,q=Q[g.q];if(!q)return;O.qi=g.i;O.ans=null;O.x2=false;O.shown='';O.t0=0;
+  if(O.gid!==g.gid){O.gid=g.gid;O.j50=false;O.j2=false;O.streakDone=false}
+  if((g.j2||{})[O.me])O.j2=true;
+  SEEN.add(q.id);saveSeen();
   page(topBar('Frage '+(g.i+1)+' von '+g.n,'quit')+
     '<div id="qa" style="display:flex;flex-direction:column;gap:14px">'+qHead(q)+'<div class="timer"><i></i></div><p class="qtext">'+esc(q.q)+'</p>'+
-    (q.est?estHTML(q,'o','data-act="oEst"'):ansHTML(q,optOrder(q,rng(g.sd)),'data-act="oAns" data-v'))+
+    (q.est?estHTML(q,'o','data-act="oEst"'):ansHTML(q,optOrder(q,rng(g.sd)),'data-act="oAns" data-v'))+jokerBar(q)+
     '<div id="oStat" class="people"></div></div>');
-  startTimer(g.t,[$('#qa .timer')],()=>{if(O&&O.ans==null)oSend(q.est?estVal($('#qa .est')):null)});
   oPauseBtn();oAnswered();
+  O.cdPending=true;pzClear();$('#pzOv').hidden=false;$('#pzGo').hidden=true;
+  $('#pzLbl').textContent='Frage '+(g.i+1)+' von '+g.n;$('#pzTxt').textContent=CATS[q.c].n+' · '+DIFFN[q.d];
+  [3,2,1].forEach((n,k)=>PZT.push(setTimeout(()=>{$('#pzBig').textContent=String(n);sfx('tick')},k*1000)));
+  PZT.push(setTimeout(oStartQ,3000));
 }
+function oStartQ(){
+  if(!O||!O.cdPending||O.g.ph!=='q')return;O.cdPending=false;pzHide();const q=Q[O.g.q];O.t0=performance.now();sfx('start');
+  startTimer(O.g.t,[$('#qa .timer')],()=>{if(O&&O.ans==null)oSend(q.est?estVal($('#qa .est')):null)});
+}
+function jokerBar(q){if(!O.g.jk)return '';
+  return '<div class="joker" id="oJk"><button data-act="oJ50"'+(O.j50||q.est?' disabled':'')+'>50:50'+(O.j50?' (verbraucht)':'')+'</button>'+
+    '<button data-act="oJ2"'+(O.j2?' disabled':'')+'>×2 Punkte'+(O.j2?' (verbraucht)':'')+'</button></div>'}
+ACT.oJ50=(v,b)=>{const q=Q[O.g.q];if(!O||O.j50||O.ans||O.cdPending||q.est)return;O.j50=true;b.disabled=true;b.textContent='50:50 (verbraucht)';sfx('lock');
+  const wrong=shuffle([...document.querySelectorAll('#qa .ans')].filter(el=>+el.dataset.v!==0));for(const el of wrong.slice(0,Math.max(0,wrong.length-1)))el.classList.add('gone')};
+ACT.oJ2=(v,b)=>{if(!O||O.j2||O.ans||O.cdPending)return;O.j2=true;O.x2=true;b.disabled=true;b.classList.add('on');b.textContent='×2 ist aktiv';sfx('lock')};
+
 /* ---------- Pause: alle dürfen anhalten, wer „Weiter“ drückt, startet 3-2-1 ---------- */
 function oPauseBtn(){const bar=$('#page .bar');if(bar&&!bar.querySelector('[data-act=oPause]'))bar.insertAdjacentHTML('beforeend','<button class="icon-btn" data-act="oPause" aria-label="Spiel pausieren"><svg viewBox="0 0 24 24"><path d="M9 6v12M15 6v12"/></svg></button>')}
 ACT.oPause=()=>{
@@ -1800,22 +1904,25 @@ function oPauseUI(){
   const pz=(O.g.ph==='q'||O.g.ph==='r')?O.g.pz:null,ov=$('#pzOv');
   if(pz){
     if(!O.pzOn){O.pzOn=true;O.pzT0=performance.now();pauseTimer()}
-    ov.hidden=false;const go=$('#pzGo');
+    ov.hidden=false;const go=$('#pzGo');$('#pzLbl').textContent='Online-Spiel';
     if(pz.cd){if(O.cdFor!==pz.id){O.cdFor=pz.id;pzClear();go.hidden=true;$('#pzTxt').textContent='Gleich geht es weiter.';
         [3,2,1].forEach((n,i)=>PZT.push(setTimeout(()=>{$('#pzBig').textContent=String(n);sfx('tick')},i*1000)));
         PZT.push(setTimeout(()=>{$('#pzBig').textContent='Los!';sfx('start')},3000))}}
     else if(O.pzShown!==pz.id){O.pzShown=pz.id;pzClear();sfx('gong');$('#pzBig').textContent='Pause';$('#pzTxt').textContent=pz.by+' hat pausiert. Die Zeit ist angehalten.';go.hidden=false;go.disabled=false}
   }else{
-    if(O.pzOn){O.pzOn=false;if(O.t0)O.t0+=performance.now()-O.pzT0;resumeTimer()}
-    pzHide();
+    if(O.pzOn){O.pzOn=false;if(O.t0)O.t0+=performance.now()-O.pzT0;resumeTimer();if(O.cdPending){oStartQ();return}}
+    if(!O.cdPending)pzHide();
   }
 }
+
+/* ---------- Antworten ---------- */
 function oSend(v){
-  if(!O||O.ans||O.g.ph!=='q')return;const q=Q[O.g.q];
-  O.ans={i:O.g.i,k:O.g.qk,v,ms:Math.round(performance.now()-O.t0)};O.rm.presence({a:O.ans}).catch(()=>{});
+  if(!O||O.ans||O.cdPending||O.g.ph!=='q')return;const q=Q[O.g.q];
+  O.ans={i:O.g.i,k:O.g.qk,v,ms:Math.round(performance.now()-O.t0)};if(O.x2)O.ans.x2=1;O.rm.presence({a:O.ans}).catch(()=>{});
   const root=$('#qa');if(root){
     if(q.est){const box=root.querySelector('.est');if(box){box.classList.add('lock');box.querySelector('input').disabled=true;const b=box.querySelector('.btn');b.disabled=true;b.textContent='Tipp steht: '+(v==null?'–':fmtN(v,q))}}
     else{const a=root.querySelector('.answers');a.classList.add('lock');for(const el of a.querySelectorAll('.ans'))el.classList.add(+el.dataset.v===v?'sel':'dim')}
+    const jk=root.querySelector('#oJk');if(jk)for(const b of jk.querySelectorAll('button'))b.disabled=true;
   }
   sfx('lock');stopTimer();oAnswered();if(O.host)oHostCheck();
 }
@@ -1840,44 +1947,65 @@ function oScore(q,a,t){
 }
 function oHostReveal(){
   if(!O||!O.host||O.g.ph!=='q'||O.g.pz)return;clearLater();stopTimer();
-  const g=O.g,q=Q[g.q],gain={},pick={};
-  for(const p of O.peers.filter(p=>p.kind==='viewer'&&p.presence&&(p.presence.k==='p'||p.presence.k==='h'))){const a=p.sameTab?O.ans:(p.presence.a&&p.presence.a.i===g.i&&p.presence.a.k===g.qk?p.presence.a:null);const pts=oScore(q,a,g.t);gain[p.peer]=pts;g.sc[p.peer]=(g.sc[p.peer]||0)+pts;g.nm[p.peer]=pName(p);if(a&&a.v!=null&&!q.est)pick[p.peer]=a.v}
-  O.g=Object.assign({},g,{ph:'r',gain,pick});oPush();
+  const g=O.g,q=Q[g.q],gain={},pick={},dbl={},j2=Object.assign({},g.j2||{});
+  for(const p of O.peers.filter(p=>p.kind==='viewer'&&p.presence&&(p.presence.k==='p'||p.presence.k==='h'))){
+    const a=p.sameTab?O.ans:(p.presence.a&&p.presence.a.i===g.i&&p.presence.a.k===g.qk?p.presence.a:null);let pts=oScore(q,a,g.t);
+    if(a&&a.x2&&g.jk&&!j2[p.peer]){j2[p.peer]=1;dbl[p.peer]=1;pts*=2}
+    gain[p.peer]=pts;g.sc[p.peer]=(g.sc[p.peer]||0)+pts;g.nm[p.peer]=pName(p);if(a&&a.v!=null&&!q.est)pick[p.peer]=a.v}
+  O.g=Object.assign({},g,{ph:'r',gain,pick,dbl,j2});oPush();
   O.nextAt=performance.now()+11000;later(11000,()=>{if(O&&O.host&&O.g.ph==='r'&&O.g.i===g.i&&!O.g.pz)ACT.oNext()});
 }
 ACT.oNext=()=>{
-  if(!O||!O.host||O.g.ph!=='r'||O.g.pz)return;clearLater();const g=O.g,i=g.i+1;
-  if(i>=O.qs.length){O.g={ph:'end',b:BUILD,n:g.n,i:g.i,sc:g.sc,nm:g.nm,ep:g.ep};oPush();return}
-  O.g={ph:'q',b:BUILD,n:g.n,i,q:O.qs[i].id,qk:qKey(),sd:Math.floor(R()*1e9),t:O.qs[i].est?25:20,sc:g.sc,nm:g.nm,ep:g.ep};
-  O.qp=oPlayers().map(p=>p.peer);oPush();oHostTimer();
+  if(!O||!O.host||O.g.ph!=='r'||O.g.pz)return;clearLater();const i=O.g.i+1;
+  if(i>=O.g.n){O.g=Object.assign(oBase(),{ph:'end',i:O.g.i});oPush();return}
+  if(O.cfg&&O.cfg.vote&&i>=O.qs.length)return oStartVote();
+  if(i>=O.qs.length)O.qs.push(...drawSet(1,O.cfg?O.cfg.cats:SET.cats,O.cfg?O.cfg.dl:0));
+  oAskQ(i);
 };
 function oList(withGain){const g=O.g;return Object.keys(g.sc||{}).map(k=>({k,n:(g.nm&&g.nm[k])||'Gast',c:oColor(k),s:g.sc[k]||0,plus:withGain&&g.gain?g.gain[k]||0:0}))}
 function oReveal(){
   const g=O.g,q=Q[g.q];if(!q)return;
   if(O.qi!==g.i)oQuestion();
-  O.shown='r'+g.i;stopTimer();
-  const root=$('#qa');if(!root)return;const mine=g.gain?g.gain[O.me]||0:0;const ok=mine>0;
-  const my=O.ans&&O.ans.i===g.i?O.ans.v:null;
+  O.cdPending=false;pzHide();O.shown='r'+g.i;stopTimer();
+  const root=$('#qa');if(!root)return;const mine=g.gain?g.gain[O.me]||0:0;const ok=mine>0,x2=!!(g.dbl&&g.dbl[O.me]);
+  const my=O.ans&&O.ans.i===g.i?O.ans.v:null,good=q.est?(my!=null&&estOk(q,my)):my===0;
   if(q.est)lockEst(root,q,my);else markAnswers(root,q,my);
-  O.log.push({c:q.c,ok:q.est?(my!=null&&estOk(q,my)):my===0});
-  const st=$('#oStat');if(st)st.remove();oPauseBtn();
+  O.log.push({c:q.c,ok:good,ms:good&&O.ans?O.ans.ms:null,ex:!!(q.est&&my===q.v),x2:x2&&good});
+  const st=$('#oStat');if(st)st.remove();const jk=$('#oJk');if(jk)jk.remove();oPauseBtn();
   if(!q.est){const cnt={};for(const k in (g.pick||{}))cnt[g.pick[k]]=(cnt[g.pick[k]]||0)+1;
     for(const el of root.querySelectorAll('.ans')){const c=cnt[+el.dataset.v]||0;if(c)el.insertAdjacentHTML('beforeend','<span style="margin-left:auto;font-family:var(--f-disp);font-weight:900;font-size:20px">'+c+'×</span>')}}
   ok?sfx('ok'):sfx('bad');vib(ok?30:60);
-  root.insertAdjacentHTML('beforeend','<div class="fade-in" style="display:flex;flex-direction:column;gap:12px"><p class="verdict '+(ok?'ok':'bad')+'">'+(ok?'+'+mine+' Punkte':my==null&&!q.est?'Keine Antwort':'Daneben')+'</p>'+
-    (!ok&&!q.est?'<p class="lead">Richtig ist: '+esc(correctText(q))+'</p>':'')+(q.info?'<p class="info">'+esc(q.info)+'</p>':'')+
+  root.insertAdjacentHTML('beforeend','<div class="fade-in" style="display:flex;flex-direction:column;gap:12px"><p class="verdict '+(ok?'ok':'bad')+'">'+(ok?'+'+mine+' Punkte'+(x2?' (×2)':''):my==null&&!q.est?'Keine Antwort':'Daneben')+'</p>'+
+    (!ok&&!q.est?'<p class="lead">Richtig ist: '+esc(correctText(q))+'</p>':'')+(q.info?'<p class="info">'+esc(q.info)+'</p>':'')+reactBar()+
     '<span class="lbl">Zwischenstand</span>'+tableHTML(oList(true),O.me)+
     (O.host?'<button class="btn" data-act="oNext">'+(g.i+1>=g.n?'Zum Endstand':'Nächste Frage')+'</button><p class="lead" style="text-align:center">Geht in ein paar Sekunden von selbst weiter.</p>':'<p class="lead" style="text-align:center">Gleich kommt die nächste Frage.</p>')+'</div>');
 }
 function oEnd(){
-  O.shown='end'+O.g.ep;stopTimer();sfx('end');const list=oList(false),r=rankList(list),me=r.find(x=>x.k===O.me);
-  if(O.kind==='fb'&&me&&O.log.length)recordGame({m:'o',log:O.log,pts:me.s,pl:me.pl,of:r.length,win:me.pl===1&&r.length>1,r:O.log.filter(x=>x.ok).length,w:r.filter(x=>x.k!==O.me).map(x=>x.n).join(', ')});
-  O.log=[];
+  O.shown='end'+O.g.ep;stopTimer();pzHide();O.cdPending=false;sfx('end');EXCL=new Set();
+  const list=oList(false),r=rankList(list),me=r.find(x=>x.k===O.me);
+  if(O.kind==='fb'&&me&&O.log.length)recordGame({m:'o',log:O.log,pts:me.s,pl:me.pl,of:r.length,win:me.pl===1&&r.length>1,host:O.host,r:O.log.filter(x=>x.ok).length,w:r.filter(x=>x.k!==O.me).map(x=>x.n).join(', ')});
+  O.log=[];O.rm.presence({sn:seenEncode()}).catch(()=>{});
   page(topBar('Endstand','quit')+'<div class="hand" style="flex:0;padding-top:6px"><span class="lbl">Sieger</span><div class="big" style="color:var(--lampe)">'+r.filter(x=>x.pl===1).map(x=>esc(x.n)).join(' & ')+'</div>'+
-    (me?'<p class="lead">Du bist auf Platz '+me.pl+' von '+r.length+'.</p>':'')+'</div>'+podiumHTML(list)+tableHTML(list,O.me)+
+    (me?'<p class="lead">Du bist auf Platz '+me.pl+' von '+r.length+'.</p>':'')+'</div>'+podiumHTML(list)+tableHTML(list,O.me)+reactBar()+
     (O.host?'<button class="btn" data-act="oAgain">Neues Spiel mit allen</button>':'<p class="note">Bleib hier, falls der Gastgeber ein neues Spiel startet.</p>')+'<button class="btn ghost" data-act="home">Verlassen</button>');
 }
 ACT.oAgain=()=>{if(!O||!O.host)return;const sc={};for(const p of oPlayers())sc[p.peer]=0;O.g={ph:'lobby',b:BUILD,n:SET.onN,i:-1,sc,nm:O.g.nm,ep:O.g.ep};O.qi=-1;O.ans=null;oPush()};
+
+/* ---------- Reaktionen ---------- */
+const EMO=['😂','👏','😱','🔥','🙈'];
+function reactBar(){return '<div class="reacts" aria-label="Reaktionen">'+EMO.map(e=>'<button data-act="react" data-v="'+e+'" aria-label="Reaktion '+e+'">'+e+'</button>').join('')+'</div>'}
+let reT=0;
+ACT.react=v=>{if(!O||!EMO.includes(v))return;const now=Date.now();if(now-reT<600)return;reT=now;O.rm.presence({re:{e:v,id:qKey()}}).catch(()=>{});floatEmoji(v,'Du')};
+function oReacts(){
+  if(!O.reSeen)O.reSeen={};
+  for(const p of O.peers){if(p.sameTab)continue;const r=p.presence&&p.presence.re;if(!r||!r.id||!EMO.includes(r.e))continue;
+    const known=p.peer in O.reSeen;if(O.reSeen[p.peer]===r.id)continue;O.reSeen[p.peer]=r.id;if(known)floatEmoji(r.e,pName(p))}
+  for(const p of O.peers)if(!(p.peer in O.reSeen))O.reSeen[p.peer]=null;
+}
+function floatEmoji(e,who){
+  const d=document.createElement('div');d.className='fly';d.style.left=(8+Math.random()*76)+'%';
+  d.innerHTML='<b>'+e+'</b><small>'+esc(who)+'</small>';document.body.appendChild(d);setTimeout(()=>d.remove(),2700);
+}
 /* ==========================================================================
    KONTO: Anmeldung mit E-Mail und Passwort (Firebase). Pflicht nur für Online.
    Gespeichert werden Statistik, Verlauf, Rangliste und Einstellungen für alle Geräte.
@@ -1979,8 +2107,8 @@ async function acctOverview(b){
     '<button class="btn" data-act="board" data-v="pts">Rangliste</button>'+
     '<div class="card"><label class="lbl" for="accNewName">Name ändern</label><div class="row"><input class="inp" id="accNewName" maxlength="14" value="'+esc(ACC.name)+'"><button class="btn small ghost" data-act="accName" style="flex:0 0 auto">Speichern</button></div></div>'+
     '<button class="btn ghost" data-act="accOut">Abmelden</button>';
-  let s={},h={};
-  try{const r=await Promise.all([FBA.db.ref('users/'+ACC.uid+'/stats').get(),FBA.db.ref('users/'+ACC.uid+'/hist').get()]);s=r[0].val()||{};h=r[1].val()||{}}catch(_){}
+  let s={},h={},ach={};
+  try{const r=await Promise.all([FBA.db.ref('users/'+ACC.uid+'/stats').get(),FBA.db.ref('users/'+ACC.uid+'/hist').get(),FBA.db.ref('users/'+ACC.uid+'/ach').get()]);s=r[0].val()||{};h=r[1].val()||{};ach=r[2].val()||{}}catch(_){}
   const box=$('#accStats');if(!box)return;
   const cats=CAT_KEYS.filter(k=>s.cat&&s.cat[k]&&s.cat[k].a).map(k=>({k,a:s.cat[k].a,c:s.cat[k].c||0})).sort((x,y)=>pct(y.c,y.a)-pct(x.c,x.a)||y.a-x.a);
   const hist=Object.keys(h).sort().reverse().slice(0,15).map(k=>h[k]);
@@ -1990,10 +2118,13 @@ async function acctOverview(b){
       '<div class="tile"><span class="lbl">Richtig</span><b>'+(s.a?pct(s.c||0,s.a)+' %':'–')+'</b><small>'+(s.c||0)+' von '+(s.a||0)+' Fragen</small></div>'+
       '<div class="tile"><span class="lbl">Online-Punkte</span><b>'+Number(s.pts||0).toLocaleString('de-DE')+'</b><small>insgesamt</small></div>'+
       '<div class="tile"><span class="lbl">Challenge</span><b>'+(s.cg?(s.cb||0)+'/10':'–')+'</b><small>'+(s.cg?'Bestwert aus '+s.cg+(s.cg===1?' Runde':' Runden'):'noch nicht gespielt')+'</small></div>'+
+      '<div class="tile"><span class="lbl">Tagesquiz</span><b>'+(s.dg?(s.dlast===dayKey()||s.dlast===prevDay(dayKey())?s.dstreak||0:0):'–')+'</b><small>'+(s.dg?'Tage in Folge · bester Tag '+(s.dbest||0)+'/10':'noch nicht gespielt')+'</small></div>'+
+      '<div class="tile"><span class="lbl">Erfolge</span><b>'+ACH.filter(a=>ach[a[0]]).length+'/'+ACH.length+'</b><small>freigeschaltet</small></div>'+
     '</div>'+
     '<div class="card"><span class="lbl">Stärken und Schwächen</span>'+(cats.length?'<div class="bars">'+cats.map(x=>'<div class="barrow"><span>'+CATS[x.k].n+'</span><em>'+x.c+' von '+x.a+' · '+pct(x.c,x.a)+' %</em><div class="track" role="img" aria-label="'+CATS[x.k].n+': '+pct(x.c,x.a)+' Prozent richtig"><i style="width:'+(x.c?Math.max(2,pct(x.c,x.a)):0)+'%"></i></div></div>').join('')+'</div>'
       :'<p class="lead">Spiel online oder eine Challenge, dann siehst du hier, in welchen Kategorien du stark bist.</p>')+'</div>'+
-    '<div class="card"><span class="lbl">Verlauf</span>'+(hist.length?'<div class="hist">'+hist.map(e=>'<div class="hrow"><span class="d">'+fmtDate(e.t)+'</span><span class="w"><b>'+(e.m==='o'?'Online · Platz '+e.pl+' von '+e.of:'Challenge'+(e.vs!=null?' gegen '+e.vs+'/10':''))+'</b><small>'+(e.m==='o'?(e.w?'mit '+esc(e.w):'allein'):'Code '+esc(e.code||''))+'</small></span><span class="v num">'+(e.m==='o'?Number(e.pts||0).toLocaleString('de-DE'):e.r+'/10')+'</span></div>').join('')+'</div>'
+    achHTML(ach)+
+    '<div class="card"><span class="lbl">Verlauf</span>'+(hist.length?'<div class="hist">'+hist.map(e=>'<div class="hrow"><span class="d">'+fmtDate(e.t)+'</span><span class="w"><b>'+(e.m==='o'?'Online · Platz '+e.pl+' von '+e.of:e.m==='d'?'Tagesquiz':'Challenge'+(e.vs!=null?' gegen '+e.vs+'/10':''))+'</b><small>'+(e.m==='o'?(e.w?'mit '+esc(e.w):'allein'):e.m==='d'?'Zeit '+fmtMs(e.ms):'Code '+esc(e.code||''))+'</small></span><span class="v num">'+(e.m==='o'?Number(e.pts||0).toLocaleString('de-DE'):e.r+'/10')+'</span></div>').join('')+'</div>'
       :'<p class="lead">Noch keine Spiele gespeichert.</p>')+'</div></div>';
 }
 ACT.accName=async()=>{
@@ -2010,7 +2141,7 @@ async function boardPage(m){
   const B=BOARD[m],rows=Object.keys(all).map(k=>Object.assign({k},all[k])).filter(x=>B.v(x)>=0).sort((x,y)=>B.v(y)-B.v(x));
   let last=null,pl=0;const box=$('#brdBox');if(!box)return;
   box.innerHTML=(rows.length?'<div class="table">'+rows.map((x,i)=>{const v=B.v(x);if(v!==last){pl=i+1;last=v}return '<div class="trow'+(ACC&&x.k===ACC.uid?' me':'')+'"><span class="pl">'+pl+'</span><span class="nm">'+esc(String(x.n||'?').slice(0,14))+'</span><span class="pt">'+B.f(v)+'</span></div>'}).join('')+'</div>'
-    :'<p class="note">Noch niemand in dieser Wertung.</p>')+(m==='quote'?'<p class="lead">In die Quote kommt, wer mindestens 20 Fragen beantwortet hat.</p>':'')+'<p class="lead">Gezählt werden Online-Spiele und Challenges von allen mit Konto.</p>';
+    :'<p class="note">Noch niemand in dieser Wertung.</p>')+(m==='quote'?'<p class="lead">In die Quote kommt, wer mindestens 20 Fragen beantwortet hat.</p>':'')+'<p class="lead">Gezählt werden Online-Spiele, Challenges und Tagesquiz von allen mit Konto.</p>';
 }
 function seg2(act,cur,opts){return '<div class="seg">'+opts.map(([v,n])=>'<button class="'+(v===cur?'on':'')+'" data-act="'+act+'" data-v="'+v+'">'+n+'</button>').join('')+'</div>'}
 ACT.board=v=>boardPage(v||'pts');ACT.brd=v=>boardPage(v);
@@ -2022,13 +2153,16 @@ async function recordGame(r){
     const res=await db.ref(base+'/stats').transaction(s=>{s=s||{};
       s.a=(s.a||0)+r.log.length;s.c=(s.c||0)+r.log.filter(x=>x.ok).length;s.cat=s.cat||{};
       for(const x of r.log){const k=s.cat[x.c]||{a:0,c:0};k.a++;if(x.ok)k.c++;s.cat[x.c]=k}
-      if(r.m==='o'){s.games=(s.games||0)+1;if(r.win)s.wins=(s.wins||0)+1;s.pts=(s.pts||0)+(r.pts||0)}else{s.cg=(s.cg||0)+1;s.cb=Math.max(s.cb||0,r.r||0)}
+      if(r.m==='o'){s.games=(s.games||0)+1;if(r.win)s.wins=(s.wins||0)+1;s.pts=(s.pts||0)+(r.pts||0)}
+      else if(r.m==='d'){s.dg=(s.dg||0)+1;s.dstreak=s.dlast===prevDay(r.day)?(s.dstreak||0)+1:s.dlast===r.day?(s.dstreak||1):1;s.dlast=r.day;s.dbest=Math.max(s.dbest||0,r.r||0)}
+      else{s.cg=(s.cg||0)+1;s.cb=Math.max(s.cb||0,r.r||0)}
       return s});
     const s=res&&res.snapshot?res.snapshot.val()||{}:{};
     await db.ref('board/'+ACC.uid).set({n:ACC.name,pts:s.pts||0,wins:s.wins||0,games:s.games||0,a:s.a||0,c:s.c||0,cb:s.cb||0});
     const e={t:Date.now(),m:r.m,r:r.r||0,n:r.log.length};
-    if(r.m==='o')Object.assign(e,{pl:r.pl,of:r.of,pts:r.pts||0,w:(r.w||'').slice(0,80)});else Object.assign(e,{code:r.code||''},r.vs!=null?{vs:r.vs}:{});
+    if(r.m==='o')Object.assign(e,{pl:r.pl,of:r.of,pts:r.pts||0,w:(r.w||'').slice(0,80)});else if(r.m==='d')Object.assign(e,{ms:r.ms||0});else Object.assign(e,{code:r.code||''},r.vs!=null?{vs:r.vs}:{});
     await db.ref(base+'/hist').push().set(e);
+    achCheck(s,r);
     const keys=Object.keys((await db.ref(base+'/hist').get()).val()||{}).sort();
     if(keys.length>30){const up={};for(const k of keys.slice(0,keys.length-30))up[k]=null;await db.ref(base+'/hist').update(up)}
   }catch(_){}
@@ -2051,8 +2185,97 @@ function syncPush(now){
   syncPush.t=setTimeout(()=>{const t=Date.now();ST.set('synct',t);FBA.db.ref('users/'+ACC.uid+'/sync').set({t,set:JSON.stringify(SET),seen:seenEncode()}).catch(()=>{})},now?0:4000);
 }
 
+/* ==========================================================================
+   TAGESQUIZ: jeden Tag dieselben zehn Fragen für alle, nur der erste Versuch zählt.
+   daily/<Tag>/<uid> = {n, r, ms, done}; Rangliste nach richtigen Antworten, dann Zeit.
+   ========================================================================== */
+function dayKey(d){return new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Berlin'}).format(d||new Date())}
+function prevDay(k){const d=new Date(k+'T12:00:00Z');d.setUTCDate(d.getUTCDate()-1);return d.toISOString().slice(0,10)}
+function dayLabel(k){return new Date(k+'T12:00:00Z').toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'})}
+/* Fragen-Stand je Tag: neue Fragen kommen erst ab dem Folgetag ins Tagesquiz, damit es den ganzen Tag gleich bleibt */
+function dailyVer(k){let v='A';for(const x of Object.keys(CH_FROM).sort())if(CH_FROM[x]<=k&&CH_VER[x])v=x;return v}
+function dailySeed(k){let h=2166136261;for(const ch of 'tagesquiz-'+k){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+function fmtMs(ms){const s=Math.round((ms||0)/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')+' min'}
+function dailyMine(r,k){return !!r&&r.day===k&&(r.uid||null)===(ACC?ACC.uid:null)}
+function dailyHome(){const el=$('#dailySub');if(!el)return;const k=dayKey(),r=ST.get('dailyRes',null);
+  el.textContent=dailyMine(r,k)&&r.done?'Heute gespielt: '+r.r+' von 10 richtig.':'Jeden Tag zehn neue Fragen, für alle gleich.'}
+async function dailyStart(){
+  const k=dayKey();
+  page(topBar('Tagesquiz')+'<h2>Tagesquiz</h2><p class="lead">'+dayLabel(k)+'. Zehn Fragen, für alle gleich. Nur der erste Versuch zählt, und gewertet wird auch die Zeit.</p><div id="dBox" style="display:flex;flex-direction:column;gap:16px"><p class="note">Wird geladen …</p></div>');
+  if(ACC_OK&&ST.get('acct',0)){try{await withTimeout(fbBase(),12000)}catch(_){}}
+  let mine=null;if(ACC){try{mine=(await FBA.db.ref('daily/'+k+'/'+ACC.uid).get()).val()}catch(_){}}
+  const loc=ST.get('dailyRes',null),lm=dailyMine(loc,k),played=!!mine||lm;const b=$('#dBox');if(!b)return;
+  if(played){
+    const r=mine&&mine.done?mine:lm&&loc.done?loc:null;
+    b.innerHTML='<div class="hand" style="flex:0"><span class="lbl">Dein Ergebnis heute</span><div class="big num" style="color:var(--lampe)">'+(r?r.r+' / 10':'–')+'</div><p class="lead">'+(r?'Zeit: '+fmtMs(r.ms):'Abgebrochen. Morgen gibt es neue Fragen.')+'</p></div>'+
+      (ACC?'<div id="dBoard"><p class="note">Rangliste wird geladen …</p></div>':'<p class="note">Mit Konto siehst du hier die Tages-Rangliste deiner Freunde.</p><button class="btn ghost" data-act="acct">Anmelden</button>');
+    if(ACC)dailyBoard(k);return;
+  }
+  b.innerHTML=(ACC?'':'<p class="note">Ohne Konto kannst du mitspielen, dein Ergebnis kommt aber nicht in die Tages-Rangliste.</p>')+
+    '<button class="btn" data-act="dGo">Los geht\'s</button>'+(ACC?'<button class="btn ghost" data-act="dBoardY">Rangliste von gestern</button>':'');
+}
+ACT.dGo=()=>{const k=dayKey(),v=dailyVer(k);chalBegin(v,dailySeed(k),null,k)};
+async function dailyMark(){
+  const k=C.daily;ST.set('dailyRes',{day:k,r:0,ms:0,done:false,uid:ACC?ACC.uid:null});
+  if(ACC&&FBA)try{await FBA.db.ref('daily/'+k+'/'+ACC.uid).set({n:ACC.name,r:0,ms:0,done:false})}catch(_){}
+}
+async function dailyEnd(){
+  GAME=null;wake(false);sfx('end');const k=C.daily,res={day:k,r:C.right,ms:C.ms,done:true,uid:ACC?ACC.uid:null};ST.set('dailyRes',res);
+  if(ACC&&FBA){try{await FBA.db.ref('daily/'+k+'/'+ACC.uid).set({n:ACC.name,r:C.right,ms:C.ms,done:true})}catch(_){}
+    recordGame({m:'d',log:C.log,r:C.right,ms:C.ms,day:k})}
+  page(topBar('Tagesquiz')+'<div class="hand" style="flex:0;padding:10px 0 0"><span class="lbl">Dein Ergebnis heute</span><div class="big num" style="color:var(--lampe)">'+C.right+' / 10</div><p class="lead">Zeit: '+fmtMs(C.ms)+'</p></div>'+
+    '<div style="display:flex">'+chalDots()+'</div>'+
+    (ACC?'<div id="dBoard"><p class="note">Rangliste wird geladen …</p></div>':'<p class="note">Mit Konto kommst du in die Tages-Rangliste.</p>')+
+    '<button class="btn ghost" data-act="home">Zum Menü</button>');
+  if(ACC)setTimeout(()=>dailyBoard(k),500);
+}
+async function dailyBoard(k,title){
+  const box=$('#dBoard');if(!box)return;let all={};
+  try{all=(await FBA.db.ref('daily/'+k).get()).val()||{}}catch(_){box.innerHTML='<p class="note">Die Tages-Rangliste ließ sich nicht laden. Sind die neuen Datenbank-Regeln eingetragen?</p>';return}
+  const rows=Object.keys(all).map(u=>Object.assign({u},all[u])).filter(x=>x.done).sort((a,b)=>(b.r-a.r)||(a.ms-b.ms));
+  let last=null,pl=0;
+  box.innerHTML='<span class="lbl">'+(title||'Tages-Rangliste')+'</span>'+(rows.length?'<div class="table" style="margin-top:8px">'+rows.map((x,i)=>{const key=x.r+'/'+x.ms;if(key!==last){pl=i+1;last=key}
+    return '<div class="trow'+(ACC&&x.u===ACC.uid?' me':'')+'"><span class="pl">'+pl+'</span><span class="nm">'+esc(String(x.n||'?').slice(0,14))+'</span><span class="pt">'+x.r+'/10 <small style="font-size:13px;color:var(--text2);font-family:var(--f-body)">'+fmtMs(x.ms)+'</small></span></div>'}).join('')+'</div>'
+    :'<p class="note" style="margin-top:8px">Noch niemand fertig.</p>');
+}
+ACT.dBoardY=()=>{const y=prevDay(dayKey());page(topBar('Tagesquiz')+'<h2>Gestern</h2><p class="lead">'+dayLabel(y)+'</p><div id="dBoard"><p class="note">Wird geladen …</p></div>');dailyBoard(y,'Rangliste von gestern')};
+
+/* ==========================================================================
+   ERFOLGE (mit Konto): users/<uid>/ach/<id> = Zeitpunkt
+   ========================================================================== */
+const ACH=[
+  ['o1','Online-Neuling','Dein erstes Online-Spiel'],['w1','Erster Sieg','Ein Online-Spiel gewonnen'],
+  ['w10','Seriensieger','10 Online-Spiele gewonnen'],['g25','Stammgast','25 Online-Spiele gespielt'],
+  ['h1','Gastgeber','Ein Online-Spiel eröffnet und zu Ende gespielt'],['p5','Volles Haus','Online-Spiel mit mindestens 5 Leuten'],
+  ['s5','Lauf','5 richtige Antworten in Folge'],['s10','Unaufhaltsam','10 richtige Antworten in Folge'],
+  ['fast','Blitzmerker','Richtig in unter 2 Sekunden'],['ex','Punktlandung','Eine Schätzfrage genau getroffen'],
+  ['x2','Doppelt hält besser','Mit dem ×2-Joker richtig geantwortet'],['c10','Perfekte Challenge','Challenge mit 10 von 10'],
+  ['d1','Tagesquiz','Dein erstes Tagesquiz'],['d7','Eine Woche dabei','Tagesquiz an 7 Tagen in Folge'],
+  ['d10','Tagesbestwert','Tagesquiz mit 10 von 10'],['all','Allrounder','In allen 11 Kategorien richtig geantwortet'],
+  ['fach','Fachgebiet','In einer Kategorie mindestens 20 Fragen und 80 % richtig'],['r100','Hundert','100 richtige Antworten'],
+  ['r500','Fünfhundert','500 richtige Antworten'],['r1000','Wissensriese','1000 richtige Antworten']];
+function maxRun(log){let m=0,c=0;for(const x of log){c=x.ok?c+1:0;if(c>m)m=c}return m}
+function achTest(id,s,r){const L=r.log||[];switch(id){
+  case 'o1':return (s.games||0)>=1;case 'w1':return (s.wins||0)>=1;case 'w10':return (s.wins||0)>=10;case 'g25':return (s.games||0)>=25;
+  case 'h1':return r.m==='o'&&!!r.host;case 'p5':return r.m==='o'&&(r.of||0)>=5;
+  case 's5':return maxRun(L)>=5;case 's10':return maxRun(L)>=10;
+  case 'fast':return L.some(x=>x.ok&&x.ms!=null&&x.ms<2000);case 'ex':return L.some(x=>x.ex);case 'x2':return L.some(x=>x.x2);
+  case 'c10':return r.m==='c'&&r.r===10;case 'd1':return (s.dg||0)>=1;case 'd7':return (s.dstreak||0)>=7;case 'd10':return r.m==='d'&&r.r===10;
+  case 'all':return CAT_KEYS.every(k=>s.cat&&s.cat[k]&&s.cat[k].c>0);
+  case 'fach':return CAT_KEYS.some(k=>s.cat&&s.cat[k]&&s.cat[k].a>=20&&s.cat[k].c/s.cat[k].a>=.8);
+  case 'r100':return (s.c||0)>=100;case 'r500':return (s.c||0)>=500;case 'r1000':return (s.c||0)>=1000}return false}
+async function achCheck(s,r){
+  try{const ref=FBA.db.ref('users/'+ACC.uid+'/ach'),have=(await ref.get()).val()||{},add={};
+    for(const [id] of ACH)if(!have[id]&&achTest(id,s,r))add[id]=Date.now();
+    const ids=Object.keys(add);if(!ids.length)return;await ref.update(add);
+    sfx('reveal');toast('Erfolg freigeschaltet: '+ids.map(id=>ACH.find(a=>a[0]===id)[1]).join(', '),4500);
+  }catch(_){}
+}
+function achHTML(have){const n=ACH.filter(a=>have[a[0]]).length;
+  return '<div class="card"><span class="lbl">Erfolge · '+n+' von '+ACH.length+'</span><div class="achs">'+ACH.map(([id,t,d])=>'<div class="ach'+(have[id]?' on':'')+'"><i aria-hidden="true">'+(have[id]?'★':'☆')+'</i><span><b>'+t+'</b><small>'+d+'</small></span></div>').join('')+'</div></div>'}
+
 /* ---------- Start ---------- */
-function homeInfo(){const seen=Q.filter(q=>SEEN.has(q.id)).length;$('#bankInfo').textContent=Q.length+' Fragen in '+CAT_KEYS.length+' Kategorien · '+seen+' davon schon gesehen'}
+function homeInfo(){dailyHome();const seen=Q.filter(q=>SEEN.has(q.id)).length;$('#bankInfo').textContent=Q.length+' Fragen in '+CAT_KEYS.length+' Kategorien · '+seen+' davon schon gesehen'}
 /* Selbst-Update, wenn das Spiel als Webseite läuft */
 let updating=false;
 async function checkUpdate(){
