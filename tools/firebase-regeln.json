@@ -32,6 +32,13 @@
           ".validate": "newData.child('n').isString() && newData.child('n').val().length <= 20 && newData.child('r').isNumber() && newData.child('r').val() >= 0 && newData.child('r').val() <= 10 && newData.child('ms').isNumber() && newData.child('done').isBoolean()"
         }
       }
+    },
+    "reports": {
+      ".read": "auth != null && auth.token.firebase.sign_in_provider === 'password'",
+      "$id": {
+        ".write": "auth != null && auth.token.firebase.sign_in_provider === 'password' && (!data.exists() || !newData.exists())",
+        ".validate": "newData.child('u').val() === auth.uid && newData.child('q').isNumber() && newData.child('r').isString() && newData.child('r').val().length <= 40 && newData.child('t').isString() && newData.child('t').val().length <= 400 && newData.child('a').isString() && newData.child('a').val().length <= 200 && (!newData.child('m').exists() || (newData.child('m').isString() && newData.child('m').val().length <= 300)) && (!newData.child('n').exists() || (newData.child('n').isString() && newData.child('n').val().length <= 20))"
+      }
     }
   }
 }

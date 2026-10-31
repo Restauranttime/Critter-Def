@@ -341,7 +341,7 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:18px;margin:0;color:var(-
 .buzz[disabled]{opacity:.35;pointer-events:none}
 .buzz.pressed{opacity:1;background:radial-gradient(circle at 50% 35%,#ffe2a0,var(--lampe) 60%,var(--lampe3));color:#2a1a00;box-shadow:0 3px 0 #6b4a10;transform:translateY(7px)}
 .answers.wait .ans{opacity:.55}
-.ans.bad{text-decoration:line-through}
+.ans.bad.xout{text-decoration:line-through}
 .bzmsg{margin:0;text-align:center;font-weight:700;font-size:17px;color:var(--text2)}
 .bzmsg.me{color:var(--lampe);font-family:var(--f-disp);font-weight:800;font-size:24px}
 .timer.bzt{margin-top:8px}.timer.bzt i{background:var(--bad);animation:bzt linear forwards}
@@ -400,6 +400,21 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:18px;margin:0;color:var(-
 .tvm .pod.p1 .blk{height:36vh}.tvm .pod.p2 .blk{height:27vh}.tvm .pod.p3 .blk{height:20vh}
 .tvm .hand .big{font-size:clamp(60px,7vw,140px)}
 @media (max-width:820px){.tvgrid,.tvlobby{grid-template-columns:1fr}.tvvote{grid-template-columns:1fr}}
+
+/* Eigene Fragen, Melden */
+.homelinks{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:6px}
+.homelinks button{min-height:40px;padding:6px 14px;border-radius:99px;border:1px solid var(--linie);background:rgba(11,15,37,.6);font-weight:700;font-size:14px;color:var(--text2)}
+.replink{align-self:flex-end;color:var(--text3);font-size:13px;font-weight:700;min-height:36px;padding:0 4px}
+#repOv{position:fixed;inset:0;z-index:70;display:flex;align-items:flex-end;justify-content:center;background:rgba(8,10,25,.75);
+  padding:16px max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 16px) max(16px,env(safe-area-inset-left,0px))}
+#repOv .sheetc{width:100%;max-width:520px;max-height:92vh;overflow:auto;background:var(--nacht2);border:1.5px solid var(--linie);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px}
+#repOv .qpic .flag{width:min(40vw,160px)}#repOv .qemo{font-size:40px}
+textarea{font:inherit;color:inherit;-webkit-user-select:text;user-select:text}
+textarea.inp{resize:vertical;min-height:64px;font-size:16px;font-weight:500;line-height:1.35}
+.inp.ok{border-color:color-mix(in srgb,var(--ok) 60%,transparent)}
+.card.done{opacity:.55}
+.pkb{display:flex;gap:4px}
+.pkb .icon-btn{font-size:18px;color:var(--text2)}
 </style>
 </head>
 <body>
@@ -418,6 +433,7 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:18px;margin:0;color:var(-
       <button class="mode" style="--c:#ff9a5c" data-act="go" data-v="daily"><b>Tagesquiz</b><span id="dailySub">Jeden Tag zehn neue Fragen, für alle gleich.</span><i>heute</i></button>
       <button class="mode" style="--c:var(--ok)" data-act="go" data-v="chal"><b>Challenge</b><span>Zehn Fragen allein, dann den Code an Freunde schicken.</span><i>1 + Code</i></button>
     </nav>
+    <div class="homelinks"><button data-act="packs">✎ Eigene Fragen</button><button data-act="reps">⚑ Gemeldete Fragen</button></div>
     <p class="foot" id="bankInfo"></p>
   </div>
 </section>
@@ -440,7 +456,7 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:18px;margin:0;color:var(-
 
 <script>
 'use strict';
-const BUILD='2026-10-31-10';
+const BUILD='2026-10-31-11';
 /* ==========================================================================
    FRAGEN
    Multiple Choice: [Kategorie, Stufe 1–3, Frage, RICHTIG, falsch, falsch, falsch, Info]
@@ -4280,7 +4296,7 @@ function estStart(q){const st=estStep(q),span=q.hi-q.lo,gap=Math.max(q.tol*3,spa
 function vib(ms){try{navigator.vibrate&&navigator.vibrate(ms)}catch(_){}}
 const ST={get(k,d){try{const v=localStorage.getItem('qa-'+k);return v==null?d:JSON.parse(v)}catch(_){return d}},set(k,v){try{localStorage.setItem('qa-'+k,JSON.stringify(v))}catch(_){}}};
 const SET=Object.assign({sound:true,cats:CAT_KEYS.slice(),duel:['',''],duelN:10,party:['',''],partyR:5,partyT:20,partyTeams:0,partyCat:true,partySteal:true,partyJoker:true,
-  qm:['','',''],qmTeams:0,qmN:20,qmT:30,qmOpts:true,qmDiff:true,nick:'',onN:10,onD:0,onVote:true,onJoker:true,onTV:false,onBz:0,duelD:0,qmD:0},ST.get('set',{}));
+  qm:['','',''],qmTeams:0,qmN:20,qmT:30,qmOpts:true,qmDiff:true,nick:'',onN:10,onD:0,onVote:true,onJoker:true,onTV:false,onBz:0,onPack:'',qmPack:'',duelD:0,qmD:0},ST.get('set',{}));
 SET.cats=SET.cats.filter(c=>CATS[c]);if(!SET.cats.length)SET.cats=CAT_KEYS.slice();
 /* neue Kategorie „Flaggen & Emojis“ einmal für alle einschalten */
 function catsMig(o){if(o&&!o.catsV){SET.catsV=1;if(!SET.cats.includes('bild'))SET.cats.push('bild')}}
@@ -4354,7 +4370,8 @@ function drawSet(n,cats,dl,pf){
 }
 
 /* ---------- Bausteine für Fragen ---------- */
-function qHead(q,extra){return '<div class="hd-cat"><span class="cat" style="--c:'+CATS[q.c].c+'">'+CATS[q.c].n+'</span><span class="diff" aria-label="Schwierigkeit '+q.d+' von 3">'+[1,2,3].map(i=>'<u class="'+(i<=q.d?'on':'')+'"></u>').join('')+'</span>'+(extra||'')+'</div>'}
+function catOf(c){return CATS[c]||{n:'Eigene Fragen',c:'#ffc04d'}}
+function qHead(q,extra){return '<div class="hd-cat"><span class="cat" style="--c:'+catOf(q.c).c+'">'+catOf(q.c).n+'</span><span class="diff" aria-label="Schwierigkeit '+q.d+' von 3">'+[1,2,3].map(i=>'<u class="'+(i<=q.d?'on':'')+'"></u>').join('')+'</span>'+(extra||'')+'</div>'}
 function ansHTML(q,order,attr){return '<div class="answers">'+order.map((oi,k)=>'<button class="ans" '+attr+'="'+oi+'"><span class="k">'+'ABCD'[k]+'</span><span>'+esc(q.opts[oi])+'</span></button>').join('')+'</div>'}
 function estHTML(q,key,btnAttr){const st=estStep(q),v=estStart(q);
   return '<div class="est" data-est="'+key+'" data-q="'+q.id+'"><div class="est-val"><span class="num">'+fmtN(v,q)+'</span>'+(q.u&&q.u!=='Jahr'?'<small>'+esc(q.u)+'</small>':'')+'</div>'+
@@ -4634,7 +4651,7 @@ function lockEst(root,q,x){const box=root.querySelector('.est');if(!box)return;b
   '<p class="lead" style="text-align:center">'+(x==null?'Kein Tipp abgegeben':'Dein Tipp: '+fmtN(x,q)+' · '+(x===q.v?'genau richtig!':'daneben um '+fmtN(Math.abs(x-q.v),q)))+'<br>Als richtig zählt alles bis ±'+fmtN(q.tol,q)+'</p>'}
 function resultBlock(ok,title,sub,q,btnAct,btnTxt){
   return '<div class="fade-in" style="display:flex;flex-direction:column;gap:12px"><div><p class="verdict '+(ok?'ok':'bad')+'">'+title+'</p>'+(sub?'<p class="lead">'+sub+'</p>':'')+'</div>'+
-    (q.info?'<p class="info">'+esc(q.info)+'</p>':'')+'<button class="btn" data-act="'+btnAct+'">'+btnTxt+'</button></div>'}
+    infoHTML(q)+'<button class="btn" data-act="'+btnAct+'">'+btnTxt+'</button></div>'}
 function rankList(list){const s=list.slice().sort((a,b)=>b.s-a.s);let last=null,pl=0;return s.map((p,i)=>{if(p.s!==last){pl=i+1;last=p.s}return Object.assign({pl},p)})}
 function tableHTML(list,meKey){return '<div class="table">'+rankList(list).map(p=>'<div class="trow'+(meKey!=null&&p.k===meKey?' me':'')+'"><span class="pl">'+p.pl+'</span><span class="nm"><span class="dot" style="background:'+p.c+'"></span>'+esc(p.n)+'</span><span class="pt">'+(p.plus?'<span class="plus'+(p.plus<0?' neg':'')+'">'+(p.plus<0?'−'+(-p.plus):'+'+p.plus)+'</span>':'')+(p.s<0?'−'+(-p.s):p.s)+'</span></div>').join('')+'</div>'}
 function podiumHTML(list){const r=rankList(list);const slot=(p,k)=>p?'<div class="pod p'+k+'"><span class="nm" style="color:'+p.c+'">'+esc(p.n)+'</span><div class="blk"><b>'+p.pl+'</b><small>'+(p.s<0?'−'+(-p.s):p.s)+'</small></div></div>':'<div></div>';
@@ -4771,6 +4788,7 @@ function qmSetup(){
   page(topBar('Quizmaster')+
   '<h2>Einer liest vor, alle raten</h2><p class="lead">Du bist Quizmaster: Du liest die Fragen vor, die anderen rufen ihre Antwort oder schreiben sie auf. Dann löst du auf und tippst an, wer richtig lag. Die Lösung bleibt verdeckt, bis du auflöst.</p>'+
   namesCard('qm')+
+  '<div class="card"><span class="lbl">Woher kommen die Fragen?</span>'+packChips('qmPack',SET.qmPack)+'</div>'+
   '<div class="card"><span class="lbl">Fragen</span>'+seg('qmN',[10,20,30],v=>v+' Fragen')+'<span class="lbl">Schwierigkeit</span>'+seg('qmD',[0,1,2,3],v=>DIFFN[v])+'<span class="lbl">Bedenkzeit</span>'+seg('qmT',[0,15,30,60],v=>v?v+' Sek.':'Ohne')+'</div>'+
   '<div class="card"><span class="lbl">Regeln</span>'+
     togHTML('qmOpts','Antwortmöglichkeiten zeigen','Aus: Nur die Frage wird vorgelesen. Das ist schwerer.')+'<div class="sep"></div>'+
@@ -4780,11 +4798,12 @@ function qmSetup(){
 }
 ACT.qmGo=()=>{
   readNames('qm');saveSet();clearLater();USED=new Set();
-  M={pl:makePlayers('qm'),qs:drawSet(SET.qmN,SET.cats,SET.qmD),i:0,T:SET.qmT,opts:!!SET.qmOpts,diff:!!SET.qmDiff};
+  const pk=packGet(SET.qmPack),own=packOk(pk);
+  M={pl:makePlayers('qm'),qs:own?packQs(pk):drawSet(SET.qmN,SET.cats,SET.qmD),i:0,T:SET.qmT,opts:!!SET.qmOpts,diff:!!SET.qmDiff,pack:own?pk.id:''};
   GAME='qm';wake(true);sfx('start');qmAsk();
 };
-ACT.qmGo2=()=>{clearLater();USED=new Set();M=Object.assign(M,{pl:M.pl.map(x=>Object.assign({},x,{s:0,plus:0})),qs:drawSet(M.qs.length,SET.cats,SET.qmD),i:0});GAME='qm';wake(true);sfx('start');qmAsk()};
-function qmPts(q){return M.diff?q.d:1}
+ACT.qmGo2=()=>{clearLater();USED=new Set();const pk=M.pack&&packGet(M.pack);M=Object.assign(M,{pl:M.pl.map(x=>Object.assign({},x,{s:0,plus:0})),qs:packOk(pk)?packQs(pk):drawSet(M.qs.length,SET.cats,SET.qmD),i:0});GAME='qm';wake(true);sfx('start');qmAsk()};
+function qmPts(q){return M.diff&&!q.custom?q.d:1}
 function ptsTxt(n){return n+(n===1?' Punkt':' Punkte')}
 function qmAsk(){
   const q=M.qs[M.i];M.rev=false;M.right=new Set();M.order=q.est?null:optOrder(q);
@@ -4793,7 +4812,7 @@ function qmAsk(){
     '<div class="timer'+(M.T?'':' off')+'"><i></i></div><p class="qtext" style="font-size:clamp(22px,6.4vw,32px)">'+qtx(q)+'</p>'+
     (q.est?'<p class="note">Schätzfrage'+(q.u&&q.u!=='Jahr'?' (in '+esc(q.u)+')':'')+'. Wer am nächsten dran ist, bekommt die Punkte.</p>':
       M.opts?'<ul class="qmopts">'+M.order.map((oi,k)=>'<li data-v="'+oi+'"><span class="k">'+'ABCD'[k]+'</span>'+esc(q.opts[oi])+'</li>').join('')+'</ul>':'')+
-    '<div id="qmAct" style="display:flex;flex-direction:column;gap:10px"><button class="btn" data-act="qmReveal">Auflösen</button><button class="btn ghost small" data-act="qmSwap">Andere Frage</button></div>'+
+    '<div id="qmAct" style="display:flex;flex-direction:column;gap:10px"><button class="btn" data-act="qmReveal">Auflösen</button>'+(q.custom?'':'<button class="btn ghost small" data-act="qmSwap">Andere Frage</button>')+'</div>'+
     '<span class="lbl">Spielstand</span><div class="people">'+M.pl.map(p=>'<span class="person"><span class="dot" style="background:'+p.c+'"></span>'+esc(p.n)+'<b class="num" style="color:var(--lampe)">'+p.s+'</b></span>').join('')+'</div></div>');
   if(M.T)startTimer(M.T,[$('#qa .timer')],()=>{sfx('gong');toast('Die Zeit ist um!')});
 }
@@ -4801,7 +4820,7 @@ ACT.qmSwap=()=>{const q=M.qs[M.i];const n=drawAny(q.d);if(n){M.qs[M.i]=n;qmAsk()
 ACT.qmReveal=()=>{
   if(M.rev)return;M.rev=true;stopTimer();sfx('reveal');const q=M.qs[M.i],root=$('#qa');
   for(const li of root.querySelectorAll('.qmopts li'))li.classList.add(+li.dataset.v===0?'ok':'dim');
-  $('#qmAct').outerHTML='<div class="fade-in" style="display:flex;flex-direction:column;gap:12px"><span class="lbl">Lösung</span><p class="answer-big">'+esc(correctText(q))+'</p>'+(q.info?'<p class="info">'+esc(q.info)+'</p>':'')+
+  $('#qmAct').outerHTML='<div class="fade-in" style="display:flex;flex-direction:column;gap:12px"><span class="lbl">Lösung</span><p class="answer-big">'+esc(correctText(q))+'</p>'+infoHTML(q)+
     (q.est?'<p class="lead">Als richtig gilt alles bis ±'+fmtN(q.tol,q)+'. Sonst bekommt, wer am nächsten dran war, die Punkte.</p>':'')+
     '<span class="lbl">'+(q.est?'Wer lag richtig oder am nächsten?':'Wer lag richtig?')+'</span><div class="who-grid">'+
     M.pl.map((p,i)=>'<button class="whob" data-act="qmWho" data-v="'+i+'"><span class="dot" style="background:'+p.c+'"></span><span>'+esc(p.n)+'</span></button>').join('')+'</div>'+
@@ -5040,7 +5059,8 @@ function oLobby(){
   page(topBar(O.host?'Dein Spiel':'Lobby','quit')+
     '<div class="codebox"><span class="lbl">Spiel-Code</span><b>'+esc(O.code)+'</b><span class="lead">'+(O.host?'Sag deinen Freunden diesen Code.':'Gastgeber: '+esc(O.hostName||''))+'</span></div>'+
     '<div class="card" id="oLobby"><span class="lbl">Dabei</span><div class="people" id="oPeople"></div></div>'+
-    (O.host?'<div class="card"><span class="lbl">Spielart</span>'+seg('onBz',[0,1],v=>v?'Buzzer':'Normal')+'<p class="lead" id="oBzHint">'+bzHint()+'</p>'+
+    (O.host?'<div class="card"><span class="lbl">Fragen</span>'+packChips('oPack',SET.onPack)+'</div>'+
+      '<div class="card"><span class="lbl">Spielart</span>'+seg('onBz',[0,1],v=>v?'Buzzer':'Normal')+'<p class="lead" id="oBzHint">'+bzHint()+'</p>'+
         '<span class="lbl">Länge</span>'+seg('onN',[5,10,15],v=>v+' Fragen')+'<span class="lbl">Schwierigkeit</span>'+seg('onD',[0,1,2,3],v=>DIFFN[v])+'</div>'+
       '<div class="card"><span class="lbl">Regeln</span>'+togHTML('onVote','Kategorie-Abstimmung','Alle 5 Fragen stimmen alle ab, aus welcher von drei Kategorien es weitergeht.')+'<div class="sep"></div>'+
         togHTML('onJoker','Joker','Jeder hat einmal 50:50 und einmal doppelte Punkte. Nicht im Buzzer-Modus.')+'<div class="sep"></div>'+
@@ -5066,10 +5086,15 @@ ACT.oStart=()=>{
   O.cfg={cats:SET.cats.slice(),dl:SET.onD||0,vote:!!SET.onVote,bz:!!SET.onBz};
   O.g={b:BUILD,n:SET.onN,sc,nm:O.g.nm||{},ep:O.g.ep,gid:qKey(),jk:SET.onJoker&&!SET.onBz?1:0,j2:{},tv:SET.onTV?1:0,bz:SET.onBz?1:0,ph:'lobby',i:0};
   sfx('start');
+  const pk=packGet(SET.onPack);if(packOk(pk)){O.cfg.vote=false;O.qs=packQs(pk);O.g.n=O.qs.length;return oAskQ(0)}
   if(O.cfg.vote)return oStartVote();
   O.qs=drawSet(SET.onN,O.cfg.cats,O.cfg.dl,oPred());oAskQ(0);
 };
-function oAskQ(i){const q=O.qs[i];O.bzWait=false;O.g=Object.assign(oBase(),{ph:'q',i,q:q.id,qk:qKey(),sd:Math.floor(R()*1e9),t:q.est?25:20});O.qp=oPlayers().map(p=>p.peer);oPush();oHostTimer()}
+/* Frage zur laufenden Runde: aus der Sammlung oder, bei eigenen Fragen, aus dem Spielstand */
+function oQ(g){g=g||O.g;if(!g)return null;if(g.cq){if(O.cqk!==g.cq){O.cqk=g.cq;let d={};try{d=JSON.parse(g.cq)}catch(_){}
+  O.cqo={id:typeof g.q==='number'?g.q:-1,c:'eigen',d:2,q:String(d.q||''),opts:(Array.isArray(d.o)?d.o:[]).map(String),info:String(d.i||''),custom:1}}return O.cqo}return Q[g.q]||null}
+function oAskQ(i){const q=O.qs[i];O.bzWait=false;O.g=Object.assign(oBase(),{ph:'q',i,q:q.id,qk:qKey(),sd:Math.floor(R()*1e9),t:q.est?25:20});
+  if(q.custom)O.g.cq=JSON.stringify({q:q.q,o:q.opts,i:q.info});O.qp=oPlayers().map(p=>p.peer);oPush();oHostTimer()}
 /* Zeitlimit: 3 s Countdown + Fragezeit + Puffer für langsame Verbindungen */
 function oHostTimer(){clearLater();const qk=O.g.qk,ms=(O.g.t+(O.g.bz?4:7))*1000;O.deadAt=performance.now()+ms;later(ms,()=>{if(O&&O.host&&O.g.ph==='q'&&O.g.qk===qk)(O.g.bz?oBzTimeUp():oHostReveal())})}
 
@@ -5115,10 +5140,10 @@ ACT.oVoteC=v=>{if(!O||O.g.ph!=='vote'||O.g.vote.w)return;O.myVote={id:O.g.vote.i
 
 /* ---------- Frage mit 3-2-1 vorweg ---------- */
 function oQuestion(){
-  const g=O.g,q=Q[g.q];if(!q)return;O.qi=g.i;O.ans=null;O.x2=false;O.shown='';O.t0=0;O.buzz=null;O.bzWin=null;O.bzOver=false;clearTimeout(O.bzT);
+  const g=O.g,q=oQ(g);if(!q)return;O.qi=g.i;O.ans=null;O.x2=false;O.shown='';O.t0=0;O.buzz=null;O.bzWin=null;O.bzOver=false;clearTimeout(O.bzT);
   if(O.gid!==g.gid){O.gid=g.gid;O.j50=false;O.j2=false;O.streakDone=false}
   if((g.j2||{})[O.me])O.j2=true;
-  SEEN.add(q.id);saveSeen();
+  if(q.id>=0){SEEN.add(q.id);saveSeen()}
   page(topBar('Frage '+(g.i+1)+' von '+g.n,'quit')+
     '<div id="qa" style="display:flex;flex-direction:column;gap:14px">'+qHead(q)+'<div class="timer"><i></i></div>'+
     (g.tv?'<p class="note">Die Frage steht auf dem Fernseher.</p>':'<p class="qtext">'+qtx(q)+'</p>')+
@@ -5130,12 +5155,12 @@ function oQuestion(){
 /* 3-2-1 vor jeder Frage, damit alle bereit sind */
 function oCountdown(g,q){
   O.cdPending=true;pzClear();$('#pzOv').hidden=false;$('#pzGo').hidden=true;
-  $('#pzLbl').textContent='Frage '+(g.i+1)+' von '+g.n;$('#pzTxt').textContent=CATS[q.c].n+' · '+DIFFN[q.d];
+  $('#pzLbl').textContent='Frage '+(g.i+1)+' von '+g.n;$('#pzTxt').textContent=catOf(q.c).n+(q.custom?'':' · '+DIFFN[q.d]);
   [3,2,1].forEach((n,k)=>PZT.push(setTimeout(()=>{$('#pzBig').textContent=String(n);sfx('tick')},k*1000)));
   PZT.push(setTimeout(oStartQ,3000));
 }
 function oStartQ(){
-  if(!O||!O.cdPending||O.g.ph!=='q')return;O.cdPending=false;pzHide();const q=Q[O.g.q];O.t0=performance.now();sfx('start');
+  if(!O||!O.cdPending||O.g.ph!=='q')return;O.cdPending=false;pzHide();const q=oQ();O.t0=performance.now();sfx('start');
   if(O.tv){startTimer(O.g.t,[$('#qa .timer')],()=>{});return}
   if(O.g.bz){startTimer(O.g.t,[$('#qa .timer')],()=>{if(O&&O.g.bz){O.bzOver=true;oBzUI()}});oBzUI();return}
   startTimer(O.g.t,[$('#qa .timer')],()=>{if(O&&O.ans==null)oSend(q.est?estVal($('#qa .est')):null)});
@@ -5143,7 +5168,7 @@ function oStartQ(){
 function jokerBar(q){if(!O.g.jk)return '';
   return '<div class="joker" id="oJk"><button data-act="oJ50"'+(O.j50||q.est?' disabled':'')+'>50:50'+(O.j50?' (verbraucht)':'')+'</button>'+
     '<button data-act="oJ2"'+(O.j2?' disabled':'')+'>×2 Punkte'+(O.j2?' (verbraucht)':'')+'</button></div>'}
-ACT.oJ50=(v,b)=>{const q=Q[O.g.q];if(!O||O.j50||O.ans||O.cdPending||q.est)return;O.j50=true;b.disabled=true;b.textContent='50:50 (verbraucht)';sfx('lock');
+ACT.oJ50=(v,b)=>{if(!O)return;const q=oQ();if(O.j50||O.ans||O.cdPending||q.est)return;O.j50=true;b.disabled=true;b.textContent='50:50 (verbraucht)';sfx('lock');
   const wrong=shuffle([...document.querySelectorAll('#qa .ans')].filter(el=>+el.dataset.v!==0));for(const el of wrong.slice(0,Math.max(0,wrong.length-1)))el.classList.add('gone')};
 ACT.oJ2=(v,b)=>{if(!O||O.j2||O.ans||O.cdPending)return;O.j2=true;O.x2=true;b.disabled=true;b.classList.add('on');b.textContent='×2 ist aktiv';sfx('lock')};
 
@@ -5198,7 +5223,7 @@ function oPauseUI(){
 
 /* ---------- Antworten ---------- */
 function oSend(v){
-  if(!O||O.tv||O.ans||O.cdPending||O.g.ph!=='q'||O.g.pz)return;const q=Q[O.g.q];
+  if(!O||O.tv||O.ans||O.cdPending||O.g.ph!=='q'||O.g.pz)return;const q=oQ();
   if(O.g.bz&&O.g.bo!==O.me)return;
   O.ans={i:O.g.i,k:O.g.qk,v,ms:Math.round(performance.now()-O.t0)};if(O.x2)O.ans.x2=1;if(O.g.bz){O.ans.w=O.g.bw;clearTimeout(O.bzT)}O.rm.presence({a:O.ans}).catch(()=>{});
   const root=$('#qa');if(root){
@@ -5230,7 +5255,7 @@ function oScore(q,a,t){
 }
 function oHostReveal(){
   if(!O||!O.host||O.g.ph!=='q'||O.g.pz)return;clearLater();stopTimer();
-  const g=O.g,q=Q[g.q],gain={},pick={},dbl={},j2=Object.assign({},g.j2||{});
+  const g=O.g,q=oQ(g),gain={},pick={},dbl={},j2=Object.assign({},g.j2||{});
   for(const p of O.peers.filter(p=>p.kind==='viewer'&&p.presence&&(p.presence.k==='p'||p.presence.k==='h'))){
     const a=p.sameTab?O.ans:(p.presence.a&&p.presence.a.i===g.i&&p.presence.a.k===g.qk?p.presence.a:null);let pts=oScore(q,a,g.t);
     if(a&&a.x2&&g.jk&&!j2[p.peer]){j2[p.peer]=1;dbl[p.peer]=1;pts*=2}
@@ -5247,7 +5272,7 @@ ACT.oNext=()=>{
 };
 function oList(withGain){const g=O.g;return Object.keys(g.sc||{}).map(k=>({k,n:(g.nm&&g.nm[k])||'Gast',c:oColor(k),s:g.sc[k]||0,plus:withGain&&g.gain?g.gain[k]||0:0}))}
 function oReveal(){
-  const g=O.g,q=Q[g.q];if(!q)return;
+  const g=O.g,q=oQ(g);if(!q)return;
   if(O.qi!==g.i)oQuestion();
   O.cdPending=false;pzHide();O.shown='r'+g.i;stopTimer();
   const root=$('#qa');if(!root)return;const mine=g.gain?g.gain[O.me]||0:0;const ok=mine>0,x2=!!(g.dbl&&g.dbl[O.me]);clearTimeout(O.bzT);
@@ -5259,7 +5284,7 @@ function oReveal(){
     for(const el of root.querySelectorAll('.ans')){const c=cnt[+el.dataset.v]||0;if(c)el.insertAdjacentHTML('beforeend','<span style="margin-left:auto;font-family:var(--f-disp);font-weight:900;font-size:20px">'+c+'×</span>')}}
   ok?sfx('ok'):sfx('bad');vib(ok?30:60);
   root.insertAdjacentHTML('beforeend','<div class="fade-in" style="display:flex;flex-direction:column;gap:12px"><p class="verdict '+(ok?'ok':'bad')+'">'+(ok?'+'+mine+' Punkte'+(x2?' (×2)':''):g.bz?(mine<0?'−'+(-mine)+' Punkte':g.bwn?esc(g.nm[g.bwn]||'Jemand')+' war schneller':'Keine Punkte'):my==null&&!q.est?'Keine Antwort':'Daneben')+'</p>'+
-    (!ok&&!q.est?'<p class="lead">Richtig ist: '+esc(correctText(q))+'</p>':'')+(q.info?'<p class="info">'+esc(q.info)+'</p>':'')+reactBar()+
+    (!ok&&!q.est?'<p class="lead">Richtig ist: '+esc(correctText(q))+'</p>':'')+infoHTML(q)+reactBar()+
     '<span class="lbl">Zwischenstand</span>'+tableHTML(oList(true),O.me)+
     (O.host?'<button class="btn" data-act="oNext">'+(g.i+1>=g.n?'Zum Endstand':'Nächste Frage')+'</button><p class="lead" style="text-align:center">Geht in ein paar Sekunden von selbst weiter.</p>':'<p class="lead" style="text-align:center">Gleich kommt die nächste Frage.</p>')+'</div>');
 }
@@ -5322,7 +5347,7 @@ function oBzUI(){
   const g=O.g;if(!g||!g.bz||g.ph!=='q')return;const box=$('#oBzBox');if(!box)return;
   const bl=g.bl||{},bp=g.bp||{},me=O.me,mine=!O.tv&&!!g.bo&&g.bo===me,out=!O.tv&&!!bl[me],pressed=!!(O.buzz&&O.buzz.k===g.qk);
   /* falsch getippte Antworten für alle durchstreichen */
-  const wrong=Object.values(bp);for(const el of document.querySelectorAll('#qa .ans'))el.classList.toggle('bad',wrong.includes(+el.dataset.v));
+  const wrong=Object.values(bp);for(const el of document.querySelectorAll('#qa .ans')){const x=wrong.includes(+el.dataset.v);el.classList.toggle('bad',x);el.classList.toggle('xout',x)}
   const ans=$('#qa .answers');if(ans&&!O.tv){const open=mine&&!O.ans;ans.classList.toggle('lock',!open);ans.classList.toggle('wait',!open&&!O.ans)}
   if(mine&&!O.ans&&O.bzWin!==g.bw){O.bzWin=g.bw;sfx('reveal');vib(80);clearTimeout(O.bzT);const bw=g.bw;
     O.bzT=setTimeout(()=>{if(O&&O.g.ph==='q'&&O.g.bo===me&&O.g.bw===bw&&!O.ans)oSend(null)},BZ_WIN*1000)}
@@ -5364,17 +5389,17 @@ function tvVoteRefresh(){const v=O.g.vote;if(!v||!$('#oVoteGrid'))return;const l
   for(const b of document.querySelectorAll('#oVoteGrid .catbtn')){const c=b.dataset.v,n=cnt[c]||0;b.classList.toggle('win',v.w===c);b.classList.toggle('lose',!!v.w&&v.w!==c);b.querySelector('.vc').textContent=n+(n===1?' Stimme':' Stimmen')}
   $('#oVoteStat').innerHTML=oPlayers().map(p=>{const x=p.presence.vt;return '<span class="person'+(x&&x.id===v.id?' done':'')+'"><span class="dot" style="background:'+oColor(p.peer)+'"></span>'+esc(pName(p))+'</span>'}).join('');
   if(v.w&&O.voteSnd!==v.id){O.voteSnd=v.id;stopTimer();sfx('reveal')}}
-function tvQuestion(){const g=O.g,q=Q[g.q];if(!q)return;O.qi=g.i;O.shown='';O.t0=0;O.bzOver=false;
+function tvQuestion(){const g=O.g,q=oQ(g);if(!q)return;O.qi=g.i;O.shown='';O.t0=0;O.bzOver=false;
   page(tvTop('Frage '+(g.i+1)+' von '+g.n)+'<div class="tvgrid"><div id="qa" class="tvq">'+qHead(q)+'<p class="qtext">'+qtx(q)+'</p><div class="timer"><i></i></div>'+
     (q.est?'<div class="tvest"><span>'+fmtN(q.lo,q)+'</span><b>Schätzen am Handy'+(q.u&&q.u!=='Jahr'?' · '+esc(q.u):'')+'</b><span>'+fmtN(q.hi,q)+'</span></div>'
       :'<div class="answers tvk tvans">'+optOrder(q,rng(g.sd)).map((oi,k)=>'<div class="ans" data-v="'+oi+'"><span class="k">'+'ABCD'[k]+'</span><span>'+esc(q.opts[oi])+'</span></div>').join('')+'</div>')+
     '</div><div class="tvside" id="tvSide">'+(g.bz?'<div id="oBzBox"></div>':'')+'<div id="oStat" class="people"></div></div></div>');
   oAnswered();oCountdown(g,q)}
-function tvReveal(){const g=O.g,q=Q[g.q];if(!q)return;if(O.qi!==g.i)tvQuestion();O.cdPending=false;pzHide();O.shown='r'+g.i;stopTimer();
+function tvReveal(){const g=O.g,q=oQ(g);if(!q)return;if(O.qi!==g.i)tvQuestion();O.cdPending=false;pzHide();O.shown='r'+g.i;stopTimer();
   const root=$('#qa'),side=$('#tvSide');if(!root||!side)return;const tm=root.querySelector('.timer');if(tm)tm.remove();
   if(q.est){const e=root.querySelector('.tvest');if(e)e.outerHTML='<div class="tvest ok"><b>Richtig: '+esc(correctText(q))+'</b></div>'}
   else{const cnt={};for(const k in (g.pick||{}))cnt[g.pick[k]]=(cnt[g.pick[k]]||0)+1;
-    for(const el of root.querySelectorAll('.ans')){const v=+el.dataset.v;el.classList.remove('bad');el.classList.add(v===0?'ok':'dim');if(cnt[v])el.insertAdjacentHTML('beforeend','<span class="cnt">'+cnt[v]+'×</span>')}}
+    for(const el of root.querySelectorAll('.ans')){const v=+el.dataset.v;el.classList.remove('bad','xout');el.classList.add(v===0?'ok':'dim');if(cnt[v])el.insertAdjacentHTML('beforeend','<span class="cnt">'+cnt[v]+'×</span>')}}
   const win=g.bz&&g.bwn?g.nm[g.bwn]||'Jemand':'';sfx('reveal');
   side.innerHTML='<div class="fade-in" style="display:flex;flex-direction:column;gap:14px">'+(g.bz?'<p class="verdict '+(win?'ok':'bad')+'">'+(win?esc(win)+' hat es gewusst!':'Niemand hatte es richtig.')+'</p>':'')+
     (q.info?'<p class="info">'+esc(q.info)+'</p>':'')+'<span class="lbl">Zwischenstand</span>'+tableHTML(oList(true),null)+'</div>'}
@@ -5385,6 +5410,121 @@ function floatEmoji(e,who){
   const d=document.createElement('div');d.className='fly';d.style.left=(8+Math.random()*76)+'%';
   d.innerHTML='<b>'+e+'</b><small>'+esc(who)+'</small>';document.body.appendChild(d);setTimeout(()=>d.remove(),2700);
 }
+/* ==========================================================================
+   EIGENE FRAGEN: Pakete mit selbst geschriebenen Fragen, für Online und Quizmaster.
+   Gespeichert auf dem Gerät und mit Konto auf allen Geräten.
+   ========================================================================== */
+let PACKS=ST.get('packs',[]);if(!Array.isArray(PACKS))PACKS=[];
+const PK_MAX=50;
+function packsSave(){ST.set('packs',PACKS);syncPush()}
+function packGet(id){return id?PACKS.find(p=>p.id===id)||null:null}
+function packOk(pk){return !!(pk&&Array.isArray(pk.qs)&&pk.qs.length)}
+function packQs(pk){return shuffle(pk.qs.slice(0,PK_MAX).map((x,k)=>({id:-1-k,c:'eigen',d:2,q:String(x.q),opts:x.a.map(String),info:String(x.i||''),custom:1})))}
+/* Cloud-Stand übernehmen, aber Pakete behalten, die hier nach dem Cloud-Stand geändert wurden */
+function packsMerge(json,t){try{const ps=JSON.parse(json);if(!Array.isArray(ps))return;
+  const mine=PACKS.filter(p=>(p.t||0)>t);PACKS=ps.filter(x=>!mine.some(p=>p.id===x.id)).concat(mine);ST.set('packs',PACKS)}catch(_){}}
+function packChips(act,cur){const ok=PACKS.filter(packOk);
+  if(!ok.length)return '<p class="lead" style="font-size:14px">Unsere Fragensammlung. Eigene Fragen schreibst du im Hauptmenü unter „Eigene Fragen“.</p>';
+  const sel=packOk(packGet(cur))?cur:'';
+  return '<div class="chips">'+[['','Unsere Fragensammlung']].concat(ok.map(p=>[p.id,p.n+' · '+p.qs.length])).map(([v,n])=>'<button class="chip'+(v===sel?' on':'')+'" style="--c:var(--lampe)" data-act="'+act+'" data-v="'+esc(v)+'">'+esc(n)+'</button>').join('')+'</div>'+
+    '<p class="lead" style="font-size:14px">Bei einem eigenen Paket kommen alle seine Fragen dran, gemischt.</p>'}
+ACT.oPack=(v,b)=>{SET.onPack=v||'';saveSet();for(const x of b.parentNode.children)x.classList.toggle('on',x===b)};
+ACT.qmPack=(v,b)=>{SET.qmPack=v||'';saveSet();for(const x of b.parentNode.children)x.classList.toggle('on',x===b)};
+ACT.packs=()=>packsPage();
+function packsPage(){
+  page(topBar('Eigene Fragen')+'<h2>Eigene Fragen</h2><p class="lead">Schreib eure eigenen Fragen, zum Beispiel über euch selbst: „Wo waren wir zum ersten Mal zusammen im Urlaub?“ Spielen kannst du sie online als Gastgeber oder im Quizmaster-Modus.</p>'+
+    (PACKS.length?'<div class="hist">'+PACKS.map(p=>'<div class="hrow"><span class="d">'+p.qs.length+'</span><span class="w"><b>'+esc(p.n)+'</b><small>'+(p.qs.length?esc(p.qs[0].q):'Noch keine Fragen')+'</small></span><button class="btn small ghost" data-act="pkOpen" data-v="'+esc(p.id)+'">Öffnen</button></div>').join('')+'</div>'
+      :'<p class="note">Noch kein Paket da. Leg unten eins an.</p>')+
+    '<div class="card"><span class="lbl">Neues Paket</span><input class="inp" id="pkName" maxlength="30" placeholder="z. B. Familie, Urlaub 2026, Büro"><button class="btn" data-act="pkNew">Anlegen</button></div>'+
+    (ACC?'':'<p class="note">Mit Konto werden deine Pakete auf allen deinen Geräten gespeichert.</p>'));
+}
+ACT.pkNew=()=>{if(PACKS.length>=20)return toast('Mehr als 20 Pakete gehen nicht.');const n=($('#pkName').value||'').trim().slice(0,30)||'Mein Paket';
+  const p={id:qKey()+qKey(),n,qs:[],t:Date.now()};PACKS.push(p);packsSave();sfx('tap');pkPage(p.id)};
+ACT.pkOpen=v=>pkPage(v);
+let PK=null;
+function pkPage(id,ei){const p=packGet(id);if(!p)return packsPage();PK={id,e:ei==null?-1:ei};const e=PK.e>=0?p.qs[PK.e]:null;
+  page(topBar('Paket','packs')+
+    '<div class="card"><span class="lbl">Name des Pakets</span><div class="row"><input class="inp" id="pkN" maxlength="30" value="'+esc(p.n)+'"><button class="btn small ghost" data-act="pkRename" style="flex:0 0 auto">Speichern</button></div></div>'+
+    '<span class="lbl">'+p.qs.length+(p.qs.length===1?' Frage':' Fragen')+' · höchstens '+PK_MAX+'</span>'+
+    (p.qs.length?'<div class="hist">'+p.qs.map((x,k)=>'<div class="hrow"><span class="d">'+(k+1)+'</span><span class="w"><b>'+esc(x.q)+'</b><small>✓ '+esc(x.a[0])+' · ✗ '+x.a.slice(1).map(esc).join(' · ')+'</small></span>'+
+      '<span class="pkb"><button class="icon-btn" data-act="pkEdit" data-v="'+k+'" aria-label="Frage ändern">✎</button><button class="icon-btn" data-act="pkDelQ" data-v="'+k+'" aria-label="Frage löschen">✕</button></span></div>').join('')+'</div>':'')+
+    '<div class="card" id="pkForm"><span class="lbl">'+(e?'Frage '+(PK.e+1)+' ändern':'Neue Frage')+'</span>'+
+      '<textarea class="inp" id="pkQ" maxlength="150" rows="2" placeholder="Frage">'+esc(e?e.q:'')+'</textarea>'+
+      '<input class="inp ok" id="pkA0" maxlength="60" placeholder="Richtige Antwort" value="'+esc(e?e.a[0]:'')+'">'+
+      [1,2,3].map(i=>'<input class="inp" id="pkA'+i+'" maxlength="60" placeholder="Falsche Antwort'+(i>1?' (freiwillig)':'')+'" value="'+esc(e&&e.a[i]||'')+'">').join('')+
+      '<input class="inp" id="pkI" maxlength="200" placeholder="Info nach dem Auflösen (freiwillig)" value="'+esc(e&&e.i||'')+'">'+
+      '<button class="btn" data-act="pkSaveQ">'+(e?'Änderung speichern':'Frage hinzufügen')+'</button>'+(e?'<button class="btn ghost small" data-act="pkCancel">Abbrechen</button>':'')+'</div>'+
+    '<p class="lead" style="font-size:14px">Spielen: Online als Gastgeber in der Lobby oder beim Quizmaster unter „Woher kommen die Fragen?“ das Paket wählen.</p>'+
+    '<button class="btn ghost small" data-act="pkDel">Ganzes Paket löschen</button>');
+}
+function sure(b,msg){if(b.dataset.sure==='1')return true;b.dataset.sure='1';toast(msg);setTimeout(()=>{b.dataset.sure=''},2500);return false}
+ACT.pkRename=()=>{const p=packGet(PK&&PK.id);if(!p)return;p.n=($('#pkN').value||'').trim().slice(0,30)||p.n;p.t=Date.now();packsSave();toast('Name gespeichert.')};
+ACT.pkEdit=v=>{pkPage(PK.id,+v);const f=$('#pkForm');if(f)f.scrollIntoView({behavior:'smooth',block:'start'})};
+ACT.pkCancel=()=>pkPage(PK.id);
+ACT.pkDelQ=(v,b)=>{const p=packGet(PK&&PK.id);if(!p||!sure(b,'Nochmal tippen, um die Frage zu löschen.'))return;p.qs.splice(+v,1);p.t=Date.now();packsSave();pkPage(p.id)};
+ACT.pkDel=(v,b)=>{const p=packGet(PK&&PK.id);if(!p||!sure(b,'Nochmal tippen, um das ganze Paket zu löschen.'))return;PACKS=PACKS.filter(x=>x!==p);packsSave();toast('Paket gelöscht.');packsPage()};
+ACT.pkSaveQ=()=>{const p=packGet(PK&&PK.id);if(!p)return;
+  const q=($('#pkQ').value||'').trim().replace(/\s+/g,' '),a=[0,1,2,3].map(i=>($('#pkA'+i).value||'').trim().replace(/\s+/g,' ')).filter((x,i)=>x||i===0),info=($('#pkI').value||'').trim();
+  if(!q)return toast('Schreib zuerst die Frage.');if(!a[0])return toast('Die richtige Antwort fehlt.');if(a.length<2)return toast('Mindestens eine falsche Antwort braucht es.');
+  if(new Set(a.map(x=>x.toLowerCase())).size!==a.length)return toast('Zwei Antworten sind gleich.');
+  if(PK.e<0&&p.qs.length>=PK_MAX)return toast('Ein Paket hat höchstens '+PK_MAX+' Fragen.');
+  const x={q:q.slice(0,150),a:a.map(s=>s.slice(0,60))};if(info)x.i=info.slice(0,200);
+  if(PK.e>=0)p.qs[PK.e]=x;else p.qs.push(x);p.t=Date.now();packsSave();sfx('ok');toast(PK.e>=0?'Frage geändert.':'Frage hinzugefügt.');pkPage(p.id)};
+
+/* ==========================================================================
+   FRAGE MELDEN: bei jeder Auflösung. Mit Konto für alle sichtbar (reports/), sonst auf dem Gerät.
+   ========================================================================== */
+const REP_WHY=['Antwort falsch','Mehrere Antworten richtig','Frage unklar','Tippfehler','Sonstiges'];
+function repLink(q){return q&&q.id>=0&&!q.custom?'<button class="replink" data-act="rep" data-v="'+q.id+'">⚑ Frage melden</button>':''}
+function infoHTML(q){return (q.info?'<p class="info">'+esc(q.info)+'</p>':'')+repLink(q)}
+function qPlain(q){return String(q&&q.q||'').replace(/\{F:(\w+)\}$/,' [Flagge: $1]').replace(/\{E:([^}]+)\}$/,' $1')}
+let REP=null,REPL=[];
+ACT.rep=v=>{const q=Q[+v];if(!q)return;ACT.repX();REP={q:q.id,why:''};const ov=document.createElement('div');ov.id='repOv';
+  ov.innerHTML='<div class="sheetc" role="dialog" aria-label="Frage melden"><span class="lbl">Frage melden</span><p class="qtext" style="font-size:18px">'+qtx(q)+'</p>'+
+    '<p class="lead" style="font-size:14px">Richtig laut Spiel: <b>'+esc(correctText(q))+'</b></p>'+
+    '<div class="chips">'+REP_WHY.map(w=>'<button class="chip" style="--c:var(--bad)" data-act="repWhy" data-v="'+w+'">'+w+'</button>').join('')+'</div>'+
+    '<textarea class="inp" id="repTxt" maxlength="300" rows="3" placeholder="Was stimmt nicht, was wäre richtig? (freiwillig)"></textarea>'+
+    '<div class="row"><button class="btn ghost small" style="flex:1" data-act="repX">Abbrechen</button><button class="btn small" style="flex:1" data-act="repGo">Melden</button></div></div>';
+  document.body.appendChild(ov)};
+ACT.repWhy=(v,b)=>{if(!REP)return;REP.why=v;for(const x of b.parentNode.children)x.classList.toggle('on',x===b)};
+ACT.repX=()=>{const o=$('#repOv');if(o)o.remove();REP=null};
+ACT.repGo=async()=>{
+  if(!REP)return;if(!REP.why)return toast('Wähl kurz einen Grund aus.');const q=Q[REP.q];if(!q)return ACT.repX();
+  const r={q:q.id,t:String(q.q).slice(0,400),a:String(correctText(q)).slice(0,200),r:REP.why,ts:Date.now(),b:BUILD,n:String(ACC?ACC.name:(SET.nick||'')).slice(0,20)};
+  const m=($('#repTxt').value||'').trim().slice(0,300);if(m)r.m=m;ACT.repX();
+  const item=Object.assign({id:qKey(),sent:false},r);
+  if(ACC&&FBA){try{const ref=FBA.db.ref('reports').push();await withTimeout(ref.set(Object.assign({u:ACC.uid},r)),8000);item.sent=true;item.key=ref.key}catch(_){}}
+  const loc=ST.get('reports',[]);loc.unshift(item);ST.set('reports',loc.slice(0,100));
+  toast(item.sent?'Danke! Die Meldung ist gespeichert.':'Danke! Die Meldung ist auf diesem Gerät gespeichert.',3200)};
+ACT.reps=()=>repsPage();
+async function repsPage(){
+  page(topBar('Gemeldete Fragen')+'<h2>Gemeldete Fragen</h2><p class="lead">Hier landet alles, was ihr bei der Auflösung über „⚑ Frage melden“ geschickt habt. Mit „Kopieren“ bekommst du eine Liste, die du Claude im Chat schicken kannst, damit die Fragen korrigiert werden.</p><div id="repBox"><p class="note">Wird geladen …</p></div>');
+  let list=ST.get('reports',[]).slice();
+  if(ACC_OK&&ST.get('acct',0)){try{await withTimeout(fbBase(),12000)}catch(_){}}
+  if(ACC&&FBA){try{const v=(await withTimeout(FBA.db.ref('reports').get(),10000)).val()||{};const have=new Set(list.map(x=>x.key).filter(Boolean));
+    for(const k in v)if(v[k]&&!have.has(k))list.push(Object.assign({key:k,sent:true},v[k]))}catch(_){}}
+  REPL=list.filter(x=>x&&typeof x.q==='number').sort((a,b)=>(b.ts||0)-(a.ts||0));repsDraw();
+}
+/* erledigt = Frage oder Lösung hat sich seit der Meldung geändert */
+function repDone(x){const q=Q[x.q];return !q||String(q.q)!==x.t||String(correctText(q))!==x.a}
+function repsDraw(){const b=$('#repBox');if(!b)return;
+  if(!REPL.length){b.innerHTML='<p class="note">Noch keine Meldungen.</p>';return}
+  const open=REPL.filter(x=>!repDone(x)).length;
+  b.innerHTML='<div style="display:flex;flex-direction:column;gap:10px">'+(open?'<button class="btn" data-act="repCopy">'+(open===1?'Die offene Meldung':'Alle '+open+' offenen')+' kopieren</button>':'<p class="note">Alles schon überarbeitet.</p>')+
+    REPL.map((x,i)=>{const q=Q[x.q],done=repDone(x);return '<div class="card'+(done?' done':'')+'"><span class="lbl">'+esc(x.r)+(done?' · schon überarbeitet':'')+(x.sent?'':' · nur auf diesem Gerät')+'</span>'+
+      '<p style="margin:0;font-weight:700">'+esc(qPlain(q||{q:x.t}))+'</p><p class="lead" style="font-size:14px">Richtig laut Spiel: '+esc(x.a)+(x.m?'<br>„'+esc(x.m)+'“':'')+'<br>'+esc(x.n||'Jemand')+' · '+new Date(x.ts||0).toLocaleDateString('de-DE')+'</p>'+
+      '<button class="btn ghost small" data-act="repDel" data-v="'+i+'">Löschen</button></div>'}).join('')+'</div>'}
+function repText(){const L=REPL.filter(x=>!repDone(x));
+  return 'Quiz Abend: gemeldete Fragen (Version '+BUILD+')\n\n'+L.map((x,i)=>{const q=Q[x.q];
+    return (i+1)+') Frage #'+x.q+(q?' ('+catOf(q.c).n+', Stufe '+q.d+')':'')+': '+qPlain(q||{q:x.t})+'\n   Richtig laut Spiel: '+x.a+(q&&q.opts?' · Andere Antworten: '+q.opts.slice(1).join(', '):'')+
+      '\n   Grund: '+x.r+(x.m?' · „'+x.m+'“':'')+' · '+(x.n||'Jemand')+', '+new Date(x.ts||0).toLocaleDateString('de-DE')}).join('\n\n')}
+ACT.repCopy=async()=>{const t=repText();
+  try{await navigator.clipboard.writeText(t);toast('Kopiert. Füge die Liste im Chat mit Claude ein.',3500)}
+  catch(_){const old=$('#repCopyTxt');if(old)old.remove();const ta=document.createElement('textarea');ta.id='repCopyTxt';ta.className='inp';ta.rows=8;ta.value=t;$('#repBox').prepend(ta);ta.focus();ta.select();toast('Text ist markiert, jetzt kopieren.',3000)}};
+ACT.repDel=async(v,b)=>{const x=REPL[+v];if(!x||!sure(b,'Nochmal tippen, um die Meldung zu löschen.'))return;
+  if(x.key&&ACC&&FBA){try{await withTimeout(FBA.db.ref('reports/'+x.key).remove(),8000)}catch(_){}}
+  ST.set('reports',ST.get('reports',[]).filter(y=>!(x.key&&y.key===x.key)&&!(x.id&&y.id===x.id)));REPL.splice(+v,1);repsDraw()};
+
 /* ==========================================================================
    KONTO: Anmeldung mit E-Mail und Passwort (Firebase). Pflicht nur für Online.
    Gespeichert werden Statistik, Verlauf, Rangliste und Einstellungen für alle Geräte.
@@ -5554,14 +5694,15 @@ async function syncPull(){
   if(!ACC||!FBA)return;
   try{
     const v=(await FBA.db.ref('users/'+ACC.uid+'/sync').get()).val();
-    if(v&&v.set&&(v.t||0)>ST.get('synct',0)){try{const o=JSON.parse(v.set);for(const k in o)if(k in SET)SET[k]=o[k];catsMig(o);ST.set('set',SET)}catch(_){}}
+    if(v&&v.set&&(v.t||0)>ST.get('synct',0)){try{const o=JSON.parse(v.set);for(const k in o)if(k in SET)SET[k]=o[k];catsMig(o);ST.set('set',SET)}catch(_){}
+      if(v.packs)packsMerge(v.packs,v.t||0)}
     if(v&&v.seen){for(const id of seenDecode(v.seen))if(id<Q.length)SEEN.add(id);ST.set('seen',[...SEEN])}
     soundIcon();homeInfo();syncPush(true);
   }catch(_){}
 }
 function syncPush(now){
   if(!ACC||!FBA)return;clearTimeout(syncPush.t);
-  syncPush.t=setTimeout(()=>{const t=Date.now();ST.set('synct',t);FBA.db.ref('users/'+ACC.uid+'/sync').set({t,set:JSON.stringify(SET),seen:seenEncode()}).catch(()=>{})},now?0:4000);
+  syncPush.t=setTimeout(()=>{const t=Date.now();ST.set('synct',t);FBA.db.ref('users/'+ACC.uid+'/sync').set({t,set:JSON.stringify(SET),seen:seenEncode(),packs:JSON.stringify(PACKS)}).catch(()=>{})},now?0:4000);
 }
 
 /* ==========================================================================
