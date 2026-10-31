@@ -237,6 +237,7 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:18px;margin:0;color:var(-
 .trow .nm .dot{width:11px;height:11px;border-radius:50%;flex:none}
 .trow .pt{font-family:var(--f-disp);font-weight:800;font-size:24px;color:var(--lampe);font-variant-numeric:tabular-nums}
 .trow .plus{font-size:13px;font-weight:700;color:var(--ok);margin-right:6px}
+.trow .plus.neg{color:var(--bad)}
 .trow.me{border-color:var(--lampe)}
 .podium{display:grid;grid-template-columns:1fr 1fr 1fr;align-items:end;gap:8px;padding-top:10px}
 .pod{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;min-width:0}
@@ -326,6 +327,79 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:18px;margin:0;color:var(-
 @keyframes fin{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition:none!important}}
 @media (min-height:760px){.half .ans{min-height:60px}}
+
+/* Bilderfragen: Flaggen und Emojis */
+.qpic{display:flex;justify-content:center;margin-top:12px}
+.qpic .flag{display:block;width:min(64vw,280px);height:auto;max-height:28vh;filter:drop-shadow(0 0 1px rgba(255,255,255,.45)) drop-shadow(0 8px 16px rgba(0,0,0,.4))}
+.qemo{font-size:clamp(46px,13vw,76px);line-height:1.15;letter-spacing:.06em;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",var(--f-body);text-align:center}
+.half .qpic{margin-top:6px}.half .qpic .flag{width:min(42vw,180px);max-height:14vh}.half .qemo{font-size:clamp(34px,9vw,52px)}
+
+/* Buzzer */
+.buzz{display:grid;place-items:center;width:min(48vw,190px);aspect-ratio:1;margin:4px auto 0;border-radius:50%;background:radial-gradient(circle at 50% 35%,#ff8a7e,var(--bad) 60%,var(--bad2));color:#fff;
+  font-family:var(--f-disp);font-weight:800;font-size:clamp(28px,8vw,40px);letter-spacing:.02em;box-shadow:0 10px 0 #7a221a,0 16px 30px rgba(0,0,0,.4);text-transform:uppercase}
+.buzz:active{transform:translateY(7px);box-shadow:0 3px 0 #7a221a,0 8px 18px rgba(0,0,0,.4)}
+.buzz[disabled]{opacity:.35;pointer-events:none}
+.buzz.pressed{opacity:1;background:radial-gradient(circle at 50% 35%,#ffe2a0,var(--lampe) 60%,var(--lampe3));color:#2a1a00;box-shadow:0 3px 0 #6b4a10;transform:translateY(7px)}
+.answers.wait .ans{opacity:.55}
+.ans.bad{text-decoration:line-through}
+.bzmsg{margin:0;text-align:center;font-weight:700;font-size:17px;color:var(--text2)}
+.bzmsg.me{color:var(--lampe);font-family:var(--f-disp);font-weight:800;font-size:24px}
+.timer.bzt{margin-top:8px}.timer.bzt i{background:var(--bad);animation:bzt linear forwards}
+@keyframes bzt{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.person.on{border-color:var(--lampe);background:color-mix(in srgb,var(--lampe) 22%,transparent)}
+.person.out{opacity:.45}
+
+/* farbige Buchstaben im Fernseher-Modus, gleich auf Handy und Bildschirm */
+.answers.tvk .ans:nth-child(1) .k{background:#ff5b4f;color:#1a1010}
+.answers.tvk .ans:nth-child(2) .k{background:#4aa8ff;color:#0d1a2a}
+.answers.tvk .ans:nth-child(3) .k{background:#ffd447;color:#2a2005}
+.answers.tvk .ans:nth-child(4) .k{background:#5fe08a;color:#0b2414}
+
+/* Fernseher: großer Bildschirm */
+.tvm .wrap{max-width:1700px}
+.tvm .scr{padding-left:max(24px,3vw);padding-right:max(24px,3vw)}
+.tvm .bar h3{font-size:clamp(18px,1.8vw,32px)}
+.tvcode{font-size:clamp(15px,1.4vw,26px);color:var(--text2);white-space:nowrap}
+.tvcode b{color:var(--lampe);letter-spacing:.14em;font-family:var(--f-disp)}
+.tvm h2{font-size:clamp(30px,3.2vw,60px)}
+.tvm .lead{font-size:clamp(15px,1.3vw,24px)}
+.tvm .lbl{font-size:clamp(12px,.95vw,18px)}
+.tvgrid{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);gap:max(20px,3vw);align-items:start}
+.tvq{display:flex;flex-direction:column;gap:max(14px,1.6vw)}
+.tvside{display:flex;flex-direction:column;gap:14px}
+.tvm .qtext{font-size:clamp(26px,3.3vw,62px);line-height:1.15}
+.tvm .qpic .flag{width:min(34vw,560px);max-height:36vh}
+.tvm .qemo{font-size:clamp(64px,8vw,150px)}
+.tvm .timer{height:clamp(8px,1.1vh,16px)}
+.tvans{grid-template-columns:1fr 1fr;gap:max(10px,1.2vw)}
+.tvans .ans{min-height:clamp(64px,10vh,130px);font-size:clamp(18px,2vw,38px);padding:.5em .8em;gap:.6em;box-shadow:none}
+.tvans .ans .k{width:clamp(30px,3vw,56px);height:clamp(30px,3vw,56px);font-size:clamp(17px,1.7vw,32px)}
+.tvans .cnt{margin-left:auto;font-family:var(--f-disp);font-weight:900;font-size:clamp(20px,2vw,40px)}
+.tvest{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:max(14px,1.4vw) max(16px,2vw);border-radius:16px;background:rgba(11,15,37,.72);border:1.5px solid var(--linie);font-size:clamp(18px,1.8vw,34px)}
+.tvest.ok{border-color:var(--ok);color:var(--ok);justify-content:center}
+.tvm .person{font-size:clamp(15px,1.4vw,26px);padding:.4em .9em}
+.tvm .person .dot{width:.7em;height:.7em}
+.tvm .trow{padding:max(9px,.8vw) max(12px,1vw)}
+.tvm .trow .nm{font-size:clamp(17px,1.6vw,30px)}
+.tvm .trow .pt{font-size:clamp(22px,2.1vw,40px)}
+.tvm .trow .plus{font-size:clamp(13px,1.1vw,20px)}
+.tvm .trow .pl{font-size:clamp(20px,1.7vw,32px)}
+.tvm .verdict{font-size:clamp(30px,3vw,58px)}
+.tvm .info{font-size:clamp(15px,1.35vw,26px)}
+.tvm .bzmsg{font-family:var(--f-disp);font-weight:800;font-size:clamp(24px,2.6vw,48px);color:var(--lampe)}
+.tvm #pzBig{font-size:clamp(120px,22vw,320px)}
+.tvm #pzOv .pzc{max-width:900px}
+.tvm .fly b{font-size:clamp(46px,5vw,96px)}
+.tvlobby{display:grid;grid-template-columns:1fr 1fr;gap:max(20px,3vw);align-items:center;flex:1}
+.tvbig{padding:max(20px,3vw)}
+.tvbig b{font-size:clamp(64px,10vw,200px)}
+.tvvote{display:grid;grid-template-columns:repeat(3,1fr);gap:max(10px,2vw)}
+.tvvote .catbtn{min-height:16vh;font-size:clamp(20px,2.2vw,42px);pointer-events:none}
+.tvm .podium .pod .nm{font-size:clamp(15px,1.6vw,30px)}
+.tvm .pod .blk b{font-size:clamp(32px,4vw,76px)}.tvm .pod .blk small{font-size:clamp(15px,1.6vw,30px)}
+.tvm .pod.p1 .blk{height:36vh}.tvm .pod.p2 .blk{height:27vh}.tvm .pod.p3 .blk{height:20vh}
+.tvm .hand .big{font-size:clamp(60px,7vw,140px)}
+@media (max-width:820px){.tvgrid,.tvlobby{grid-template-columns:1fr}.tvvote{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -366,7 +440,7 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:18px;margin:0;color:var(-
 
 <script>
 'use strict';
-const BUILD='2026-10-31-9';
+const BUILD='2026-10-31-10';
 /* ==========================================================================
    FRAGEN
    Multiple Choice: [Kategorie, Stufe 1–3, Frage, RICHTIG, falsch, falsch, falsch, Info]
@@ -3956,6 +4030,210 @@ for(const r of [
 ['essen',1,'Welche Zutat lässt Brotteig aufgehen?','Hefe','Salz','Essig','Zucker','Auch Sauerteig oder Backpulver lockern Teig auf.'],
 ['essen',1,'Welches Obst ist gelb, krumm und kommt oft aus Südamerika?','Banane','Zitrone','Mango','Ananas','Bananen wachsen an Stauden, nicht an Bäumen.'],
 ]){if(!SEEN_Q.has(r[2])){SEEN_Q.add(r[2]);Q_RAW.push(r)}}
+/* ---- Flaggen: Code | Land | Stufe | Gruppe (h/v = Streifen, n = Kreuz, s = Zeichen, x = Sonstige). Gezeichnet werden sie von FLAG() ---- */
+const FLG=rows(`
+de|Deutschland|1|h
+at|Österreich|1|h
+nl|Niederlande|1|h
+ru|Russland|1|h
+pl|Polen|1|h
+ua|Ukraine|1|h
+es|Spanien|1|h
+hu|Ungarn|2|h
+bg|Bulgarien|2|h
+ee|Estland|2|h
+lt|Litauen|2|h
+id|Indonesien|2|h
+co|Kolumbien|2|h
+th|Thailand|2|h
+lv|Lettland|3|h
+lu|Luxemburg|3|h
+ye|Jemen|3|h
+sl|Sierra Leone|3|h
+ga|Gabun|3|h
+am|Armenien|3|h
+bo|Bolivien|3|h
+mu|Mauritius|3|h
+bw|Botswana|3|h
+gm|Gambia|3|h
+gh|Ghana|3|h
+ve|Venezuela|3|h
+et|Äthiopien|3|h
+fr|Frankreich|1|v
+it|Italien|1|v
+ie|Irland|1|v
+be|Belgien|1|v
+ro|Rumänien|2|v
+ng|Nigeria|2|v
+pe|Peru|2|v
+ci|Elfenbeinküste|3|v
+ml|Mali|3|v
+gn|Guinea|3|v
+sn|Senegal|3|v
+cm|Kamerun|3|v
+se|Schweden|1|n
+dk|Dänemark|1|n
+fi|Finnland|1|n
+no|Norwegen|1|n
+is|Island|2|n
+ch|Schweiz|1|s
+jp|Japan|1|s
+cn|China|1|s
+tr|Türkei|1|s
+vn|Vietnam|2|s
+ma|Marokko|2|s
+tn|Tunesien|2|s
+bd|Bangladesch|3|s
+so|Somalia|3|s
+pk|Pakistan|3|s
+dz|Algerien|3|s
+mk|Nordmazedonien|3|s
+gb|Großbritannien|1|x
+us|USA|1|x
+gr|Griechenland|1|x
+br|Brasilien|1|x
+ca|Kanada|1|x
+il|Israel|2|x
+in|Indien|2|x
+ar|Argentinien|2|x
+pt|Portugal|2|x
+cl|Chile|2|x
+cu|Kuba|2|x
+jm|Jamaika|2|x
+cz|Tschechien|2|x
+pa|Panama|3|x
+ph|Philippinen|3|x
+ba|Bosnien und Herzegowina|3|x
+ge|Georgien|3|x
+tz|Tansania|3|x
+uy|Uruguay|3|x
+ae|Vereinigte Arabische Emirate|3|x
+`);
+/* zum Verwechseln ähnliche Flaggen nie gegeneinander anbieten */
+const FLG_NO={nl:['Luxemburg'],lu:['Niederlande'],at:['Lettland'],lv:['Österreich'],id:['Polen'],pl:['Indonesien'],co:['Venezuela'],ve:['Kolumbien'],bo:['Ghana'],gh:['Bolivien']};
+for(const [k,l,d,g] of FLG){const no=FLG_NO[k]||[],ok=x=>!no.includes(x);let pool=FLG.filter(x=>x[3]===g&&x[0]!==k).map(x=>x[1]).filter(ok);if(pool.length<6)pool=pool.concat(FLG.map(x=>x[1]).filter(ok));
+  add('bild',+d,'Welches Land hat diese Flagge?{F:'+k+'}',l,pool)}
+
+/* ---- Emoji-Rätsel: Gruppe | Emojis | Lösung | Stufe ---- */
+const EMJ=rows(`
+f|🦁👑|Der König der Löwen|1
+f|🚢🧊💔|Titanic|1
+f|🦖🏝️|Jurassic Park|1
+f|🕷️👦🏙️|Spider-Man|1
+f|🧙‍♂️💍🌋|Der Herr der Ringe|1
+f|⚡👓🧙‍♂️|Harry Potter|1
+f|🦈🏊|Der weiße Hai|1
+f|🐠🔍|Findet Nemo|1
+f|❄️👸⛄|Die Eiskönigin|1
+f|🧸🤠🚀|Toy Story|1
+f|🐼🥋|Kung Fu Panda|1
+f|🐻🍯🎈|Winnie Puuh|1
+f|🔨⚡|Thor|1
+f|🧜‍♀️🦀|Arielle, die Meerjungfrau|1
+f|🐘👂✈️|Dumbo|1
+f|1️⃣0️⃣1️⃣🐶|101 Dalmatiner|1
+f|⭐⚔️🌌|Star Wars|1
+f|👦🏠🎄😱|Kevin – Allein zu Haus|1
+f|🧞‍♂️🪔🐒|Aladdin|1
+f|🤥👃|Pinocchio|1
+f|🏎️⚡🏁|Cars|1
+f|🏠🎈👴|Oben|2
+f|🐀👨‍🍳|Ratatouille|2
+f|👻🚫|Ghostbusters|2
+f|🚗⏰⚡|Zurück in die Zukunft|2
+f|🤖🌱|WALL·E|2
+f|🍫🏭🎫|Charlie und die Schokoladenfabrik|2
+f|🦍🏙️|King Kong|2
+f|🧛🏰🦇|Dracula|2
+f|🏴‍☠️🦜💀|Fluch der Karibik|2
+f|💊🕶️🐇|Matrix|2
+f|🏃🍫📦|Forrest Gump|2
+f|👠👗😈|Der Teufel trägt Prada|2
+f|🛡️⭐|Captain America|2
+f|🌪️👠🦁|Der Zauberer von Oz|2
+f|🏹👧🔥|Die Tribute von Panem|2
+f|🍝🐕🐕|Susi und Strolch|2
+f|🎈🤡|Es|2
+f|🤠🐍🏺|Indiana Jones|2
+f|🦁🦓🦒🦛|Madagascar|2
+f|🐊⏰🧚|Peter Pan|2
+f|🧊🐿️🌰|Ice Age|2
+f|🦊🐰👮|Zoomania|2
+f|👨‍🚀🌽🕳️|Interstellar|3
+f|🥊🥚🏃|Rocky|3
+f|🧔🌊🏐|Cast Away – Verschollen|3
+f|🐧🕺|Happy Feet|3
+f|🐒🪐|Planet der Affen|3
+f|🐝🎬|Bee Movie|3
+f|👸🐸💋|Küss den Frosch|3
+m|👧🔴🐺|Rotkäppchen|1
+m|🍬🏠👧👦|Hänsel und Gretel|1
+m|👸🍎7️⃣|Schneewittchen|1
+m|👠🕛🎃|Aschenputtel|1
+m|👸💤🌹|Dornröschen|1
+m|👸💇‍♀️🏰|Rapunzel|1
+m|🐸👑🟡|Der Froschkönig|1
+m|🐱👢|Der gestiefelte Kater|1
+m|🐺🐐7️⃣|Der Wolf und die sieben Geißlein|1
+m|🐕🐈🐓🎵|Die Bremer Stadtmusikanten|2
+m|🌾🧵💰|Rumpelstilzchen|2
+m|🦢🐣😢|Das hässliche Entlein|2
+m|🐇🦔🏁|Der Hase und der Igel|2
+m|⭐💰👧|Die Sterntaler|2
+m|👸🛏️🛏️🛏️|Die Prinzessin auf der Erbse|2
+m|🧵7️⃣👊|Das tapfere Schneiderlein|2
+m|🛏️❄️👵|Frau Holle|2
+m|🍽️✨💰|Tischlein deck dich|3
+m|👧❄️👑|Die Schneekönigin|3
+m|🎣🐟🏰👑|Vom Fischer und seiner Frau|3
+r|🐷🍀|Schwein haben|1
+r|🍅👀|Tomaten auf den Augen haben|1
+r|🐘🍽️🏪|Wie ein Elefant im Porzellanladen|1
+r|⏰💰|Zeit ist Geld|1
+r|🗣️🥈🤐🥇|Reden ist Silber, Schweigen ist Gold|1
+r|🍎⬇️🌳|Der Apfel fällt nicht weit vom Stamm|1
+r|🐦⏰🐛|Der frühe Vogel fängt den Wurm|1
+r|💡😮|Mir geht ein Licht auf|1
+r|🐌🐌🐌|Im Schneckentempo|1
+r|🐱👜|Die Katze im Sack kaufen|2
+r|👁️👁️🦷🦷|Auge um Auge, Zahn um Zahn|2
+r|🏰☁️|Luftschlösser bauen|2
+r|🌳🌳🌳🙈|Den Wald vor lauter Bäumen nicht sehen|2
+r|✋🔥|Für jemanden die Hand ins Feuer legen|2
+r|🔝🧊|Die Spitze des Eisbergs|2
+r|🐦✋🕊️🏠|Lieber den Spatz in der Hand als die Taube auf dem Dach|2
+r|🌅🥇👄|Morgenstund hat Gold im Mund|2
+r|🐟💧😊|Sich wie ein Fisch im Wasser fühlen|2
+r|🎯⚫|Ins Schwarze treffen|2
+r|🐈🚪🐭💃|Ist die Katze aus dem Haus, tanzen die Mäuse auf dem Tisch|2
+r|🌹🛏️|Auf Rosen gebettet sein|3
+r|🧂🍲|Jemandem die Suppe versalzen|3
+r|🐦🎵🏠|Das pfeifen die Spatzen von den Dächern|3
+r|🤡🍳|Einen Clown gefrühstückt haben|3
+s|💃👑|Dancing Queen|1
+s|🟡🚢|Yellow Submarine|1
+s|🎄💝💔|Last Christmas|1
+s|☔|Umbrella|2
+s|🍉🍬|Watermelon Sugar|2
+s|💜🌧️|Purple Rain|2
+s|👁️🐯|Eye of the Tiger|2
+s|🚀👨|Rocket Man|2
+s|🧊🧊👶|Ice Ice Baby|2
+s|🏨🌴|Hotel California|2
+s|🛣️🔥😈|Highway to Hell|2
+s|🧱🧱🧱|Another Brick in the Wall|2
+s|⬆️🌈|Somewhere Over the Rainbow|2
+s|🎆👩|Firework|2
+s|🚶‍♂️☀️|Walking on Sunshine|2
+s|🎤🌧️|Singin’ in the Rain|2
+s|💨🌊|Smoke on the Water|2
+s|💔🏨|Heartbreak Hotel|3
+s|👩🌌💎|Lucy in the Sky with Diamonds|3
+s|🏄🌊|Surfin’ USA|3
+s|🏠🌅|The House of the Rising Sun|3
+`);
+const EMQ={f:'Welcher Film ist das?',m:'Welches Märchen ist das?',r:'Welcher Spruch ist das?',s:'Welcher Hit ist das?'};
+for(const [g,e,l,d] of EMJ)add('bild',+d,EMQ[g]+'{E:'+e+'}',l,EMJ.filter(x=>x[0]===g).map(x=>x[2]));
 })();
 
 const CATS={
@@ -3969,7 +4247,8 @@ const CATS={
   essen:{n:'Essen & Trinken',c:'#ffd166'},
   sprache:{n:'Sprache & Wörter',c:'#a3abff'},
   sport:{n:'Sport',c:'#ff6a5c'},
-  fuss:{n:'Fußball',c:'#5fe0a0'}
+  fuss:{n:'Fußball',c:'#5fe0a0'},
+  bild:{n:'Flaggen & Emojis',c:'#dfe6f3'}
 };
 const CAT_KEYS=Object.keys(CATS);
 /* Schätzskala: pro Frage fest verschoben, damit die Antwort nicht immer in der Mitte liegt (auf allen Geräten gleich) */
@@ -3980,9 +4259,9 @@ const Q=Q_RAW.map((r,id)=>typeof r[3]==='number'
   ?{id,c:r[0],d:r[1],q:r[2],est:true,v:r[3],lo:estRange(id,r[3],r[4],r[5],r[6])[0],hi:estRange(id,r[3],r[4],r[5],r[6])[1],u:r[6]||'',tol:r[7],info:r[8]||''}
   :{id,c:r[0],d:r[1],q:r[2],opts:[r[3],r[4],r[5],r[6]].filter(x=>x!=null),info:r[7]||''});
 /* Challenge-Codes: Buchstabe = Fragen-Stand. Neue Fragen nur hinten anhängen, dann bleiben alte Codes gültig. */
-const CH_VER={A:696,B:Q.length};const CH_CUR='B';
+const CH_VER={A:696,B:3602,C:Q.length};const CH_CUR='C';
 /* ab welchem Tag ein Fragen-Stand ins Tagesquiz kommt */
-const CH_FROM={A:'2026-01-01',B:'2026-11-01'};
+const CH_FROM={A:'2026-01-01',B:'2026-11-01',C:'2026-11-02'};
 const PCOL=['#ff5b4f','#4aa8ff','#ffd447','#5fe08a','#c58bff','#ff9a3c','#3fe0d0','#ff7ac8'];
 
 /* ---------- Hilfen ---------- */
@@ -4001,8 +4280,11 @@ function estStart(q){const st=estStep(q),span=q.hi-q.lo,gap=Math.max(q.tol*3,spa
 function vib(ms){try{navigator.vibrate&&navigator.vibrate(ms)}catch(_){}}
 const ST={get(k,d){try{const v=localStorage.getItem('qa-'+k);return v==null?d:JSON.parse(v)}catch(_){return d}},set(k,v){try{localStorage.setItem('qa-'+k,JSON.stringify(v))}catch(_){}}};
 const SET=Object.assign({sound:true,cats:CAT_KEYS.slice(),duel:['',''],duelN:10,party:['',''],partyR:5,partyT:20,partyTeams:0,partyCat:true,partySteal:true,partyJoker:true,
-  qm:['','',''],qmTeams:0,qmN:20,qmT:30,qmOpts:true,qmDiff:true,nick:'',onN:10,onD:0,onVote:true,onJoker:true,duelD:0,qmD:0},ST.get('set',{}));
+  qm:['','',''],qmTeams:0,qmN:20,qmT:30,qmOpts:true,qmDiff:true,nick:'',onN:10,onD:0,onVote:true,onJoker:true,onTV:false,onBz:0,duelD:0,qmD:0},ST.get('set',{}));
 SET.cats=SET.cats.filter(c=>CATS[c]);if(!SET.cats.length)SET.cats=CAT_KEYS.slice();
+/* neue Kategorie „Flaggen & Emojis“ einmal für alle einschalten */
+function catsMig(o){if(o&&!o.catsV){SET.catsV=1;if(!SET.cats.includes('bild'))SET.cats.push('bild')}}
+catsMig(ST.get('set',{}));
 function saveSet(){ST.set('set',SET);syncPush()}
 const SEEN=new Set(ST.get('seen',[]));
 let USED=new Set();
@@ -4060,12 +4342,12 @@ function drawQ(pred){
 function diffPlan(n,r=R){const a=[];for(let i=0;i<n;i++){const p=i/Math.max(1,n-1);a.push(p<.3?1:p<.72?2:3)}
   for(let i=0;i<a.length-1;i++)if(r()<.3)[a[i],a[i+1]]=[a[i+1],a[i]];return a}
 function drawAny(d,pred){const c=pickOne(SET.cats);return drawQ(x=>x.c===c&&(!d||x.d===d)&&(!pred||pred(x)))||drawQ(x=>SET.cats.includes(x.c)&&(!d||x.d===d)&&(!pred||pred(x)))||drawQ(()=>true)}
-function drawSet(n,cats,dl){
-  const plan=dl?Array(n).fill(dl):diffPlan(n);let cyc=[];const out=[];
+function drawSet(n,cats,dl,pf){
+  const plan=dl?Array(n).fill(dl):diffPlan(n);let cyc=[];const out=[];const ok=x=>!pf||pf(x);
   for(let i=0;i<n;i++){
     if(!cyc.length)cyc=shuffle(cats.slice());
     const c=cyc.pop(),d=plan[i];
-    const q=drawQ(x=>x.c===c&&x.d===d)||(dl?drawQ(x=>cats.includes(x.c)&&x.d===d):null)||drawQ(x=>x.c===c)||drawQ(x=>cats.includes(x.c)&&x.d===d)||drawQ(x=>cats.includes(x.c))||drawQ(()=>true);
+    const q=drawQ(x=>ok(x)&&x.c===c&&x.d===d)||(dl?drawQ(x=>ok(x)&&cats.includes(x.c)&&x.d===d):null)||drawQ(x=>ok(x)&&x.c===c)||drawQ(x=>ok(x)&&cats.includes(x.c)&&x.d===d)||drawQ(x=>ok(x)&&cats.includes(x.c))||drawQ(ok)||drawQ(()=>true);
     if(q)out.push(q);
   }
   return out;
@@ -4086,6 +4368,107 @@ function estNudge(btn){const box=btn.closest('.est'),inp=box.querySelector('inpu
   const st=estStep(q);inp.value=Math.min(q.hi,Math.max(q.lo,+inp.value+(+btn.dataset.estd)*st));box.querySelector('.est-val span').textContent=fmtN(+inp.value,q);sfx('tap')}
 function optOrder(q,r=R){return shuffle(q.opts.map((_,i)=>i),r)}
 function correctText(q){return q.est?fmtN(q.v,q)+(q.u&&q.u!=='Jahr'?' '+q.u:''):q.opts[0]}
+/* ---------- Flaggen als SVG (sehen überall gleich aus, auch wo Flaggen-Emojis fehlen) ---------- */
+const FLAG=(()=>{
+  const n=x=>+x.toFixed(3);
+  const r=(x,y,w,h,c)=>'<rect x="'+n(x)+'" y="'+n(y)+'" width="'+n(w)+'" height="'+n(h)+'" fill="'+c+'"/>';
+  const hz=(cs,ws,W=30,H=20)=>{ws=ws||cs.map(()=>1);const t=ws.reduce((a,b)=>a+b,0);let y=0;return cs.map((c,i)=>{const h=H*ws[i]/t,s=r(0,y,W,h+(i<cs.length-1?.05:0),c);y+=h;return s}).join('')};
+  const vt=(cs,ws,W=30,H=20)=>{ws=ws||cs.map(()=>1);const t=ws.reduce((a,b)=>a+b,0);let x=0;return cs.map((c,i)=>{const w=W*ws[i]/t,s=r(x,0,w+(i<cs.length-1?.05:0),H,c);x+=w;return s}).join('')};
+  const ci=(cx,cy,R,c,ex)=>'<circle cx="'+n(cx)+'" cy="'+n(cy)+'" r="'+n(R)+'" fill="'+c+'"'+(ex||'')+'/>';
+  const pts=(cx,cy,R,rot,k,inner)=>{let p='';for(let i=0;i<k*2;i++){const a=rot-Math.PI/2+i*Math.PI/k,rr=i%2?R*inner:R;p+=n(cx+rr*Math.cos(a))+','+n(cy+rr*Math.sin(a))+' '}return p.trim()};
+  const star=(cx,cy,R,c,rot)=>'<polygon points="'+pts(cx,cy,R,rot||0,5,.382)+'" fill="'+c+'"/>';
+  const pent=(cx,cy,R,c,w)=>{let p='';for(const i of [0,2,4,1,3]){const a=-Math.PI/2+i*2*Math.PI/5;p+=n(cx+R*Math.cos(a))+','+n(cy+R*Math.sin(a))+' '}return '<polygon points="'+p.trim()+'" fill="none" stroke="'+c+'" stroke-width="'+w+'" stroke-linejoin="miter"/>'};
+  const poly=(p,c)=>'<polygon points="'+p+'" fill="'+c+'"/>';
+  const line=(d,c,w)=>'<path d="'+d+'" stroke="'+c+'" stroke-width="'+w+'" fill="none"/>';
+  /* Halbmond: Kreis, aus dem ein versetzter Kreis ausgeschnitten wird */
+  const cres=(id,cx,cy,R,dx,R2,c)=>'<mask id="fm-'+id+'"><rect x="-5" y="-5" width="60" height="40" fill="#fff"/>'+ci(cx+dx,cy,R2,'#000')+'</mask>'+ci(cx,cy,R,c,' mask="url(#fm-'+id+')"');
+  const nord=(bg,c,i,g)=>{g=g||[9.4,3.75,8,4];return r(0,0,30,20,bg)+r(g[0],0,g[1],20,c)+r(0,g[2],30,g[3],c)+(i?r(g[0]+g[1]/4,0,g[1]/2,20,i)+r(0,g[2]+g[3]/4,30,g[3]/2,i):'')};
+  const D={
+    de:()=>hz(['#000','#DD0000','#FFCE00']),
+    at:()=>hz(['#C8102E','#FFF','#C8102E']),
+    nl:()=>hz(['#AE1C28','#FFF','#21468B']),
+    lu:()=>hz(['#EF3340','#FFF','#00A3E0']),
+    ru:()=>hz(['#FFF','#0039A6','#D52B1E']),
+    hu:()=>hz(['#CE2939','#FFF','#477050']),
+    bg:()=>hz(['#FFF','#00966E','#D62612']),
+    ee:()=>hz(['#0072CE','#000','#FFF']),
+    lt:()=>hz(['#FDB913','#006A44','#C1272D']),
+    lv:()=>hz(['#9E3039','#FFF','#9E3039'],[2,1,2]),
+    ua:()=>hz(['#0057B7','#FFD700']),
+    pl:()=>hz(['#FFF','#DC143C']),
+    id:()=>hz(['#CE1126','#FFF']),
+    ye:()=>hz(['#CE1126','#FFF','#000']),
+    sl:()=>hz(['#1EB53A','#FFF','#0072C6']),
+    ga:()=>hz(['#009E60','#FCD116','#3A75C4']),
+    am:()=>hz(['#D90012','#0033A0','#F2A800']),
+    bo:()=>hz(['#D52B1E','#F9E300','#007934']),
+    co:()=>hz(['#FCD116','#003893','#CE1126'],[2,1,1]),
+    es:()=>hz(['#AA151B','#F1BF00','#AA151B'],[1,2,1]),
+    th:()=>hz(['#A51931','#F4F5F8','#2D2A4A','#F4F5F8','#A51931'],[1,1,2,1,1]),
+    mu:()=>hz(['#EA2839','#1A206D','#FFD500','#00A551']),
+    bw:()=>hz(['#6DA9D2','#FFF','#000','#FFF','#6DA9D2'],[9,1,4,1,9]),
+    gm:()=>hz(['#CE1126','#FFF','#0C1C8C','#FFF','#3A7728'],[6,1,4,1,6]),
+    fr:()=>vt(['#0055A4','#FFF','#EF4135']),
+    it:()=>vt(['#009246','#FFF','#CE2B37']),
+    ie:()=>vt(['#169B62','#FFF','#FF883E']),
+    ci:()=>vt(['#F77F00','#FFF','#009E60']),
+    be:()=>vt(['#000','#FDDA24','#EF3340']),
+    ro:()=>vt(['#002B7F','#FCD116','#CE1126']),
+    ng:()=>vt(['#008751','#FFF','#008751']),
+    ml:()=>vt(['#14B53A','#FCD116','#CE1126']),
+    gn:()=>vt(['#CE1126','#FCD116','#009460']),
+    pe:()=>vt(['#D91023','#FFF','#D91023']),
+    sn:()=>vt(['#00853F','#FDEF42','#E31B23'])+star(15,10,2.7,'#00853F'),
+    cm:()=>vt(['#007A5E','#CE1126','#FCD116'])+star(15,10,2.7,'#FCD116'),
+    gh:()=>hz(['#CE1126','#FCD116','#006B3F'])+star(15,10,3.2,'#000'),
+    se:()=>nord('#006AA7','#FECC00'),
+    dk:()=>nord('#C8102E','#FFF',null,[9.7,3.3,8.6,2.9]),
+    fi:()=>nord('#FFF','#002F6C',null,[8.3,5,7.3,5.4]),
+    no:()=>nord('#BA0C2F','#FFF','#00205B',[8.2,5.4,7.4,5.2]),
+    is:()=>nord('#02529C','#FFF','#DC1E35',[8.2,5.4,7.4,5.2]),
+    jp:()=>r(0,0,30,20,'#FFF')+ci(15,10,6,'#BC002D'),
+    bd:()=>r(0,0,30,20,'#006A4E')+ci(13.5,10,6,'#F42A41'),
+    vn:()=>r(0,0,30,20,'#DA251D')+star(15,10,6,'#FFFF00'),
+    so:()=>r(0,0,30,20,'#4189DD')+star(15,10,5,'#FFF'),
+    ma:()=>r(0,0,30,20,'#C1272D')+pent(15,10.4,5,'#006233',.9),
+    cn:()=>r(0,0,30,20,'#EE1C25')+star(5,5,3,'#FFFF00')+star(10,2,1,'#FFFF00',.4)+star(12,4,1,'#FFFF00',.9)+star(12,7,1,'#FFFF00',0)+star(10,9,1,'#FFFF00',.4),
+    ch:()=>({vb:'0 0 32 32',s:r(0,0,32,32,'#DA291C')+r(13,6,6,20,'#FFF')+r(6,13,20,6,'#FFF')}),
+    gb:()=>({vb:'0 0 60 30',s:r(0,0,60,30,'#012169')+line('M0,0L60,30M60,0L0,30','#FFF',6)+line('M0,0L60,30M60,0L0,30','#C8102E',2)+line('M30,0V30M0,15H60','#FFF',10)+line('M30,0V30M0,15H60','#C8102E',6)}),
+    us:()=>{let s=hz(['#B22234','#FFF','#B22234','#FFF','#B22234','#FFF','#B22234','#FFF','#B22234','#FFF','#B22234','#FFF','#B22234'],null,38,20)+r(0,0,15.2,10.77,'#3C3B6E');
+      for(let j=0;j<9;j++){const y=(j+1)*1.077;for(let k=0;k<(j%2?5:6);k++)s+=star((j%2?2*k+2:2*k+1)*1.267,y,.55,'#FFF')}return{vb:'0 0 38 20',s}},
+    gr:()=>{const h=20/9;let s='';for(let i=0;i<9;i++)s+=r(0,i*h,30,h+.05,i%2?'#FFF':'#0D5EAF');return s+r(0,0,5*h,5*h,'#0D5EAF')+r(2*h,0,h,5*h,'#FFF')+r(0,2*h,5*h,h,'#FFF')},
+    tr:()=>r(0,0,30,20,'#E30A17')+cres('tr',10.6,10,5,1.25,4,'#FFF')+star(16.3,10,2.5,'#FFF',-Math.PI/2),
+    tn:()=>r(0,0,30,20,'#E70013')+ci(15,10,5,'#FFF')+cres('tn',14.7,10,3.75,.95,3,'#E70013')+star(16.1,10,2.2,'#E70013',-Math.PI/2),
+    pk:()=>r(0,0,7.5,20,'#FFF')+r(7.5,0,22.5,20,'#01411C')+cres('pk',18.5,10.6,6,1.6,5.2,'#FFF')+star(21.6,7.8,2,'#FFF',.6),
+    dz:()=>vt(['#006233','#FFF'])+cres('dz',15.6,10,5,1.25,4,'#D21034')+star(17.6,10,2.4,'#D21034',-Math.PI/2),
+    il:()=>r(0,0,30,20,'#FFF')+r(0,2,30,2.9,'#0038B8')+r(0,15.1,30,2.9,'#0038B8')+'<path d="M15,5.9L18.55,12.05H11.45ZM15,14.1L18.55,7.95H11.45Z" fill="none" stroke="#0038B8" stroke-width=".85"/>',
+    br:()=>({vb:'0 0 30 21',s:r(0,0,30,21,'#009C3B')+poly('2.5,10.5 15,1.8 27.5,10.5 15,19.2','#FFDF00')+ci(15,10.5,5.25,'#002776')+line('M9.85,9.3Q15.5,8.2 20.15,12','#FFF',.8)}),
+    ca:()=>({vb:'0 0 9600 4800',s:r(0,0,9600,4800,'#D52B1E')+r(2400,0,4800,4800,'#FFF')+'<path fill="#D52B1E" d="M4890 4430l-45-863a95 95 0 0 1 111-98l859 151-116-320a65 65 0 0 1 20-73l941-762-212-99a65 65 0 0 1-34-79l186-572-542 115a65 65 0 0 1-73-38l-105-247-423 454a65 65 0 0 1-111-57l204-1052-327 189a65 65 0 0 1-91-27l-332-652-332 652a65 65 0 0 1-91 27l-327-189 204 1052a65 65 0 0 1-111 57l-423-454-105 247a65 65 0 0 1-73 38l-542-115 186 572a65 65 0 0 1-34 79l-212 99 941 762a65 65 0 0 1 20 73l-116 320 859-151a95 95 0 0 1 111 98l-45 863z"/>'}),
+    in:()=>{let s=hz(['#FF9933','#FFF','#138808'])+ci(15,10,2.6,'none',' stroke="#000080" stroke-width=".45"')+ci(15,10,.5,'#000080');let d='';for(let i=0;i<12;i++){const a=i*Math.PI/12;d+='M'+n(15+2.4*Math.cos(a))+','+n(10+2.4*Math.sin(a))+'L'+n(15-2.4*Math.cos(a))+','+n(10-2.4*Math.sin(a))}return s+line(d,'#000080',.15)},
+    ar:()=>hz(['#74ACDF','#FFF','#74ACDF'])+ci(15,10,2,'#F6B40E',' stroke="#85340A" stroke-width=".25"'),
+    pt:()=>vt(['#046A38','#DA291C'],[2,3])+ci(12,10,3.4,'none',' stroke="#FFE900" stroke-width="1"')+'<path d="M10.5,7.8H13.5V11.2Q13.5,12.6 12,12.9Q10.5,12.6 10.5,11.2Z" fill="#FFF" stroke="#DA291C" stroke-width=".7"/>',
+    cl:()=>r(0,0,30,10,'#FFF')+r(0,10,30,10,'#D52B1E')+r(0,0,10,10,'#0039A6')+star(5,5,2.6,'#FFF'),
+    cu:()=>hz(['#002A8F','#FFF','#002A8F','#FFF','#002A8F'])+poly('0,0 17.3,10 0,20','#CF142B')+star(5.8,10,3.2,'#FFF'),
+    pa:()=>r(0,0,30,20,'#FFF')+r(15,0,15,10,'#D21034')+r(0,10,15,10,'#005293')+star(7.5,5,2.6,'#005293')+star(22.5,15,2.6,'#D21034'),
+    jm:()=>poly('0,0 30,0 15,10','#009B3A')+poly('0,20 30,20 15,10','#009B3A')+poly('0,0 0,20 15,10','#000')+poly('30,0 30,20 15,10','#000')+line('M0,0L30,20M30,0L0,20','#FED100',3),
+    cz:()=>hz(['#FFF','#D7141A'])+poly('0,0 15,10 0,20','#11457E'),
+    ph:()=>({vb:'0 0 30 15',s:r(0,0,30,7.5,'#0038A8')+r(0,7.5,30,7.5,'#CE1126')+poly('0,0 13,7.5 0,15','#FFF')+ci(4.4,7.5,1.7,'#FCD116')+star(1.4,1.7,.75,'#FCD116')+star(1.4,13.3,.75,'#FCD116')+star(10.9,7.5,.75,'#FCD116')}),
+    ve:()=>{let s=hz(['#FFCC00','#00247D','#CF142B']);for(let i=0;i<8;i++){const a=Math.PI*(1.1+i*0.8/7);s+=star(15+4.6*Math.cos(a),11.6+4.6*Math.sin(a),.6,'#FFF')}return s},
+    ba:()=>{let s=r(0,0,30,15,'#002395')+poly('8.5,0 23.5,0 23.5,15','#FECB00');for(let k=0;k<9;k++)s+=star(6.4+1.95*k,.3+1.95*k,.85,'#FFF');return{vb:'0 0 30 15',s}},
+    mk:()=>{let s=r(0,0,30,15,'#CE2028');for(const b of ['13.5,0 16.5,0','13.5,15 16.5,15','0,6 0,9','30,6 30,9','0,1.8 2.6,0','27.4,0 30,1.8','0,13.2 2.6,15','27.4,15 30,13.2'])s+=poly('15,7.5 '+b,'#F9D616');
+      return{vb:'0 0 30 15',s:s+ci(15,7.5,2.6,'#F9D616',' stroke="#CE2028" stroke-width=".5"')}},
+    ge:()=>{let s=r(0,0,30,20,'#FFF')+r(13,0,4,20,'#FF0000')+r(0,8,30,4,'#FF0000');for(const [x,y] of [[6.5,4],[23.5,4],[6.5,16],[23.5,16]])s+=r(x-.6,y-2,1.2,4,'#FF0000')+r(x-2,y-.6,4,1.2,'#FF0000');return s},
+    et:()=>({vb:'0 0 30 15',s:hz(['#078930','#FCDD09','#DA121A'],null,30,15)+ci(15,7.5,3.6,'#0F47AF')+pent(15,7.7,2.6,'#FCDD09',.45)}),
+    tz:()=>poly('0,0 30,0 0,20','#1EB53A')+poly('30,0 30,20 0,20','#00A3DD')+line('M0,20L30,0','#FCD116',6)+line('M0,20L30,0','#000',4),
+    uy:()=>{let s='';const h=20/9;for(let i=0;i<9;i++)s+=r(0,i*h,30,h+.05,i%2?'#0038A8':'#FFF');s+=r(0,0,5*h,5*h,'#FFF');let d='';for(let i=0;i<16;i++){const a=i*Math.PI/8;d+='M'+n(5.55+1.6*Math.cos(a))+','+n(5.55+1.6*Math.sin(a))+'L'+n(5.55+3.6*Math.cos(a))+','+n(5.55+3.6*Math.sin(a))}return s+line(d,'#FCD116',.5)+ci(5.55,5.55,1.9,'#FCD116')},
+    ae:()=>hz(['#00732F','#FFF','#000'])+r(0,0,7.5,20,'#FF0000')
+  };
+  return code=>{const f=D[code];if(!f)return '';const v=f(),o=typeof v==='object';
+    return '<svg class="flag" viewBox="'+(o?v.vb:'0 0 30 20')+'" role="img" aria-label="Flagge">'+(o?v.s:v)+'</svg>'};
+})();
+/* Fragetext mit Bild: {F:de} = Flagge, {E:…} = Emojis */
+function qtx(q){const t=String(q.q),m=t.match(/\{([FE]):([^}]+)\}$/);if(!m)return esc(t);
+  return esc(t.slice(0,m.index))+'<span class="qpic">'+(m[1]==='F'?FLAG(m[2]):'<span class="qemo">'+esc(m[2])+'</span>')+'</span>'}
 
 /* ---------- Timer (ein gemeinsamer Takt) ---------- */
 let TM=null;
@@ -4187,7 +4570,7 @@ function duelAsk(q){
   duelBoard();
   for(const p of [0,1]){
     const h=p?$('#dBot'):$('#dTop');
-    h.innerHTML='<div class="hd"><span class="who">'+esc(D.names[p])+'</span>'+qHead(q)+'</div><div class="timer"><i></i></div><p class="qtext">'+esc(q.q)+'</p>'+
+    h.innerHTML='<div class="hd"><span class="who">'+esc(D.names[p])+'</span>'+qHead(q)+'</div><div class="timer"><i></i></div><p class="qtext">'+qtx(q)+'</p>'+
       (q.est?estHTML(q,p,'data-tap="dEst" data-v="'+p+'"'):ansHTML(q,D.order,'data-tap="dAns" data-p="'+p+'" data-v'))+'<div class="msg"></div>';
   }
   startTimer(q.est?22:15,[...document.querySelectorAll('#s-duel .timer')],()=>duelReveal('time'));
@@ -4253,8 +4636,8 @@ function resultBlock(ok,title,sub,q,btnAct,btnTxt){
   return '<div class="fade-in" style="display:flex;flex-direction:column;gap:12px"><div><p class="verdict '+(ok?'ok':'bad')+'">'+title+'</p>'+(sub?'<p class="lead">'+sub+'</p>':'')+'</div>'+
     (q.info?'<p class="info">'+esc(q.info)+'</p>':'')+'<button class="btn" data-act="'+btnAct+'">'+btnTxt+'</button></div>'}
 function rankList(list){const s=list.slice().sort((a,b)=>b.s-a.s);let last=null,pl=0;return s.map((p,i)=>{if(p.s!==last){pl=i+1;last=p.s}return Object.assign({pl},p)})}
-function tableHTML(list,meKey){return '<div class="table">'+rankList(list).map(p=>'<div class="trow'+(meKey!=null&&p.k===meKey?' me':'')+'"><span class="pl">'+p.pl+'</span><span class="nm"><span class="dot" style="background:'+p.c+'"></span>'+esc(p.n)+'</span><span class="pt">'+(p.plus?'<span class="plus">+'+p.plus+'</span>':'')+p.s+'</span></div>').join('')+'</div>'}
-function podiumHTML(list){const r=rankList(list);const slot=(p,k)=>p?'<div class="pod p'+k+'"><span class="nm" style="color:'+p.c+'">'+esc(p.n)+'</span><div class="blk"><b>'+p.pl+'</b><small>'+p.s+'</small></div></div>':'<div></div>';
+function tableHTML(list,meKey){return '<div class="table">'+rankList(list).map(p=>'<div class="trow'+(meKey!=null&&p.k===meKey?' me':'')+'"><span class="pl">'+p.pl+'</span><span class="nm"><span class="dot" style="background:'+p.c+'"></span>'+esc(p.n)+'</span><span class="pt">'+(p.plus?'<span class="plus'+(p.plus<0?' neg':'')+'">'+(p.plus<0?'−'+(-p.plus):'+'+p.plus)+'</span>':'')+(p.s<0?'−'+(-p.s):p.s)+'</span></div>').join('')+'</div>'}
+function podiumHTML(list){const r=rankList(list);const slot=(p,k)=>p?'<div class="pod p'+k+'"><span class="nm" style="color:'+p.c+'">'+esc(p.n)+'</span><div class="blk"><b>'+p.pl+'</b><small>'+(p.s<0?'−'+(-p.s):p.s)+'</small></div></div>':'<div></div>';
   return '<div class="podium">'+slot(r[1],2)+slot(r[0],1)+slot(r[2],3)+'</div>'}
 
 /* ==========================================================================
@@ -4268,7 +4651,7 @@ function nameRows(key){const team=!!SET[TEAMKEY[key]];return SET[key].map((n,i)=
 function readNames(key){for(const el of document.querySelectorAll('[data-pk="'+key+'"]'))SET[key][+el.dataset.pi]=el.value.trim()}
 function redrawNames(key){$('#plist').innerHTML=nameRows(key);const l=$('#plbl');if(l)l.textContent=SET[TEAMKEY[key]]?'Teams':'Spieler'}
 function namesCard(key){return '<div class="card">'+seg(TEAMKEY[key],[0,1],v=>v?'In Teams':'Jeder für sich')+'<span class="lbl" id="plbl">'+(SET[TEAMKEY[key]]?'Teams':'Spieler')+'</span><div class="plist" id="plist">'+nameRows(key)+'</div><button class="btn ghost small" data-act="pAdd" data-v="'+key+'">+ Hinzufügen</button></div>'}
-function onSeg(k){for(const key in TEAMKEY)if(TEAMKEY[key]===k){readNames(key);redrawNames(key)}}
+function onSeg(k){if(k==='onBz'){const h=$('#oBzHint');if(h)h.textContent=bzHint()}for(const key in TEAMKEY)if(TEAMKEY[key]===k){readNames(key);redrawNames(key)}}
 ACT.pAdd=v=>{readNames(v);if(SET[v].length>=8)return toast('Höchstens 8 Mitspieler oder Teams.');SET[v].push('');saveSet();redrawNames(v);const l=document.querySelectorAll('[data-pk="'+v+'"]');l[l.length-1].focus()};
 ACT.pDel=v=>{const[k,i]=v.split(':');readNames(k);SET[k].splice(+i,1);saveSet();redrawNames(k)};
 function makePlayers(key){const team=!!SET[TEAMKEY[key]];return SET[key].map((n,i)=>({k:i,n:n||(team?'Team ':'Spieler ')+(i+1),c:PCOL[i],s:0,j:true,plus:0}))}
@@ -4333,7 +4716,7 @@ function partyAsk(who){
   page(topBar(steal?'Klau-Chance':esc(p.n)+' · '+PTS[P.pts].n,'quit')+
     '<div id="qa" style="display:flex;flex-direction:column;gap:14px">'+
     (steal?'<div class="steal" style="--c:'+p.c+'">'+esc(p.n)+' kann '+PTS[P.pts].n+' klauen</div>':'')+
-    qHead(q)+'<div class="timer'+(P.T?'':' off')+'"><i></i></div><p class="qtext">'+esc(q.q)+'</p>'+
+    qHead(q)+'<div class="timer'+(P.T?'':' off')+'"><i></i></div><p class="qtext">'+qtx(q)+'</p>'+
     (q.est?estHTML(q,'p','data-act="pEst"'):ansHTML(q,P.order,'data-act="pAns" data-v')+
       (P.joker&&!steal?'<div class="joker"><button data-act="pJoker"'+(p.j?'':' disabled')+'>50:50-Joker'+(p.j?'':' (verbraucht)')+'</button></div>':''))+'</div>');
   for(const el of document.querySelectorAll('#qa .ans')){const v=+el.dataset.v;if(!steal&&P.gone.includes(v))el.classList.add('gone');if(steal&&v===P.firstWrong){el.classList.add('bad');el.disabled=true}}
@@ -4407,7 +4790,7 @@ function qmAsk(){
   const q=M.qs[M.i];M.rev=false;M.right=new Set();M.order=q.est?null:optOrder(q);
   page(topBar('Frage '+(M.i+1)+' von '+M.qs.length,'quit')+
     '<div id="qa" style="display:flex;flex-direction:column;gap:14px">'+qHead(q,'<span class="lbl" style="margin-left:auto">'+ptsTxt(qmPts(q))+'</span>')+
-    '<div class="timer'+(M.T?'':' off')+'"><i></i></div><p class="qtext" style="font-size:clamp(22px,6.4vw,32px)">'+esc(q.q)+'</p>'+
+    '<div class="timer'+(M.T?'':' off')+'"><i></i></div><p class="qtext" style="font-size:clamp(22px,6.4vw,32px)">'+qtx(q)+'</p>'+
     (q.est?'<p class="note">Schätzfrage'+(q.u&&q.u!=='Jahr'?' (in '+esc(q.u)+')':'')+'. Wer am nächsten dran ist, bekommt die Punkte.</p>':
       M.opts?'<ul class="qmopts">'+M.order.map((oi,k)=>'<li data-v="'+oi+'"><span class="k">'+'ABCD'[k]+'</span>'+esc(q.opts[oi])+'</li>').join('')+'</ul>':'')+
     '<div id="qmAct" style="display:flex;flex-direction:column;gap:10px"><button class="btn" data-act="qmReveal">Auflösen</button><button class="btn ghost small" data-act="qmSwap">Andere Frage</button></div>'+
@@ -4448,9 +4831,11 @@ function chParse(str){
 }
 function chQs(ver,seed){
   const r=rng(seed*7919+13),pool=Q.slice(0,CH_VER[ver]),out=[],ids=new Set();let cats=[];
+  /* nur Kategorien, die es in diesem Fragen-Stand gibt, damit alte Codes dieselben Fragen liefern */
+  const ck=CAT_KEYS.filter(c=>pool.some(x=>x.c===c));
   for(const d of [1,1,1,2,2,2,2,3,3,3]){
     let q=null;
-    for(let i=0;i<CAT_KEYS.length&&!q;i++){if(!cats.length)cats=shuffle(CAT_KEYS.slice(),r);const c=cats.pop();const cand=pool.filter(x=>x.c===c&&x.d===d&&!ids.has(x.id));if(cand.length)q=pickOne(cand,r)}
+    for(let i=0;i<ck.length&&!q;i++){if(!cats.length)cats=shuffle(ck.slice(),r);const c=cats.pop();const cand=pool.filter(x=>x.c===c&&x.d===d&&!ids.has(x.id));if(cand.length)q=pickOne(cand,r)}
     if(!q)q=pickOne(pool.filter(x=>x.d===d&&!ids.has(x.id)),r);
     out.push(q);ids.add(q.id);
   }
@@ -4469,7 +4854,7 @@ function chalDots(){return '<div style="display:flex;gap:5px">'+C.qs.map((_,i)=>
 function chalAsk(){
   const q=C.qs[C.i];C.done=false;SEEN.add(q.id);saveSeen();C.qt0=performance.now();
   page(topBar((C.daily?'Tagesquiz · ':'')+'Frage '+(C.i+1)+' von 10','quit')+chalDots()+
-    '<div id="qa" style="display:flex;flex-direction:column;gap:14px">'+qHead(q)+'<div class="timer"><i></i></div><p class="qtext">'+esc(q.q)+'</p>'+
+    '<div id="qa" style="display:flex;flex-direction:column;gap:14px">'+qHead(q)+'<div class="timer"><i></i></div><p class="qtext">'+qtx(q)+'</p>'+
     (q.est?estHTML(q,'c','data-act="cEst"'):ansHTML(q,optOrder(q,rng(C.seed+C.i*101)),'data-act="cAns" data-v'))+'</div>');
   startTimer(q.est?25:20,[$('#qa .timer')],()=>chalResult(null,true));
 }
@@ -4551,13 +4936,24 @@ function fbRoom(code,host){
     leave(){dead=true;base.off('value',onVal);con.off('value',onCon);hs.clear();errs.clear();return me.onDisconnect().cancel().then(()=>me.remove()).catch(()=>{})}
   };
 }
+/* Nur zuschauen (Fernseher): liest den Spielraum mit, schreibt nichts.
+   So darf der Fernseher auch mit demselben Konto angemeldet sein wie ein Handy. */
+function fbWatch(code){
+  const base=FB.db.ref('games/'+code+'/players');let peers=[];const hs=new Set(),errs=new Set();
+  const onVal=s=>{const v=s.val()||{};peers=Object.keys(v).map(k=>Object.freeze({peer:k,by:k,isMe:false,sameTab:false,kind:'viewer',guest:false,presence:v[k]||{},updatedAt:Date.now()}));for(const h of hs)h({peers,joined:[],left:[],updated:[]})};
+  const onErr=e=>{for(const f of errs)f({code:e&&e.code==='PERMISSION_DENIED'?'not_permitted':'upstream_error',message:String(e&&e.message||e)})};
+  base.on('value',onVal,onErr);
+  return{presence(){return Promise.resolve()},
+    onPeers(h,err){hs.add(h);if(err)errs.add(err);if(peers.length)setTimeout(()=>h({peers,joined:[],left:[],updated:[]}),0);return()=>{hs.delete(h);if(err)errs.delete(err)}},
+    leave(){base.off('value',onVal);hs.clear();errs.clear();return Promise.resolve()}};
+}
 function netNS(){
-  if(IN_CLAUDE){if(!NETP)NETP=(async()=>{try{const r=await window.claude.use('room');if(r)return{kind:'claude',async enter(code){return r.join('quizabend-'+code.toLowerCase())},async free(){return true}}}catch(_){}return null})();return NETP}
+  if(IN_CLAUDE){if(!NETP)NETP=(async()=>{try{const r=await window.claude.use('room');if(r)return{kind:'claude',async enter(code){return r.join('quizabend-'+code.toLowerCase())},async watch(code){return r.join('quizabend-'+code.toLowerCase())},async free(){return true}}}catch(_){}return null})();return NETP}
   if(!FIREBASE_CONFIG)return Promise.resolve(null);
   return withTimeout(fbBase(),15000).then(()=>{
     if(!ACC)return{kind:'login'};
     FB={db:FBA.db,uid:ACC.uid};
-    return{kind:'fb',async enter(code,host){return fbRoom(code,host)},
+    return{kind:'fb',async enter(code,host){return fbRoom(code,host)},async watch(code){return fbWatch(code)},
       async free(code){const s=await FB.db.ref('games/'+code+'/players').get();return !s.exists()}};
   });
 }
@@ -4577,30 +4973,32 @@ function onlineStart(){
       (ns.kind==='fb'?'<div class="card"><span class="lbl">Du spielst als</span><div class="row" style="align-items:center"><b style="font-size:19px;overflow-wrap:anywhere">'+esc(ACC.name)+'</b><button class="btn small ghost" data-act="acct" style="flex:0 0 auto">Konto</button></div></div>'
         :'<div class="card"><span class="lbl">Dein Name</span><input class="inp" id="oName" maxlength="14" placeholder="Wie sollen dich die anderen sehen?" value="'+esc(SET.nick)+'"></div>')+
       '<div class="card"><span class="lbl">Spiel eröffnen</span><button class="btn" data-act="oHost">Neues Spiel</button></div>'+
-      '<div class="card"><span class="lbl">Einem Spiel beitreten</span><input class="inp code" id="oCode" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="CODE"><button class="btn ghost" data-act="oJoin">Beitreten</button></div></div>';
+      '<div class="card"><span class="lbl">Einem Spiel beitreten</span><input class="inp code" id="oCode" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="CODE"><button class="btn ghost" data-act="oJoin">Beitreten</button></div>'+
+      '<div class="card"><span class="lbl">Fernseher oder Laptop</span><p class="lead">Ist das hier der große Bildschirm? Gib den Code des Spiels ein. Dann laufen Fragen, Countdown und Rangliste hier groß mit, gespielt wird am Handy.</p><input class="inp code" id="oTvCode" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="CODE"><button class="btn ghost" data-act="oTv">Als Bildschirm verbinden</button></div></div>';
   }).catch(()=>fail('Keine Verbindung zum Spiele-Server. Bist du online? Dann bitte gleich nochmal versuchen.'));
 }
 ACT.accOnline=()=>acctPage('online');
 function oName(){if(!$('#oName')&&ACC)return ACC.name;const v=($('#oName')&&$('#oName').value||'').trim().slice(0,14);if(!v){toast('Gib zuerst deinen Namen ein.');return null}SET.nick=v;saveSet();return v}
 let oBusy=false;
-async function oEnter(code,host){
-  const name=oName();if(!name||oBusy)return;oBusy=true;
+async function oEnter(code,host,tv){
+  const name=tv?'Bildschirm':oName();if(!name||oBusy)return;oBusy=true;
   try{
     const ns=await netNS();if(!ns)return;
     if(host){for(let i=0;i<6&&!(await ns.free(code));i++){code='';for(let j=0;j<4;j++)code+=pickOne(OCODE.split(''))}}
-    let rm;try{rm=await ns.enter(code,host)}catch(e){toast(e&&e.code==='not_permitted'?'Online-Spiele sind für dich hier nicht freigegeben.':'Verbindung fehlgeschlagen. Bitte nochmal versuchen.');return}
+    let rm;try{rm=await (tv?ns.watch(code):ns.enter(code,host))}catch(e){toast(e&&e.code==='not_permitted'?'Online-Spiele sind für dich hier nicht freigegeben.':'Verbindung fehlgeschlagen. Bitte nochmal versuchen.');return}
     onlineLeave();
-    O={code,host,rm,name,kind:ns.kind,log:[],rqDone:new Set(),peers:[],me:null,ep:-1,g:null,qi:-1,ans:null,unsub:[],sawHost:false};
+    O={code,host,tv:!!tv,rm,name,kind:ns.kind,log:[],rqDone:new Set(),peers:[],me:null,ep:-1,g:null,qi:-1,ans:null,unsub:[],sawHost:false};
     O.unsub.push(rm.onPeers(oPeers,e=>{if(O&&O.rm===rm)oGone(e&&e.code==='not_permitted'?'Der Spiele-Server hat den Zugriff abgelehnt. Sind die Datenbank-Regeln eingetragen?':'Die Verbindung ist abgerissen.')}));
     if(host){O.qs=[];O.g={ph:'lobby',b:BUILD,n:SET.onN,i:-1,sc:{},nm:{},ep:0};rm.presence({k:'h',n:name,g:O.g,sn:seenEncode()}).catch(()=>{})}
-    else{rm.presence({k:'p',n:name,sn:seenEncode()}).catch(()=>{});later(8000,()=>{if(O&&!O.host&&!O.sawHost)oGone('Unter dem Code '+code+' läuft gerade kein Spiel. Stimmt der Code?')})}
-    GAME='online';wake(true);oRender();
+    else{if(!tv)rm.presence({k:'p',n:name,sn:seenEncode()}).catch(()=>{});later(8000,()=>{if(O&&!O.host&&!O.sawHost)oGone('Unter dem Code '+code+' läuft gerade kein Spiel. Stimmt der Code?')})}
+    document.body.classList.toggle('tvm',!!tv);GAME='online';wake(true);oRender();
   }catch(_){toast('Keine Verbindung zum Spiele-Server. Bitte nochmal versuchen.')}
   finally{oBusy=false}
 }
 ACT.oHost=()=>{let c='';for(let i=0;i<4;i++)c+=pickOne(OCODE.split(''));oEnter(c,true)};
 ACT.oJoin=()=>{const c=($('#oCode').value||'').toUpperCase().replace(/[^A-Z]/g,'');if(c.length!==4)return toast('Der Code hat vier Buchstaben.');oEnter(c,false)};
-function onlineLeave(){if(!O)return;const o=O;O=null;for(const u of o.unsub)try{u()}catch(_){}try{o.rm.leave()}catch(_){}}
+ACT.oTv=()=>{const c=($('#oTvCode').value||'').toUpperCase().replace(/[^A-Z]/g,'');if(c.length!==4)return toast('Der Code hat vier Buchstaben.');oEnter(c,false,true)};
+function onlineLeave(){document.body.classList.remove('tvm');if(!O)return;const o=O;O=null;for(const u of o.unsub)try{u()}catch(_){}try{o.rm.leave()}catch(_){}}
 function oGone(msg){onlineLeave();clearLater();stopTimer();pzHide();GAME=null;wake(false);page(topBar('Online')+'<h2>Spiel vorbei</h2><p class="note">'+esc(msg)+'</p><button class="btn" data-act="go" data-v="online">Zurück zur Online-Lobby</button><button class="btn ghost" data-act="home">Zum Menü</button>')}
 function oPlayers(){return O.peers.filter(p=>p.kind==='viewer'&&p.presence&&(p.presence.k==='p'||p.presence.k==='h')&&p.presence.on!==false)}
 function pName(p){return String(p.presence&&p.presence.n||'Gast').slice(0,14)}
@@ -4627,6 +5025,7 @@ function oPush(silent){O.g.ep=(O.g.ep||0)+1;O.rm.presence({g:O.g}).catch(()=>{})
 function oRender(refresh){oRender0(refresh);if(O&&O.g)oPauseUI()}
 function oRender0(refresh){
   if(!O||!O.g)return oWait();
+  if(O.tv)return tvRender(refresh);
   const g=O.g;
   if(g.ph==='lobby'){if(!refresh||!$('#oLobby'))return oLobby();return oLobbyList()}
   if(g.ph==='vote'&&g.vote){if(O.shown!=='vote'+g.vote.id)return oVote();return oVoteRefresh()}
@@ -4641,9 +5040,12 @@ function oLobby(){
   page(topBar(O.host?'Dein Spiel':'Lobby','quit')+
     '<div class="codebox"><span class="lbl">Spiel-Code</span><b>'+esc(O.code)+'</b><span class="lead">'+(O.host?'Sag deinen Freunden diesen Code.':'Gastgeber: '+esc(O.hostName||''))+'</span></div>'+
     '<div class="card" id="oLobby"><span class="lbl">Dabei</span><div class="people" id="oPeople"></div></div>'+
-    (O.host?'<div class="card"><span class="lbl">Länge</span>'+seg('onN',[5,10,15],v=>v+' Fragen')+'<span class="lbl">Schwierigkeit</span>'+seg('onD',[0,1,2,3],v=>DIFFN[v])+'</div>'+
+    (O.host?'<div class="card"><span class="lbl">Spielart</span>'+seg('onBz',[0,1],v=>v?'Buzzer':'Normal')+'<p class="lead" id="oBzHint">'+bzHint()+'</p>'+
+        '<span class="lbl">Länge</span>'+seg('onN',[5,10,15],v=>v+' Fragen')+'<span class="lbl">Schwierigkeit</span>'+seg('onD',[0,1,2,3],v=>DIFFN[v])+'</div>'+
       '<div class="card"><span class="lbl">Regeln</span>'+togHTML('onVote','Kategorie-Abstimmung','Alle 5 Fragen stimmen alle ab, aus welcher von drei Kategorien es weitergeht.')+'<div class="sep"></div>'+
-        togHTML('onJoker','Joker','Jeder hat einmal 50:50 und einmal doppelte Punkte.')+'</div>'+
+        togHTML('onJoker','Joker','Jeder hat einmal 50:50 und einmal doppelte Punkte. Nicht im Buzzer-Modus.')+'<div class="sep"></div>'+
+        togHTML('onTV','Fernseher-Modus','Die Frage steht nur auf dem großen Bildschirm, am Handy tippt ihr die Antwort.')+
+        '<p class="lead" style="font-size:14px">Fernseher verbinden: Dort Quiz Abend öffnen, unter Online bei „Fernseher oder Laptop“ den Code '+esc(O.code)+' eingeben.</p></div>'+
       '<div class="card"><span class="lbl">Kategorien</span>'+catChips()+'</div><button class="btn" data-act="oStart">Starten</button>'
       :'<p class="note">Warte, bis '+esc(O.hostName||'der Gastgeber')+' das Spiel startet. Lass diese Seite offen.</p>')+reactBar());
   oLobbyList();
@@ -4653,21 +5055,23 @@ function oLobbyList(){const el=$('#oPeople');if(!el)return;
   el.innerHTML=oPlayers().map(p=>'<span class="person"><span class="dot" style="background:'+oColor(p.peer)+'"></span>'+esc(pName(p))+(p.presence.k==='h'?' · Gastgeber':'')+(p.sameTab?' (du)':'')+'</span>').join('')||'<span class="lead">Noch niemand da.</span>'}
 function qKey(){return Math.random().toString(36).slice(2,8)}
 /* gemeinsamer Spielstand ohne Frage-Details */
-function oBase(){const g=O.g;return{b:BUILD,n:g.n,sc:g.sc||{},nm:g.nm||{},ep:g.ep,gid:g.gid,jk:g.jk||0,j2:g.j2||{}}}
+function oBase(){const g=O.g;return{b:BUILD,n:g.n,sc:g.sc||{},nm:g.nm||{},ep:g.ep,gid:g.gid,jk:g.jk||0,j2:g.j2||{},tv:g.tv||0,bz:g.bz||0}}
+function oPred(){return O.cfg&&O.cfg.bz?(q=>!q.est):null}
+function bzHint(){return SET.onBz?'Wer zuerst drückt, darf antworten: richtig +1000, falsch −500, dann ist der Nächste dran. Ohne Schätzfragen.':'Alle antworten gleichzeitig, schnelle richtige Antworten bringen mehr Punkte.'}
 /* Fragen, die irgendein Mitspieler schon hatte, möglichst meiden */
 function oExclude(){EXCL=new Set();for(const p of oPlayers())if(!p.sameTab&&p.presence.sn)for(const id of seenDecode(p.presence.sn))EXCL.add(id)}
 ACT.oStart=()=>{
   if(!O||!O.host)return;USED=new Set();O.qs=[];oExclude();
   const sc={};for(const p of oPlayers())sc[p.peer]=0;
-  O.cfg={cats:SET.cats.slice(),dl:SET.onD||0,vote:!!SET.onVote};
-  O.g={b:BUILD,n:SET.onN,sc,nm:O.g.nm||{},ep:O.g.ep,gid:qKey(),jk:SET.onJoker?1:0,j2:{},ph:'lobby',i:0};
+  O.cfg={cats:SET.cats.slice(),dl:SET.onD||0,vote:!!SET.onVote,bz:!!SET.onBz};
+  O.g={b:BUILD,n:SET.onN,sc,nm:O.g.nm||{},ep:O.g.ep,gid:qKey(),jk:SET.onJoker&&!SET.onBz?1:0,j2:{},tv:SET.onTV?1:0,bz:SET.onBz?1:0,ph:'lobby',i:0};
   sfx('start');
   if(O.cfg.vote)return oStartVote();
-  O.qs=drawSet(SET.onN,O.cfg.cats,O.cfg.dl);oAskQ(0);
+  O.qs=drawSet(SET.onN,O.cfg.cats,O.cfg.dl,oPred());oAskQ(0);
 };
-function oAskQ(i){const q=O.qs[i];O.g=Object.assign(oBase(),{ph:'q',i,q:q.id,qk:qKey(),sd:Math.floor(R()*1e9),t:q.est?25:20});O.qp=oPlayers().map(p=>p.peer);oPush();oHostTimer()}
+function oAskQ(i){const q=O.qs[i];O.bzWait=false;O.g=Object.assign(oBase(),{ph:'q',i,q:q.id,qk:qKey(),sd:Math.floor(R()*1e9),t:q.est?25:20});O.qp=oPlayers().map(p=>p.peer);oPush();oHostTimer()}
 /* Zeitlimit: 3 s Countdown + Fragezeit + Puffer für langsame Verbindungen */
-function oHostTimer(){clearLater();const qk=O.g.qk,ms=(O.g.t+7)*1000;O.deadAt=performance.now()+ms;later(ms,()=>{if(O&&O.host&&O.g.ph==='q'&&O.g.qk===qk)oHostReveal()})}
+function oHostTimer(){clearLater();const qk=O.g.qk,ms=(O.g.t+(O.g.bz?4:7))*1000;O.deadAt=performance.now()+ms;later(ms,()=>{if(O&&O.host&&O.g.ph==='q'&&O.g.qk===qk)(O.g.bz?oBzTimeUp():oHostReveal())})}
 
 /* ---------- Kategorie-Abstimmung ---------- */
 function oStartVote(){
@@ -4686,7 +5090,7 @@ function oEndVote(){
   if(!O||!O.host||O.g.ph!=='vote'||O.g.vote.w)return;clearLater();const v=O.g.vote,cnt={};
   const vo=vOpts(v);for(const p of O.peers){const x=oMyVote(p);if(x&&x.id===v.id&&vo.includes(x.c))cnt[x.c]=(cnt[x.c]||0)+1}
   let best=-1,win=[];for(const c of vo){const n=cnt[c]||0;if(n>best){best=n;win=[c]}else if(n===best)win.push(c)}
-  const c=pickOne(win);O.qs.push(...drawSet(Math.min(RD,O.g.n-O.qs.length),[c],O.cfg.dl));
+  const c=pickOne(win);O.qs.push(...drawSet(Math.min(RD,O.g.n-O.qs.length),[c],O.cfg.dl,oPred()));
   O.g=Object.assign({},O.g,{vote:Object.assign({},v,{w:c,cnt})});oPush();
   later(2200,()=>{if(O&&O.host&&O.g.ph==='vote')oAskQ(O.g.i)});
 }
@@ -4711,15 +5115,20 @@ ACT.oVoteC=v=>{if(!O||O.g.ph!=='vote'||O.g.vote.w)return;O.myVote={id:O.g.vote.i
 
 /* ---------- Frage mit 3-2-1 vorweg ---------- */
 function oQuestion(){
-  const g=O.g,q=Q[g.q];if(!q)return;O.qi=g.i;O.ans=null;O.x2=false;O.shown='';O.t0=0;
+  const g=O.g,q=Q[g.q];if(!q)return;O.qi=g.i;O.ans=null;O.x2=false;O.shown='';O.t0=0;O.buzz=null;O.bzWin=null;O.bzOver=false;clearTimeout(O.bzT);
   if(O.gid!==g.gid){O.gid=g.gid;O.j50=false;O.j2=false;O.streakDone=false}
   if((g.j2||{})[O.me])O.j2=true;
   SEEN.add(q.id);saveSeen();
   page(topBar('Frage '+(g.i+1)+' von '+g.n,'quit')+
-    '<div id="qa" style="display:flex;flex-direction:column;gap:14px">'+qHead(q)+'<div class="timer"><i></i></div><p class="qtext">'+esc(q.q)+'</p>'+
-    (q.est?estHTML(q,'o','data-act="oEst"'):ansHTML(q,optOrder(q,rng(g.sd)),'data-act="oAns" data-v'))+jokerBar(q)+
+    '<div id="qa" style="display:flex;flex-direction:column;gap:14px">'+qHead(q)+'<div class="timer"><i></i></div>'+
+    (g.tv?'<p class="note">Die Frage steht auf dem Fernseher.</p>':'<p class="qtext">'+qtx(q)+'</p>')+
+    (q.est?estHTML(q,'o','data-act="oEst"'):ansHTML(q,optOrder(q,rng(g.sd)),'data-act="oAns" data-v').replace('class="answers"','class="answers'+(g.tv?' tvk':'')+(g.bz?' lock wait':'')+'"'))+
+    (g.bz?'<div id="oBzBox"></div><button class="buzz" id="oBuzzBtn" data-act="oBuzz">Buzzer</button>':jokerBar(q))+
     '<div id="oStat" class="people"></div></div>');
-  oPauseBtn();oAnswered();
+  oPauseBtn();oAnswered();oCountdown(g,q);
+}
+/* 3-2-1 vor jeder Frage, damit alle bereit sind */
+function oCountdown(g,q){
   O.cdPending=true;pzClear();$('#pzOv').hidden=false;$('#pzGo').hidden=true;
   $('#pzLbl').textContent='Frage '+(g.i+1)+' von '+g.n;$('#pzTxt').textContent=CATS[q.c].n+' · '+DIFFN[q.d];
   [3,2,1].forEach((n,k)=>PZT.push(setTimeout(()=>{$('#pzBig').textContent=String(n);sfx('tick')},k*1000)));
@@ -4727,6 +5136,8 @@ function oQuestion(){
 }
 function oStartQ(){
   if(!O||!O.cdPending||O.g.ph!=='q')return;O.cdPending=false;pzHide();const q=Q[O.g.q];O.t0=performance.now();sfx('start');
+  if(O.tv){startTimer(O.g.t,[$('#qa .timer')],()=>{});return}
+  if(O.g.bz){startTimer(O.g.t,[$('#qa .timer')],()=>{if(O&&O.g.bz){O.bzOver=true;oBzUI()}});oBzUI();return}
   startTimer(O.g.t,[$('#qa .timer')],()=>{if(O&&O.ans==null)oSend(q.est?estVal($('#qa .est')):null)});
 }
 function jokerBar(q){if(!O.g.jk)return '';
@@ -4753,7 +5164,7 @@ function oHostRequests(){
 }
 function oDoPause(by){
   const g=O.g,now=performance.now();clearLater();
-  O.pzLeft=Math.max(1500,((g.ph==='q'?O.deadAt:O.nextAt)||now)-now);
+  O.pzLeft=Math.max(1500,((g.ph==='q'?O.deadAt:O.nextAt)||now)-now);O.bzWait=false;
   O.g=Object.assign({},g,{pz:{id:qKey(),by:String(by||'Jemand').slice(0,14),cd:0}});oPush();
 }
 function oDoGo(){
@@ -4762,7 +5173,8 @@ function oDoGo(){
   later(3000,()=>{
     if(!O||!O.host||!O.g.pz)return;const g=Object.assign({},O.g);delete g.pz;O.g=g;oPush();
     const left=O.pzLeft||1500,qk=g.qk;
-    if(g.ph==='q'){O.deadAt=performance.now()+left;later(left,()=>{if(O&&O.host&&O.g.ph==='q'&&O.g.qk===qk)oHostReveal()});oHostCheck()}
+    if(g.ph==='q'){O.deadAt=performance.now()+left;later(left,()=>{if(O&&O.host&&O.g.ph==='q'&&O.g.qk===qk)(O.g.bz?oBzTimeUp():oHostReveal())});
+      if(g.bz&&g.bo)oBzGive(g.bo);else oHostCheck()}
     else if(g.ph==='r'){O.nextAt=performance.now()+left;later(left,()=>{if(O&&O.host&&O.g.ph==='r'&&O.g.qk===qk)ACT.oNext()})}
   });
 }
@@ -4772,12 +5184,12 @@ function pzHide(){pzClear();const ov=$('#pzOv');if(ov)ov.hidden=true}
 function oPauseUI(){
   const pz=(O.g.ph==='q'||O.g.ph==='r')?O.g.pz:null,ov=$('#pzOv');
   if(pz){
-    if(!O.pzOn){O.pzOn=true;O.pzT0=performance.now();pauseTimer()}
+    if(!O.pzOn){O.pzOn=true;O.pzT0=performance.now();pauseTimer();clearTimeout(O.bzT);O.bzWin=null}
     ov.hidden=false;const go=$('#pzGo');$('#pzLbl').textContent='Online-Spiel';
     if(pz.cd){if(O.cdFor!==pz.id){O.cdFor=pz.id;pzClear();go.hidden=true;$('#pzTxt').textContent='Gleich geht es weiter.';
         [3,2,1].forEach((n,i)=>PZT.push(setTimeout(()=>{$('#pzBig').textContent=String(n);sfx('tick')},i*1000)));
         PZT.push(setTimeout(()=>{$('#pzBig').textContent='Los!';sfx('start')},3000))}}
-    else if(O.pzShown!==pz.id){O.pzShown=pz.id;pzClear();sfx('gong');$('#pzBig').textContent='Pause';$('#pzTxt').textContent=pz.by+' hat pausiert. Die Zeit ist angehalten.';go.hidden=false;go.disabled=false}
+    else if(O.pzShown!==pz.id){O.pzShown=pz.id;pzClear();sfx('gong');$('#pzBig').textContent='Pause';$('#pzTxt').textContent=pz.by+' hat pausiert. Die Zeit ist angehalten.';go.hidden=!!O.tv;go.disabled=false}
   }else{
     if(O.pzOn){O.pzOn=false;if(O.t0)O.t0+=performance.now()-O.pzT0;resumeTimer();if(O.cdPending){oStartQ();return}}
     if(!O.cdPending)pzHide();
@@ -4786,24 +5198,26 @@ function oPauseUI(){
 
 /* ---------- Antworten ---------- */
 function oSend(v){
-  if(!O||O.ans||O.cdPending||O.g.ph!=='q')return;const q=Q[O.g.q];
-  O.ans={i:O.g.i,k:O.g.qk,v,ms:Math.round(performance.now()-O.t0)};if(O.x2)O.ans.x2=1;O.rm.presence({a:O.ans}).catch(()=>{});
+  if(!O||O.tv||O.ans||O.cdPending||O.g.ph!=='q'||O.g.pz)return;const q=Q[O.g.q];
+  if(O.g.bz&&O.g.bo!==O.me)return;
+  O.ans={i:O.g.i,k:O.g.qk,v,ms:Math.round(performance.now()-O.t0)};if(O.x2)O.ans.x2=1;if(O.g.bz){O.ans.w=O.g.bw;clearTimeout(O.bzT)}O.rm.presence({a:O.ans}).catch(()=>{});
   const root=$('#qa');if(root){
     if(q.est){const box=root.querySelector('.est');if(box){box.classList.add('lock');box.querySelector('input').disabled=true;const b=box.querySelector('.btn');b.disabled=true;b.textContent='Tipp steht: '+(v==null?'–':fmtN(v,q))}}
     else{const a=root.querySelector('.answers');a.classList.add('lock');for(const el of a.querySelectorAll('.ans'))el.classList.add(+el.dataset.v===v?'sel':'dim')}
     const jk=root.querySelector('#oJk');if(jk)for(const b of jk.querySelectorAll('button'))b.disabled=true;
   }
-  sfx('lock');stopTimer();oAnswered();if(O.host)oHostCheck();
+  sfx('lock');if(!O.g.bz)stopTimer();oAnswered();if(O.host)oHostCheck();
 }
 ACT.oAns=v=>oSend(+v);
 ACT.oEst=()=>oSend(estVal($('#qa .est')));
 function oHasAns(p){if(p.sameTab)return !!O.ans;const a=p.presence&&p.presence.a;return !!a&&a.i===O.g.i&&a.k===O.g.qk}
-function oAnswered(){const el=$('#oStat');if(!el)return;
+function oAnswered(){if(O.g&&O.g.bz)return oBzUI();const el=$('#oStat');if(!el)return;
   const ps=oPlayers();const n=ps.filter(oHasAns).length;
-  el.innerHTML='<span class="lbl" style="width:100%">'+(O.ans?'Antwort abgegeben · ':'')+n+' von '+ps.length+' haben geantwortet</span>'+ps.map(p=>'<span class="person'+(oHasAns(p)?' done':'')+'"><span class="dot" style="background:'+oColor(p.peer)+'"></span>'+esc(pName(p))+'</span>').join('')}
+  el.innerHTML='<span class="lbl" style="width:100%">'+(O.ans?'Antwort abgegeben · ':'')+n+' von '+ps.length+(ps.length===1?' hat':' haben')+' geantwortet</span>'+ps.map(p=>'<span class="person'+(oHasAns(p)?' done':'')+'"><span class="dot" style="background:'+oColor(p.peer)+'"></span>'+esc(pName(p))+'</span>').join('')}
 /* Früher auflösen nur, wenn alle, die bei Fragebeginn dabei waren, geantwortet haben.
    Wer kurz die Verbindung verliert, wird nicht gestrichen; dann endet die Frage mit der Zeit. */
 function oHostCheck(){
+  if(O&&O.g&&O.g.bz)return oBzCheck();
   if(!O||!O.host||O.g.ph!=='q'||O.g.pz)return;const qk=O.g.qk,by=new Map(O.peers.map(p=>[p.peer,p]));
   const need=O.qp&&O.qp.length?O.qp:oPlayers().map(p=>p.peer);
   if(need.length&&need.every(k=>{const p=by.get(k);return !!p&&p.presence&&p.presence.on!==false&&oHasAns(p)}))
@@ -4828,7 +5242,7 @@ ACT.oNext=()=>{
   if(!O||!O.host||O.g.ph!=='r'||O.g.pz)return;clearLater();const i=O.g.i+1;
   if(i>=O.g.n){O.g=Object.assign(oBase(),{ph:'end',i:O.g.i});oPush();return}
   if(O.cfg&&O.cfg.vote&&i>=O.qs.length)return oStartVote();
-  if(i>=O.qs.length)O.qs.push(...drawSet(1,O.cfg?O.cfg.cats:SET.cats,O.cfg?O.cfg.dl:0));
+  if(i>=O.qs.length)O.qs.push(...drawSet(1,O.cfg?O.cfg.cats:SET.cats,O.cfg?O.cfg.dl:0,oPred()));
   oAskQ(i);
 };
 function oList(withGain){const g=O.g;return Object.keys(g.sc||{}).map(k=>({k,n:(g.nm&&g.nm[k])||'Gast',c:oColor(k),s:g.sc[k]||0,plus:withGain&&g.gain?g.gain[k]||0:0}))}
@@ -4836,15 +5250,15 @@ function oReveal(){
   const g=O.g,q=Q[g.q];if(!q)return;
   if(O.qi!==g.i)oQuestion();
   O.cdPending=false;pzHide();O.shown='r'+g.i;stopTimer();
-  const root=$('#qa');if(!root)return;const mine=g.gain?g.gain[O.me]||0:0;const ok=mine>0,x2=!!(g.dbl&&g.dbl[O.me]);
+  const root=$('#qa');if(!root)return;const mine=g.gain?g.gain[O.me]||0:0;const ok=mine>0,x2=!!(g.dbl&&g.dbl[O.me]);clearTimeout(O.bzT);
   const my=O.ans&&O.ans.i===g.i?O.ans.v:null,good=q.est?(my!=null&&estOk(q,my)):my===0;
   if(q.est)lockEst(root,q,my);else markAnswers(root,q,my);
-  O.log.push({c:q.c,ok:good,ms:good&&O.ans?O.ans.ms:null,ex:!!(q.est&&my===q.v),x2:x2&&good});
-  const st=$('#oStat');if(st)st.remove();const jk=$('#oJk');if(jk)jk.remove();oPauseBtn();
+  if(!g.bz||(O.ans&&O.ans.i===g.i))O.log.push({c:q.c,ok:good,ms:good&&O.ans?(g.bz&&O.buzz?O.buzz.ms:O.ans.ms):null,ex:!!(q.est&&my===q.v),x2:x2&&good});
+  for(const id of ['#oStat','#oJk','#oBzBox','#oBuzzBtn']){const el=$(id);if(el)el.remove()}oPauseBtn();
   if(!q.est){const cnt={};for(const k in (g.pick||{}))cnt[g.pick[k]]=(cnt[g.pick[k]]||0)+1;
     for(const el of root.querySelectorAll('.ans')){const c=cnt[+el.dataset.v]||0;if(c)el.insertAdjacentHTML('beforeend','<span style="margin-left:auto;font-family:var(--f-disp);font-weight:900;font-size:20px">'+c+'×</span>')}}
   ok?sfx('ok'):sfx('bad');vib(ok?30:60);
-  root.insertAdjacentHTML('beforeend','<div class="fade-in" style="display:flex;flex-direction:column;gap:12px"><p class="verdict '+(ok?'ok':'bad')+'">'+(ok?'+'+mine+' Punkte'+(x2?' (×2)':''):my==null&&!q.est?'Keine Antwort':'Daneben')+'</p>'+
+  root.insertAdjacentHTML('beforeend','<div class="fade-in" style="display:flex;flex-direction:column;gap:12px"><p class="verdict '+(ok?'ok':'bad')+'">'+(ok?'+'+mine+' Punkte'+(x2?' (×2)':''):g.bz?(mine<0?'−'+(-mine)+' Punkte':g.bwn?esc(g.nm[g.bwn]||'Jemand')+' war schneller':'Keine Punkte'):my==null&&!q.est?'Keine Antwort':'Daneben')+'</p>'+
     (!ok&&!q.est?'<p class="lead">Richtig ist: '+esc(correctText(q))+'</p>':'')+(q.info?'<p class="info">'+esc(q.info)+'</p>':'')+reactBar()+
     '<span class="lbl">Zwischenstand</span>'+tableHTML(oList(true),O.me)+
     (O.host?'<button class="btn" data-act="oNext">'+(g.i+1>=g.n?'Zum Endstand':'Nächste Frage')+'</button><p class="lead" style="text-align:center">Geht in ein paar Sekunden von selbst weiter.</p>':'<p class="lead" style="text-align:center">Gleich kommt die nächste Frage.</p>')+'</div>');
@@ -4871,6 +5285,102 @@ function oReacts(){
     const known=p.peer in O.reSeen;if(O.reSeen[p.peer]===r.id)continue;O.reSeen[p.peer]=r.id;if(known)floatEmoji(r.e,pName(p))}
   for(const p of O.peers)if(!(p.peer in O.reSeen))O.reSeen[p.peer]=null;
 }
+/* ---------- Buzzer: wer zuerst drückt, antwortet. Falsch heißt raus, dann ist der Nächste dran ---------- */
+const BZ_WIN=7; /* Sekunden zum Antworten nach dem Buzzern */
+function oMyBuzz(p){return p.sameTab?O.buzz:p.presence&&p.presence.b}
+ACT.oBuzz=()=>{
+  if(!O||O.tv||!O.g||!O.g.bz||O.g.ph!=='q'||O.cdPending||O.g.pz||O.bzOver)return;const g=O.g;
+  if((g.bl||{})[O.me]||(O.buzz&&O.buzz.k===g.qk)||g.bt)return;
+  O.buzz={i:g.i,k:g.qk,ms:Math.round(performance.now()-O.t0)};O.rm.presence({b:O.buzz}).catch(()=>{});sfx('lock');vib(40);oBzUI();if(O.host)oBzCheck();
+};
+/* Gastgeber: kurz sammeln, dann bekommt der schnellste Druck (nach eigener Uhr gemessen) das Wort */
+function oBzCheck(){
+  if(!O||!O.host||!O.g||O.g.ph!=='q'||!O.g.bz||O.g.pz)return;const g=O.g,qk=g.qk;
+  if(g.bo){const p=O.peers.find(x=>x.peer===g.bo);const a=p&&(p.sameTab?O.ans:p.presence&&p.presence.a);if(a&&a.k===qk&&a.w===g.bw)oBzResult(g.bo,a.v);return}
+  if(g.bt||O.bzWait||!oBzQueue().length)return;
+  O.bzWait=true;later(300,()=>{O.bzWait=false;if(!O||!O.host||O.g.ph!=='q'||O.g.qk!==qk||O.g.bo||O.g.pz||O.g.bt)return;const c=oBzQueue();if(c.length)oBzGive(c[0].k)});
+}
+function oBzQueue(){const g=O.g,bl=g.bl||{};return oPlayers().filter(p=>!bl[p.peer]).map(p=>({k:p.peer,b:oMyBuzz(p)})).filter(x=>x.b&&x.b.k===g.qk).sort((a,b)=>(a.b.ms||0)-(b.b.ms||0))}
+function oBzGive(k){const bw=qKey(),qk=O.g.qk;O.g=Object.assign({},O.g,{bo:k,bw});oPush();
+  later((BZ_WIN+2.5)*1000,()=>{if(O&&O.host&&O.g.ph==='q'&&O.g.qk===qk&&O.g.bo===k&&O.g.bw===bw&&!O.g.pz)oBzResult(k,null)})}
+function oBzResult(k,v){
+  const g=O.g;if(g.ph!=='q'||g.bo!==k)return;const sc=Object.assign({},g.sc);
+  if(v===0){const gain=Object.assign({},g.bg||{}),pick=Object.assign({},g.bp||{});gain[k]=(gain[k]||0)+1000;sc[k]=(sc[k]||0)+1000;pick[k]=0;
+    O.g=Object.assign({},g,{sc,ph:'r',gain,pick,dbl:{},bwn:k,bo:''});oPush();return oBzNext()}
+  const bl=Object.assign({},g.bl||{}),bp=Object.assign({},g.bp||{}),bg=Object.assign({},g.bg||{});
+  bl[k]=1;if(v!=null)bp[k]=v;bg[k]=(bg[k]||0)-500;sc[k]=(sc[k]||0)-500;
+  O.g=Object.assign({},g,{bl,bp,bg,sc,bo:'',bw:''});oPush();
+  if(g.bt||oPlayers().every(p=>bl[p.peer]))return oBzReveal();
+  oBzCheck();
+}
+function oBzTimeUp(){if(!O||!O.host||O.g.ph!=='q')return;if(O.g.bo){O.g=Object.assign({},O.g,{bt:1});oPush();return}oBzReveal()}
+function oBzReveal(){if(!O||!O.host||O.g.ph!=='q')return;const g=O.g;
+  O.g=Object.assign({},g,{ph:'r',gain:Object.assign({},g.bg||{}),pick:Object.assign({},g.bp||{}),dbl:{},bwn:'',bo:''});oPush();oBzNext()}
+function oBzNext(){clearLater();stopTimer();const i=O.g.i;O.nextAt=performance.now()+11000;later(11000,()=>{if(O&&O.host&&O.g.ph==='r'&&O.g.i===i&&!O.g.pz)ACT.oNext()})}
+/* Anzeige am Handy und am Fernseher */
+function oBzUI(){
+  const g=O.g;if(!g||!g.bz||g.ph!=='q')return;const box=$('#oBzBox');if(!box)return;
+  const bl=g.bl||{},bp=g.bp||{},me=O.me,mine=!O.tv&&!!g.bo&&g.bo===me,out=!O.tv&&!!bl[me],pressed=!!(O.buzz&&O.buzz.k===g.qk);
+  /* falsch getippte Antworten für alle durchstreichen */
+  const wrong=Object.values(bp);for(const el of document.querySelectorAll('#qa .ans'))el.classList.toggle('bad',wrong.includes(+el.dataset.v));
+  const ans=$('#qa .answers');if(ans&&!O.tv){const open=mine&&!O.ans;ans.classList.toggle('lock',!open);ans.classList.toggle('wait',!open&&!O.ans)}
+  if(mine&&!O.ans&&O.bzWin!==g.bw){O.bzWin=g.bw;sfx('reveal');vib(80);clearTimeout(O.bzT);const bw=g.bw;
+    O.bzT=setTimeout(()=>{if(O&&O.g.ph==='q'&&O.g.bo===me&&O.g.bw===bw&&!O.ans)oSend(null)},BZ_WIN*1000)}
+  const who=esc(g.bo?(g.nm[g.bo]||'Jemand'):'');let t;
+  if(O.tv)t=g.bo?'🔔 '+who+' ist dran!':g.bt||O.bzOver?'Die Zeit ist um.':O.cdPending?'Gleich geht es los.':'Wer weiß es? Am Handy buzzern!';
+  else if(mine)t=O.ans?'Antwort ist raus …':'Du bist dran! Tipp schnell die Antwort.';
+  else if(out)t='Leider falsch. Bei dieser Frage bist du raus.';
+  else if(g.bo)t=who+' ist dran …'+(pressed?' Du bist danach dran, falls es falsch ist.':'');
+  else if(O.bzOver||g.bt)t='Die Zeit ist um.';
+  else t=pressed?'Gedrückt!':'Wer zuerst drückt, darf antworten.';
+  const bar=g.bo&&(O.tv||mine)&&!(mine&&O.ans)?'<div class="timer bzt"><i style="animation-duration:'+BZ_WIN+'s"></i></div>':'';
+  const key=t+'|'+(g.bo?g.bw:'');if(box.dataset.k!==key){box.dataset.k=key;box.innerHTML='<p class="bzmsg'+(mine&&!O.ans?' me':'')+'">'+t+'</p>'+bar}
+  const btn=$('#oBuzzBtn');if(btn){btn.disabled=out||mine||O.bzOver||!!g.bt||pressed||!!O.cdPending;btn.classList.toggle('pressed',pressed)}
+  const st=$('#oStat');if(st)st.innerHTML=oPlayers().map(p=>{const k=p.peer,b=oMyBuzz(p),c=g.bo===k?' on':bl[k]?' out':b&&b.k===g.qk?' done':'';
+    return '<span class="person'+c+'"><span class="dot" style="background:'+oColor(k)+'"></span>'+esc(pName(p))+(bl[k]?' ✗':g.bo===k?' 🔔':'')+'</span>'}).join('');
+}
+
+/* ---------- Fernseher: zeigt alles groß, gespielt wird am Handy ---------- */
+function tvRender(refresh){
+  const g=O.g;
+  if(g.ph==='lobby'){if(!refresh||!$('#tvLobby'))return tvLobby();return oLobbyList()}
+  if(g.ph==='vote'&&g.vote){if(O.shown!=='vote'+g.vote.id)return tvVote();return tvVoteRefresh()}
+  if(g.ph==='q'){if(O.qi!==g.i)return tvQuestion();return oAnswered()}
+  if(g.ph==='r'){if(O.shown!=='r'+g.i)return tvReveal();return}
+  if(g.ph==='end'){if(O.shown!=='end'+g.ep)return tvEnd()}
+}
+function tvTop(t){return '<div class="bar"><button class="icon-btn" data-act="quit" aria-label="Bildschirm trennen">'+XICON+'</button><h3 class="grow">'+t+'</h3><span class="tvcode">Code <b>'+esc(O.code)+'</b></span></div>'}
+function tvLobby(){O.shown='lobby';O.qi=-1;pzHide();stopTimer();
+  page(tvTop('Quiz Abend')+'<div class="tvlobby" id="tvLobby"><div class="codebox tvbig"><span class="lbl">Spiel-Code</span><b>'+esc(O.code)+'</b><span class="lead">Am Handy: Quiz Abend · Online · Beitreten</span></div>'+
+    '<div class="card"><span class="lbl">Dabei</span><div class="people" id="oPeople"></div><p class="lead">'+esc(O.hostName||'Der Gastgeber')+' startet das Spiel am Handy.</p></div></div>');
+  oLobbyList()}
+function tvVote(){const g=O.g,v=g.vote;O.shown='vote'+v.id;O.qi=-1;O.cdPending=false;pzHide();
+  page(tvTop('Abstimmung')+'<h2>Welche Kategorie kommt als Nächstes?</h2><p class="lead">Abstimmen am Handy. Die nächsten '+Math.min(RD,g.n-g.i)+' Fragen kommen aus der Kategorie mit den meisten Stimmen.</p>'+
+    '<div class="tvvote" id="oVoteGrid">'+vOpts(v).map(c=>'<div class="catbtn" style="--c:'+CATS[c].c+'" data-v="'+c+'">'+CATS[c].n+'<em class="vc"></em></div>').join('')+'</div><div class="timer"><i></i></div><div id="oVoteStat" class="people"></div>');
+  if(!v.w)startTimer(12,[$('#page .timer')],()=>{});tvVoteRefresh()}
+function tvVoteRefresh(){const v=O.g.vote;if(!v||!$('#oVoteGrid'))return;const live={};
+  for(const p of oPlayers()){const x=p.presence.vt;if(x&&x.id===v.id)live[x.c]=(live[x.c]||0)+1}
+  const cnt=v.w?(v.cnt||{}):live;
+  for(const b of document.querySelectorAll('#oVoteGrid .catbtn')){const c=b.dataset.v,n=cnt[c]||0;b.classList.toggle('win',v.w===c);b.classList.toggle('lose',!!v.w&&v.w!==c);b.querySelector('.vc').textContent=n+(n===1?' Stimme':' Stimmen')}
+  $('#oVoteStat').innerHTML=oPlayers().map(p=>{const x=p.presence.vt;return '<span class="person'+(x&&x.id===v.id?' done':'')+'"><span class="dot" style="background:'+oColor(p.peer)+'"></span>'+esc(pName(p))+'</span>'}).join('');
+  if(v.w&&O.voteSnd!==v.id){O.voteSnd=v.id;stopTimer();sfx('reveal')}}
+function tvQuestion(){const g=O.g,q=Q[g.q];if(!q)return;O.qi=g.i;O.shown='';O.t0=0;O.bzOver=false;
+  page(tvTop('Frage '+(g.i+1)+' von '+g.n)+'<div class="tvgrid"><div id="qa" class="tvq">'+qHead(q)+'<p class="qtext">'+qtx(q)+'</p><div class="timer"><i></i></div>'+
+    (q.est?'<div class="tvest"><span>'+fmtN(q.lo,q)+'</span><b>Schätzen am Handy'+(q.u&&q.u!=='Jahr'?' · '+esc(q.u):'')+'</b><span>'+fmtN(q.hi,q)+'</span></div>'
+      :'<div class="answers tvk tvans">'+optOrder(q,rng(g.sd)).map((oi,k)=>'<div class="ans" data-v="'+oi+'"><span class="k">'+'ABCD'[k]+'</span><span>'+esc(q.opts[oi])+'</span></div>').join('')+'</div>')+
+    '</div><div class="tvside" id="tvSide">'+(g.bz?'<div id="oBzBox"></div>':'')+'<div id="oStat" class="people"></div></div></div>');
+  oAnswered();oCountdown(g,q)}
+function tvReveal(){const g=O.g,q=Q[g.q];if(!q)return;if(O.qi!==g.i)tvQuestion();O.cdPending=false;pzHide();O.shown='r'+g.i;stopTimer();
+  const root=$('#qa'),side=$('#tvSide');if(!root||!side)return;const tm=root.querySelector('.timer');if(tm)tm.remove();
+  if(q.est){const e=root.querySelector('.tvest');if(e)e.outerHTML='<div class="tvest ok"><b>Richtig: '+esc(correctText(q))+'</b></div>'}
+  else{const cnt={};for(const k in (g.pick||{}))cnt[g.pick[k]]=(cnt[g.pick[k]]||0)+1;
+    for(const el of root.querySelectorAll('.ans')){const v=+el.dataset.v;el.classList.remove('bad');el.classList.add(v===0?'ok':'dim');if(cnt[v])el.insertAdjacentHTML('beforeend','<span class="cnt">'+cnt[v]+'×</span>')}}
+  const win=g.bz&&g.bwn?g.nm[g.bwn]||'Jemand':'';sfx('reveal');
+  side.innerHTML='<div class="fade-in" style="display:flex;flex-direction:column;gap:14px">'+(g.bz?'<p class="verdict '+(win?'ok':'bad')+'">'+(win?esc(win)+' hat es gewusst!':'Niemand hatte es richtig.')+'</p>':'')+
+    (q.info?'<p class="info">'+esc(q.info)+'</p>':'')+'<span class="lbl">Zwischenstand</span>'+tableHTML(oList(true),null)+'</div>'}
+function tvEnd(){O.shown='end'+O.g.ep;stopTimer();pzHide();O.cdPending=false;sfx('end');const list=oList(false),r=rankList(list);
+  page(tvTop('Endstand')+'<div class="tvgrid"><div><div class="hand" style="flex:0"><span class="lbl">Sieger</span><div class="big" style="color:var(--lampe)">'+r.filter(x=>x.pl===1).map(x=>esc(x.n)).join(' & ')+'</div></div>'+podiumHTML(list)+'</div>'+
+    '<div class="tvside">'+tableHTML(list,null)+'<p class="lead">'+esc(O.hostName||'Der Gastgeber')+' kann am Handy ein neues Spiel mit allen starten.</p></div></div>')}
 function floatEmoji(e,who){
   const d=document.createElement('div');d.className='fly';d.style.left=(8+Math.random()*76)+'%';
   d.innerHTML='<b>'+e+'</b><small>'+esc(who)+'</small>';document.body.appendChild(d);setTimeout(()=>d.remove(),2700);
@@ -5044,7 +5554,7 @@ async function syncPull(){
   if(!ACC||!FBA)return;
   try{
     const v=(await FBA.db.ref('users/'+ACC.uid+'/sync').get()).val();
-    if(v&&v.set&&(v.t||0)>ST.get('synct',0)){try{const o=JSON.parse(v.set);for(const k in o)if(k in SET)SET[k]=o[k];ST.set('set',SET)}catch(_){}}
+    if(v&&v.set&&(v.t||0)>ST.get('synct',0)){try{const o=JSON.parse(v.set);for(const k in o)if(k in SET)SET[k]=o[k];catsMig(o);ST.set('set',SET)}catch(_){}}
     if(v&&v.seen){for(const id of seenDecode(v.seen))if(id<Q.length)SEEN.add(id);ST.set('seen',[...SEEN])}
     soundIcon();homeInfo();syncPush(true);
   }catch(_){}
@@ -5120,7 +5630,7 @@ const ACH=[
   ['fast','Blitzmerker','Richtig in unter 2 Sekunden'],['ex','Punktlandung','Eine Schätzfrage genau getroffen'],
   ['x2','Doppelt hält besser','Mit dem ×2-Joker richtig geantwortet'],['c10','Perfekte Challenge','Challenge mit 10 von 10'],
   ['d1','Tagesquiz','Dein erstes Tagesquiz'],['d7','Eine Woche dabei','Tagesquiz an 7 Tagen in Folge'],
-  ['d10','Tagesbestwert','Tagesquiz mit 10 von 10'],['all','Allrounder','In allen 11 Kategorien richtig geantwortet'],
+  ['d10','Tagesbestwert','Tagesquiz mit 10 von 10'],['all','Allrounder','In allen 12 Kategorien richtig geantwortet'],
   ['fach','Fachgebiet','In einer Kategorie mindestens 20 Fragen und 80 % richtig'],['r100','Hundert','100 richtige Antworten'],
   ['r500','Fünfhundert','500 richtige Antworten'],['r1000','Wissensriese','1000 richtige Antworten']];
 function maxRun(log){let m=0,c=0;for(const x of log){c=x.ok?c+1:0;if(c>m)m=c}return m}
