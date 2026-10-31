@@ -282,6 +282,12 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:18px;margin:0;color:var(-
 .linkbtn{color:var(--lampe);font-weight:700;text-decoration:underline;align-self:flex-start;min-height:44px}
 #accForm .lbl{margin-bottom:-6px}
 
+/* Pause im Online-Spiel */
+#pzOv{position:fixed;inset:0;z-index:45;display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 24px) max(16px,env(safe-area-inset-left,0px));background:rgba(12,15,36,.95);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+#pzOv .pzc{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;width:100%;max-width:360px}
+#pzBig{font-family:var(--f-disp);font-weight:800;font-size:clamp(72px,24vw,128px);line-height:.9;letter-spacing:-.03em;color:var(--lampe);text-shadow:0 0 40px rgba(255,192,77,.45);font-variant-numeric:tabular-nums}
+#pzOv .btn{min-width:220px}
+
 /* Großer Einblender */
 #ovl{position:fixed;inset:0;display:grid;place-items:center;pointer-events:none;z-index:50;padding:0 16px}
 #ovl .t{font-family:var(--f-disp);font-weight:800;font-size:clamp(56px,18vw,120px);line-height:.9;letter-spacing:-.03em;text-align:center;color:var(--lampe);
@@ -329,12 +335,13 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:18px;margin:0;color:var(-
 </section>
 
 </div>
+<div id="pzOv" hidden><div class="pzc"><span class="lbl">Online-Spiel</span><div id="pzBig">Pause</div><p class="lead" id="pzTxt"></p><button class="btn" id="pzGo" data-act="oGo">Weiter</button></div></div>
 <div id="ovl"></div>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
 'use strict';
-const BUILD='2026-10-31-5';
+const BUILD='2026-10-31-6';
 /* ==========================================================================
    FRAGEN
    Multiple Choice: [Kategorie, Stufe 1–3, Frage, RICHTIG, falsch, falsch, falsch, Info]
@@ -1184,10 +1191,12 @@ function correctText(q){return q.est?fmtN(q.v,q)+(q.u&&q.u!=='Jahr'?' '+q.u:''):
 let TM=null;
 function startTimer(sec,bars,onEnd){TM={t0:performance.now(),dur:sec*1000,bars,onEnd,last:99}}
 function stopTimer(){TM=null}
-function timeLeft(){return TM?Math.max(0,TM.dur-(performance.now()-TM.t0)):0}
+function pauseTimer(){if(TM&&!TM.pz)TM.pz=performance.now()}
+function resumeTimer(){if(TM&&TM.pz){TM.t0+=performance.now()-TM.pz;TM.pz=0}}
+function timeLeft(){return TM?Math.max(0,TM.dur-((TM.pz||performance.now())-TM.t0)):0}
 function loop(){
   requestAnimationFrame(loop);
-  if(!TM)return;
+  if(!TM||TM.pz)return;
   const el=performance.now()-TM.t0,left=Math.max(0,1-el/TM.dur);
   for(const b of TM.bars){if(!b.isConnected)continue;b.firstElementChild.style.transform='scaleX('+left+')';b.classList.toggle('hurry',left<.25)}
   const s=Math.ceil((TM.dur-el)/1000);if(s<=3&&s>0&&s!==TM.last){TM.last=s;sfx('tick')}
@@ -1203,7 +1212,7 @@ function page(html){const p=$('#page');p.innerHTML=html;p.classList.remove('fade
 const BACK='<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>';
 const XICON='<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>';
 function topBar(title,act){return '<div class="bar"><button class="icon-btn" data-act="'+(act||'home')+'" aria-label="Zurück">'+(act==='quit'?XICON:BACK)+'</button><h3 class="grow">'+title+'</h3></div>'}
-function goHome(){clearLater();stopTimer();GAME=null;wake(false);onlineLeave();homeInfo();show('home')}
+function goHome(){clearLater();stopTimer();pzHide();GAME=null;wake(false);onlineLeave();homeInfo();show('home')}
 ACT.home=goHome;
 ACT.go=v=>{({duelSetup,partySetup,qmSetup,online:onlineStart,chal:chalStart})[v]()};
 ACT.sound=()=>{SET.sound=!SET.sound;saveSet();soundIcon();if(SET.sound)sfx('ok')};
@@ -1680,7 +1689,7 @@ async function oEnter(code,host){
     if(host){for(let i=0;i<6&&!(await ns.free(code));i++){code='';for(let j=0;j<4;j++)code+=pickOne(OCODE.split(''))}}
     let rm;try{rm=await ns.enter(code,host)}catch(e){toast(e&&e.code==='not_permitted'?'Online-Spiele sind für dich hier nicht freigegeben.':'Verbindung fehlgeschlagen. Bitte nochmal versuchen.');return}
     onlineLeave();
-    O={code,host,rm,name,kind:ns.kind,log:[],peers:[],me:null,ep:-1,g:null,qi:-1,ans:null,unsub:[],sawHost:false};
+    O={code,host,rm,name,kind:ns.kind,log:[],rqDone:new Set(),peers:[],me:null,ep:-1,g:null,qi:-1,ans:null,unsub:[],sawHost:false};
     O.unsub.push(rm.onPeers(oPeers,e=>{if(O&&O.rm===rm)oGone(e&&e.code==='not_permitted'?'Der Spiele-Server hat den Zugriff abgelehnt. Sind die Datenbank-Regeln eingetragen?':'Die Verbindung ist abgerissen.')}));
     if(host){O.qs=[];O.g={ph:'lobby',b:BUILD,n:SET.onN,i:-1,sc:{},nm:{},ep:0};rm.presence({k:'h',n:name,g:O.g}).catch(()=>{})}
     else{rm.presence({k:'p',n:name}).catch(()=>{});later(8000,()=>{if(O&&!O.host&&!O.sawHost)oGone('Unter dem Code '+code+' läuft gerade kein Spiel. Stimmt der Code?')})}
@@ -1691,7 +1700,7 @@ async function oEnter(code,host){
 ACT.oHost=()=>{let c='';for(let i=0;i<4;i++)c+=pickOne(OCODE.split(''));oEnter(c,true)};
 ACT.oJoin=()=>{const c=($('#oCode').value||'').toUpperCase().replace(/[^A-Z]/g,'');if(c.length!==4)return toast('Der Code hat vier Buchstaben.');oEnter(c,false)};
 function onlineLeave(){if(!O)return;const o=O;O=null;for(const u of o.unsub)try{u()}catch(_){}try{o.rm.leave()}catch(_){}}
-function oGone(msg){onlineLeave();clearLater();stopTimer();GAME=null;wake(false);page(topBar('Online')+'<h2>Spiel vorbei</h2><p class="note">'+esc(msg)+'</p><button class="btn" data-act="go" data-v="online">Zurück zur Online-Lobby</button><button class="btn ghost" data-act="home">Zum Menü</button>')}
+function oGone(msg){onlineLeave();clearLater();stopTimer();pzHide();GAME=null;wake(false);page(topBar('Online')+'<h2>Spiel vorbei</h2><p class="note">'+esc(msg)+'</p><button class="btn" data-act="go" data-v="online">Zurück zur Online-Lobby</button><button class="btn ghost" data-act="home">Zum Menü</button>')}
 function oPlayers(){return O.peers.filter(p=>p.kind==='viewer'&&p.presence&&(p.presence.k==='p'||p.presence.k==='h')&&p.presence.on!==false)}
 function pName(p){return String(p.presence&&p.presence.n||'Gast').slice(0,14)}
 function oPeers(ch){
@@ -1701,7 +1710,7 @@ function oPeers(ch){
     let dirty=false;for(const p of oPlayers()){const n=pName(p);if(O.g.nm[p.peer]!==n){O.g.nm[p.peer]=n;dirty=true}if(O.g.sc[p.peer]==null){O.g.sc[p.peer]=0;dirty=true}}
     if(O.g.ph==='lobby'){for(const k in O.g.sc)if(!oPlayers().some(p=>p.peer===k)){delete O.g.sc[k];delete O.g.nm[k];dirty=true}}
     if(dirty)oPush(true);
-    oHostCheck();oRender(true);return;
+    oHostRequests();oHostCheck();oRender(true);return;
   }
   const h=ch.peers.find(p=>p.presence&&p.presence.k==='h'&&p.kind==='viewer');
   if(!h){if(O.sawHost){O.hostMiss=O.hostMiss||Date.now();later(3500,()=>{if(O&&O.hostMiss&&!O.peers.some(p=>p.presence&&p.presence.k==='h'))oGone('Der Gastgeber hat das Spiel verlassen.')})}return}
@@ -1714,7 +1723,8 @@ function oPeers(ch){
 function oVersion(){page(topBar('Online','quit')+'<h2>Unterschiedliche Versionen</h2><p class="note">Du und der Gastgeber habt verschiedene Versionen von Quiz Abend geöffnet. Ladet beide die Seite neu und tretet dem Spiel erneut bei.</p>')}
 function oPush(silent){O.g.ep=(O.g.ep||0)+1;O.rm.presence({g:O.g}).catch(()=>{});if(!silent){O.ep=O.g.ep;oRender()}}
 /* Zeichnen: refresh=true aktualisiert nur Listen, ohne die Frage neu aufzubauen */
-function oRender(refresh){
+function oRender(refresh){oRender0(refresh);if(O&&O.g)oPauseUI()}
+function oRender0(refresh){
   if(!O||!O.g)return oWait();
   const g=O.g;
   if(g.ph==='lobby'){if(!refresh||!$('#oLobby'))return oLobby();return oLobbyList()}
@@ -1743,7 +1753,7 @@ ACT.oStart=()=>{
 };
 function qKey(){return Math.random().toString(36).slice(2,8)}
 /* Zeitlimit: Fragezeit plus Puffer für langsame Verbindungen */
-function oHostTimer(){clearLater();const qk=O.g.qk;later((O.g.t+4)*1000,()=>{if(O&&O.host&&O.g.ph==='q'&&O.g.qk===qk)oHostReveal()})}
+function oHostTimer(){clearLater();const qk=O.g.qk;O.deadAt=performance.now()+(O.g.t+4)*1000;later((O.g.t+4)*1000,()=>{if(O&&O.host&&O.g.ph==='q'&&O.g.qk===qk)oHostReveal()})}
 function oQuestion(){
   const g=O.g,q=Q[g.q];if(!q)return;O.qi=g.i;O.ans=null;O.t0=performance.now();O.shown='';
   page(topBar('Frage '+(g.i+1)+' von '+g.n,'quit')+
@@ -1751,7 +1761,54 @@ function oQuestion(){
     (q.est?estHTML(q,'o','data-act="oEst"'):ansHTML(q,optOrder(q,rng(g.sd)),'data-act="oAns" data-v'))+
     '<div id="oStat" class="people"></div></div>');
   startTimer(g.t,[$('#qa .timer')],()=>{if(O&&O.ans==null)oSend(q.est?estVal($('#qa .est')):null)});
-  oAnswered();
+  oPauseBtn();oAnswered();
+}
+/* ---------- Pause: alle dürfen anhalten, wer „Weiter“ drückt, startet 3-2-1 ---------- */
+function oPauseBtn(){const bar=$('#page .bar');if(bar&&!bar.querySelector('[data-act=oPause]'))bar.insertAdjacentHTML('beforeend','<button class="icon-btn" data-act="oPause" aria-label="Spiel pausieren"><svg viewBox="0 0 24 24"><path d="M9 6v12M15 6v12"/></svg></button>')}
+ACT.oPause=()=>{
+  if(!O||!O.g||O.g.pz||(O.g.ph!=='q'&&O.g.ph!=='r'))return;sfx('lock');
+  if(O.host)oDoPause(O.name);else O.rm.presence({rq:{x:'pause',g:O.g.qk,id:qKey()}}).catch(()=>{});
+};
+ACT.oGo=(v,b)=>{
+  if(!O||!O.g||!O.g.pz||O.g.pz.cd)return;b.disabled=true;
+  if(O.host)oDoGo();else O.rm.presence({rq:{x:'go',p:O.g.pz.id,id:qKey()}}).catch(()=>{});
+};
+function oHostRequests(){
+  for(const p of O.peers){const rq=p.presence&&p.presence.rq;if(!rq||!rq.id||O.rqDone.has(rq.id))continue;O.rqDone.add(rq.id);
+    if(rq.x==='pause'&&rq.g===O.g.qk&&!O.g.pz&&(O.g.ph==='q'||O.g.ph==='r'))oDoPause(pName(p));
+    else if(rq.x==='go'&&O.g.pz&&rq.p===O.g.pz.id&&!O.g.pz.cd)oDoGo();}
+}
+function oDoPause(by){
+  const g=O.g,now=performance.now();clearLater();
+  O.pzLeft=Math.max(1500,((g.ph==='q'?O.deadAt:O.nextAt)||now)-now);
+  O.g=Object.assign({},g,{pz:{id:qKey(),by:String(by||'Jemand').slice(0,14),cd:0}});oPush();
+}
+function oDoGo(){
+  if(!O.g.pz||O.g.pz.cd)return;
+  O.g=Object.assign({},O.g,{pz:Object.assign({},O.g.pz,{cd:1})});oPush();
+  later(3000,()=>{
+    if(!O||!O.host||!O.g.pz)return;const g=Object.assign({},O.g);delete g.pz;O.g=g;oPush();
+    const left=O.pzLeft||1500,qk=g.qk;
+    if(g.ph==='q'){O.deadAt=performance.now()+left;later(left,()=>{if(O&&O.host&&O.g.ph==='q'&&O.g.qk===qk)oHostReveal()});oHostCheck()}
+    else if(g.ph==='r'){O.nextAt=performance.now()+left;later(left,()=>{if(O&&O.host&&O.g.ph==='r'&&O.g.qk===qk)ACT.oNext()})}
+  });
+}
+let PZT=[];
+function pzClear(){for(const t of PZT)clearTimeout(t);PZT=[]}
+function pzHide(){pzClear();const ov=$('#pzOv');if(ov)ov.hidden=true}
+function oPauseUI(){
+  const pz=(O.g.ph==='q'||O.g.ph==='r')?O.g.pz:null,ov=$('#pzOv');
+  if(pz){
+    if(!O.pzOn){O.pzOn=true;O.pzT0=performance.now();pauseTimer()}
+    ov.hidden=false;const go=$('#pzGo');
+    if(pz.cd){if(O.cdFor!==pz.id){O.cdFor=pz.id;pzClear();go.hidden=true;$('#pzTxt').textContent='Gleich geht es weiter.';
+        [3,2,1].forEach((n,i)=>PZT.push(setTimeout(()=>{$('#pzBig').textContent=String(n);sfx('tick')},i*1000)));
+        PZT.push(setTimeout(()=>{$('#pzBig').textContent='Los!';sfx('start')},3000))}}
+    else if(O.pzShown!==pz.id){O.pzShown=pz.id;pzClear();sfx('gong');$('#pzBig').textContent='Pause';$('#pzTxt').textContent=pz.by+' hat pausiert. Die Zeit ist angehalten.';go.hidden=false;go.disabled=false}
+  }else{
+    if(O.pzOn){O.pzOn=false;if(O.t0)O.t0+=performance.now()-O.pzT0;resumeTimer()}
+    pzHide();
+  }
 }
 function oSend(v){
   if(!O||O.ans||O.g.ph!=='q')return;const q=Q[O.g.q];
@@ -1771,7 +1828,7 @@ function oAnswered(){const el=$('#oStat');if(!el)return;
 /* Früher auflösen nur, wenn alle, die bei Fragebeginn dabei waren, geantwortet haben.
    Wer kurz die Verbindung verliert, wird nicht gestrichen; dann endet die Frage mit der Zeit. */
 function oHostCheck(){
-  if(!O||!O.host||O.g.ph!=='q')return;const qk=O.g.qk,by=new Map(O.peers.map(p=>[p.peer,p]));
+  if(!O||!O.host||O.g.ph!=='q'||O.g.pz)return;const qk=O.g.qk,by=new Map(O.peers.map(p=>[p.peer,p]));
   const need=O.qp&&O.qp.length?O.qp:oPlayers().map(p=>p.peer);
   if(need.length&&need.every(k=>{const p=by.get(k);return !!p&&p.presence&&p.presence.on!==false&&oHasAns(p)}))
     later(400,()=>{if(O&&O.g.ph==='q'&&O.g.qk===qk)oHostReveal()});
@@ -1782,14 +1839,14 @@ function oScore(q,a,t){
   if(a.v!==0)return 0;return 500+Math.round(500*Math.max(0,1-(a.ms||0)/(t*1000)));
 }
 function oHostReveal(){
-  if(!O||!O.host||O.g.ph!=='q')return;clearLater();stopTimer();
+  if(!O||!O.host||O.g.ph!=='q'||O.g.pz)return;clearLater();stopTimer();
   const g=O.g,q=Q[g.q],gain={},pick={};
   for(const p of O.peers.filter(p=>p.kind==='viewer'&&p.presence&&(p.presence.k==='p'||p.presence.k==='h'))){const a=p.sameTab?O.ans:(p.presence.a&&p.presence.a.i===g.i&&p.presence.a.k===g.qk?p.presence.a:null);const pts=oScore(q,a,g.t);gain[p.peer]=pts;g.sc[p.peer]=(g.sc[p.peer]||0)+pts;g.nm[p.peer]=pName(p);if(a&&a.v!=null&&!q.est)pick[p.peer]=a.v}
   O.g=Object.assign({},g,{ph:'r',gain,pick});oPush();
-  later(11000,()=>{if(O&&O.host&&O.g.ph==='r'&&O.g.i===g.i)ACT.oNext()});
+  O.nextAt=performance.now()+11000;later(11000,()=>{if(O&&O.host&&O.g.ph==='r'&&O.g.i===g.i&&!O.g.pz)ACT.oNext()});
 }
 ACT.oNext=()=>{
-  if(!O||!O.host||O.g.ph!=='r')return;clearLater();const g=O.g,i=g.i+1;
+  if(!O||!O.host||O.g.ph!=='r'||O.g.pz)return;clearLater();const g=O.g,i=g.i+1;
   if(i>=O.qs.length){O.g={ph:'end',b:BUILD,n:g.n,i:g.i,sc:g.sc,nm:g.nm,ep:g.ep};oPush();return}
   O.g={ph:'q',b:BUILD,n:g.n,i,q:O.qs[i].id,qk:qKey(),sd:Math.floor(R()*1e9),t:O.qs[i].est?25:20,sc:g.sc,nm:g.nm,ep:g.ep};
   O.qp=oPlayers().map(p=>p.peer);oPush();oHostTimer();
@@ -1803,7 +1860,7 @@ function oReveal(){
   const my=O.ans&&O.ans.i===g.i?O.ans.v:null;
   if(q.est)lockEst(root,q,my);else markAnswers(root,q,my);
   O.log.push({c:q.c,ok:q.est?(my!=null&&estOk(q,my)):my===0});
-  const st=$('#oStat');if(st)st.remove();
+  const st=$('#oStat');if(st)st.remove();oPauseBtn();
   if(!q.est){const cnt={};for(const k in (g.pick||{}))cnt[g.pick[k]]=(cnt[g.pick[k]]||0)+1;
     for(const el of root.querySelectorAll('.ans')){const c=cnt[+el.dataset.v]||0;if(c)el.insertAdjacentHTML('beforeend','<span style="margin-left:auto;font-family:var(--f-disp);font-weight:900;font-size:20px">'+c+'×</span>')}}
   ok?sfx('ok'):sfx('bad');vib(ok?30:60);
