@@ -366,7 +366,7 @@ h3{font-family:var(--f-disp);font-weight:700;font-size:18px;margin:0;color:var(-
 
 <script>
 'use strict';
-const BUILD='2026-10-31-7';
+const BUILD='2026-10-31-9';
 /* ==========================================================================
    FRAGEN
    Multiple Choice: [Kategorie, Stufe 1–3, Frage, RICHTIG, falsch, falsch, falsch, Info]
@@ -1090,6 +1090,2874 @@ const Q_RAW=[
 ['fuss',3,'Wie viele Länderspieltore erzielte Gerd Müller für Deutschland?',68,30,100,'Tore',3,'In nur 62 Länderspielen.'],
 ['fuss',3,'Wie viele Tore schoss Gerd Müller im Kalenderjahr 1972?',85,40,120,'Tore',4,'Der Rekord hielt 40 Jahre, bis Lionel Messi 2012 auf 91 Tore kam.'],
 ];
+/* ==========================================================================
+   FRAGEN AUS FAKTENTABELLEN
+   Jede Tabelle ergibt Fragen; die falschen Antworten kommen aus derselben Tabelle.
+   Welche falschen Antworten gezogen werden, hängt nur vom Fragetext ab, damit
+   alle Geräte dieselben Fragen sehen. Neue Zeilen nur unten anhängen.
+   ========================================================================== */
+(()=>{
+const H=s=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0};
+const RN=seed=>{let s=seed>>>0;return()=>{s=(s+0x6D2B79F5)>>>0;let t=s;t=Math.imul(t^t>>>15,1|t);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}};
+const pick3=(q,right,pool)=>{const r=RN(H(q)),c=[...new Set(pool)].filter(x=>x&&x!==right&&!right.includes(x)&&!x.includes(right));for(let i=c.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[c[i],c[j]]=[c[j],c[i]]}return c.slice(0,3)};
+const SEEN_Q=new Set(Q_RAW.map(r=>r[2]));
+const add=(cat,d,q,right,pool,info)=>{if(SEEN_Q.has(q))return;const w=pick3(q,right,pool);if(w.length===3){SEEN_Q.add(q);Q_RAW.push([cat,d,q,right,w[0],w[1],w[2],info||''])}};
+const rows=t=>t.trim().split('\n').filter(l=>l.trim()&&!l.trim().startsWith('#')).map(l=>l.split('|').map(x=>x.trim()));
+const vonL=(n,a)=>a==='der'?'von der '+n:a==='dem'?'vom '+n:a==='den'?'von den '+n:'von '+n;
+const inL=(n,a)=>a==='der'?'in der '+n:a==='dem'?'im '+n:a==='den'?'in den '+n:'in '+n;
+const nomL=(n,a)=>a==='der'?'die '+n:a==='dem'?'der '+n:a==='den'?'die '+n:n;
+const KONT={EU:'Europa',AS:'Asien',AF:'Afrika',NA:'Nordamerika',SA:'Südamerika',OZ:'Ozeanien'};
+
+/* ---- Länder: Name | Artikel (Dativ) | Hauptstadt | Kontinent | Stufe | Extras (r = Gegenfrage, k = Kontinentfrage) ---- */
+const LAND=rows(`
+Deutschland||Berlin|EU|1|
+Frankreich||Paris|EU|1|
+Italien||Rom|EU|1|
+Portugal||Lissabon|EU|1|r
+Großbritannien||London|EU|1|
+Irland||Dublin|EU|1|r
+Niederlande|den|Amsterdam|EU|1|r
+Belgien||Brüssel|EU|1|r
+Österreich||Wien|EU|1|r
+Polen||Warschau|EU|1|r
+Tschechien||Prag|EU|1|r
+Slowakei|der|Bratislava|EU|2|r
+Ungarn||Budapest|EU|1|r
+Dänemark||Kopenhagen|EU|1|r
+Schweden||Stockholm|EU|1|r
+Norwegen||Oslo|EU|1|r
+Finnland||Helsinki|EU|1|r
+Island||Reykjavík|EU|2|r
+Estland||Tallinn|EU|2|r
+Lettland||Riga|EU|2|r
+Litauen||Vilnius|EU|2|r
+Russland||Moskau|EU|1|
+Ukraine|der|Kiew|EU|1|r
+Belarus||Minsk|EU|2|r
+Moldau||Chișinău|EU|3|r
+Rumänien||Bukarest|EU|2|r
+Bulgarien||Sofia|EU|2|r
+Griechenland||Athen|EU|1|r
+Serbien||Belgrad|EU|2|r
+Kroatien||Zagreb|EU|2|r
+Slowenien||Ljubljana|EU|2|r
+Bosnien und Herzegowina||Sarajevo|EU|2|r
+Montenegro||Podgorica|EU|3|rk
+Nordmazedonien||Skopje|EU|3|r
+Albanien||Tirana|EU|2|r
+Malta||Valletta|EU|2|r
+Liechtenstein||Vaduz|EU|2|r
+China||Peking|AS|1|r
+Japan||Tokio|AS|1|r
+Indien||Neu-Delhi|AS|1|r
+Südkorea||Seoul|AS|1|r
+Nordkorea||Pjöngjang|AS|2|r
+Thailand||Bangkok|AS|1|r
+Vietnam||Hanoi|AS|2|r
+Philippinen|den|Manila|AS|2|r
+Malaysia||Kuala Lumpur|AS|2|r
+Pakistan||Islamabad|AS|2|r
+Bangladesch||Dhaka|AS|2|rk
+Nepal||Kathmandu|AS|2|r
+Bhutan||Thimphu|AS|3|rk
+Afghanistan||Kabul|AS|2|r
+Iran|dem|Teheran|AS|1|r
+Irak|dem|Bagdad|AS|1|r
+Syrien||Damaskus|AS|2|r
+Jordanien||Amman|AS|2|rk
+Libanon|dem|Beirut|AS|2|rk
+Saudi-Arabien||Riad|AS|2|r
+Jemen|dem|Sanaa|AS|3|rk
+Oman||Maskat|AS|3|rk
+Vereinigte Arabische Emirate|den|Abu Dhabi|AS|2|r
+Katar||Doha|AS|2|r
+Bahrain||Manama|AS|3|rk
+Mongolei|der|Ulan-Bator|AS|2|r
+Usbekistan||Taschkent|AS|3|rk
+Turkmenistan||Aschgabat|AS|3|rk
+Kirgisistan||Bischkek|AS|3|rk
+Tadschikistan||Duschanbe|AS|3|rk
+Laos||Vientiane|AS|3|rk
+Kambodscha||Phnom Penh|AS|2|rk
+Malediven|den|Malé|AS|3|rk
+Brunei||Bandar Seri Begawan|AS|3|rk
+Osttimor||Dili|AS|3|rk
+Ägypten||Kairo|AF|1|r
+Marokko||Rabat|AF|2|r
+Algerien||Algier|AF|2|r
+Tunesien||Tunis|AF|2|
+Libyen||Tripolis|AF|2|r
+Sudan|dem|Khartum|AF|2|r
+Äthiopien||Addis Abeba|AF|2|r
+Kenia||Nairobi|AF|1|r
+Tansania||Dodoma|AF|3|r
+Uganda||Kampala|AF|2|rk
+Ruanda||Kigali|AF|2|rk
+Nigeria||Abuja|AF|2|r
+Ghana||Accra|AF|2|r
+Senegal|dem|Dakar|AF|2|r
+Mali||Bamako|AF|3|rk
+Niger|dem|Niamey|AF|3|rk
+Tschad|dem|N’Djamena|AF|3|rk
+Kamerun||Jaunde|AF|3|r
+Elfenbeinküste|der|Yamoussoukro|AF|3|r
+Burkina Faso||Ouagadougou|AF|3|rk
+Angola||Luanda|AF|2|rk
+Mosambik||Maputo|AF|3|rk
+Simbabwe||Harare|AF|2|rk
+Sambia||Lusaka|AF|3|rk
+Namibia||Windhoek|AF|2|r
+Botswana||Gaborone|AF|3|rk
+Madagaskar||Antananarivo|AF|3|r
+Somalia||Mogadischu|AF|2|r
+Eritrea||Asmara|AF|3|rk
+Demokratische Republik Kongo|der|Kinshasa|AF|2|r
+Republik Kongo|der|Brazzaville|AF|3|r
+Gabun||Libreville|AF|3|rk
+Liberia||Monrovia|AF|3|rk
+Sierra Leone||Freetown|AF|3|rk
+Guinea||Conakry|AF|3|rk
+Mauretanien||Nouakchott|AF|3|rk
+Benin||Porto-Novo|AF|3|rk
+Togo||Lomé|AF|3|rk
+Malawi||Lilongwe|AF|3|rk
+Lesotho||Maseru|AF|3|rk
+Zentralafrikanische Republik|der|Bangui|AF|3|r
+Südsudan|dem|Juba|AF|3|r
+Mauritius||Port Louis|AF|3|rk
+Kap Verde||Praia|AF|3|rk
+USA|den|Washington, D.C.|NA|1|
+Kuba||Havanna|NA|1|r
+Jamaika||Kingston|NA|2|r
+Haiti||Port-au-Prince|NA|2|r
+Dominikanische Republik|der|Santo Domingo|NA|2|r
+Costa Rica||San José|NA|2|r
+Nicaragua||Managua|NA|3|rk
+Honduras||Tegucigalpa|NA|3|rk
+Belize||Belmopan|NA|3|rk
+Bahamas|den|Nassau|NA|2|r
+Barbados||Bridgetown|NA|3|rk
+Brasilien||Brasília|SA|1|
+Argentinien||Buenos Aires|SA|1|r
+Chile||Santiago de Chile|SA|1|
+Peru||Lima|SA|1|r
+Kolumbien||Bogotá|SA|1|r
+Venezuela||Caracas|SA|2|r
+Ecuador||Quito|SA|2|r
+Paraguay||Asunción|SA|2|r
+Uruguay||Montevideo|SA|2|r
+Guyana||Georgetown|SA|3|rk
+Suriname||Paramaribo|SA|3|rk
+Fidschi||Suva|OZ|3|rk
+Papua-Neuguinea||Port Moresby|OZ|3|rk
+Samoa||Apia|OZ|3|rk
+Tonga||Nukuʻalofa|OZ|3|rk
+`);
+const capBy=k=>LAND.filter(x=>x[3]===k).map(x=>x[2]),landBy=k=>LAND.filter(x=>x[3]===k).map(x=>x[0]);
+for(const [n,a,cap,k,d,x] of LAND){
+  const pc=capBy(k).length>=4?capBy(k):LAND.map(y=>y[2]),pl=landBy(k).length>=4?landBy(k):LAND.map(y=>y[0]);
+  add('geo',+d,'Wie heißt die Hauptstadt '+vonL(n,a)+'?',cap,pc);
+  if(x.includes('r'))add('geo',+d,cap+' ist die Hauptstadt welches Landes?',n,pl);
+  if(x.includes('k'))add('geo',Math.max(2,+d-1),'Auf welchem Kontinent '+(a==='den'?'liegen ':'liegt ')+nomL(n,a)+'?',KONT[k],Object.values(KONT));
+}
+
+/* ---- Chemische Elemente: Name | Zeichen | Stufe ---- */
+const EL=rows(`
+Wasserstoff|H|1
+Helium|He|1
+Lithium|Li|2
+Kohlenstoff|C|1
+Stickstoff|N|2
+Sauerstoff|O|1
+Fluor|F|2
+Neon|Ne|2
+Natrium|Na|2
+Magnesium|Mg|2
+Aluminium|Al|2
+Silicium|Si|2
+Phosphor|P|2
+Schwefel|S|2
+Chlor|Cl|2
+Argon|Ar|3
+Kalium|K|2
+Calcium|Ca|2
+Titan|Ti|2
+Chrom|Cr|3
+Mangan|Mn|3
+Eisen|Fe|2
+Cobalt|Co|3
+Nickel|Ni|2
+Kupfer|Cu|2
+Zink|Zn|2
+Silber|Ag|1
+Zinn|Sn|3
+Iod|I|2
+Platin|Pt|2
+Gold|Au|1
+Quecksilber|Hg|2
+Blei|Pb|2
+Uran|U|2
+Plutonium|Pu|3
+Brom|Br|3
+Radon|Rn|3
+Wolfram|W|3
+Antimon|Sb|3
+Arsen|As|3
+Bismut|Bi|3
+Barium|Ba|3
+Strontium|Sr|3
+Cäsium|Cs|3
+Radium|Ra|3
+Krypton|Kr|3
+Xenon|Xe|3
+Germanium|Ge|3
+Gallium|Ga|3
+Selen|Se|3
+Molybdän|Mo|3
+Palladium|Pd|3
+Bor|B|3
+Beryllium|Be|3
+Osmium|Os|3
+Iridium|Ir|3
+Vanadium|V|3
+Cadmium|Cd|3
+`);
+for(const [n,z,d] of EL){
+  add('wiss',+d,'Welches chemische Zeichen hat '+n+'?',z,EL.map(e=>e[1]));
+  add('wiss',Math.min(3,+d+(+d<3?1:0)),'Für welches chemische Element steht das Zeichen „'+z+'“?',n,EL.map(e=>e[0]));
+}
+
+/* ---- Bundesländer: Land | Landeshauptstadt | Stufe ---- */
+const BL=rows(`
+Baden-Württemberg|Stuttgart|1
+Bayern|München|1
+Brandenburg|Potsdam|2
+Hessen|Wiesbaden|2
+Mecklenburg-Vorpommern|Schwerin|2
+Niedersachsen|Hannover|1
+Nordrhein-Westfalen|Düsseldorf|1
+Rheinland-Pfalz|Mainz|2
+Saarland|Saarbrücken|1
+Sachsen|Dresden|1
+Sachsen-Anhalt|Magdeburg|2
+Schleswig-Holstein|Kiel|1
+Thüringen|Erfurt|2
+`);
+const ALLBL=BL.map(x=>x[0]).concat(['Berlin','Hamburg','Bremen']);
+for(const [l,c,d] of BL){
+  add('geo',+d,'Wie heißt die Landeshauptstadt '+(l==='Saarland'?'des Saarlandes':'von '+l)+'?',c,BL.map(x=>x[1]));
+  add('geo',+d,c+' ist die Landeshauptstadt welches Bundeslandes?',l,ALLBL);
+}
+/* Stadt | Bundesland | Stufe */
+const ORT=rows(`
+Bielefeld|Nordrhein-Westfalen|2
+Jena|Thüringen|2
+Cottbus|Brandenburg|2
+Görlitz|Sachsen|3
+Passau|Bayern|2
+Flensburg|Schleswig-Holstein|1
+Wolfsburg|Niedersachsen|2
+Kassel|Hessen|2
+Freiburg im Breisgau|Baden-Württemberg|1
+Trier|Rheinland-Pfalz|2
+Ingolstadt|Bayern|2
+Wernigerode|Sachsen-Anhalt|3
+Stralsund|Mecklenburg-Vorpommern|2
+Zwickau|Sachsen|3
+Lüneburg|Niedersachsen|2
+Paderborn|Nordrhein-Westfalen|3
+Gießen|Hessen|3
+Kaiserslautern|Rheinland-Pfalz|2
+Heilbronn|Baden-Württemberg|2
+Oldenburg|Niedersachsen|2
+Greifswald|Mecklenburg-Vorpommern|2
+Weimar|Thüringen|1
+Halle (Saale)|Sachsen-Anhalt|2
+Chemnitz|Sachsen|1
+Würzburg|Bayern|1
+Darmstadt|Hessen|2
+Ludwigshafen am Rhein|Rheinland-Pfalz|3
+Neubrandenburg|Mecklenburg-Vorpommern|3
+Frankfurt (Oder)|Brandenburg|2
+Lutherstadt Wittenberg|Sachsen-Anhalt|2
+Eisenach|Thüringen|3
+Bamberg|Bayern|2
+Konstanz|Baden-Württemberg|2
+Lübeck|Schleswig-Holstein|1
+Göttingen|Niedersachsen|2
+Münster|Nordrhein-Westfalen|2
+Ulm|Baden-Württemberg|2
+Regensburg|Bayern|1
+Quedlinburg|Sachsen-Anhalt|3
+Gera|Thüringen|3
+Fulda|Hessen|3
+Koblenz|Rheinland-Pfalz|2
+Bochum|Nordrhein-Westfalen|1
+Heidelberg|Baden-Württemberg|1
+Cuxhaven|Niedersachsen|2
+Husum|Schleswig-Holstein|3
+Plauen|Sachsen|3
+Eberswalde|Brandenburg|3
+Wismar|Mecklenburg-Vorpommern|3
+Saarlouis|Saarland|3
+`);
+for(const [o,l,d] of ORT)add('geo',+d,'In welchem Bundesland liegt '+o+'?',l,ALLBL);
+/* Inseln | Bundesland | Stufe */
+for(const [o,l,d] of rows(`
+Rügen|Mecklenburg-Vorpommern|1
+Usedom|Mecklenburg-Vorpommern|2
+Helgoland|Schleswig-Holstein|2
+Fehmarn|Schleswig-Holstein|2
+Borkum|Niedersachsen|2
+Norderney|Niedersachsen|2
+Föhr|Schleswig-Holstein|3
+Poel|Mecklenburg-Vorpommern|3
+Langeoog|Niedersachsen|3
+Amrum|Schleswig-Holstein|3
+Hiddensee|Mecklenburg-Vorpommern|3
+`))add('geo',+d,'Zu welchem Bundesland gehört die Insel '+o+'?',l,['Mecklenburg-Vorpommern','Schleswig-Holstein','Niedersachsen','Hamburg','Bremen']);
+
+/* ---- Währungen: Land | Artikel (Dativ) | Währung | Stufe ---- */
+const WAEHR=rows(`
+Japan||Yen|1
+Großbritannien||Pfund Sterling|1
+Schweiz|der|Franken|1
+China||Renminbi (Yuan)|2
+Indien||Rupie|2
+Russland||Rubel|1
+Polen||Złoty|2
+Tschechien||Tschechische Krone|2
+Schweden||Schwedische Krone|2
+Ungarn||Forint|2
+Türkei|der|Lira|1
+Brasilien||Real|2
+Mexiko||Peso|2
+Südafrika||Rand|2
+Südkorea||Won|2
+Thailand||Baht|2
+Vietnam||Đồng|3
+Israel||Schekel|2
+Saudi-Arabien||Riyal|3
+Ägypten||Ägyptisches Pfund|3
+Indonesien||Rupiah|3
+Rumänien||Leu|3
+Kroatien||Euro|2
+Island||Isländische Krone|3
+Nigeria||Naira|3
+Ukraine|der|Hrywnja|3
+Serbien||Dinar|3
+Malaysia||Ringgit|3
+Dänemark||Dänische Krone|2
+Norwegen||Norwegische Krone|2
+Österreich||Euro|1
+Kenia||Kenia-Schilling|3
+Iran|dem|Rial|3
+`);
+for(const [n,a,w,d] of WAEHR)add('geo',+d,'Mit welcher Währung bezahlt man '+inL(n,a)+'?',w,WAEHR.map(x=>x[2]).filter(v=>v!=='Euro'||w==='Euro').concat(w==='Euro'?[]:['Euro']),n==='Kroatien'?'Kroatien hat den Euro 2023 eingeführt.':'');
+
+/* ---- Bücher: Titel | Autor | Stufe (Gegenfrage automatisch, wenn der Autor nur einmal vorkommt) ---- */
+const BUCH=rows(`
+Hamlet|William Shakespeare|1
+Macbeth|William Shakespeare|2
+Ein Sommernachtstraum|William Shakespeare|2
+Othello|William Shakespeare|2
+König Lear|William Shakespeare|3
+Die Räuber|Friedrich Schiller|2
+Kabale und Liebe|Friedrich Schiller|2
+Maria Stuart|Friedrich Schiller|3
+Die Jungfrau von Orleans|Friedrich Schiller|3
+Das Lied von der Glocke|Friedrich Schiller|2
+Die Leiden des jungen Werthers|Johann Wolfgang von Goethe|2
+Iphigenie auf Tauris|Johann Wolfgang von Goethe|3
+Der Erlkönig|Johann Wolfgang von Goethe|2
+Der Zauberlehrling|Johann Wolfgang von Goethe|2
+Nathan der Weise|Gotthold Ephraim Lessing|2
+Emilia Galotti|Gotthold Ephraim Lessing|3
+Woyzeck|Georg Büchner|2
+Dantons Tod|Georg Büchner|3
+Der zerbrochne Krug|Heinrich von Kleist|3
+Michael Kohlhaas|Heinrich von Kleist|3
+Effi Briest|Theodor Fontane|2
+Der Schimmelreiter|Theodor Storm|2
+Der Prozess|Franz Kafka|2
+Das Schloss|Franz Kafka|3
+Der Steppenwolf|Hermann Hesse|2
+Siddhartha|Hermann Hesse|2
+Unterm Rad|Hermann Hesse|3
+Das Glasperlenspiel|Hermann Hesse|3
+Der Zauberberg|Thomas Mann|2
+Der Tod in Venedig|Thomas Mann|3
+Der Untertan|Heinrich Mann|3
+Im Westen nichts Neues|Erich Maria Remarque|2
+Berlin Alexanderplatz|Alfred Döblin|3
+Die Dreigroschenoper|Bertolt Brecht|2
+Mutter Courage und ihre Kinder|Bertolt Brecht|2
+Der Besuch der alten Dame|Friedrich Dürrenmatt|2
+Der Richter und sein Henker|Friedrich Dürrenmatt|3
+Homo faber|Max Frisch|2
+Andorra|Max Frisch|3
+Die verlorene Ehre der Katharina Blum|Heinrich Böll|3
+Ansichten eines Clowns|Heinrich Böll|3
+Draußen vor der Tür|Wolfgang Borchert|3
+Das Fräulein von Scuderi|E. T. A. Hoffmann|3
+Die Judenbuche|Annette von Droste-Hülshoff|3
+Der Vorleser|Bernhard Schlink|2
+Die Vermessung der Welt|Daniel Kehlmann|2
+Tschick|Wolfgang Herrndorf|2
+Der Schwarm|Frank Schätzing|2
+Die Känguru-Chroniken|Marc-Uwe Kling|2
+Er ist wieder da|Timur Vermes|3
+Die Wand|Marlen Haushofer|3
+Das Boot|Lothar-Günther Buchheim|3
+Emil und die Detektive|Erich Kästner|1
+Das doppelte Lottchen|Erich Kästner|1
+Pünktchen und Anton|Erich Kästner|2
+Die kleine Hexe|Otfried Preußler|1
+Der Räuber Hotzenplotz|Otfried Preußler|1
+Krabat|Otfried Preußler|2
+Jim Knopf und Lukas der Lokomotivführer|Michael Ende|1
+Momo|Michael Ende|2
+Tintenherz|Cornelia Funke|2
+Die wilden Hühner|Cornelia Funke|2
+Das Sams|Paul Maar|2
+Ronja Räubertochter|Astrid Lindgren|1
+Michel aus Lönneberga|Astrid Lindgren|1
+Karlsson vom Dach|Astrid Lindgren|2
+Die Brüder Löwenherz|Astrid Lindgren|2
+Die wunderbare Reise des kleinen Nils Holgersson mit den Wildgänsen|Selma Lagerlöf|2
+Heidi|Johanna Spyri|1
+Der Struwwelpeter|Heinrich Hoffmann|2
+Die Biene Maja|Waldemar Bonsels|2
+Fünf Freunde|Enid Blyton|2
+Gregs Tagebuch|Jeff Kinney|2
+Pinocchio|Carlo Collodi|2
+Alice im Wunderland|Lewis Carroll|1
+Peter Pan|J. M. Barrie|2
+Das Dschungelbuch|Rudyard Kipling|2
+Die Schatzinsel|Robert Louis Stevenson|2
+Robinson Crusoe|Daniel Defoe|2
+Gullivers Reisen|Jonathan Swift|2
+Moby Dick|Herman Melville|2
+Die Abenteuer des Tom Sawyer|Mark Twain|1
+Onkel Toms Hütte|Harriet Beecher Stowe|3
+Der große Gatsby|F. Scott Fitzgerald|2
+Der alte Mann und das Meer|Ernest Hemingway|2
+Wem die Stunde schlägt|Ernest Hemingway|3
+Früchte des Zorns|John Steinbeck|3
+Von Mäusen und Menschen|John Steinbeck|3
+Der Fänger im Roggen|J. D. Salinger|2
+Wer die Nachtigall stört|Harper Lee|3
+Fahrenheit 451|Ray Bradbury|2
+Schöne neue Welt|Aldous Huxley|2
+Farm der Tiere|George Orwell|2
+Der Herr der Fliegen|William Golding|3
+Lolita|Vladimir Nabokov|3
+Stolz und Vorurteil|Jane Austen|2
+Sturmhöhe|Emily Brontë|3
+Jane Eyre|Charlotte Brontë|3
+Oliver Twist|Charles Dickens|1
+Eine Weihnachtsgeschichte|Charles Dickens|2
+David Copperfield|Charles Dickens|2
+Frankenstein|Mary Shelley|2
+Dracula|Bram Stoker|2
+Das Bildnis des Dorian Gray|Oscar Wilde|2
+Der Hobbit|J. R. R. Tolkien|1
+Die Chroniken von Narnia|C. S. Lewis|2
+Harry Potter und der Stein der Weisen|J. K. Rowling|1
+Die Tribute von Panem|Suzanne Collins|2
+Bis(s) zum Morgengrauen|Stephenie Meyer|2
+Sakrileg|Dan Brown|2
+Der Alchimist|Paulo Coelho|2
+Hundert Jahre Einsamkeit|Gabriel García Márquez|3
+Die Liebe in den Zeiten der Cholera|Gabriel García Márquez|3
+Das Geisterhaus|Isabel Allende|3
+Anna Karenina|Leo Tolstoi|2
+Schuld und Sühne|Fjodor Dostojewski|2
+Die Brüder Karamasow|Fjodor Dostojewski|3
+Der Meister und Margarita|Michail Bulgakow|3
+Die Elenden|Victor Hugo|2
+Der Glöckner von Notre-Dame|Victor Hugo|2
+Die drei Musketiere|Alexandre Dumas|2
+Der Graf von Monte Christo|Alexandre Dumas|2
+In 80 Tagen um die Welt|Jules Verne|1
+20.000 Meilen unter dem Meer|Jules Verne|2
+Madame Bovary|Gustave Flaubert|3
+Der Fremde|Albert Camus|3
+Die Pest|Albert Camus|3
+Die Göttliche Komödie|Dante Alighieri|2
+Die Odyssee|Homer|1
+Die Ilias|Homer|2
+Der Hundertjährige, der aus dem Fenster stieg und verschwand|Jonas Jonasson|2
+Ein Mann namens Ove|Fredrik Backman|2
+Verblendung|Stieg Larsson|3
+Sofies Welt|Jostein Gaarder|2
+Die Säulen der Erde|Ken Follett|2
+Es|Stephen King|2
+Shining|Stephen King|2
+Mord im Orient-Express|Agatha Christie|2
+Der Hund von Baskerville|Arthur Conan Doyle|2
+Der Pate|Mario Puzo|2
+Jurassic Park|Michael Crichton|2
+Der Report der Magd|Margaret Atwood|3
+Die Welle|Morton Rhue|2
+Das Tagebuch der Anne Frank|Anne Frank|1
+Die Bücherdiebin|Markus Zusak|3
+Schiffbruch mit Tiger|Yann Martel|3
+Der Medicus|Noah Gordon|2
+Die Päpstin|Donna W. Cross|3
+Das Lied von Eis und Feuer|George R. R. Martin|2
+Per Anhalter durch die Galaxis|Douglas Adams|2
+Der Gott des Gemetzels|Yasmina Reza|3
+`);
+const AUT=BUCH.map(b=>b[1]),autN=a=>AUT.filter(x=>x===a).length;
+for(const [t,a,d] of BUCH){
+  add('kultur',+d,'Wer schrieb „'+t+'“?',a,AUT);
+  if(autN(a)===1&&+d<=2)add('kultur',Math.min(3,+d+1),'Welches Werk stammt von '+a+'?',t,BUCH.filter(b=>b[1]!==a).map(b=>b[0]));
+}
+
+/* ---- Kunstwerke: Werk | Künstler | Stufe ---- */
+const KUNST=rows(`
+Die Sternennacht|Vincent van Gogh|1
+Sonnenblumen|Vincent van Gogh|2
+Die Kartoffelesser|Vincent van Gogh|3
+Die Nachtwache|Rembrandt|2
+Guernica|Pablo Picasso|2
+Les Demoiselles d’Avignon|Pablo Picasso|3
+Die Erschaffung Adams|Michelangelo|2
+Die Pietà im Petersdom|Michelangelo|2
+Der Kuss|Gustav Klimt|2
+Seerosen|Claude Monet|2
+Impression, Sonnenaufgang|Claude Monet|3
+Das Frühstück im Grünen|Édouard Manet|3
+Der Wanderer über dem Nebelmeer|Caspar David Friedrich|2
+Kreidefelsen auf Rügen|Caspar David Friedrich|2
+Das Eismeer|Caspar David Friedrich|3
+Der arme Poet|Carl Spitzweg|3
+Die Schule von Athen|Raffael|3
+Die Sixtinische Madonna|Raffael|3
+Der Turmbau zu Babel|Pieter Bruegel der Ältere|3
+Die Jäger im Schnee|Pieter Bruegel der Ältere|3
+Der Garten der Lüste|Hieronymus Bosch|3
+Feldhase|Albrecht Dürer|2
+Betende Hände|Albrecht Dürer|2
+Die Tanzklasse|Edgar Degas|3
+Ein Sonntagnachmittag auf der Insel La Grande Jatte|Georges Seurat|3
+Nighthawks|Edward Hopper|3
+Komposition mit Rot, Gelb und Blau|Piet Mondrian|2
+Der Sohn des Menschen|René Magritte|3
+Marilyn-Diptychon|Andy Warhol|2
+Blaues Pferd I|Franz Marc|3
+Die Freiheit führt das Volk|Eugène Delacroix|3
+Das Floß der Medusa|Théodore Géricault|3
+Der Denker|Auguste Rodin|2
+Las Meninas|Diego Velázquez|3
+Die nackte Maja|Francisco de Goya|3
+Die Toteninsel|Arnold Böcklin|3
+Die große Welle vor Kanagawa|Katsushika Hokusai|3
+American Gothic|Grant Wood|3
+Der Tanz|Henri Matisse|3
+Balloon Dog|Jeff Koons|3
+Mädchen mit Ballon|Banksy|2
+Whaam!|Roy Lichtenstein|3
+Fountain|Marcel Duchamp|3
+Venus von Urbino|Tizian|3
+Senecio|Paul Klee|3
+Komposition VIII|Wassily Kandinsky|3
+`);
+for(const [w,k,d] of KUNST)add('kultur',+d,'Von wem stammt das Kunstwerk „'+w+'“?',k,KUNST.map(x=>x[1]));
+
+/* ---- Musikwerke: Werk (mit Anführungszeichen) | Komponist | Stufe ---- */
+const WERK=rows(`
+„Für Elise“|Ludwig van Beethoven|1
+die „Mondscheinsonate“|Ludwig van Beethoven|2
+die „Schicksalssinfonie“|Ludwig van Beethoven|2
+die Oper „Die Hochzeit des Figaro“|Wolfgang Amadeus Mozart|2
+die Oper „Don Giovanni“|Wolfgang Amadeus Mozart|3
+den „Türkischen Marsch“ (Rondo alla turca)|Wolfgang Amadeus Mozart|2
+die „Brandenburgischen Konzerte“|Johann Sebastian Bach|2
+das „Weihnachtsoratorium“|Johann Sebastian Bach|2
+die „Matthäus-Passion“|Johann Sebastian Bach|3
+das Oratorium „Der Messias“ mit dem „Halleluja“|Georg Friedrich Händel|2
+die „Wassermusik“|Georg Friedrich Händel|3
+die „Feuerwerksmusik“|Georg Friedrich Händel|3
+das Oratorium „Die Schöpfung“|Joseph Haydn|3
+das Lied „Die Forelle“|Franz Schubert|2
+die Sinfonie „Die Unvollendete“|Franz Schubert|2
+die „Ungarischen Tänze“|Johannes Brahms|2
+das Wiegenlied „Guten Abend, gut’ Nacht“|Johannes Brahms|2
+die Oper „Lohengrin“|Richard Wagner|2
+die Oper „Der fliegende Holländer“|Richard Wagner|3
+die Oper „Carmen“|Georges Bizet|2
+die Oper „Aida“|Giuseppe Verdi|2
+die Oper „La Traviata“|Giuseppe Verdi|3
+die Oper „Nabucco“|Giuseppe Verdi|3
+die Oper „Madame Butterfly“|Giacomo Puccini|3
+die Oper „La Bohème“|Giacomo Puccini|3
+die Oper „Turandot“|Giacomo Puccini|3
+die Oper „Der Barbier von Sevilla“|Gioachino Rossini|2
+das Ballett „Schwanensee“|Pjotr Iljitsch Tschaikowski|2
+das Ballett „Der Nussknacker“|Pjotr Iljitsch Tschaikowski|2
+den Walzer „An der schönen blauen Donau“|Johann Strauss (Sohn)|2
+die Operette „Die Fledermaus“|Johann Strauss (Sohn)|3
+den „Radetzky-Marsch“|Johann Strauss (Vater)|3
+„Also sprach Zarathustra“|Richard Strauss|3
+„Carmina Burana“|Carl Orff|2
+„Bilder einer Ausstellung“|Modest Mussorgski|3
+„Peer Gynt“ mit „In der Halle des Bergkönigs“|Edvard Grieg|3
+„Die Moldau“|Bedřich Smetana|3
+die Sinfonie „Aus der Neuen Welt“|Antonín Dvořák|3
+„Rhapsody in Blue“|George Gershwin|2
+das Musical „West Side Story“|Leonard Bernstein|2
+„Clair de Lune“|Claude Debussy|3
+„Peter und der Wolf“|Sergei Prokofjew|2
+das Ballett „Der Feuervogel“|Igor Strawinsky|3
+die Märchenoper „Hänsel und Gretel“|Engelbert Humperdinck|3
+die Operette „Die lustige Witwe“|Franz Lehár|3
+das Musical „Cats“|Andrew Lloyd Webber|2
+das Musical „Das Phantom der Oper“|Andrew Lloyd Webber|2
+die Filmmusik zu „Star Wars“|John Williams|2
+die Filmmusik zu „Harry Potter“|John Williams|3
+die Filmmusik zu „Der König der Löwen“ (1994)|Hans Zimmer|2
+die Filmmusik zu „Titanic“|James Horner|3
+die Filmmusik zu „Der Herr der Ringe“|Howard Shore|3
+die Filmmusik zu „Spiel mir das Lied vom Tod“|Ennio Morricone|3
+`);
+for(const [w,k,d] of WERK)add('musik',+d,'Wer komponierte '+w+'?',k,WERK.map(x=>x[1]));
+
+/* ---- Hits: Titel | Interpret | Stufe ---- */
+const HIT=rows(`
+Bohemian Rhapsody|Queen|1
+We Are the Champions|Queen|1
+Don’t Stop Me Now|Queen|2
+Another One Bites the Dust|Queen|2
+Billie Jean|Michael Jackson|1
+Beat It|Michael Jackson|2
+Smooth Criminal|Michael Jackson|2
+Like a Prayer|Madonna|1
+Like a Virgin|Madonna|2
+Material Girl|Madonna|2
+Yesterday|The Beatles|1
+Hey Jude|The Beatles|1
+Let It Be|The Beatles|1
+Imagine|John Lennon|1
+(I Can’t Get No) Satisfaction|The Rolling Stones|1
+Paint It Black|The Rolling Stones|2
+Hello|Adele|1
+Rolling in the Deep|Adele|2
+Someone Like You|Adele|2
+Skyfall|Adele|2
+Shape of You|Ed Sheeran|1
+Thinking Out Loud|Ed Sheeran|2
+Perfect|Ed Sheeran|2
+Smells Like Teen Spirit|Nirvana|1
+Dancing Queen|ABBA|1
+Mamma Mia|ABBA|1
+Super Trouper|ABBA|2
+…Baby One More Time|Britney Spears|1
+Toxic|Britney Spears|2
+Shake It Off|Taylor Swift|1
+Bad Guy|Billie Eilish|1
+Blinding Lights|The Weeknd|1
+Despacito|Luis Fonsi|1
+Happy|Pharrell Williams|1
+Uptown Funk|Mark Ronson & Bruno Mars|2
+Rocket Man|Elton John|1
+Candle in the Wind|Elton John|2
+Heroes|David Bowie|2
+Single Ladies|Beyoncé|1
+Crazy in Love|Beyoncé|2
+Umbrella|Rihanna|1
+Poker Face|Lady Gaga|1
+Bad Romance|Lady Gaga|2
+Africa|Toto|2
+Take On Me|a-ha|1
+The Final Countdown|Europe|1
+Eye of the Tiger|Survivor|2
+Livin’ on a Prayer|Bon Jovi|2
+Sweet Child o’ Mine|Guns N’ Roses|2
+Highway to Hell|AC/DC|1
+Stairway to Heaven|Led Zeppelin|2
+Hotel California|Eagles|2
+Smoke on the Water|Deep Purple|2
+Born in the U.S.A.|Bruce Springsteen|2
+Hallelujah|Leonard Cohen|2
+My Heart Will Go On|Céline Dion|1
+Wannabe|Spice Girls|1
+Everybody (Backstreet’s Back)|Backstreet Boys|2
+Barbie Girl|Aqua|1
+Macarena|Los del Río|2
+Gangnam Style|Psy|1
+Viva la Vida|Coldplay|2
+Mr. Brightside|The Killers|3
+Seven Nation Army|The White Stripes|2
+Zombie|The Cranberries|2
+Wake Me Up|Avicii|2
+Titanium|David Guetta|2
+Chandelier|Sia|2
+Someone You Loved|Lewis Capaldi|2
+Flowers|Miley Cyrus|2
+Wrecking Ball|Miley Cyrus|2
+As It Was|Harry Styles|2
+Levitating|Dua Lipa|2
+drivers license|Olivia Rodrigo|3
+Espresso|Sabrina Carpenter|2
+Lose Yourself|Eminem|2
+In da Club|50 Cent|3
+Girls Just Want to Have Fun|Cyndi Lauper|2
+Light My Fire|The Doors|3
+Purple Haze|Jimi Hendrix|3
+Like a Rolling Stone|Bob Dylan|2
+Blowin’ in the Wind|Bob Dylan|2
+What a Wonderful World|Louis Armstrong|1
+My Way|Frank Sinatra|2
+Jailhouse Rock|Elvis Presley|2
+Johnny B. Goode|Chuck Berry|3
+No Woman, No Cry|Bob Marley|2
+Brother Louie|Modern Talking|2
+You’re My Heart, You’re My Soul|Modern Talking|2
+Blue (Da Ba Dee)|Eiffel 65|3
+Mambo No. 5|Lou Bega|2
+Hips Don’t Lie|Shakira|2
+Waka Waka|Shakira|2
+Rehab|Amy Winehouse|2
+Crazy|Gnarls Barkley|3
+Feel Good Inc.|Gorillaz|3
+Numb|Linkin Park|2
+In the End|Linkin Park|2
+Enter Sandman|Metallica|2
+Du hast|Rammstein|2
+Sonne|Rammstein|3
+Sweet Caroline|Neil Diamond|2
+Take Me Home, Country Roads|John Denver|2
+Running Up That Hill|Kate Bush|3
+Major Tom (völlig losgelöst)|Peter Schilling|2
+Männer|Herbert Grönemeyer|2
+Bochum|Herbert Grönemeyer|2
+Ein Kompliment|Sportfreunde Stiller|2
+Tage wie diese|Die Toten Hosen|2
+Schrei nach Liebe|Die Ärzte|2
+Westerland|Die Ärzte|2
+Haus am See|Peter Fox|2
+Lieblingsmensch|Namika|2
+Auf uns|Andreas Bourani|2
+Durch den Monsun|Tokio Hotel|2
+Ohne dich (schlaf’ ich heut’ Nacht nicht ein)|Münchener Freiheit|3
+Skandal im Sperrbezirk|Spider Murphy Gang|3
+Da Da Da|Trio|3
+Rock Me Amadeus|Falco|2
+Der Kommissar|Falco|3
+Verdammt, ich lieb’ dich|Matthias Reim|2
+Griechischer Wein|Udo Jürgens|2
+Aber bitte mit Sahne|Udo Jürgens|2
+Ich war noch niemals in New York|Udo Jürgens|2
+Über den Wolken|Reinhard Mey|2
+Sonderzug nach Pankow|Udo Lindenberg|2
+Komet|Udo Lindenberg & Apache 207|2
+Roller|Apache 207|3
+Alt wie ein Baum|Puhdys|3
+Am Fenster|City|3
+Dreiklangsdimensionen|Rheingold|3
+Bruttosozialprodukt|Geier Sturzflug|3
+Mädchen|Lucilectric|3
+Marmor, Stein und Eisen bricht|Drafi Deutscher|3
+Er gehört zu mir|Marianne Rosenberg|2
+Ein Bett im Kornfeld|Jürgen Drews|2
+Wahnsinn|Wolfgang Petry|2
+Irgendwie, irgendwo, irgendwann|Nena|3
+Chöre|Mark Forster|2
+Viva Colonia|Höhner|2
+Layla|DJ Robin & Schürze|2
+`);
+for(const [t,a,d] of HIT)add('musik',+d,'Von wem stammt der Hit „'+t+'“?',a,HIT.map(x=>x[1]));
+
+/* ---- Filme: Film | Regie | Stufe ---- */
+const REGIE=rows(`
+Titanic|James Cameron|2
+Avatar|James Cameron|2
+Terminator|James Cameron|2
+Der Pate|Francis Ford Coppola|2
+Pulp Fiction|Quentin Tarantino|2
+Kill Bill|Quentin Tarantino|2
+Inception|Christopher Nolan|2
+The Dark Knight|Christopher Nolan|2
+Oppenheimer|Christopher Nolan|2
+Interstellar|Christopher Nolan|2
+Schindlers Liste|Steven Spielberg|2
+E.T. – Der Außerirdische|Steven Spielberg|1
+Krieg der Sterne (1977)|George Lucas|1
+Der Herr der Ringe|Peter Jackson|2
+2001: Odyssee im Weltraum|Stanley Kubrick|2
+Shining (1980)|Stanley Kubrick|2
+Uhrwerk Orange|Stanley Kubrick|3
+Vertigo|Alfred Hitchcock|2
+Das Schweigen der Lämmer|Jonathan Demme|3
+Forrest Gump|Robert Zemeckis|3
+Zurück in die Zukunft|Robert Zemeckis|2
+Fight Club|David Fincher|3
+Sieben|David Fincher|3
+Gladiator|Ridley Scott|2
+Alien|Ridley Scott|2
+Blade Runner|Ridley Scott|3
+Matrix|Lana und Lilly Wachowski|2
+Barbie (2023)|Greta Gerwig|2
+Parasite|Bong Joon-ho|3
+Chihiros Reise ins Zauberland|Hayao Miyazaki|2
+Mein Nachbar Totoro|Hayao Miyazaki|3
+Taxi Driver|Martin Scorsese|2
+The Wolf of Wall Street|Martin Scorsese|2
+GoodFellas|Martin Scorsese|3
+Lola rennt|Tom Tykwer|2
+Good Bye, Lenin!|Wolfgang Becker|3
+Das Boot (1981)|Wolfgang Petersen|2
+Der Untergang|Oliver Hirschbiegel|3
+Das Leben der Anderen|Florian Henckel von Donnersmarck|3
+Im Westen nichts Neues (2022)|Edward Berger|3
+Metropolis|Fritz Lang|2
+M – Eine Stadt sucht einen Mörder|Fritz Lang|3
+Nosferatu (1922)|F. W. Murnau|3
+Toni Erdmann|Maren Ade|3
+Fack ju Göhte|Bora Dağtekin|2
+Keinohrhasen|Til Schweiger|2
+Der Schuh des Manitu|Michael Bully Herbig|1
+La La Land|Damien Chazelle|3
+Whiplash|Damien Chazelle|3
+Get Out|Jordan Peele|3
+Casablanca|Michael Curtiz|3
+Der Zauberer von Oz|Victor Fleming|3
+Moderne Zeiten|Charlie Chaplin|2
+Der große Diktator|Charlie Chaplin|2
+Manche mögen’s heiß|Billy Wilder|3
+Harry Potter und der Stein der Weisen|Chris Columbus|3
+Kevin – Allein zu Haus|Chris Columbus|3
+Dune (2021)|Denis Villeneuve|3
+Nomadland|Chloé Zhao|3
+`);
+for(const [f,r,d] of REGIE)add('film',+d,'Wer führte Regie bei „'+f+'“?',r,REGIE.map(x=>x[1]));
+
+/* ---- Rollen: Rolle | Schauspieler | m/w | Stufe ---- */
+const ROLLE=rows(`
+Rocky Balboa in „Rocky“|Sylvester Stallone|m|1
+John Rambo in „Rambo“|Sylvester Stallone|m|1
+Indiana Jones|Harrison Ford|m|1
+Han Solo in „Krieg der Sterne“|Harrison Ford|m|2
+Ethan Hunt in „Mission: Impossible“|Tom Cruise|m|1
+Maverick in „Top Gun“|Tom Cruise|m|1
+Vivian in „Pretty Woman“|Julia Roberts|w|1
+Erin Brockovich|Julia Roberts|w|2
+Mrs. Doubtfire|Robin Williams|m|2
+den Lehrer John Keating in „Der Club der toten Dichter“|Robin Williams|m|2
+Edward mit den Scherenhänden|Johnny Depp|m|2
+Vito Corleone in „Der Pate“ (1972)|Marlon Brando|m|2
+Travis Bickle in „Taxi Driver“|Robert De Niro|m|2
+Jordan Belfort in „The Wolf of Wall Street“|Leonardo DiCaprio|m|2
+den Schiffbrüchigen Chuck Noland in „Cast Away“|Tom Hanks|m|2
+Miranda Priestly in „Der Teufel trägt Prada“|Meryl Streep|w|2
+den Joker in „Joker“ (2019)|Joaquin Phoenix|m|2
+Maximus in „Gladiator“|Russell Crowe|m|2
+Agent J in „Men in Black“|Will Smith|m|1
+Johnny Castle in „Dirty Dancing“|Patrick Swayze|m|1
+Danny Zuko in „Grease“|John Travolta|m|1
+John McClane in „Stirb langsam“|Bruce Willis|m|1
+Lara Croft in „Tomb Raider“ (2001)|Angelina Jolie|w|2
+Maleficent|Angelina Jolie|w|2
+Tyler Durden in „Fight Club“|Brad Pitt|m|2
+Danny Ocean in „Ocean’s Eleven“ (2001)|George Clooney|m|2
+Holly Golightly in „Frühstück bei Tiffany“|Audrey Hepburn|w|2
+Iron Man|Robert Downey Jr.|m|1
+Thor|Chris Hemsworth|m|2
+Captain America|Chris Evans|m|2
+Black Widow|Scarlett Johansson|w|2
+Spider-Man (2002)|Tobey Maguire|m|2
+Wonder Woman|Gal Gadot|w|2
+Barbie (2023)|Margot Robbie|w|1
+Katniss Everdeen in „Die Tribute von Panem“|Jennifer Lawrence|w|2
+Harry Potter|Daniel Radcliffe|m|1
+Ron Weasley|Rupert Grint|m|2
+Bella Swan in „Twilight“|Kristen Stewart|w|2
+Mr. Bean|Rowan Atkinson|m|1
+Abahachi in „Der Schuh des Manitu“|Michael Bully Herbig|m|2
+Zeki Müller in „Fack ju Göhte“|Elyas M’Barek|m|2
+Winnetou in den Karl-May-Filmen der 1960er|Pierre Brice|m|2
+Old Shatterhand in den Karl-May-Filmen der 1960er|Lex Barker|m|3
+Sissi in den „Sissi“-Filmen|Romy Schneider|w|2
+Lola in „Lola rennt“|Franka Potente|w|3
+Professor Boerne im „Tatort“ aus Münster|Jan Josef Liefers|m|2
+Kommissar Thiel im „Tatort“ aus Münster|Axel Prahl|m|3
+Kommissar Schimanski im „Tatort“|Götz George|m|2
+James Bond in „Casino Royale“ (2006)|Daniel Craig|m|1
+Elsa in „Die Eiskönigin“ (Originalstimme)|Idina Menzel|w|3
+Wednesday Addams in der Serie „Wednesday“|Jenna Ortega|w|2
+Walter White in „Breaking Bad“|Bryan Cranston|m|2
+Daenerys Targaryen in „Game of Thrones“|Emilia Clarke|w|2
+Eleven in „Stranger Things“|Millie Bobby Brown|w|2
+Sheldon Cooper in „The Big Bang Theory“|Jim Parsons|m|2
+Rachel Green in „Friends“|Jennifer Aniston|w|2
+Carrie Bradshaw in „Sex and the City“|Sarah Jessica Parker|w|2
+Mia in „La La Land“|Emma Stone|w|3
+`);
+for(const [r,s,g,d] of ROLLE)add('film',+d,'Wer spielte '+r+'?',s,ROLLE.filter(x=>x[2]===g).map(x=>x[1]));
+
+/* ---- Gerichte: Gericht | Land | Stufe ---- */
+const ESSEN=rows(`
+Tapas|Spanien|1|p
+Gazpacho|Spanien|2
+Churros|Spanien|2|p
+Croissant|Frankreich|1
+Ratatouille|Frankreich|1
+Crème brûlée|Frankreich|2
+Coq au Vin|Frankreich|2
+Bouillabaisse|Frankreich|3
+Quiche Lorraine|Frankreich|2
+Risotto|Italien|1
+Lasagne|Italien|1
+Spaghetti carbonara|Italien|1
+Panna cotta|Italien|2
+Ossobuco|Italien|3
+Gnocchi|Italien|2|p
+Moussaka|Griechenland|2
+Souvlaki|Griechenland|2
+Tzatziki|Griechenland|1
+Börek|Türkei|2
+Lahmacun|Türkei|2
+Gulasch (Gulyás)|Ungarn|1
+Pierogi|Polen|2|p
+Smørrebrød|Dänemark|2
+Köttbullar|Schweden|1|p
+Surströmming|Schweden|3
+Haggis|Schottland|2
+Fish and Chips|England|1
+Yorkshire Pudding|England|3
+Irish Stew|Irland|1
+Wiener Schnitzel|Österreich|1
+Kaiserschmarrn|Österreich|1
+Sachertorte|Österreich|1
+Käsefondue|Schweiz|1
+Rösti|Schweiz|2
+Raclette|Schweiz|2
+Pastel de Nata|Portugal|2
+Bacalhau|Portugal|3
+Poffertjes|Niederlande|3|p
+Stroopwafels|Niederlande|2|p
+Tacos|Mexiko|1|p
+Burritos|Mexiko|1|p
+Hamburger|USA|1
+Feijoada|Brasilien|3
+Ceviche|Peru|3
+Asado|Argentinien|2
+Pad Thai|Thailand|1
+Phở|Vietnam|2
+Bibimbap|Südkorea|2
+Ramen|Japan|2
+Tempura|Japan|2
+Peking-Ente|China|1
+Dim Sum|China|2
+Biryani|Indien|2
+Naan|Indien|2
+Tajine|Marokko|2
+Poutine|Kanada|3
+Pelmeni|Russland|3|p
+`);
+for(const [g,l,d,p] of ESSEN)add('essen',+d,'Aus welchem Land '+(p?'stammen ':'stammt ')+g+'?',l,ESSEN.map(x=>x[1]));
+/* Spezialität | Herkunft | Stufe */
+const REG=rows(`
+Maultaschen|Schwaben|2
+Spätzle|Schwaben|1
+Königsberger Klopse|Ostpreußen|3
+Saumagen|Pfalz|2
+Himmel un Ääd|Rheinland|3
+Christstollen|Dresden|1
+Grüne Soße|Frankfurt am Main|2
+Rostbratwürstchen, „drei im Weggla“|Nürnberg|2
+Printen|Aachen|2
+Marzipan mit Weltruf|Lübeck|1
+Rostbratwurst mit eigener Schutzmarke|Thüringen|1
+eingelegte Gurken mit Herkunftsschutz|Spreewald|1
+Grünkohl mit Pinkel|Bremen|3
+Halve Hahn|Köln|3
+Pfefferpotthast|Westfalen|3
+Bethmännchen|Frankfurt am Main|3
+Baumkuchen|Salzwedel|3
+Eierschecke|Sachsen|3
+Obatzda|Bayern|2
+Pannfisch|Hamburg|3
+`);
+for(const [s,o,d] of REG)add('essen',+d,'Woher stammt die Spezialität „'+s+'“?',o,REG.map(x=>x[1]));
+
+/* ---- Bauwerke: Bauwerk | Stadt | Gruppe (DE/W) | Stufe ---- */
+const BAU=rows(`
+der Eiffelturm|Paris|W|1
+der Big Ben|London|W|1
+die Freiheitsstatue|New York|W|1
+die Sagrada Família|Barcelona|W|1
+die Akropolis|Athen|W|1
+der Schiefe Turm|Pisa|W|1
+das Taj Mahal|Agra|W|3
+das Opernhaus mit dem Segeldach|Sydney|W|1
+die Christus-Statue auf dem Corcovado|Rio de Janeiro|W|1
+der Burj Khalifa|Dubai|W|1
+die Golden Gate Bridge|San Francisco|W|1
+die Hagia Sophia|Istanbul|W|2
+der Kreml|Moskau|W|1
+die Basilius-Kathedrale|Moskau|W|2
+die Tower Bridge|London|W|1
+das Atomium|Brüssel|W|2
+das Manneken Pis|Brüssel|W|2
+die Alhambra|Granada|W|2
+der Trevi-Brunnen|Rom|W|1
+der Markusdom|Venedig|W|2
+die Rialtobrücke|Venedig|W|2
+der Ponte Vecchio|Florenz|W|2
+das Riesenrad im Prater|Wien|W|2
+das Schloss Schönbrunn|Wien|W|2
+der Stephansdom|Wien|W|2
+die Kettenbrücke über die Donau|Budapest|W|3
+die Kleine Meerjungfrau|Kopenhagen|W|2
+der Turm von Belém|Lissabon|W|3
+das Guggenheim-Museum von Frank Gehry|Bilbao|W|3
+die Glaspyramide vor dem Louvre|Paris|W|1
+der Arc de Triomphe|Paris|W|1
+die Basilika Sacré-Cœur|Paris|W|2
+die Westminster Abbey|London|W|2
+der Buckingham Palace|London|W|1
+das Empire State Building|New York|W|1
+die Space Needle|Seattle|W|3
+der Gateway Arch|St. Louis|W|3
+der CN Tower|Toronto|W|2
+der Hollywood-Schriftzug|Los Angeles|W|1
+das Weiße Haus|Washington, D.C.|W|1
+die Petronas Towers|Kuala Lumpur|W|2
+das Hotel Marina Bay Sands|Singapur|W|2
+die Verbotene Stadt|Peking|W|1
+das Gateway of India|Mumbai|W|3
+der Felsendom|Jerusalem|W|2
+die Klagemauer|Jerusalem|W|1
+die Harbour Bridge|Sydney|W|2
+der Dom mit den zwei 157 Meter hohen Türmen|Köln|DE|1
+die wiederaufgebaute Frauenkirche|Dresden|DE|1
+der Zwinger|Dresden|DE|2
+die Semperoper|Dresden|DE|2
+die Elbphilharmonie|Hamburg|DE|1
+die Speicherstadt|Hamburg|DE|2
+der „Michel“ (St. Michaelis)|Hamburg|DE|2
+das Holstentor|Lübeck|DE|1
+der Fernsehturm am Alexanderplatz|Berlin|DE|1
+das Reichstagsgebäude|Berlin|DE|1
+das Schloss Sanssouci|Potsdam|DE|2
+das Hofbräuhaus|München|DE|1
+der Römer (das Rathaus)|Frankfurt am Main|DE|2
+die Porta Nigra|Trier|DE|2
+die Wartburg|Eisenach|DE|2
+das Völkerschlachtdenkmal|Leipzig|DE|2
+das Chilehaus|Hamburg|DE|3
+die Fuggerei|Augsburg|DE|2
+die Kaiserburg|Nürnberg|DE|2
+das Münster mit dem höchsten Kirchturm der Welt|Ulm|DE|2
+`);
+for(const [b,s,g,d] of BAU)add('geo',+d,'In welcher Stadt steht '+b+'?',s,BAU.filter(x=>x[2]===g).map(x=>x[1]));
+
+/* ---- Flüsse: Stadt | Fluss | Gruppe | Stufe ---- */
+const FLUSS=rows(`
+Köln|Rhein|DE|1
+Düsseldorf|Rhein|DE|1
+Bonn|Rhein|DE|2
+Mainz|Rhein|DE|2
+Dresden|Elbe|DE|1
+Hamburg|Elbe|DE|1
+Magdeburg|Elbe|DE|2
+Würzburg|Main|DE|2
+München|Isar|DE|1
+Berlin|Spree|DE|1
+Hannover|Leine|DE|2
+Bremen|Weser|DE|1
+Stuttgart|Neckar|DE|1
+Heidelberg|Neckar|DE|2
+Tübingen|Neckar|DE|3
+Regensburg|Donau|DE|2
+Ulm|Donau|DE|2
+Nürnberg|Pegnitz|DE|2
+Kassel|Fulda|DE|3
+Freiburg im Breisgau|Dreisam|DE|3
+Trier|Mosel|DE|2
+Augsburg|Lech|DE|3
+Jena|Saale|DE|3
+Erfurt|Gera|DE|3
+Potsdam|Havel|DE|2
+Lübeck|Trave|DE|2
+Rostock|Warnow|DE|3
+Bamberg|Regnitz|DE|3
+Landshut|Isar|DE|3
+Innsbruck|Inn|W|2
+Salzburg|Salzach|W|2
+Budapest|Donau|W|1
+Paris|Seine|W|1
+London|Themse|W|1
+Rom|Tiber|W|1
+Florenz|Arno|W|2
+Warschau|Weichsel|W|2
+Lissabon|Tejo|W|2
+Sevilla|Guadalquivir|W|3
+Bordeaux|Garonne|W|3
+Kairo|Nil|W|1
+Bagdad|Tigris|W|2
+Sankt Petersburg|Newa|W|2
+Kiew|Dnepr|W|2
+Bratislava|Donau|W|2
+Bern|Aare|W|2
+Zürich|Limmat|W|3
+Genf|Rhône|W|2
+Dublin|Liffey|W|3
+Amsterdam|Amstel|W|2
+Antwerpen|Schelde|W|3
+New York|Hudson|W|2
+`);
+for(const [s,f,g,d] of FLUSS)add('geo',+d,'An welchem Fluss liegt '+s+'?',f,FLUSS.filter(x=>x[2]===g).map(x=>x[1]));
+
+/* ---- Erfindungen und Entdeckungen: Frage | Person | Stufe ---- */
+const ERF=rows(`
+Wer verbesserte die Dampfmaschine so, dass sie die Industrialisierung antrieb?|James Watt|2
+Wer erfand das Dynamit?|Alfred Nobel|2
+Wer entdeckte 1895 die nach ihm benannten Strahlen?|Wilhelm Conrad Röntgen|1
+Wer erfand 1817 die Laufmaschine, den Vorläufer des Fahrrads?|Karl Drais|2
+Wer erfand den nach ihm benannten Selbstzündermotor?|Rudolf Diesel|1
+Wer baute die ersten großen starren Luftschiffe?|Ferdinand von Zeppelin|1
+Wer erfand den Blitzableiter?|Benjamin Franklin|2
+Wer entwickelte den nach ihm benannten Telegrafen-Code aus Punkten und Strichen?|Samuel Morse|2
+Wer schickte 1901 als Erster Funksignale über den Atlantik?|Guglielmo Marconi|3
+Wer entwickelte den Wechselstrommotor und gab einer Einheit der magnetischen Flussdichte den Namen?|Nikola Tesla|3
+Wem gelang 1903 der erste gesteuerte Motorflug?|Den Brüdern Wright|1
+Wer unternahm in den 1890er-Jahren berühmte Gleitflüge bei Berlin?|Otto Lilienthal|2
+Wer entwickelte Ende des 18. Jahrhunderts die Pockenimpfung?|Edward Jenner|3
+Nach wem ist das Erhitzen von Milch zum Haltbarmachen benannt?|Louis Pasteur|2
+Wer entdeckte 1882 den Erreger der Tuberkulose?|Robert Koch|2
+Wer stellte 1869 das Periodensystem der Elemente auf?|Dmitri Mendelejew|2
+Wer begründete die Evolutionstheorie mit dem Buch „Über die Entstehung der Arten“?|Charles Darwin|1
+Wer entdeckte 1938 zusammen mit Fritz Straßmann die Kernspaltung?|Otto Hahn|3
+Wer gilt als Begründer der Quantentheorie?|Max Planck|2
+Wer setzte die Sonne statt der Erde in die Mitte des Weltbilds?|Nikolaus Kopernikus|2
+Wer fand die drei Gesetze der Planetenbewegung?|Johannes Kepler|3
+Wer richtete als einer der Ersten ein Fernrohr auf die Jupitermonde?|Galileo Galilei|2
+Nach wem ist die Temperaturskala mit 0 und 100 Grad für Gefrier- und Siedepunkt benannt?|Anders Celsius|2
+Wer erfand eine Temperaturskala, die vor allem in den USA verwendet wird?|Daniel Gabriel Fahrenheit|2
+Wer meldete 1873 die genietete Jeans zum Patent an?|Levi Strauss|2
+Wer erfand den Spreizdübel?|Artur Fischer|3
+Wer erfand 1908 den Kaffeefilter aus Papier?|Melitta Bentz|2
+Wer erfand die Gummibärchen?|Hans Riegel|2
+Wer erfand das Grammophon mit Schallplatte?|Emil Berliner|3
+Wer erfand den Phonographen?|Thomas Edison|2
+Wer erfand die nach ihm benannte Röhre, Grundlage des Fernsehers?|Ferdinand Braun|3
+Nach wem ist der Viertakt-Benzinmotor benannt?|Nicolaus August Otto|2
+Wer nähte 1880 einen kleinen Filz-Elefanten und gründete daraus eine berühmte Stofftierfirma?|Margarete Steiff|2
+Wer erfand die Playmobil-Figuren?|Hans Beck|3
+Wer stellte 1897 bei Bayer reine Acetylsalicylsäure her, den Wirkstoff von Aspirin?|Felix Hoffmann|3
+Wer entdeckte die Radioaktivität des Urans?|Henri Becquerel|3
+Wer entdeckte das Prinzip des Auftriebs, angeblich in der Badewanne?|Archimedes|2
+Wer formulierte die drei Bewegungsgesetze der klassischen Mechanik?|Isaac Newton|1
+Wer wies in den 1880er-Jahren als Erster elektromagnetische Wellen nach?|Heinrich Hertz|3
+Wer entdeckte die Elektronen?|Joseph John Thomson|3
+Wer entwickelte das Atommodell mit Elektronen auf festen Bahnen?|Niels Bohr|3
+`);
+for(const [q,p,d] of ERF)add('wiss',+d,q,p,ERF.map(x=>x[1]));
+
+/* ---- Sportler: Name | Sportart | Stufe ---- */
+const SPORTLER=rows(`
+Roger Federer|Tennis|1
+Serena Williams|Tennis|1
+Novak Djokovic|Tennis|1
+Rafael Nadal|Tennis|1
+Alexander Zverev|Tennis|1
+Angelique Kerber|Tennis|2
+Michael Jordan|Basketball|1
+LeBron James|Basketball|1
+Dennis Schröder|Basketball|2
+Tiger Woods|Golf|1
+Usain Bolt|Leichtathletik|1
+Carl Lewis|Leichtathletik|2
+Malaika Mihambo|Leichtathletik|2
+Robert Harting|Leichtathletik|3
+Michael Phelps|Schwimmen|1
+Franziska van Almsick|Schwimmen|2
+Michael Groß|Schwimmen|3
+Britta Steffen|Schwimmen|3
+Lewis Hamilton|Formel 1|1
+Max Verstappen|Formel 1|1
+Nico Rosberg|Formel 1|2
+Magnus Carlsen|Schach|2
+Wladimir Klitschko|Boxen|1
+Muhammad Ali|Boxen|1
+Henry Maske|Boxen|2
+Regina Halmich|Boxen|2
+Katarina Witt|Eiskunstlauf|2
+Jan Ullrich|Radsport|2
+Tadej Pogačar|Radsport|2
+Eddy Merckx|Radsport|3
+Sven Hannawald|Skispringen|2
+Martin Schmitt|Skispringen|3
+Magdalena Neuner|Biathlon|2
+Laura Dahlmeier|Biathlon|2
+Felix Neureuther|Ski alpin|2
+Marcel Hirscher|Ski alpin|2
+Mikaela Shiffrin|Ski alpin|2
+Timo Boll|Tischtennis|2
+Dimitrij Ovtcharov|Tischtennis|3
+Uwe Gensheimer|Handball|3
+Andreas Wolff|Handball|3
+Leon Draisaitl|Eishockey|2
+Wayne Gretzky|Eishockey|2
+Tom Brady|American Football|2
+Patrick Mahomes|American Football|2
+Babe Ruth|Baseball|3
+Simone Biles|Turnen|2
+Fabian Hambüchen|Turnen|3
+Nadia Comăneci|Turnen|3
+Jan Frodeno|Triathlon|2
+Valentino Rossi|Motorradrennen|2
+Shaun White|Snowboard|3
+Kelly Slater|Surfen|3
+Tony Hawk|Skateboard|2
+Ronnie O’Sullivan|Snooker|3
+Phil Taylor|Darts|2
+Luke Littler|Darts|2
+Sachin Tendulkar|Cricket|3
+Jonah Lomu|Rugby|3
+`);
+for(const [n,s,d] of SPORTLER)add('sport',+d,'In welcher Sportart wurde '+n+' berühmt?',s,SPORTLER.map(x=>x[1]));
+
+/* ---- Tiergruppen: Tier (mit Artikel) | Gruppe | Stufe ---- */
+const GRUPPEN=['Säugetiere','Vögel','Reptilien','Amphibien','Fische','Insekten','Spinnentiere','Krebstiere','Weichtiere'];
+const TIER=rows(`
+der Delfin|Säugetiere|1
+die Fledermaus|Säugetiere|1
+der Pinguin|Vögel|1
+der Strauß|Vögel|1
+der Kiwi|Vögel|2
+das Seepferdchen|Fische|2
+der Hai|Fische|1
+der Rochen|Fische|2
+der Aal|Fische|2
+der Walhai|Fische|2
+die Blindschleiche|Reptilien|2
+der Feuersalamander|Amphibien|2
+der Teichmolch|Amphibien|2
+die Kröte|Amphibien|1
+der Laubfrosch|Amphibien|1
+die Schildkröte|Reptilien|1
+das Krokodil|Reptilien|1
+das Chamäleon|Reptilien|1
+der Gecko|Reptilien|1
+die Kreuzotter|Reptilien|2
+die Kreuzspinne|Spinnentiere|1
+der Skorpion|Spinnentiere|2
+die Zecke|Spinnentiere|2
+die Hausstaubmilbe|Spinnentiere|3
+der Weberknecht|Spinnentiere|3
+die Ameise|Insekten|1
+die Libelle|Insekten|1
+der Marienkäfer|Insekten|1
+die Termite|Insekten|2
+der Ohrwurm|Insekten|2
+der Hummer|Krebstiere|1
+die Garnele|Krebstiere|2
+die Kellerassel|Krebstiere|3
+der Krill|Krebstiere|3
+die Seepocke|Krebstiere|3
+der Tintenfisch|Weichtiere|2
+die Weinbergschnecke|Weichtiere|1
+die Miesmuschel|Weichtiere|1
+der Igel|Säugetiere|1
+der Maulwurf|Säugetiere|1
+der Seehund|Säugetiere|1
+die Seekuh|Säugetiere|2
+das Schuppentier|Säugetiere|3
+das Gürteltier|Säugetiere|2
+der Ameisenigel|Säugetiere|3
+der Komodowaran|Reptilien|2
+der Leguan|Reptilien|1
+der Pfeilgiftfrosch|Amphibien|2
+der Grottenolm|Amphibien|3
+der Lungenfisch|Fische|3
+der Kugelfisch|Fische|2
+der Schlammspringer|Fische|3
+der Emu|Vögel|2
+der Kolibri|Vögel|1
+der Flughund|Säugetiere|2
+der Flugdrache|Reptilien|3
+die Blindwühle|Amphibien|3
+der Seelöwe|Säugetiere|1
+das Walross|Säugetiere|1
+der Albatros|Vögel|1
+die Wespe|Insekten|1
+die Hummel|Insekten|1
+die Stubenfliege|Insekten|1
+die Vogelspinne|Spinnentiere|1
+die Tarantel|Spinnentiere|2
+die Languste|Krebstiere|2
+die Krabbe|Krebstiere|1
+der Kalmar|Weichtiere|2
+die Nacktschnecke|Weichtiere|1
+der Lachs|Fische|1
+die Forelle|Fische|1
+der Seeteufel|Fische|2
+das Faultier|Säugetiere|1
+der Steinfisch|Fische|3
+die Ringelnatter|Reptilien|2
+der Pfau|Vögel|1
+`);
+for(const [t,g,d] of TIER)add('natur',+d,'Zu welcher Tiergruppe gehört '+t+'?',g,GRUPPEN);
+/* Tiernamen: Frage | Antwort | Art (j/m/w) | Stufe */
+const TN=rows(`
+Wie heißt das Junge einer Kuh?|Kalb|j|1
+Wie heißt das Junge eines Schweins?|Ferkel|j|1
+Wie heißt das Junge eines Schafs?|Lamm|j|1
+Wie heißt das Junge einer Ziege?|Zicklein|j|2
+Wie heißt das Junge eines Hundes?|Welpe|j|1
+Wie heißt das Junge eines Rehs?|Kitz|j|2
+Wie heißt das Junge eines Wildschweins?|Frischling|j|2
+Wie heißt das Junge eines Huhns?|Küken|j|1
+Wie heißt die Larve eines Froschs?|Kaulquappe|j|1
+Wie heißt die Larve eines Schmetterlings?|Raupe|j|1
+Wie heißt das Junge einer Gans?|Gössel|j|3
+Wie nennt man ein männliches Huhn?|Hahn|m|1
+Wie nennt man ein männliches Hausschwein?|Eber|m|2
+Wie nennt man ein männliches Pferd?|Hengst|m|1
+Wie nennt man eine männliche Ente?|Erpel|m|2
+Wie nennt man eine männliche Gans?|Ganter|m|3
+Wie nennt man eine männliche Katze?|Kater|m|1
+Wie nennt man einen männlichen Hund?|Rüde|m|2
+Wie nennt man ein männliches Schaf?|Widder|m|2
+Wie nennt man ein männliches Wildschwein?|Keiler|m|3
+Wie nennt man ein ausgewachsenes männliches Rind, das nicht kastriert ist?|Stier|m|2
+Wie nennt man ein weibliches Pferd?|Stute|w|1
+Wie nennt man ein weibliches Hausschwein?|Sau|w|2
+Wie nennt man ein weibliches Reh?|Ricke|w|3
+Wie nennt man ein weibliches Wildschwein?|Bache|w|3
+Wie nennt man einen weiblichen Fuchs?|Fähe|w|3
+Wie nennt man ein weibliches Huhn?|Henne|w|1
+Wie nennt man eine weibliche Ziege?|Geiß|w|2
+Wie nennt man einen weiblichen Hirsch?|Hirschkuh|w|2
+`);
+for(const [q,a,k,d] of TN)add('natur',+d,q,a,TN.filter(x=>x[2]===k).map(x=>x[1]));
+
+/* ---- Vokabeln: Sprache | Wort | Deutsch | Stufe | r = auch Gegenfrage ---- */
+const SPR={en:'englische',fr:'französische',es:'spanische',it:'italienische'};
+const VOK=rows(`
+en|apple|Apfel|1|
+en|cheese|Käse|1|
+en|kitchen|Küche|1|
+en|chair|Stuhl|1|
+en|window|Fenster|1|
+en|bridge|Brücke|1|
+en|key|Schlüssel|1|
+en|cloud|Wolke|1|
+en|honey|Honig|1|
+en|bee|Biene|1|
+en|cow|Kuh|1|
+en|sheep|Schaf|1|
+en|horse|Pferd|1|
+en|tree|Baum|1|
+en|river|Fluss|1|
+en|mountain|Berg|1|
+en|moon|Mond|1|
+en|star|Stern|1|
+en|snow|Schnee|1|
+en|rain|Regen|1|
+en|egg|Ei|1|
+en|knife|Messer|1|
+en|fork|Gabel|2|r
+en|spoon|Löffel|2|r
+en|mushroom|Pilz|2|r
+en|squirrel|Eichhörnchen|2|r
+en|pumpkin|Kürbis|2|r
+en|glove|Handschuh|2|r
+en|lighthouse|Leuchtturm|2|r
+en|owl|Eule|2|r
+en|beard|Bart|2|
+en|ladder|Leiter|2|r
+en|pillow|Kopfkissen|2|
+en|blanket|Decke|2|
+en|thunderstorm|Gewitter|2|r
+en|swan|Schwan|2|r
+en|snail|Schnecke|2|
+en|sunflower|Sonnenblume|1|
+en|rainbow|Regenbogen|1|r
+en|duck|Ente|1|
+en|fox|Fuchs|1|
+en|spider|Spinne|1|
+en|ant|Ameise|1|
+en|frog|Frosch|1|
+en|hedgehog|Igel|3|r
+en|wheelbarrow|Schubkarre|3|r
+en|dragonfly|Libelle|3|r
+en|toad|Kröte|3|r
+en|lawn mower|Rasenmäher|3|r
+en|eyebrow|Augenbraue|3|r
+en|chimney|Schornstein|3|r
+en|drawer|Schublade|3|r
+en|screwdriver|Schraubenzieher|3|r
+en|wrist|Handgelenk|3|r
+en|ankle|Knöchel|3|r
+en|puddle|Pfütze|3|r
+en|seagull|Möwe|3|r
+en|woodpecker|Specht|3|r
+fr|fromage|Käse|1|
+fr|pain|Brot|1|
+fr|chien|Hund|1|
+fr|chat|Katze|1|
+fr|maison|Haus|1|
+fr|soleil|Sonne|1|
+fr|eau|Wasser|1|
+fr|lait|Milch|1|
+fr|école|Schule|1|
+fr|glace|Eis|1|
+fr|voiture|Auto|2|
+fr|pomme|Apfel|2|
+fr|plage|Strand|2|
+fr|fenêtre|Fenster|2|
+fr|lune|Mond|2|
+fr|arbre|Baum|2|
+fr|château|Schloss|2|
+fr|fraise|Erdbeere|2|
+fr|poisson|Fisch|2|
+fr|oiseau|Vogel|2|
+fr|cheval|Pferd|2|
+fr|vache|Kuh|2|
+fr|montagne|Berg|2|
+fr|pomme de terre|Kartoffel|2|
+fr|escargot|Schnecke|2|
+fr|bouteille|Flasche|2|
+fr|papillon|Schmetterling|3|
+fr|grenouille|Frosch|3|
+fr|parapluie|Regenschirm|3|
+fr|cuillère|Löffel|3|
+fr|mouton|Schaf|3|
+fr|étoile|Stern|3|
+fr|chaussure|Schuh|3|
+fr|clé|Schlüssel|3|
+fr|hibou|Eule|3|
+fr|écureuil|Eichhörnchen|3|
+fr|champignon|Pilz|3|
+fr|fourchette|Gabel|3|
+es|perro|Hund|1|
+es|gato|Katze|1|
+es|casa|Haus|1|
+es|agua|Wasser|1|
+es|cerveza|Bier|1|
+es|sol|Sonne|1|
+es|luna|Mond|1|
+es|playa|Strand|2|
+es|queso|Käse|2|
+es|manzana|Apfel|2|
+es|mesa|Tisch|2|
+es|libro|Buch|2|
+es|leche|Milch|2|
+es|pan|Brot|2|
+es|caballo|Pferd|2|
+es|vaca|Kuh|2|
+es|pescado|Fisch|2|
+es|helado|Eis|2|
+es|montaña|Berg|2|
+es|estrella|Stern|2|
+es|mariposa|Schmetterling|3|
+es|ventana|Fenster|3|
+es|zapato|Schuh|3|
+es|pájaro|Vogel|3|
+es|árbol|Baum|3|
+es|llave|Schlüssel|3|
+es|fresa|Erdbeere|3|
+es|cuchara|Löffel|3|
+es|nieve|Schnee|3|
+it|gelato|Eis|1|
+it|acqua|Wasser|1|
+it|sole|Sonne|1|
+it|luna|Mond|1|
+it|casa|Haus|1|
+it|birra|Bier|1|
+it|vino|Wein|1|
+it|cane|Hund|2|
+it|gatto|Katze|2|
+it|formaggio|Käse|2|
+it|pane|Brot|2|
+it|latte|Milch|2|
+it|libro|Buch|2|
+it|cavallo|Pferd|2|
+it|pesce|Fisch|2|
+it|montagna|Berg|2|
+it|stella|Stern|2|
+it|strada|Straße|2|
+it|finestra|Fenster|3|
+it|farfalla|Schmetterling|3|
+it|spiaggia|Strand|3|
+it|chiave|Schlüssel|3|
+it|albero|Baum|3|
+it|mucca|Kuh|3|
+it|uccello|Vogel|3|
+it|fragola|Erdbeere|3|
+it|cucchiaio|Löffel|3|
+it|neve|Schnee|3|
+`);
+for(const [l,w,de,d,x] of VOK){
+  add('sprache',+d,'Was heißt das '+SPR[l]+' Wort „'+w+'“ auf Deutsch?',de,VOK.filter(v=>v[0]===l).map(v=>v[2]));
+  if(x==='r')add('sprache',+d,'Was heißt „'+de+'“ auf Englisch?',w,VOK.filter(v=>v[0]==='en').map(v=>v[1]));
+}
+
+/* ---- Jahreszahlen (Schätzfragen): Frage | Jahr | Toleranz | Stufe | Info ---- */
+const JAHR=rows(`
+In welchem Jahr begann die Französische Revolution?|1789|3|1|Am 14. Juli wurde in Paris die Bastille gestürmt.
+In welchem Jahr veröffentlichte Martin Luther seine 95 Thesen?|1517|5|2|Der 31. Oktober ist deshalb Reformationstag.
+In welchem Jahr fand die Schlacht bei Waterloo statt?|1815|5|2|Napoleon wurde danach nach St. Helena verbannt.
+In welchem Jahr wurde das Deutsche Kaiserreich gegründet?|1871|3|2|Wilhelm I. wurde in Versailles zum Kaiser ausgerufen.
+In welchem Jahr endete der Erste Weltkrieg?|1918|1|1|Der Waffenstillstand trat am 11. November in Kraft.
+In welchem Jahr begann der Zweite Weltkrieg?|1939|1|1|Er begann am 1. September mit dem Überfall auf Polen.
+In welchem Jahr landeten zum ersten Mal Menschen auf dem Mond?|1969|1|1|Mit der Mission Apollo 11.
+In welchem Jahr fand die Schlacht bei Hastings statt?|1066|10|3|Wilhelm der Eroberer wurde danach König von England.
+In welchem Jahr eroberten die Osmanen Konstantinopel?|1453|15|3|Damit endete das Byzantinische Reich.
+In welchem Jahr wurde in England die Magna Carta besiegelt?|1215|20|3|Sie beschränkte die Macht des Königs.
+In welchem Jahr begann der Dreißigjährige Krieg?|1618|5|2|Auslöser war der Prager Fenstersturz.
+In welchem Jahr wurde der Westfälische Friede geschlossen?|1648|10|3|Er beendete den Dreißigjährigen Krieg.
+In welchem Jahr erklärten die USA ihre Unabhängigkeit?|1776|3|2|Am 4. Juli, heute Nationalfeiertag.
+In welchem Jahr kam es in Deutschland zur Märzrevolution?|1848|3|2|Danach tagte in der Frankfurter Paulskirche das erste gesamtdeutsche Parlament.
+In welchem Jahr sank die Titanic?|1912|2|1|In der Nacht vom 14. auf den 15. April.
+In welchem Jahr kam es zum großen Börsenkrach an der Wall Street?|1929|2|2|Er gilt als Beginn der Weltwirtschaftskrise.
+In welchem Jahr fanden Olympische Sommerspiele in Berlin statt?|1936|2|2|Jesse Owens gewann dort vier Goldmedaillen.
+In welchem Jahr kam es in der DDR zum Volksaufstand vom 17. Juni?|1953|3|3|Der Aufstand wurde von sowjetischen Panzern niedergeschlagen.
+In welchem Jahr umkreiste Sputnik 1 als erster Satellit die Erde?|1957|3|2|Der „Sputnikschock“ löste das Wettrennen ins All aus.
+In welchem Jahr wurde US-Präsident John F. Kennedy ermordet?|1963|2|2|Das Attentat geschah in Dallas.
+In welchem Jahr ereignete sich das Reaktorunglück von Tschernobyl?|1986|2|1|Am 26. April 1986.
+In welchem Jahr zerfiel die Sowjetunion?|1991|2|2|Im Dezember 1991 löste sie sich auf.
+In welchem Jahr gab es die Anschläge auf das World Trade Center?|2001|0|1|Am 11. September 2001.
+In welchem Jahr wurde Facebook gegründet?|2004|1|2|Mark Zuckerberg startete es als Studentennetz in Harvard.
+In welchem Jahr wurde Google gegründet?|1998|2|2|Von Larry Page und Sergey Brin.
+In welchem Jahr wurde Amazon gegründet?|1994|2|3|Jeff Bezos begann mit einem Online-Buchhandel.
+In welchem Jahr wurde Apple gegründet?|1976|3|3|Steve Jobs, Steve Wozniak und Ronald Wayne gründeten es.
+In welchem Jahr wurde Microsoft gegründet?|1975|3|3|Von Bill Gates und Paul Allen.
+In welchem Jahr ging YouTube online?|2005|1|2|Das erste Video zeigt einen Besuch im Zoo.
+In welchem Jahr eröffnete das erste Disneyland in Kalifornien?|1955|3|3|Walt Disney war selbst bei der Eröffnung.
+In welchem Jahr kam der Micky-Maus-Film „Steamboat Willie“ heraus?|1928|3|3|Er gilt als Geburtsstunde der berühmten Maus.
+In welchem Jahr verunglückte das Luftschiff „Hindenburg“ in Lakehurst?|1937|3|3|Danach endete die Zeit der großen Passagier-Luftschiffe.
+In welchem Jahr flog Charles Lindbergh allein über den Atlantik?|1927|3|3|Er flog ohne Zwischenstopp von New York nach Paris.
+In welchem Jahr wurde Abraham Lincoln ermordet?|1865|3|3|Kurz nach dem Ende des Bürgerkriegs.
+In welchem Jahr regierten in Deutschland drei Kaiser nacheinander?|1888|3|3|Wilhelm I., Friedrich III. und Wilhelm II.
+In welchem Jahr trat die Weimarer Verfassung in Kraft?|1919|2|2|Sie machte Deutschland zur ersten Demokratie.
+In welchem Jahr erreichte die große Inflation in Deutschland ihren Höhepunkt?|1923|2|2|Ein Brot kostete zeitweise Milliarden Mark.
+In welchem Jahr wurde in Westdeutschland die D-Mark eingeführt?|1948|1|2|Mit der Währungsreform im Juni 1948.
+In welchem Jahr wurden die Römischen Verträge unterzeichnet?|1957|3|3|Sie gründeten die Europäische Wirtschaftsgemeinschaft.
+In welchem Jahr unterzeichneten Adenauer und de Gaulle den Élysée-Vertrag?|1963|3|3|Er besiegelte die deutsch-französische Freundschaft.
+In welchem Jahr wurde der Vertrag von Maastricht unterzeichnet?|1992|2|3|Mit ihm entstand die Europäische Union.
+In welchem Jahr ging die Bank Lehman Brothers pleite?|2008|1|2|Die Pleite verschärfte die weltweite Finanzkrise.
+In welchem Jahr kam es zur Reaktorkatastrophe von Fukushima?|2011|1|2|Ausgelöst durch ein Erdbeben und einen Tsunami.
+In welchem Jahr stimmten die Briten für den Austritt aus der EU?|2016|1|2|Der Austritt wurde 2020 vollzogen.
+In welchem Jahr erschien das erste Wörterbuch von Konrad Duden?|1880|5|3|Es hatte rund 27.000 Stichwörter.
+In welchem Jahr gab es die erste Ziehung von „Lotto 6 aus 49“?|1955|3|3|Die erste Ziehung fand im Oktober in Hamburg statt.
+In welchem Jahr lief die erste Sendung von „Wetten, dass..?“?|1981|2|3|Erfinder und erster Moderator war Frank Elstner.
+In welchem Jahr lief die erste „Sendung mit der Maus“?|1971|3|3|Damals hieß sie noch „Lach- und Sachgeschichten“.
+In welchem Jahr wurden in Deutschland die fünfstelligen Postleitzahlen eingeführt?|1993|1|3|Sie lösten die vierstelligen Zahlen ab.
+In welchem Jahr wurde die Bundeswehr gegründet?|1955|2|3|Zehn Jahre nach Kriegsende.
+Um welches Jahr druckte Johannes Gutenberg seine berühmte Bibel?|1455|10|3|Es gibt heute noch 49 erhaltene Exemplare.
+In welchem Jahr endete das Weströmische Reich?|476|20|3|Der letzte Kaiser Romulus Augustulus wurde abgesetzt.
+In welchem Jahr wurde der Eiffelturm fertiggestellt?|1889|5|2|Er wurde für die Weltausstellung gebaut.
+In welchem Jahr wurde die Elbphilharmonie in Hamburg eröffnet?|2017|1|3|Der Bau wurde viel teurer und dauerte viel länger als geplant.
+`);
+for(const [q,y,t,d,info] of JAHR){const v=+y,w=v<1800?300:v<1950?200:100;if(!SEEN_Q.has(q)){SEEN_Q.add(q);Q_RAW.push(['gesch',+d,q,v,v-w/2,v+w/2,'Jahr',+t,info||''])}}
+
+/* ---- Olympia: Jahr | Art (S/W) | Ort | Stufe ---- */
+const OLY=rows(`
+1896|S|Athen|2
+1900|S|Paris|3
+1904|S|St. Louis|3
+1908|S|London|3
+1912|S|Stockholm|3
+1920|S|Antwerpen|3
+1924|S|Paris|3
+1928|S|Amsterdam|3
+1932|S|Los Angeles|3
+1936|S|Berlin|2
+1948|S|London|3
+1952|S|Helsinki|3
+1956|S|Melbourne|3
+1960|S|Rom|3
+1964|S|Tokio|3
+1968|S|Mexiko-Stadt|2
+1976|S|Montreal|2
+1980|S|Moskau|2
+1984|S|Los Angeles|2
+1988|S|Seoul|2
+1992|S|Barcelona|1
+1996|S|Atlanta|2
+2000|S|Sydney|1
+2004|S|Athen|2
+2008|S|Peking|1
+2012|S|London|1
+2016|S|Rio de Janeiro|1
+2024|S|Paris|1
+2032|S|Brisbane|2
+1924|W|Chamonix|3
+1928|W|St. Moritz|3
+1936|W|Garmisch-Partenkirchen|3
+1952|W|Oslo|3
+1956|W|Cortina d’Ampezzo|3
+1960|W|Squaw Valley|3
+1964|W|Innsbruck|3
+1968|W|Grenoble|3
+1972|W|Sapporo|3
+1980|W|Lake Placid|3
+1984|W|Sarajevo|3
+1988|W|Calgary|2
+1992|W|Albertville|3
+1994|W|Lillehammer|2
+1998|W|Nagano|2
+2002|W|Salt Lake City|2
+2006|W|Turin|2
+2010|W|Vancouver|2
+2014|W|Sotschi|1
+2018|W|Pyeongchang|2
+2022|W|Peking|2
+2026|W|Mailand und Cortina d’Ampezzo|1
+`);
+for(const [y,a,o,d] of OLY)add('sport',+d,(+y>2026?'Wo finden die Olympischen ':'Wo fanden die Olympischen ')+(a==='S'?'Sommerspiele ':'Winterspiele ')+y+(+y>2026?' statt?':' statt?'),o,OLY.filter(x=>x[1]===a).map(x=>x[2]));
+/* ---- Grundwortschatz: Sprache | Wort | Deutsch | Stufe | Gruppe ---- */
+const GW=rows(`
+en|seven|sieben|1|zahl
+en|three|drei|1|zahl
+en|eleven|elf|1|zahl
+en|twenty|zwanzig|1|zahl
+en|red|rot|1|farbe
+en|yellow|gelb|1|farbe
+en|purple|lila|1|farbe
+en|brown|braun|1|farbe
+en|Monday|Montag|1|tag
+en|Tuesday|Dienstag|1|tag
+en|Wednesday|Mittwoch|1|tag
+en|Thursday|Donnerstag|1|tag
+en|Friday|Freitag|1|tag
+en|Saturday|Samstag|1|tag
+en|Sunday|Sonntag|1|tag
+en|daughter|Tochter|1|fam
+en|grandmother|Großmutter|1|fam
+en|uncle|Onkel|1|fam
+en|aunt|Tante|1|fam
+en|brother|Bruder|1|fam
+en|sister|Schwester|1|fam
+en|head|Kopf|1|koerper
+en|tooth|Zahn|1|koerper
+en|eye|Auge|1|koerper
+en|ear|Ohr|1|koerper
+en|nose|Nase|1|koerper
+en|mouth|Mund|1|koerper
+fr|deux|zwei|1|zahl
+fr|trois|drei|1|zahl
+fr|quatre|vier|1|zahl
+fr|cinq|fünf|1|zahl
+fr|six|sechs|1|zahl
+fr|sept|sieben|1|zahl
+fr|huit|acht|1|zahl
+fr|neuf|neun|1|zahl
+fr|dix|zehn|1|zahl
+fr|rouge|rot|1|farbe
+fr|bleu|blau|1|farbe
+fr|vert|grün|1|farbe
+fr|jaune|gelb|1|farbe
+fr|noir|schwarz|1|farbe
+fr|blanc|weiß|1|farbe
+fr|lundi|Montag|2|tag
+fr|mardi|Dienstag|2|tag
+fr|mercredi|Mittwoch|2|tag
+fr|jeudi|Donnerstag|2|tag
+fr|vendredi|Freitag|2|tag
+fr|samedi|Samstag|2|tag
+fr|dimanche|Sonntag|2|tag
+fr|mère|Mutter|1|fam
+fr|père|Vater|1|fam
+fr|frère|Bruder|1|fam
+fr|sœur|Schwester|1|fam
+fr|fils|Sohn|1|fam
+fr|fille|Tochter|1|fam
+fr|grand-mère|Großmutter|1|fam
+fr|oncle|Onkel|1|fam
+fr|tête|Kopf|2|koerper
+fr|pied|Fuß|2|koerper
+fr|œil|Auge|2|koerper
+fr|oreille|Ohr|2|koerper
+fr|nez|Nase|2|koerper
+fr|bouche|Mund|2|koerper
+es|dos|zwei|1|zahl
+es|tres|drei|1|zahl
+es|cuatro|vier|1|zahl
+es|cinco|fünf|1|zahl
+es|seis|sechs|1|zahl
+es|siete|sieben|1|zahl
+es|ocho|acht|1|zahl
+es|nueve|neun|1|zahl
+es|diez|zehn|1|zahl
+es|rojo|rot|1|farbe
+es|azul|blau|1|farbe
+es|verde|grün|1|farbe
+es|amarillo|gelb|1|farbe
+es|negro|schwarz|1|farbe
+es|blanco|weiß|1|farbe
+es|lunes|Montag|2|tag
+es|martes|Dienstag|2|tag
+es|miércoles|Mittwoch|2|tag
+es|jueves|Donnerstag|2|tag
+es|viernes|Freitag|2|tag
+es|sábado|Samstag|2|tag
+es|domingo|Sonntag|2|tag
+es|madre|Mutter|1|fam
+es|padre|Vater|1|fam
+es|hermano|Bruder|1|fam
+es|hermana|Schwester|1|fam
+es|hijo|Sohn|1|fam
+es|hija|Tochter|1|fam
+es|abuela|Großmutter|1|fam
+es|tío|Onkel|1|fam
+es|cabeza|Kopf|2|koerper
+es|pie|Fuß|2|koerper
+es|ojo|Auge|2|koerper
+es|oreja|Ohr|2|koerper
+es|nariz|Nase|2|koerper
+es|boca|Mund|2|koerper
+it|due|zwei|1|zahl
+it|tre|drei|1|zahl
+it|quattro|vier|1|zahl
+it|cinque|fünf|1|zahl
+it|sei|sechs|1|zahl
+it|sette|sieben|1|zahl
+it|otto|acht|1|zahl
+it|nove|neun|1|zahl
+it|dieci|zehn|1|zahl
+it|rosso|rot|1|farbe
+it|blu|blau|1|farbe
+it|verde|grün|1|farbe
+it|giallo|gelb|1|farbe
+it|nero|schwarz|1|farbe
+it|bianco|weiß|1|farbe
+it|lunedì|Montag|2|tag
+it|martedì|Dienstag|2|tag
+it|mercoledì|Mittwoch|2|tag
+it|giovedì|Donnerstag|2|tag
+it|venerdì|Freitag|2|tag
+it|sabato|Samstag|2|tag
+it|domenica|Sonntag|2|tag
+it|madre|Mutter|1|fam
+it|padre|Vater|1|fam
+it|fratello|Bruder|1|fam
+it|sorella|Schwester|1|fam
+it|figlio|Sohn|1|fam
+it|figlia|Tochter|1|fam
+it|nonna|Großmutter|1|fam
+it|zio|Onkel|1|fam
+it|testa|Kopf|2|koerper
+it|piede|Fuß|2|koerper
+it|occhio|Auge|2|koerper
+it|orecchio|Ohr|2|koerper
+it|naso|Nase|2|koerper
+it|bocca|Mund|2|koerper
+en|pear|Birne|1|pflanze
+en|cherry|Kirsche|1|pflanze
+en|plum|Pflaume|2|pflanze
+en|peach|Pfirsich|2|pflanze
+en|raspberry|Himbeere|2|pflanze
+en|blackberry|Brombeere|2|pflanze
+en|cauliflower|Blumenkohl|2|pflanze
+en|gooseberry|Stachelbeere|3|pflanze
+en|parsley|Petersilie|3|pflanze
+en|leek|Lauch|3|pflanze
+en|turnip|Rübe|3|pflanze
+en|chestnut|Kastanie|3|pflanze
+en|acorn|Eichel|3|pflanze
+en|wasp|Wespe|2|tier
+en|beetle|Käfer|2|tier
+en|sparrow|Spatz|2|tier
+en|stork|Storch|2|tier
+en|moth|Motte|3|tier
+en|hornet|Hornisse|3|tier
+en|flea|Floh|3|tier
+en|badger|Dachs|3|tier
+en|raven|Rabe|3|tier
+en|magpie|Elster|3|tier
+en|heron|Reiher|3|tier
+en|saw|Säge|2|werkzeug
+en|shovel|Schaufel|2|werkzeug
+en|bucket|Eimer|2|werkzeug
+en|kettle|Wasserkocher|2|werkzeug
+en|pliers|Zange|3|werkzeug
+en|anvil|Amboss|3|werkzeug
+en|broom|Besen|3|werkzeug
+en|sieve|Sieb|3|werkzeug
+en|rolling pin|Nudelholz|3|werkzeug
+en|whisk|Schneebesen|3|werkzeug
+en|basement|Keller|2|haus
+en|staircase|Treppe|2|haus
+en|attic|Dachboden|3|haus
+en|ceiling|Zimmerdecke|3|haus
+en|gutter|Dachrinne|3|haus
+en|doorbell|Türklingel|1|haus
+en|bathtub|Badewanne|1|haus
+`);
+for(const [l,w,de,d,g] of GW){
+  const pool=GW.filter(v=>v[0]===l&&v[4]===g).map(v=>v[2]);
+  add('sprache',+d,g==='zahl'?'Welche Zahl bedeutet das '+SPR[l]+' Wort „'+w+'“?':'Was heißt das '+SPR[l]+' Wort „'+w+'“ auf Deutsch?',de,pool.length>=4?pool:VOK.filter(v=>v[0]===l).map(v=>v[2]).concat(pool));
+}
+
+/* ---- Kontinente bekannter Länder: Land | Artikel (Nominativ, * = Mehrzahl) | Kontinent | Stufe ---- */
+for(const [n,a,k,d] of rows(`
+Kenia||AF|1
+Marokko||AF|1
+Nigeria||AF|1
+Ghana||AF|1
+Äthiopien||AF|1
+Peru||SA|1
+Argentinien||SA|1
+Kolumbien||SA|1
+Chile||SA|1
+Venezuela||SA|1
+Bolivien||SA|1
+Ecuador||SA|1
+Uruguay||SA|1
+Paraguay||SA|2
+Kuba||NA|1
+Jamaika||NA|1
+Mexiko||NA|1
+Kanada||NA|1
+Guatemala||NA|2
+Costa Rica||NA|2
+Panama||NA|2
+Thailand||AS|1
+Vietnam||AS|1
+Japan||AS|1
+Indien||AS|1
+Nepal||AS|1
+Iran|der|AS|1
+Irak|der|AS|1
+Saudi-Arabien||AS|1
+Pakistan||AS|1
+Mongolei|die|AS|1
+Philippinen|die*|AS|1
+Neuseeland||OZ|1
+Portugal||EU|1
+Norwegen||EU|1
+Polen||EU|1
+Ungarn||EU|1
+Island||EU|1
+Irland||EU|1
+Albanien||EU|2
+Somalia||AF|1
+Madagaskar||AF|2
+Namibia||AF|2
+Senegal|der|AF|2
+Tunesien||AF|1
+Sudan|der|AF|2
+Libyen||AF|1
+Singapur||AS|1
+Malaysia||AS|1
+Kambodscha||AS|1
+`))add('geo',+d,'Auf welchem Kontinent '+(a==='die*'?'liegen die ':'liegt '+(a?a+' ':''))+n+'?',KONT[k],Object.values(KONT),k==='NA'&&n!=='Kanada'&&n!=='Mexiko'?'Mittelamerika und die Karibik werden zu Nordamerika gezählt.':'');
+
+/* ---- Amtssprachen: Land | Artikel (Dativ) | Sprache | Stufe ---- */
+const AMT=rows(`
+Argentinien||Spanisch|1
+Österreich||Deutsch|1
+Chile||Spanisch|1
+Kuba||Spanisch|1
+Jamaika||Englisch|1
+Ägypten||Arabisch|1
+Kolumbien||Spanisch|1
+Liechtenstein||Deutsch|1
+Monaco||Französisch|1
+Iran|dem|Persisch|2
+Angola||Portugiesisch|2
+Mosambik||Portugiesisch|2
+Senegal|dem|Französisch|2
+Elfenbeinküste|der|Französisch|2
+San Marino||Italienisch|2
+Äthiopien||Amharisch|3
+Grönland||Grönländisch|3
+Suriname||Niederländisch|3
+Andorra||Katalanisch|3
+Kambodscha||Khmer|3
+Myanmar||Birmanisch|3
+`);
+for(const [n,a,s,d] of AMT)add('sprache',+d,'Welche Sprache ist Amtssprache '+inL(n,a)+'?',s,AMT.map(x=>x[2]).concat(['Englisch','Russisch','Türkisch']));
+
+/* ---- Gegensätze: Wort | Gegenteil | Stufe ---- */
+const GEG=rows(`
+geizig|großzügig|1|a
+mutig|feige|1|a
+faul|fleißig|1|a
+horizontal|vertikal|1|a
+analog|digital|1|a
+konkav|konvex|2|a
+Ebbe|Flut|1|n
+Krieg|Frieden|1|n
+Ankunft|Abfahrt|1|n
+Sieg|Niederlage|1|n
+Vorteil|Nachteil|1|n
+Import|Export|1|n
+Optimist|Pessimist|1|n
+Minimum|Maximum|1|n
+Singular|Plural|1|n
+Konsonant|Vokal|1|n
+Monolog|Dialog|1|n
+Theorie|Praxis|2|n
+Prolog|Epilog|2|n
+Dur|Moll|2|n
+Steuerbord|Backbord|2|n
+Inflation|Deflation|2|n
+Zenit|Nadir|3|n
+Luv|Lee|3|n
+Aphel|Perihel|3|n
+`);
+for(const [w,g,d,t] of GEG){const p=GEG.filter(x=>x[3]===t);add('sprache',+d,'Was ist das Gegenteil von „'+w+'“?',g,p.map(x=>x[1]).concat(p.map(x=>x[0])).filter(x=>x!==w))}
+
+/* ---- Mehr Hits ---- */
+for(const [t,a,d] of rows(`
+All I Want for Christmas Is You|Mariah Carey|1
+Last Christmas|Wham!|1
+Love Story|Taylor Swift|1
+Firework|Katy Perry|1
+Roar|Katy Perry|1
+Baby|Justin Bieber|1
+YMCA|Village People|1
+Stayin’ Alive|Bee Gees|1
+Halo|Beyoncé|2
+Diamonds|Rihanna|2
+Anti-Hero|Taylor Swift|2
+Counting Stars|OneRepublic|2
+Radioactive|Imagine Dragons|2
+Believer|Imagine Dragons|2
+Fix You|Coldplay|2
+Yellow|Coldplay|2
+Call Me Maybe|Carly Rae Jepsen|2
+Moves Like Jagger|Maroon 5|2
+Old Town Road|Lil Nas X|2
+Dance Monkey|Tones and I|2
+Watermelon Sugar|Harry Styles|2
+Losing My Religion|R.E.M.|2
+Creep|Radiohead|2
+Tears in Heaven|Eric Clapton|2
+Every Breath You Take|The Police|2
+Sweet Dreams (Are Made of This)|Eurythmics|2
+Vogue|Madonna|2
+I Will Survive|Gloria Gaynor|2
+Daddy Cool|Boney M.|2
+Rivers of Babylon|Boney M.|2
+Moskau|Dschinghis Khan|2
+Fernando|ABBA|2
+Gimme! Gimme! Gimme!|ABBA|2
+Lambada|Kaoma|2
+Ice Ice Baby|Vanilla Ice|2
+U Can’t Touch This|MC Hammer|2
+Gangsta’s Paradise|Coolio|2
+Hey Ya!|OutKast|2
+Shallow|Lady Gaga & Bradley Cooper|2
+Party Rock Anthem|LMFAO|3
+Wellerman|Nathan Evans|3
+Ab in den Süden|Buddy|3
+Tausendmal du|Münchener Freiheit|3
+Wonderful Tonight|Eric Clapton|3
+Time After Time|Cyndi Lauper|3
+Le Freak|Chic|3
+Torn|Natalie Imbruglia|3
+Bitter Sweet Symphony|The Verve|3
+Song 2|Blur|3
+Chasing Cars|Snow Patrol|3
+Cheap Thrills|Sia|3
+`))add('musik',+d,'Von wem stammt der Hit „'+t+'“?',a,HIT.map(x=>x[1]).concat(['Mariah Carey','Katy Perry','Imagine Dragons','Coldplay','Bruno Mars','Boney M.']));
+
+/* ---- Mehr Rollen ---- */
+for(const [r,s,g,d] of rows(`
+Neo in „Matrix“|Keanu Reeves|m|1
+John Wick|Keanu Reeves|m|1
+Rose in „Titanic“|Kate Winslet|w|1
+Jack Dawson in „Titanic“|Leonardo DiCaprio|m|1
+Wolverine in den „X-Men“-Filmen|Hugh Jackman|m|1
+Deadpool|Ryan Reynolds|m|1
+Marty McFly in „Zurück in die Zukunft“|Michael J. Fox|m|1
+Kevin in „Kevin – Allein zu Haus“|Macaulay Culkin|m|1
+Hannah Montana|Miley Cyrus|w|1
+James Bond in „James Bond jagt Dr. No“|Sean Connery|m|2
+Hannibal Lecter in „Das Schweigen der Lämmer“|Anthony Hopkins|m|2
+Clarice Starling in „Das Schweigen der Lämmer“|Jodie Foster|w|2
+Gandalf in „Der Herr der Ringe“|Ian McKellen|m|2
+Frodo in „Der Herr der Ringe“|Elijah Wood|m|2
+Legolas in „Der Herr der Ringe“|Orlando Bloom|m|2
+Luke Skywalker|Mark Hamill|m|2
+Prinzessin Leia|Carrie Fisher|w|2
+Batman in „The Dark Knight“|Christian Bale|m|2
+den Joker in „The Dark Knight“|Heath Ledger|m|2
+Mary Poppins (1964)|Julie Andrews|w|2
+Ellen Ripley in „Alien“|Sigourney Weaver|w|2
+Captain Kirk in der ersten „Star Trek“-Serie|William Shatner|m|2
+Mr. Spock in der ersten „Star Trek“-Serie|Leonard Nimoy|m|2
+Chandler Bing in „Friends“|Matthew Perry|m|2
+Dr. Gregory House|Hugh Laurie|m|2
+Barney Stinson in „How I Met Your Mother“|Neil Patrick Harris|m|2
+Jon Snow in „Game of Thrones“|Kit Harington|m|2
+Tyrion Lannister in „Game of Thrones“|Peter Dinklage|m|2
+Derrick in der gleichnamigen Krimiserie|Horst Tappert|m|2
+Aragorn in „Der Herr der Ringe“|Viggo Mortensen|m|3
+Superman (1978)|Christopher Reeve|m|3
+Pippi Langstrumpf in der Fernsehserie von 1969|Inger Nilsson|w|3
+Meister Eder in „Meister Eder und sein Pumuckl“|Gustl Bayrhammer|m|3
+Doc Brown in „Zurück in die Zukunft“|Christopher Lloyd|m|3
+Sarah Connor in „Terminator 2“|Linda Hamilton|w|3
+Peter Venkman in „Ghostbusters“|Bill Murray|m|3
+`))add('film',+d,'Wer spielte '+r+'?',s,ROLLE.filter(x=>x[2]===g).map(x=>x[1]).concat(g==='m'?['Keanu Reeves','Hugh Jackman','Ian McKellen','Mark Hamill','Christian Bale']:['Kate Winslet','Jodie Foster','Carrie Fisher','Sigourney Weaver','Julie Andrews']));
+
+/* ---- Mehr Bauwerke ---- */
+for(const [b,s,g,d,v] of rows(`
+das Kapitol, Sitz des US-Kongresses|Washington, D.C.|W|2|s
+der Times Square|New York|W|1|l
+der Central Park|New York|W|1|l
+die Brooklyn Bridge|New York|W|1|l
+die Engelsburg|Rom|W|2|s
+die Spanische Treppe|Rom|W|2|l
+die Galleria Vittorio Emanuele II|Mailand|W|3|s
+der Dogenpalast am Markusplatz|Venedig|W|2|s
+die Seufzerbrücke|Venedig|W|3|s
+das Hundertwasserhaus|Wien|W|2|s
+der Prado|Madrid|W|2|s
+der Parthenon|Athen|W|2|s
+die Blaue Moschee|Istanbul|W|2|s
+der Galata-Turm|Istanbul|W|3|s
+die ehemalige Gefängnisinsel Alcatraz|San Francisco|W|2|l
+der berühmte „Strip“ mit seinen Casinos|Las Vegas|W|1|l
+der Oriental Pearl Tower|Shanghai|W|3|s
+die Kaaba|Mekka|W|2|s
+das Brandenburger Tor|Berlin|DE|1|s
+der Checkpoint Charlie|Berlin|DE|1|s
+die Siegessäule|Berlin|DE|1|s
+das Deutsche Museum|München|DE|2|s
+das Schloss Nymphenburg|München|DE|2|s
+der Englische Garten|München|DE|1|l
+die Zeche Zollverein|Essen|DE|2|l
+die Hohenzollernbrücke|Köln|DE|2|s
+der Rheinturm|Düsseldorf|DE|2|s
+die Königsallee, kurz „Kö“|Düsseldorf|DE|2|l
+das Mercedes-Benz-Museum|Stuttgart|DE|2|s
+die Autostadt von Volkswagen|Wolfsburg|DE|2|l
+die Paulskirche, in der 1848 das erste deutsche Parlament tagte|Frankfurt am Main|DE|2|s
+das Bauhausgebäude von Walter Gropius|Dessau|DE|3|s
+der Roland vor dem Rathaus, UNESCO-Welterbe|Bremen|DE|3|s
+`))if(!BAU.some(x=>x[0]===b))add('geo',+d,'In welcher Stadt '+(v==='l'?'liegt ':'steht ')+b+'?',s,BAU.filter(x=>x[2]===g).map(x=>x[1]).concat(g==='DE'?['Essen','Düsseldorf','Stuttgart','Wolfsburg']:['Madrid','Mailand','Shanghai','Las Vegas']));
+
+/* ---- Mehr Gerichte ---- */
+for(const [g,l,d,p] of rows(`
+Baguette|Frankreich|1|
+Crêpes|Frankreich|1|p
+Bruschetta|Italien|1|
+Nachos|Mexiko|1|p
+Calzone|Italien|2|
+Brownies|USA|2|p
+Quesadillas|Mexiko|2|p
+Wan Tan|China|2|p
+Miso-Suppe|Japan|2|
+Tom Yum|Thailand|2|
+Tafelspitz|Österreich|2|
+Lángos|Ungarn|2|
+Tortilla de patatas|Spanien|2|
+Crema catalana|Spanien|2|
+Onigiri|Japan|3|p
+Bulgogi|Südkorea|3|
+Bündner Fleisch|Schweiz|3|
+Bigos|Polen|3|
+Spanakopita|Griechenland|3|
+`))add('essen',+d,'Aus welchem Land '+(p?'stammen ':'stammt ')+g+'?',l,ESSEN.map(x=>x[1]));
+
+/* ---- Mehr Tiergruppen ---- */
+for(const [t,g,d] of rows(`
+die Biene|Insekten|1
+der Schmetterling|Insekten|1
+die Eidechse|Reptilien|1
+das Känguru|Säugetiere|1
+der Koala|Säugetiere|1
+der Karpfen|Fische|1
+der Hering|Fische|1
+der Thunfisch|Fische|1
+die Möwe|Vögel|1
+der Uhu|Vögel|1
+der Specht|Vögel|1
+der Maikäfer|Insekten|1
+der Flusskrebs|Krebstiere|1
+die Auster|Weichtiere|1
+der Hecht|Fische|1
+die Erdkröte|Amphibien|1
+die Jakobsmuschel|Weichtiere|2
+die Sepia|Weichtiere|2
+die Wasserspinne|Spinnentiere|2
+die Gottesanbeterin|Insekten|2
+die Zikade|Insekten|2
+der Beutelteufel|Säugetiere|2
+der Waldkauz|Vögel|2
+die Unke|Amphibien|2
+der Stör|Fische|2
+der Feuerfisch|Fische|2
+der Nautilus|Weichtiere|3
+der Silberfisch|Insekten|3
+die Wasserassel|Krebstiere|3
+die Krabbenspinne|Spinnentiere|3
+das Erdferkel|Säugetiere|3
+der Kasuar|Vögel|3
+die Smaragdeidechse|Reptilien|3
+die Brückenechse|Reptilien|3
+`))add('natur',+d,'Zu welcher Tiergruppe gehört '+t+'?',g,GRUPPEN);
+
+/* ---- Mehr Städte und Bundesländer ---- */
+for(const [o,l,d] of rows(`
+Köln|Nordrhein-Westfalen|1
+Frankfurt am Main|Hessen|1
+Nürnberg|Bayern|1
+Leipzig|Sachsen|1
+Essen|Nordrhein-Westfalen|1
+Dortmund|Nordrhein-Westfalen|1
+Rostock|Mecklenburg-Vorpommern|1
+Augsburg|Bayern|1
+Karlsruhe|Baden-Württemberg|1
+Mannheim|Baden-Württemberg|1
+Aachen|Nordrhein-Westfalen|1
+Braunschweig|Niedersachsen|1
+Garmisch-Partenkirchen|Bayern|1
+Berchtesgaden|Bayern|1
+Duisburg|Nordrhein-Westfalen|1
+Osnabrück|Niedersachsen|2
+Bremerhaven|Bremen|2
+Hildesheim|Niedersachsen|2
+Pforzheim|Baden-Württemberg|2
+Rosenheim|Bayern|2
+Erlangen|Bayern|2
+Binz|Mecklenburg-Vorpommern|2
+Heringsdorf|Mecklenburg-Vorpommern|3
+Bad Doberan|Mecklenburg-Vorpommern|3
+`))add('geo',+d,'In welchem Bundesland liegt '+o+'?',l,ALLBL);
+
+/* ---- Zahlenfakten (Auswahlfragen) ---- */
+for(const r of [
+['wiss',1,'Wie viele Tage hat ein Schaltjahr?','366','365','364','367','Alle vier Jahre bekommt der Februar einen 29. Tag.'],
+['wiss',1,'Wie viele Wochen hat ein Jahr ungefähr?','52','48','50','56','52 Wochen und ein oder zwei Tage.'],
+['wiss',1,'Wie viele Grad hat ein rechter Winkel?','90','45','100','180','Zwei rechte Winkel ergeben einen gestreckten Winkel von 180 Grad.'],
+['wiss',1,'Wie groß ist die Winkelsumme in einem Dreieck?','180 Grad','90 Grad','270 Grad','360 Grad','Im Viereck sind es 360 Grad.'],
+['wiss',1,'Wie viele Ecken hat ein Würfel?','8','6','10','12','Dazu kommen sechs Flächen und zwölf Kanten.'],
+['wiss',2,'Wie viele Kanten hat ein Würfel?','12','8','10','16','Jede der sechs Flächen hat vier Kanten, jede Kante gehört zu zwei Flächen.'],
+['wiss',2,'Wie viele Augen hat ein normaler Spielwürfel insgesamt?','21','18','24','36','1 + 2 + 3 + 4 + 5 + 6 = 21.'],
+['wiss',1,'Wie viele Lungenflügel hat ein Mensch?','2','1','3','4','Der linke ist etwas kleiner, weil dort das Herz Platz braucht.'],
+['wiss',2,'Wie viele Herzkammern hat ein Mensch?','2','1','3','4','Dazu kommen zwei Vorhöfe, in die das Blut zuerst strömt.'],
+['wiss',3,'Wie viele Monde hat der Mars?','2','0','1','4','Sie heißen Phobos und Deimos.'],
+['natur',1,'Wie viele Beine hat ein Insekt?','6','4','8','10','Spinnen haben acht Beine und sind deshalb keine Insekten.'],
+['natur',2,'Wie viele Beine hat ein Hummer?','10','6','8','12','Er gehört zu den Zehnfußkrebsen, die Scheren mitgezählt.'],
+['kultur',1,'Wie viele Karten hat ein Skatblatt?','32','52','36','40','Von der Sieben bis zum Ass in vier Farben.'],
+['kultur',1,'Wie viele Leute spielen eine Runde Skat?','3','2','4','5','Bei vier Spielern setzt reihum einer aus.'],
+['kultur',2,'Wie viele Figuren hat jeder Spieler zu Beginn einer Schachpartie?','16','12','14','20','Acht Bauern und acht weitere Figuren.'],
+['kultur',2,'Wie viele Karten hat ein Pokerblatt ohne Joker?','52','32','48','54','Vier Farben mit je 13 Karten.'],
+['geo',1,'Wie viele Sterne hat die Flagge der Europäischen Union?','12','27','10','15','Die Zahl ist ein Symbol der Vollkommenheit und hängt nicht an der Zahl der Mitglieder.'],
+['geo',2,'Wie viele Streifen hat die Flagge der USA?','13','12','10','15','Sie stehen für die 13 Gründungskolonien.'],
+['geo',1,'Wie viele Sterne hat die Flagge der USA?','50','48','52','13','Einen für jeden Bundesstaat.'],
+['sport',1,'Wie viele Spieler einer Basketballmannschaft stehen gleichzeitig auf dem Feld?','5','6','7','4','Dazu kommen bis zu sieben Auswechselspieler.'],
+['sport',3,'Wie viele Spieler hat eine Rugby-Union-Mannschaft auf dem Feld?','15','11','13','12','Bei Rugby League sind es 13.'],
+['sport',3,'Wie viele Spieler einer Wasserballmannschaft sind gleichzeitig im Wasser?','7','6','5','9','Sechs Feldspieler und ein Torwart.'],
+['sport',1,'Wie viele Kegel stehen beim Bowling am Anfang?','10','9','12','8','Beim deutschen Kegeln sind es neun.'],
+['sport',2,'Wie viele Minuten reine Spielzeit hat ein Eishockeyspiel?','60','90','45','80','Drei Drittel zu je 20 Minuten.'],
+['musik',1,'Wie viele Saiten hat eine Geige?','4','5','6','3','Sie sind auf G, D, A und E gestimmt.'],
+['musik',2,'Wie viele Saiten hat eine Ukulele?','4','3','5','6','Das Instrument stammt aus Hawaii.'],
+['wiss',1,'Wie viele Minuten hat ein Tag?','1440','1240','1640','1000','24 mal 60 Minuten.'],
+['wiss',2,'Wie viele Sekunden hat eine Stunde?','3600','1440','6000','360','60 mal 60 Sekunden.'],
+]){const q=r[2];if(!SEEN_Q.has(q)){SEEN_Q.add(q);Q_RAW.push(r)}}
+
+/* ---- Schwere Ergänzungen ---- */
+for(const [t,a,d] of rows(`
+Der grüne Heinrich|Gottfried Keller|3
+Der Mann ohne Eigenschaften|Robert Musil|3
+Die Blendung|Elias Canetti|3
+Jahrestage|Uwe Johnson|3
+Irrungen, Wirrungen|Theodor Fontane|3
+Der Hauptmann von Köpenick|Carl Zuckmayer|3
+Des Teufels General|Carl Zuckmayer|3
+Leben des Galilei|Bertolt Brecht|3
+Der gute Mensch von Sezuan|Bertolt Brecht|3
+Professor Unrat|Heinrich Mann|3
+Schachnovelle|Stefan Zweig|2
+Die Welt von Gestern|Stefan Zweig|3
+Narziß und Goldmund|Hermann Hesse|3
+Bekenntnisse des Hochstaplers Felix Krull|Thomas Mann|3
+Corpus Delicti|Juli Zeh|3
+Unterleuten|Juli Zeh|3
+Herkunft|Saša Stanišić|3
+Tauben im Gras|Wolfgang Koeppen|3
+Malina|Ingeborg Bachmann|3
+Der geteilte Himmel|Christa Wolf|3
+Kassandra|Christa Wolf|3
+Die neuen Leiden des jungen W.|Ulrich Plenzdorf|3
+Nackt unter Wölfen|Bruno Apitz|3
+Ulysses|James Joyce|3
+Mrs Dalloway|Virginia Woolf|3
+Auf der Suche nach der verlorenen Zeit|Marcel Proust|3
+`))add('kultur',+d,'Wer schrieb „'+t+'“?',a,AUT.concat(['Stefan Zweig','Christa Wolf','Carl Zuckmayer','Juli Zeh']));
+for(const [w,k,d] of rows(`
+„Die Kunst der Fuge“|Johann Sebastian Bach|3
+„Das Wohltemperierte Klavier“|Johann Sebastian Bach|3
+die Oper „Der Freischütz“|Carl Maria von Weber|3
+die Oper „Fidelio“|Ludwig van Beethoven|3
+die Operette „Orpheus in der Unterwelt“ mit dem berühmten Cancan|Jacques Offenbach|3
+den „Hochzeitsmarsch“ aus „Ein Sommernachtstraum“|Felix Mendelssohn Bartholdy|3
+die Orchestersuite „Die Planeten“|Gustav Holst|3
+„Pomp and Circumstance“|Edward Elgar|3
+die „Gymnopédies“|Erik Satie|3
+den „Kanon in D-Dur“|Johann Pachelbel|3
+„Adagio for Strings“|Samuel Barber|3
+`))add('musik',+d,'Wer komponierte '+w+'?',k,WERK.map(x=>x[1]).concat(['Carl Maria von Weber','Jacques Offenbach','Edward Elgar','Erik Satie']));
+for(const [w,k,d] of rows(`
+Die Gesandten|Hans Holbein der Jüngere|3
+Die Elster|Claude Monet|3
+Der Blaue Reiter (1903)|Wassily Kandinsky|3
+`))add('kultur',+d,'Von wem stammt das Kunstwerk „'+w+'“?',k,KUNST.map(x=>x[1]).concat(['Paul Cézanne','Hans Holbein der Jüngere']));
+for(const [n,s,d] of rows(`
+Ole Einar Bjørndalen|Biathlon|3
+Johannes Thingnes Bø|Biathlon|3
+Uschi Disl|Biathlon|3
+Marit Bjørgen|Skilanglauf|3
+Sebastian Coe|Leichtathletik|3
+Max Schmeling|Boxen|3
+Gottfried von Cramm|Tennis|3
+Toni Sailer|Ski alpin|3
+Birgit Fischer|Kanu|3
+`))add('sport',+d,'In welcher Sportart wurde '+n+' berühmt?',s,SPORTLER.map(x=>x[1]).concat(['Skilanglauf','Kanu']));
+for(const [q,p,d] of rows(`
+Wer baute in den 1670er-Jahren Mikroskope, mit denen er als Erster Bakterien sah?|Antoni van Leeuwenhoek|3
+Wer erfand 1876 eine Kältemaschine, die den Kühlschrank möglich machte?|Carl von Linde|3
+Wer baute 1886 unabhängig von Carl Benz eine Motorkutsche?|Gottlieb Daimler|3
+Wer baute im 17. Jahrhundert die Rechenmaschine „Pascaline“?|Blaise Pascal|3
+Wer entdeckte bei Kreuzungsversuchen mit Erbsen die Regeln der Vererbung?|Gregor Mendel|2
+Wer beschrieb 1953 zusammen mit Francis Crick die Doppelhelix der DNA?|James Watson|3
+`))add('wiss',+d,q,p,ERF.map(x=>x[1]).concat(['Carl von Linde','Gregor Mendel','Blaise Pascal']));
+for(const [q,y,t,d,info] of rows(`
+In welchem Jahr wurde der Suezkanal eröffnet?|1869|3|3|Er verbindet das Mittelmeer mit dem Roten Meer.
+In welchem Jahr wurde der Panamakanal eröffnet?|1914|3|3|Er verkürzte den Seeweg zwischen Atlantik und Pazifik enorm.
+In welchem Jahr fuhr die erste Eisenbahn in Deutschland?|1835|3|2|Die „Adler“ fuhr von Nürnberg nach Fürth.
+In welchem Jahr startete zum ersten Mal ein Space Shuttle?|1981|3|3|Die Columbia flog im April 1981.
+In welchem Jahr wurden die Vereinten Nationen gegründet?|1945|2|2|Gründungsort war San Francisco.
+In welchem Jahr wurde die NATO gegründet?|1949|2|2|Die Bundesrepublik trat 1955 bei.
+In welchem Jahr lief die erste „Tagesschau“?|1952|3|3|Am 26. Dezember 1952.
+In welchem Jahr bekamen Frauen in Deutschland das Wahlrecht?|1918|1|2|Im Januar 1919 durften sie zum ersten Mal wählen.
+In welchem Jahr wurde das Rote Kreuz gegründet?|1863|3|3|Gründer war Henry Dunant aus Genf.
+In welchem Jahr wurde der Kölner Dom fertiggestellt?|1880|3|3|Begonnen wurde er 1248.
+In welchem Jahr wurden die ersten Nobelpreise verliehen?|1901|3|3|Fünf Jahre nach dem Tod von Alfred Nobel.
+In welchem Jahr wurde der alte Elbtunnel in Hamburg eröffnet?|1911|3|3|Autos fahren dort in Fahrstühlen 24 Meter in die Tiefe.
+`)){const v=+y,w=v<1950?200:100,q2=q;if(!SEEN_Q.has(q2)){SEEN_Q.add(q2);Q_RAW.push(['gesch',+d,q2,v,v-w/2,v+w/2,'Jahr',+t,info||''])}}
+/* ---- Autokennzeichen: Kürzel | Stadt | Stufe ---- */
+const KFZ=rows(`
+B|Berlin|1
+M|München|1
+HH|Hamburg|1
+K|Köln|1
+F|Frankfurt am Main|1
+S|Stuttgart|1
+D|Düsseldorf|1
+HB|Bremen|1
+H|Hannover|1
+L|Leipzig|1
+DD|Dresden|1
+N|Nürnberg|1
+E|Essen|1
+DO|Dortmund|1
+KA|Karlsruhe|2
+MA|Mannheim|2
+A|Augsburg|2
+BN|Bonn|2
+MS|Münster|2
+KI|Kiel|2
+MZ|Mainz|2
+WI|Wiesbaden|2
+SB|Saarbrücken|2
+EF|Erfurt|2
+MD|Magdeburg|2
+AC|Aachen|2
+HRO|Rostock|2
+P|Potsdam|2
+BS|Braunschweig|2
+WOB|Wolfsburg|2
+R|Regensburg|2
+FR|Freiburg im Breisgau|2
+HD|Heidelberg|2
+UL|Ulm|2
+KS|Kassel|2
+BI|Bielefeld|2
+HL|Lübeck|2
+W|Wuppertal|2
+BO|Bochum|2
+GE|Gelsenkirchen|2
+DU|Duisburg|2
+C|Chemnitz|2
+HGW|Greifswald|3
+SN|Schwerin|3
+GAP|Garmisch-Partenkirchen|3
+FL|Flensburg|3
+KN|Konstanz|3
+LU|Ludwigshafen|3
+TR|Trier|3
+KO|Koblenz|3
+IN|Ingolstadt|3
+WÜ|Würzburg|3
+J|Jena|3
+PB|Paderborn|3
+OL|Oldenburg|3
+OS|Osnabrück|3
+GÖ|Göttingen|3
+HN|Heilbronn|3
+PF|Pforzheim|3
+RO|Rosenheim|3
+ER|Erlangen|3
+FÜ|Fürth|3
+BA|Bamberg|3
+BT|Bayreuth|3
+CO|Coburg|3
+PA|Passau|3
+LA|Landshut|3
+OB|Oberhausen|3
+MG|Mönchengladbach|3
+KR|Krefeld|3
+MH|Mülheim an der Ruhr|3
+HAM|Hamm|3
+HAL|Halle (Saale)|3
+Z|Zwickau|3
+G|Gera|3
+`);
+for(const [k,s,d] of KFZ)add('geo',+d,'Für welche Stadt steht das Autokennzeichen „'+k+'“?',s,KFZ.filter(x=>Math.abs(x[2]-d)<=1).map(x=>x[1]));
+
+/* ---- Nationalitätszeichen am Auto: Kürzel | Land | Stufe ---- */
+const NAT=rows(`
+A|Österreich|1
+F|Frankreich|1
+I|Italien|1
+NL|Niederlande|1
+CH|Schweiz|1
+E|Spanien|1
+B|Belgien|1
+PL|Polen|1
+DK|Dänemark|1
+GR|Griechenland|1
+TR|Türkei|1
+FIN|Finnland|1
+IRL|Irland|1
+RUS|Russland|1
+CZ|Tschechien|2
+H|Ungarn|2
+S|Schweden|2
+N|Norwegen|2
+P|Portugal|2
+L|Luxemburg|2
+SK|Slowakei|2
+SLO|Slowenien|2
+HR|Kroatien|2
+IS|Island|2
+AND|Andorra|2
+EST|Estland|2
+LV|Lettland|2
+LT|Litauen|2
+RO|Rumänien|2
+BG|Bulgarien|2
+UA|Ukraine|2
+SRB|Serbien|2
+UK|Vereinigtes Königreich|2
+AUS|Australien|2
+BR|Brasilien|2
+MEX|Mexiko|2
+FL|Liechtenstein|3
+RSM|San Marino|3
+V|Vatikanstadt|3
+MC|Monaco|3
+M|Malta|3
+BY|Belarus|3
+BIH|Bosnien und Herzegowina|3
+MNE|Montenegro|3
+AL|Albanien|3
+MD|Moldau|3
+NMK|Nordmazedonien|3
+CDN|Kanada|3
+J|Japan|3
+ZA|Südafrika|3
+MA|Marokko|3
+TN|Tunesien|3
+IL|Israel|3
+RA|Argentinien|3
+RCH|Chile|3
+`);
+for(const [k,l,d] of NAT)add('geo',+d,'Für welches Land steht das Nationalitätszeichen „'+k+'“ am Auto?',l,NAT.map(x=>x[1]));
+
+/* ---- Telefonvorwahlen: Vorwahl | Land | Stufe ---- */
+const TEL=rows(`
+49|Deutschland|1
+43|Österreich|2
+41|Schweiz|2
+33|Frankreich|2
+39|Italien|2
+44|Großbritannien|2
+34|Spanien|3
+31|Niederlande|3
+32|Belgien|3
+45|Dänemark|3
+46|Schweden|3
+47|Norwegen|3
+48|Polen|3
+30|Griechenland|3
+90|Türkei|3
+81|Japan|3
+86|China|3
+91|Indien|3
+61|Australien|3
+55|Brasilien|3
+20|Ägypten|3
+27|Südafrika|3
+351|Portugal|3
+353|Irland|3
+358|Finnland|3
+420|Tschechien|3
+36|Ungarn|3
+40|Rumänien|3
+352|Luxemburg|3
+423|Liechtenstein|3
+`);
+for(const [n,l,d] of TEL)add('geo',+d,'Zu welchem Land gehört die Telefonvorwahl +'+n+'?',l,TEL.map(x=>x[1]));
+
+/* ---- Fremdwörter: Wort | Bedeutung | Stufe ---- */
+const FW=rows(`
+flexibel|anpassungsfähig|1
+spontan|aus dem Moment heraus|1
+insolvent|zahlungsunfähig|1
+chronisch|lang andauernd|2
+akut|plötzlich und heftig|2
+obsolet|veraltet|2
+eloquent|redegewandt|2
+prokrastinieren|Aufgaben vor sich herschieben|2
+redundant|mehrfach vorhanden|2
+ambivalent|zwiespältig|2
+akribisch|äußerst sorgfältig|2
+opulent|üppig|2
+marode|heruntergekommen|2
+kryptisch|rätselhaft|2
+obligatorisch|verpflichtend|2
+lethargisch|träge und teilnahmslos|2
+euphorisch|überschwänglich begeistert|2
+melancholisch|schwermütig|2
+diskret|verschwiegen|2
+kontraproduktiv|dem eigenen Ziel schadend|2
+ubiquitär|allgegenwärtig|3
+pejorativ|abwertend|3
+evident|offensichtlich|3
+kongruent|deckungsgleich|3
+ephemer|kurzlebig|3
+perfide|hinterhältig|3
+fakultativ|freiwillig|3
+pittoresk|malerisch|3
+pekuniär|das Geld betreffend|3
+sukzessive|nach und nach|3
+despektierlich|respektlos|3
+lakonisch|kurz und trocken|3
+affin|zugeneigt|3
+latent|unterschwellig vorhanden|3
+dezidiert|entschieden|3
+konziliant|versöhnlich|3
+frugal|einfach und bescheiden|3
+inhärent|innewohnend|3
+hermetisch|dicht verschlossen|3
+konsterniert|fassungslos|3
+`);
+for(const [w,b,d] of FW)add('sprache',+d,'Was bedeutet „'+w+'“?',b,FW.map(x=>x[1]));
+
+/* ---- Vorsilben bei Maßeinheiten: Vorsilbe | Faktor | Stufe ---- */
+const VS=rows(`
+Kilo|tausendfach|1
+Mega|millionenfach|1
+Zenti|ein Hundertstel|1
+Milli|ein Tausendstel|1
+Giga|milliardenfach|2
+Tera|billionenfach|2
+Mikro|ein Millionstel|2
+Nano|ein Milliardstel|2
+Dezi|ein Zehntel|2
+Hekto|hundertfach|2
+Peta|billiardenfach|3
+Piko|ein Billionstel|3
+Femto|ein Billiardstel|3
+Exa|trillionenfach|3
+Deka|zehnfach|3
+`);
+for(const [v,f,d] of VS)add('wiss',+d,'Was bedeutet die Vorsilbe „'+v+'“ bei Maßeinheiten?',f,VS.map(x=>x[1]));
+
+/* ---- Einheiten: Größe | Einheit | Stufe ---- */
+const EINH=rows(`
+die elektrische Stromstärke|Ampere|1
+die elektrische Spannung|Volt|1
+die Leistung|Watt|1
+die Kraft|Newton|2
+die Energie|Joule|2
+den Druck|Pascal|2
+die absolute Temperatur|Kelvin|2
+den Schallpegel|Dezibel|2
+die Lichtstärke|Candela|3
+die Stoffmenge|Mol|3
+die elektrische Ladung|Coulomb|3
+die Aktivität radioaktiver Stoffe|Becquerel|3
+die magnetische Flussdichte|Tesla|3
+die elektrische Kapazität|Farad|3
+`);
+for(const [g,e,d] of EINH)add('wiss',+d,'In welcher Einheit misst man '+g+'?',e,EINH.map(x=>x[1]).concat(['Hertz','Ohm']));
+
+/* ---- Märchen: Frage | Märchen | Stufe ---- */
+const MAER=rows(`
+In welchem Märchen frisst der Wolf die Großmutter?|Rotkäppchen|1
+In welchem Märchen finden zwei Kinder ein Haus aus Lebkuchen?|Hänsel und Gretel|1
+In welchem Märchen leben sieben Zwerge hinter den sieben Bergen?|Schneewittchen|1
+In welchem Märchen helfen Tauben beim Linsenlesen?|Aschenputtel|1
+In welchem Märchen schläft ein ganzes Schloss hundert Jahre lang?|Dornröschen|1
+In welchem Märchen lässt eine Frau ihr langes Haar aus einem Turm herab?|Rapunzel|1
+In welchem Märchen holt ein Frosch eine goldene Kugel aus dem Brunnen?|Der Froschkönig|1
+In welchem Märchen ziehen Esel, Hund, Katze und Hahn gemeinsam los?|Die Bremer Stadtmusikanten|1
+In welchem Märchen soll eine Müllerstochter Stroh zu Gold spinnen?|Rumpelstilzchen|1
+In welchem Märchen gibt es eine Goldmarie und eine Pechmarie?|Frau Holle|1
+In welchem Märchen versteckt sich das jüngste Geißlein im Uhrkasten?|Der Wolf und die sieben Geißlein|1
+In welchem Märchen gibt es einen Esel, der Goldstücke ausspuckt?|Tischlein deck dich|1
+In welchem Märchen fallen einem armen Mädchen Taler vom Himmel?|Die Sterntaler|1
+In welchem Märchen erschlägt jemand „sieben auf einen Streich“?|Das tapfere Schneiderlein|1
+In welchem Märchen spürt eine Prinzessin eine Erbse durch viele Matratzen?|Die Prinzessin auf der Erbse|1
+In welchem Märchen läuft ein Kaiser ohne Kleider durch die Stadt?|Des Kaisers neue Kleider|1
+In welchem Märchen wird aus einem verspotteten Küken ein Schwan?|Das hässliche Entlein|1
+In welchem Märchen öffnet der Spruch „Sesam, öffne dich“ eine Höhle?|Ali Baba und die vierzig Räuber|1
+In welchem Märchen erfüllt ein sprechender Butt immer größere Wünsche?|Vom Fischer und seiner Frau|2
+In welchem Märchen tauscht jemand einen Goldklumpen, bis er nichts mehr hat?|Hans im Glück|2
+In welchem Märchen läuft ein Hase sich bei einem Wettrennen zu Tode?|Der Hase und der Igel|2
+In welchem Märchen schützen zwei Schwestern einen Bären im Winter?|Schneeweißchen und Rosenrot|2
+In welchem Märchen verkauft ein Mädchen in der Silvesternacht Streichhölzer?|Das Mädchen mit den Schwefelhölzern|2
+In welchem Märchen gibt eine Meerjungfrau ihre Stimme für Beine her?|Die kleine Meerjungfrau|2
+In welchem Märchen schickt eine Königin ihren Jäger los, um ein Mädchen zu töten?|Schneewittchen|2
+In welchem Märchen hilft ein Kater in Stiefeln seinem armen Herrn?|Der gestiefelte Kater|1
+In welchem Märchen verflucht ein Vater seine Söhne, sodass sie als Raben davonfliegen?|Die sieben Raben|3
+In welchem Märchen muss eine Schwester sechs Jahre schweigen, um ihre Brüder zu erlösen?|Die sechs Schwäne|3
+In welchem Märchen tanzen zwölf Prinzessinnen jede Nacht ihre Schuhe kaputt?|Die zertanzten Schuhe|3
+In welchem Märchen von Andersen bleibt nur ein kleiner Zinnsoldat mit einem Bein übrig?|Der standhafte Zinnsoldat|3
+In welchem Märchen von Andersen trägt ein Junge einen Splitter eines Zauberspiegels im Herzen?|Die Schneekönigin|3
+`);
+for(const [q,m,d] of MAER)add('kultur',+d,q,m,MAER.map(x=>x[1]));
+
+/* ---- Animationsfilme: Figur | Film | Stufe | p = Mehrzahl ---- */
+const ANI=rows(`
+Timon und Pumbaa|Der König der Löwen|1|p
+die vergessliche Doktorfisch-Dame Dorie|Findet Nemo|1|
+Woody und Buzz Lightyear|Toy Story|1|p
+der Schneemann Olaf|Die Eiskönigin|1|
+der Rennwagen Lightning McQueen|Cars|1|
+Mogli und der Bär Balu|Das Dschungelbuch|1|p
+die Ratte Remy, die gerne kocht|Ratatouille|1|
+das Mammut Manni und das Faultier Sid|Ice Age|1|p
+Gru und die Minions|Ich – Einfach unverbesserlich|1|p
+der Panda Po|Kung Fu Panda|1|
+der Löwe Alex und das Zebra Marty|Madagascar|1|p
+der Esel und Prinzessin Fiona|Shrek|1|p
+die Krabbe Sebastian|Arielle, die Meerjungfrau|1|
+der Hase Klopfer|Bambi|1|
+der Dschinni aus der Wunderlampe|Aladdin|1|
+Sulley und Mike Glotzkowski|Die Monster AG|2|p
+der alte Carl mit seinem Haus an Luftballons|Oben|2|
+Judy Hopps und Nick Wilde|Zoomania|2|p
+Freude, Kummer, Wut, Angst und Ekel|Alles steht Kopf|2|p
+Hicks und der Drache Ohnezahn|Drachenzähmen leicht gemacht|2|p
+Mr. Incredible und seine Familie|Die Unglaublichen|2|p
+die Hunde Pongo und Perdita|101 Dalmatiner|2|p
+Mirabel und ihre magische Familie Madrigal|Encanto|2|p
+ein kleiner Roboter, der auf der verlassenen Erde Müll presst|WALL·E|2|
+der Halbgott Maui|Vaiana|2|
+die Grille Jiminy|Pinocchio|2|
+die Fee Tinker Bell|Peter Pan|2|
+der kleine Drache Mushu|Mulan|2|
+der Videospiel-Bösewicht Ralph|Ralph reichts|2|
+die Ameise Flik|Das große Krabbeln|2|
+die Biene Barry B. Benson|Bee Movie|2|
+`);
+for(const [f,t,d,p] of ANI)if(f!==t&&!f.includes(t))add('film',+d,'In welchem Animationsfilm '+(p?'kommen ':'kommt ')+f+' vor?',t,ANI.map(x=>x[1]));
+
+/* ---- Tierlaute: Verb | Tier | Stufe ---- */
+const LAUT=rows(`
+wiehert|Pferd|1
+muht|Kuh|1
+blökt|Schaf|1
+meckert|Ziege|1
+grunzt|Schwein|1
+kräht|Hahn|1
+gackert|Huhn|1
+schnurrt|Katze|1
+bellt|Hund|1
+trompetet|Elefant|1
+gurrt|Taube|1
+zirpt|Grille|1
+iaht|Esel|1
+quakt|Frosch|1
+schnattert|Gans|2
+röhrt|Hirsch|2
+pfeift bei Gefahr|Murmeltier|2
+brummt|Bär|2
+`);
+for(const [v,t,d] of LAUT)add('natur',+d,'Welches Tier '+v+'?',t,LAUT.map(x=>x[1]));
+
+/* ---- Tierkinder: Frage-Teil | Junges | Stufe ---- */
+const KIND=rows(`
+eines Schafs|Lamm|1
+eines Schweins|Ferkel|1
+einer Kuh|Kalb|1
+eines Hundes|Welpe|1
+einer Ziege|Zicklein|1
+eines Frosches|Kaulquappe|1
+eines Huhns|Küken|1
+eines Schmetterlings|Raupe|1
+eines Wildschweins|Frischling|2
+eines Rehs|Kitz|2
+eines Kängurus|Joey|2
+eines Esels|Fohlen|2
+einer Gans|Gössel|3
+`);
+const KX={'eines Wildschweins':['Ferkel'],'einer Ziege':['Kitz'],'eines Rehs':['Zicklein']};
+for(const [t,j,d] of KIND)add('natur',+d,'Wie heißt das Junge '+t+'?',j,KIND.map(x=>x[1]).filter(x=>!(KX[t]||[]).includes(x)));
+
+/* ---- Fachbegriffe im Sport: Begriff | Sportart | Stufe ---- */
+const SPB=rows(`
+einen „Touchdown“|American Football|1
+einen „Home Run“|Baseball|1
+einen „Doppelfehler“|Tennis|1
+einen „Siebenmeter“|Handball|1
+ein „Schachmatt“|Schach|1
+die „Pole-Position“|Formel 1|1
+einen „Boxenstopp“|Formel 1|1
+einen „Schwebebalken“|Turnen|1
+eine „Rochade“|Schach|2
+einen „Ippon“|Judo|2
+einen „Axel“|Eiskunstlauf|2
+einen „Quarterback“|American Football|2
+einen „Pitcher“|Baseball|2
+die „Telemark“-Landung|Skispringen|2
+das „Pritschen“|Volleyball|2
+einen „Leberhaken“|Boxen|2
+einen „Bogey“|Golf|2
+ein „Wicket“|Cricket|2
+ein „Gedränge“, auch „Scrum“ genannt|Rugby|2
+einen „Salchow“|Eiskunstlauf|3
+einen „Rittberger“|Eiskunstlauf|3
+einen „Tsukahara“|Turnen|3
+einen „Albatros“|Golf|3
+`);
+for(const [b,s,d] of SPB)add('sport',+d,'In welcher Sportart gibt es '+b+'?',s,SPB.map(x=>x[1]).concat(['Basketball','Tischtennis','Rudern']));
+
+/* ---- Feste und Gedenktage: Name | Datum | Stufe ---- */
+const FEST=rows(`
+der Valentinstag|14. Februar|1
+Halloween|31. Oktober|1
+der Nikolaustag|6. Dezember|1
+Heiligabend|24. Dezember|1
+Silvester|31. Dezember|1
+der Tag der Arbeit|1. Mai|1
+der Erste Weihnachtsfeiertag|25. Dezember|1
+der Unabhängigkeitstag der USA|4. Juli|1
+das Fest der Heiligen Drei Könige|6. Januar|2
+Allerheiligen|1. November|2
+der Martinstag|11. November|2
+der Internationale Frauentag|8. März|2
+der Reformationstag|31. Oktober|2
+der St. Patrick’s Day|17. März|2
+der französische Nationalfeiertag|14. Juli|2
+Mariä Himmelfahrt|15. August|3
+der Johannistag|24. Juni|3
+der Weltkindertag in Deutschland|20. September|3
+`);
+for(const [n,t,d] of FEST)add('kultur',+d,'Auf welchen Tag fällt '+n+'?',t,FEST.map(x=>x[1]));
+
+/* ---- Hauptzutaten: Gericht | Zutat | Stufe ---- */
+const ZUT=rows(`
+Pommes frites|Kartoffeln|1
+Ketchup|Tomaten|1
+Popcorn|Mais|1
+Sauerkraut|Weißkohl|1
+Marzipan|Mandeln|1
+Rosinen|Weintrauben|1
+Pesto alla genovese|Basilikum|1
+Tzatziki|Joghurt|1
+Risotto|Reis|1
+Rösti|Kartoffeln|1
+Quark|Kuhmilch|1
+Cidre|Äpfel|2
+Rum|Zuckerrohr|2
+Tahini|Sesam|2
+Polenta|Maisgrieß|2
+Sake|Reis|2
+Slivovitz|Pflaumen|2
+Baba Ghanoush|Auberginen|2
+Gazpacho|Tomaten|2
+Mozzarella di Bufala|Büffelmilch|2
+Feta|Schafsmilch|2
+Borschtsch|Rote Bete|2
+Pumpernickel|Roggen|2
+Bulgur|Weizen|2
+Matcha|Grüner Tee|2
+Kimchi|Chinakohl|2
+Tapioka|Maniok|3
+Tempeh|Sojabohnen|3
+Seitan|Weizeneiweiß|3
+Ghee|Butter|3
+`);
+for(const [g,z,d] of ZUT)add('essen',+d,'Was ist die Hauptzutat von '+g+'?',z,ZUT.map(x=>x[1]));
+
+/* ---- Einzelfragen: [Kategorie, Stufe, Frage, Richtig, Falsch, Falsch, Falsch, Info] ---- */
+for(const r of [
+['gesch',1,'Wer war der erste Präsident der USA?','George Washington','Thomas Jefferson','Abraham Lincoln','Benjamin Franklin','Er regierte von 1789 bis 1797.'],
+['gesch',1,'Welches Volk baute die Pyramiden von Gizeh?','Die alten Ägypter','Die Römer','Die Griechen','Die Maya','Die Cheops-Pyramide ist rund 4500 Jahre alt.'],
+['gesch',1,'Wie hießen die Seefahrer aus Skandinavien, die im Mittelalter Küsten in ganz Europa überfielen?','Wikinger','Hunnen','Kelten','Goten','Sie segelten bis nach Nordamerika.'],
+['gesch',1,'Welches Bauwerk sollte China vor Angriffen aus dem Norden schützen?','Die Chinesische Mauer','Der Hadrianswall','Der Limes','Die Klagemauer','Mit allen Abschnitten ist sie über 20.000 Kilometer lang.'],
+['gesch',1,'In welchem Land herrschten die Pharaonen?','Ägypten','Griechenland','Persien','Babylonien','Pharao bedeutet ursprünglich „großes Haus“.'],
+['gesch',1,'Unter welchem Spitznamen ist Kaiserin Elisabeth von Österreich bekannt?','Sisi','Lilo','Mimi','Lulu','Die Filme mit Romy Schneider machten sie weltberühmt.'],
+['gesch',1,'Wie hieß der Staat im Osten Deutschlands von 1949 bis 1990?','DDR','BRD','UdSSR','ČSSR','DDR steht für Deutsche Demokratische Republik.'],
+['gesch',1,'Wer war der letzte Staatschef der Sowjetunion?','Michail Gorbatschow','Boris Jelzin','Leonid Breschnew','Wladimir Putin','Er bekam 1990 den Friedensnobelpreis.'],
+['gesch',1,'Wer war Bundeskanzler, als Deutschland 1990 wiedervereinigt wurde?','Helmut Kohl','Helmut Schmidt','Gerhard Schröder','Willy Brandt','Er regierte 16 Jahre lang, von 1982 bis 1998.'],
+['gesch',1,'Welcher Bundeskanzler regierte von 1998 bis 2005?','Gerhard Schröder','Helmut Kohl','Angela Merkel','Helmut Schmidt','Danach übernahm Angela Merkel.'],
+['gesch',1,'Wer war von 2021 bis 2025 deutscher Bundeskanzler?','Olaf Scholz','Friedrich Merz','Angela Merkel','Armin Laschet','Er führte eine Koalition aus SPD, Grünen und FDP.'],
+['gesch',1,'Wer wurde im Mai 2025 deutscher Bundeskanzler?','Friedrich Merz','Olaf Scholz','Markus Söder','Robert Habeck','Er ist der zehnte Bundeskanzler.'],
+['gesch',1,'Welcher Südafrikaner saß 27 Jahre im Gefängnis und wurde danach Präsident?','Nelson Mandela','Desmond Tutu','Frederik de Klerk','Jacob Zuma','1993 bekam er den Friedensnobelpreis.'],
+['gesch',1,'Wer führte Indien mit gewaltlosem Widerstand in die Unabhängigkeit?','Mahatma Gandhi','Nelson Mandela','Dalai Lama','Martin Luther King','Indien wurde 1947 unabhängig.'],
+['gesch',1,'Wofür kämpfte Martin Luther King?','Für gleiche Rechte von Schwarzen in den USA','Für die Reformation der Kirche','Für die Unabhängigkeit Indiens','Für das Frauenwahlrecht in England','Seine Rede „I have a dream“ hielt er 1963.'],
+['gesch',1,'Wie nennt man den Konflikt zwischen Ost und West nach 1945?','Kalter Krieg','Hundertjähriger Krieg','Dreißigjähriger Krieg','Großer Krieg','Er endete mit dem Zerfall der Sowjetunion.'],
+['gesch',1,'Wie heißen die Kriegszüge christlicher Ritter ins Heilige Land im Mittelalter?','Kreuzzüge','Völkerwanderung','Reconquista','Rosenkriege','Der erste begann 1096.'],
+['gesch',1,'Welche Königin regierte Großbritannien von 1952 bis 2022?','Elizabeth II.','Victoria','Elizabeth I.','Anne','Sie war 70 Jahre auf dem Thron.'],
+['gesch',1,'Wer wurde 2023 in London zum König gekrönt?','Charles III.','Prinz William','Prinz Harry','Prinz Andrew','Die Krönung fand in der Westminster Abbey statt.'],
+['gesch',1,'Wer wurde an den Iden des März 44 v. Chr. ermordet?','Julius Caesar','Augustus','Nero','Cicero','Unter den Verschwörern war Brutus.'],
+['gesch',1,'Welches Ereignis verfolgten im Juli 1969 Millionen Menschen live im Fernsehen?','Die erste Mondlandung','Den Fall der Berliner Mauer','Die erste Fußball-WM','Den ersten Flug eines Flugzeugs','Neil Armstrong und Buzz Aldrin betraten den Mond.'],
+['gesch',1,'Wie nennt man die Ureinwohner Australiens?','Aborigines','Māori','Inuit','Samen','Sie leben seit über 50.000 Jahren in Australien.'],
+['gesch',1,'Welche Stadt wurde 1945 als erste von einer Atombombe getroffen?','Hiroshima','Nagasaki','Tokio','Osaka','Drei Tage später traf es Nagasaki.'],
+['gesch',1,'Welches Land erklärte 1776 seine Unabhängigkeit von Großbritannien?','USA','Kanada','Australien','Indien','Gefeiert wird am 4. Juli.'],
+['gesch',1,'Welches Symbol zeigte die Flagge der Sowjetunion?','Hammer und Sichel','Einen Adler','Ein Ahornblatt','Einen Halbmond','Es stand für Arbeiter und Bauern.'],
+['gesch',1,'Wie hieß die Geheimpolizei der DDR?','Stasi','Gestapo','KGB','Volkspolizei','Der offizielle Name war Ministerium für Staatssicherheit.'],
+['gesch',1,'Welches Auto war in der DDR am weitesten verbreitet?','Trabant','VW Käfer','Fiat 500','Citroën 2CV','Die Karosserie bestand aus Kunststoff, genannt Duroplast.'],
+['gesch',1,'Welche Stadt versorgten die Alliierten 1948/49 über eine Luftbrücke?','West-Berlin','Hamburg','Wien','München','Die Sowjetunion hatte alle Landwege gesperrt.'],
+['gesch',1,'Welcher König ließ Schloss Neuschwanstein bauen?','Ludwig II.','Ludwig I.','Maximilian II.','Otto I.','Er wird auch „Märchenkönig“ genannt.'],
+['gesch',1,'Wer reiste im 13. Jahrhundert nach China und schrieb darüber ein berühmtes Buch?','Marco Polo','Christoph Kolumbus','Vasco da Gama','James Cook','Er war Kaufmann aus Venedig.'],
+['gesch',1,'Wer gründete im 13. Jahrhundert das Mongolische Reich?','Dschingis Khan','Attila','Kublai Khan','Tamerlan','Es wurde das größte zusammenhängende Landreich der Geschichte.'],
+['gesch',1,'Wie hießen die Krieger des alten Japan, die einem strengen Ehrenkodex folgten?','Samurai','Wikinger','Gladiatoren','Kosaken','Ihr Ehrenkodex hieß Bushidō.'],
+['gesch',1,'Welche Sprache sprachen die alten Römer?','Latein','Griechisch','Italienisch','Etruskisch','Viele heutige Sprachen stammen davon ab.'],
+['gesch',1,'Welche Krankheit tötete im 14. Jahrhundert rund ein Drittel der Menschen in Europa?','Die Pest','Die Pocken','Die Cholera','Die Grippe','Sie wurde „der Schwarze Tod“ genannt.'],
+['gesch',1,'Welches Land schenkte den USA die Freiheitsstatue?','Frankreich','Großbritannien','Spanien','Italien','Sie wurde 1886 eingeweiht.'],
+['gesch',1,'Wer war der erste schwarze Präsident der USA?','Barack Obama','Joe Biden','Bill Clinton','Colin Powell','Er regierte von 2009 bis 2017.'],
+['gesch',2,'Welcher Bundeskanzler regierte von 1974 bis 1982?','Helmut Schmidt','Willy Brandt','Helmut Kohl','Ludwig Erhard','Bei der Hamburger Sturmflut 1962 wurde er als Krisenmanager bekannt.'],
+['gesch',2,'Welcher römische Kaiser soll angeblich zugesehen haben, wie Rom brannte?','Nero','Augustus','Caligula','Trajan','Ob er das Feuer wirklich gelegt hat, ist sehr umstritten.'],
+['gesch',2,'Auf welcher Insel wurde Napoleon geboren?','Korsika','Elba','St. Helena','Sardinien','Auf Elba und St. Helena war er später verbannt.'],
+['gesch',2,'In welchem Land begann die Industrielle Revolution?','Großbritannien','Deutschland','Frankreich','USA','Dampfmaschinen trieben dort zuerst die Webstühle an.'],
+['gesch',2,'Mit welchem Römer verbündete sich Kleopatra gegen Octavian?','Marcus Antonius','Julius Caesar','Brutus','Pompeius','Beide verloren 31 v. Chr. die Seeschlacht bei Actium.'],
+['gesch',2,'Welcher französische König wurde „Sonnenkönig“ genannt?','Ludwig XIV.','Ludwig XVI.','Heinrich IV.','Karl der Große','Er ließ Schloss Versailles ausbauen.'],
+['gesch',2,'Welcher Preußenkönig wurde „der Alte Fritz“ genannt?','Friedrich II.','Friedrich Wilhelm I.','Wilhelm I.','Friedrich III.','Man nennt ihn auch Friedrich den Großen.'],
+['gesch',2,'Welcher Seefahrer fand den Seeweg um Afrika nach Indien?','Vasco da Gama','Christoph Kolumbus','Ferdinand Magellan','Marco Polo','Er erreichte Indien 1498.'],
+['gesch',2,'Welche junge Frau führte im Hundertjährigen Krieg französische Truppen an?','Jeanne d’Arc','Marie Antoinette','Katharina von Medici','Eleonore von Aquitanien','Sie wurde 1431 verbrannt und später heiliggesprochen.'],
+['gesch',2,'Wie heißt der Vertrag, der 1919 den Ersten Weltkrieg für Deutschland beendete?','Versailler Vertrag','Westfälischer Frieden','Wiener Kongress','Vertrag von Maastricht','Deutschland musste hohe Reparationen zahlen.'],
+['gesch',2,'Wie hieß die Hauptstadt des Byzantinischen Reiches?','Konstantinopel','Athen','Alexandria','Antiochia','Heute heißt die Stadt Istanbul.'],
+['gesch',2,'Wie hieß der letzte Zar Russlands?','Nikolaus II.','Alexander III.','Peter der Große','Iwan der Schreckliche','Er dankte 1917 ab.'],
+['gesch',2,'Wer führte 1917 die Oktoberrevolution in Russland an?','Lenin','Stalin','Nikolaus II.','Gorbatschow','Danach entstand die Sowjetunion.'],
+['gesch',2,'Welcher Reichskanzler führte in den 1880er-Jahren die Sozialversicherung ein?','Otto von Bismarck','Gustav Stresemann','Kaiser Wilhelm II.','Friedrich Ebert','Er wurde „der Eiserne Kanzler“ genannt.'],
+['gesch',2,'Welche Stadt war die Hauptstadt des Inkareichs?','Cusco','Lima','Quito','Machu Picchu','Cusco liegt auf über 3.400 Metern Höhe.'],
+['gesch',3,'Wer war der erste Reichspräsident der Weimarer Republik?','Friedrich Ebert','Paul von Hindenburg','Gustav Stresemann','Philipp Scheidemann','Er war Sozialdemokrat und stammte aus Heidelberg.'],
+['gesch',3,'In welchen beiden Städten wurde 1648 der Westfälische Frieden geschlossen?','Münster und Osnabrück','Köln und Bonn','Paderborn und Bielefeld','Dortmund und Soest','Er beendete den Dreißigjährigen Krieg.'],
+['gesch',3,'Welcher chinesische Kaiser ließ die Terrakotta-Armee für sein Grab herstellen?','Qin Shi Huang','Kublai Khan','Puyi','Kangxi','Die rund 8.000 Figuren wurden 1974 entdeckt.'],
+['gesch',3,'Welcher Pharao ließ die Felsentempel von Abu Simbel bauen?','Ramses II.','Tutanchamun','Cheops','Echnaton','Die Tempel wurden in den 1960er-Jahren versetzt, um sie vor einem Stausee zu retten.'],
+['gesch',3,'Welcher babylonische König ließ eine der ältesten Gesetzessammlungen in Stein meißeln?','Hammurabi','Nebukadnezar II.','Darius I.','Sargon','Die Stele steht heute im Louvre.'],
+['gesch',3,'Wer führte die Reformation in Zürich an?','Ulrich Zwingli','Johannes Calvin','Martin Luther','Philipp Melanchthon','Calvin wirkte in Genf.'],
+['gesch',3,'Wie hieß die Hauptstadt des Aztekenreiches?','Tenochtitlan','Cusco','Chichén Itzá','Teotihuacán','Auf ihren Ruinen steht heute Mexiko-Stadt.'],
+['gesch',3,'Welcher römische Kaiser ließ ab 122 n. Chr. einen Grenzwall quer durch Britannien bauen?','Hadrian','Trajan','Augustus','Marc Aurel','Der Wall ist rund 117 Kilometer lang.'],
+['gesch',3,'Wie hieß der letzte Kaiser von China?','Puyi','Qin Shi Huang','Kangxi','Kublai Khan','Er wurde 1908 im Alter von zwei Jahren Kaiser.'],
+['gesch',3,'Welche Herrscherin regierte im 18. Jahrhundert 40 Jahre lang die österreichischen Länder und hatte 16 Kinder?','Maria Theresia','Elisabeth','Katharina die Große','Marie Antoinette','Eine ihrer Töchter war Marie Antoinette.'],
+['wiss',1,'Welches Organ pumpt das Blut durch den Körper?','Das Herz','Die Lunge','Die Leber','Die Niere','Es schlägt rund 100.000-mal am Tag.'],
+['wiss',1,'Welches ist das größte Organ des Menschen?','Die Haut','Die Leber','Die Lunge','Der Darm','Sie wiegt bei Erwachsenen mehrere Kilogramm.'],
+['wiss',1,'Wie heißt der längste Knochen des Menschen?','Oberschenkelknochen','Schienbein','Oberarmknochen','Wirbelsäule','Er macht rund ein Viertel der Körpergröße aus.'],
+['wiss',1,'Welches Gas atmen Menschen aus und Pflanzen nehmen es zum Wachsen auf?','Kohlendioxid','Sauerstoff','Stickstoff','Helium','Pflanzen geben dafür Sauerstoff ab.'],
+['wiss',1,'Bei wie viel Grad Celsius gefriert Wasser?','0','-10','4','10','Salzwasser gefriert erst bei tieferen Temperaturen.'],
+['wiss',1,'Wie lange braucht die Erde für eine Runde um die Sonne?','Ein Jahr','Einen Tag','Einen Monat','Eine Woche','Genauer sind es gut 365 Tage.'],
+['wiss',1,'Wie lange braucht die Erde, um sich einmal um sich selbst zu drehen?','Einen Tag','Eine Stunde','Eine Woche','Ein Jahr','Dadurch entstehen Tag und Nacht.'],
+['wiss',1,'Wie viele Farben hat ein Regenbogen nach klassischer Zählung?','7','5','6','9','Rot, Orange, Gelb, Grün, Blau, Indigo und Violett.'],
+['wiss',1,'Wofür steht die chemische Formel CO₂?','Kohlendioxid','Kohlenmonoxid','Kochsalz','Wasserstoff','Ein Kohlenstoffatom und zwei Sauerstoffatome.'],
+['wiss',1,'Welches Organ filtert das Blut und bildet Urin?','Die Niere','Die Leber','Die Milz','Der Magen','Die meisten Menschen haben zwei Nieren.'],
+['wiss',1,'Welches Vitamin bildet der Körper mithilfe von Sonnenlicht?','Vitamin D','Vitamin C','Vitamin A','Vitamin B12','Im Winter bekommen viele in Deutschland zu wenig davon.'],
+['wiss',1,'Was ist schwerer: ein Kilo Federn oder ein Kilo Eisen?','Beide sind gleich schwer','Das Eisen','Die Federn','Kommt auf das Wetter an','Ein Kilo ist ein Kilo.'],
+['wiss',1,'Wie nennt man es, wenn Wasser zu Dampf wird?','Verdampfen','Kondensieren','Schmelzen','Gefrieren','Den umgekehrten Weg nennt man Kondensieren.'],
+['wiss',1,'Welches Metall steckt in den meisten Stromkabeln?','Kupfer','Eisen','Gold','Zinn','Es leitet Strom sehr gut und ist günstiger als Silber.'],
+['wiss',1,'Welches dieser Metalle zieht ein Magnet an?','Eisen','Kupfer','Aluminium','Gold','Auch Nickel und Kobalt sind magnetisch.'],
+['wiss',1,'Mit welchem Gerät betrachtet man winzige Dinge stark vergrößert?','Mikroskop','Teleskop','Periskop','Stethoskop','Ein Teleskop braucht man für weit entfernte Dinge.'],
+['wiss',1,'Wie viel ist 7 mal 8?','56','54','48','64','Merkhilfe: 5, 6, 7, 8 – also 56 = 7 · 8.'],
+['wiss',1,'Welche dieser Zahlen ist eine Primzahl?','7','9','15','21','Eine Primzahl ist nur durch 1 und sich selbst teilbar.'],
+['wiss',1,'Wie viele Gramm hat ein Kilogramm?','1000','100','10.000','500','Kilo bedeutet tausend.'],
+['wiss',1,'Wie viele Milliliter hat ein Liter?','1000','100','10','10.000','Ein Liter passt in einen Würfel mit 10 cm Kantenlänge.'],
+['wiss',1,'Was ist die Quadratwurzel aus 81?','9','8','7','27','9 mal 9 ergibt 81.'],
+['wiss',1,'Wie heißt die gedachte Linie, die die Erde in Nord- und Südhalbkugel teilt?','Äquator','Nullmeridian','Wendekreis','Polarkreis','Er ist rund 40.000 Kilometer lang.'],
+['wiss',1,'Wie heißt der Vorgang, bei dem Eis zu Wasser wird?','Schmelzen','Verdunsten','Gefrieren','Kondensieren','Bei normalem Druck passiert das bei 0 Grad Celsius.'],
+['wiss',2,'Welcher Planet ist der heißeste in unserem Sonnensystem?','Venus','Merkur','Mars','Jupiter','Ihre dichte Atmosphäre hält die Hitze fest, über 400 Grad.'],
+['wiss',2,'Wie viele Milchzähne hat ein Kind normalerweise?','20','16','24','32','Sie fallen ungefähr ab dem sechsten Lebensjahr aus.'],
+['wiss',2,'Womit misst man den Luftdruck?','Mit einem Barometer','Mit einem Thermometer','Mit einem Hygrometer','Mit einem Tachometer','Ein Hygrometer misst die Luftfeuchtigkeit.'],
+['wiss',2,'Welche Farbe ergibt sich, wenn man alle Farben des Lichts mischt?','Weiß','Schwarz','Braun','Grau','Bei Malfarben ist es umgekehrt, da wird es dunkel.'],
+['wiss',2,'Was ist NaCl?','Kochsalz','Zucker','Backpulver','Kalk','Natrium und Chlor.'],
+['wiss',2,'Welche Blutgefäße führen das Blut vom Herzen weg?','Arterien','Venen','Kapillaren','Lymphgefäße','Venen führen es zum Herzen zurück.'],
+['wiss',2,'In welchem Organ wird Insulin gebildet?','Bauchspeicheldrüse','Leber','Schilddrüse','Milz','Insulin senkt den Blutzucker.'],
+['wiss',2,'Was ist größer: ein Kilometer oder eine Meile?','Eine Meile','Ein Kilometer','Beide sind gleich lang','Das hängt vom Land ab','Eine Meile sind rund 1,6 Kilometer.'],
+['wiss',2,'Wie viele Quadratmeter hat ein Hektar?','10.000','1.000','100','100.000','Das ist ein Quadrat mit 100 Metern Seitenlänge.'],
+['wiss',3,'Wie heißen die roten Blutkörperchen in der Fachsprache?','Erythrozyten','Leukozyten','Thrombozyten','Lymphozyten','Leukozyten sind die weißen Blutkörperchen.'],
+['wiss',3,'Was gibt man in Dioptrien an?','Die Brechkraft von Linsen','Die Lautstärke','Die Härte von Wasser','Den Blutdruck','Brillengläser werden so beschrieben.'],
+['natur',1,'Welcher Teil einer Pflanze nimmt Wasser aus dem Boden auf?','Die Wurzel','Das Blatt','Die Blüte','Der Stängel','Feine Wurzelhaare vergrößern die Oberfläche.'],
+['natur',1,'Welcher Farbstoff macht Blätter grün?','Chlorophyll','Karotin','Melanin','Hämoglobin','Im Herbst wird er abgebaut, dann sieht man Gelb und Rot.'],
+['natur',2,'Wie nennt man Tiere, die nur Pflanzen fressen?','Herbivoren','Karnivoren','Omnivoren','Insektivoren','Karnivoren fressen Fleisch, Omnivoren alles.'],
+['sport',1,'Wie oft finden Olympische Sommerspiele normalerweise statt?','Alle vier Jahre','Jedes Jahr','Alle zwei Jahre','Alle fünf Jahre','Die Winterspiele liegen zwei Jahre versetzt dazwischen.'],
+['sport',1,'Welcher Schwimmstil ist der schnellste?','Kraul','Brust','Rücken','Schmetterling','Im Freistil schwimmen deshalb fast alle Kraul.'],
+['sport',1,'Wie heißt das Spielgerät beim Eishockey?','Puck','Ball','Federball','Diskus','Er ist aus Hartgummi und wird vor dem Spiel gekühlt.'],
+['sport',1,'Wie heißt das Skisprung-Turnier, das jedes Jahr um den Jahreswechsel stattfindet?','Vierschanzentournee','Tour de Ski','Holmenkollen-Cup','Alpencup','Gesprungen wird in Oberstdorf, Garmisch-Partenkirchen, Innsbruck und Bischofshofen.'],
+['sport',1,'Wie heißt das Endspiel im American Football?','Super Bowl','World Series','Stanley Cup','Final Four','Es ist eines der meistgesehenen Sportereignisse der Welt.'],
+['sport',1,'Wie heißt das Tennisturnier auf Sand in Paris?','French Open','US Open','Australian Open','Wimbledon','Gespielt wird im Stade Roland Garros.'],
+['sport',1,'Mit wie vielen Pfeilen wirft man beim Darts pro Aufnahme?','3','2','4','5','Mit drei Würfen sind höchstens 180 Punkte möglich.'],
+['sport',1,'Wie viele Disziplinen hat ein Zehnkampf?','10','8','7','12','Er dauert zwei Tage.'],
+['sport',1,'Was ist beim Darts die höchste Punktzahl mit drei Pfeilen?','180','150','160','200','Dafür muss man dreimal die Triple-20 treffen.'],
+['sport',2,'Wie viele Gewinnsätze braucht man im Herren-Einzel bei Grand-Slam-Turnieren?','3','2','4','5','Ein Match kann also bis zu fünf Sätze dauern.'],
+['sport',2,'Wie lange dauert eine Runde beim Profiboxen?','3 Minuten','2 Minuten','5 Minuten','10 Minuten','Dazwischen gibt es eine Minute Pause.'],
+['sport',2,'Wie viele Punkte bringt ein Touchdown im American Football?','6','3','7','5','Danach gibt es noch einen Extrapunkt-Versuch.'],
+['sport',2,'Wo fahren Bahnradsportler ihre Rennen?','Im Velodrom','Im Stadion','In der Arena','Im Hippodrom','Die Kurven sind stark überhöht.'],
+]){if(!SEEN_Q.has(r[2])){SEEN_Q.add(r[2]);Q_RAW.push(r)}}
+for(const r of [
+['fuss',1,'Welcher Verein spielt im Weserstadion?','Werder Bremen','Hamburger SV','Hannover 96','VfL Wolfsburg','Das Stadion liegt direkt an der Weser.'],
+['fuss',1,'Welcher Verein spielt im Volksparkstadion?','Hamburger SV','FC St. Pauli','Werder Bremen','Holstein Kiel','Es liegt im Hamburger Stadtteil Bahrenfeld.'],
+['fuss',1,'Welcher Verein spielt im RheinEnergieStadion?','1. FC Köln','Fortuna Düsseldorf','Bayer 04 Leverkusen','Borussia Mönchengladbach','Es steht im Kölner Stadtteil Müngersdorf.'],
+['fuss',1,'Welche Vereinsfarben hat Borussia Dortmund?','Schwarz und Gelb','Blau und Weiß','Rot und Weiß','Grün und Weiß','Die Fans nennen ihren Klub einfach „Schwarzgelb“.'],
+['fuss',1,'Welche Vereinsfarben hat der FC Schalke 04?','Blau und Weiß','Schwarz und Gelb','Rot und Weiß','Grün und Weiß','Daher der Spitzname „die Königsblauen“.'],
+['fuss',1,'Welche Vereinsfarben hat Werder Bremen?','Grün und Weiß','Blau und Weiß','Rot und Schwarz','Schwarz und Gelb','Die Raute im Wappen ist grün-weiß.'],
+['fuss',1,'Welche Karte zeigt der Schiedsrichter bei einer Verwarnung?','Gelbe Karte','Rote Karte','Grüne Karte','Orange Karte','Zwei Gelbe Karten ergeben Gelb-Rot.'],
+['fuss',1,'Für welches Land spielt Kylian Mbappé?','Frankreich','Belgien','Kamerun','Spanien','Mit 19 Jahren wurde er 2018 Weltmeister.'],
+['fuss',1,'Aus welchem Land kommt Mohamed Salah?','Ägypten','Marokko','Senegal','Tunesien','Beim FC Liverpool wurde er zum Superstar.'],
+['fuss',1,'Aus welchem Land kommt Robert Lewandowski?','Polen','Tschechien','Ukraine','Kroatien','Er ist Rekordtorschütze der polnischen Nationalmannschaft.'],
+['fuss',1,'Aus welchem Land kommt Luka Modrić?','Kroatien','Serbien','Slowenien','Bosnien und Herzegowina','Mit Kroatien stand er 2018 im WM-Finale.'],
+['fuss',1,'Wie heißt die höchste spanische Liga?','La Liga','Serie A','Ligue 1','Primeira Liga','Rekordmeister ist Real Madrid.'],
+['fuss',1,'Wie heißt die höchste französische Liga?','Ligue 1','La Liga','Serie A','Eredivisie','Paris Saint-Germain gewinnt sie besonders oft.'],
+['fuss',1,'Wie viele Punkte bekommt eine Mannschaft in der Bundesliga für einen Sieg?','3','2','1','4','Bis 1995 gab es nur zwei Punkte für einen Sieg.'],
+['fuss',1,'Wie viele Punkte gibt es in der Bundesliga für ein Unentschieden?','1','0','2','3','Beide Mannschaften bekommen je einen Punkt.'],
+['fuss',1,'Wie nennt man es, wenn ein Spieler in einem Spiel drei Tore schießt?','Hattrick','Triple','Doppelpack','Grand Slam','Ein „lupenreiner“ Hattrick sind drei Tore in einer Halbzeit ohne fremdes Tor dazwischen.'],
+['fuss',1,'Wie heißt der wichtigste Wettbewerb für Europas Vereinsmannschaften?','Champions League','Europa League','Conference League','Nations League','Bis 1992 hieß er Europapokal der Landesmeister.'],
+['fuss',1,'Welcher Torwart wurde 2014 mit Deutschland Weltmeister?','Manuel Neuer','Oliver Kahn','Marc-André ter Stegen','Jens Lehmann','Er gewann im selben Jahr den Goldenen Handschuh als bester Torwart der WM.'],
+['fuss',1,'Welcher Spieler wird „CR7“ genannt?','Cristiano Ronaldo','Ronaldinho','Ronaldo Nazário','Ricardo Quaresma','Die 7 ist seine Rückennummer.'],
+['musik',1,'Wer wird „King of Pop“ genannt?','Michael Jackson','Prince','Elvis Presley','Justin Timberlake','Sein Album „Thriller“ ist das meistverkaufte aller Zeiten.'],
+['musik',1,'Wer war der Sänger der Band Queen?','Freddie Mercury','Mick Jagger','David Bowie','Elton John','Er starb 1991.'],
+['musik',1,'Welches Instrument hat schwarze und weiße Tasten?','Klavier','Gitarre','Geige','Trompete','Ein normales Klavier hat 88 Tasten.'],
+['musik',1,'Womit gibt ein Dirigent dem Orchester den Takt an?','Mit einem Taktstock','Mit einer Stimmgabel','Mit einem Notenständer','Mit einer Triangel','Manche Dirigenten arbeiten auch nur mit den Händen.'],
+['film',1,'Welcher Superheld stammt vom Planeten Krypton?','Superman','Batman','Spider-Man','Iron Man','Auf der Erde lebt er als Clark Kent.'],
+['film',1,'Welcher Superheld bekommt seine Kräfte durch den Biss einer Spinne?','Spider-Man','Ant-Man','Batman','Hulk','Sein bürgerlicher Name ist Peter Parker.'],
+['film',1,'Wie heißt die Stadt, die Batman beschützt?','Gotham City','Metropolis','Star City','Central City','Metropolis ist die Stadt von Superman.'],
+['film',1,'Wie heißt der kleine grüne Jedi-Meister aus „Star Wars“?','Yoda','Obi-Wan Kenobi','Chewbacca','R2-D2','Er spricht mit vertauschtem Satzbau.'],
+['film',1,'Wie heißt der wichtigste Filmpreis Hollywoods?','Oscar','Goldene Palme','Bambi','Emmy','Die Goldene Palme gibt es in Cannes, den Emmy fürs Fernsehen.'],
+['film',1,'Welcher Außerirdische will in Steven Spielbergs Film „nach Hause telefonieren“?','E.T.','Alf','Yoda','Stitch','Der Film kam 1982 ins Kino.'],
+['film',1,'Welche berühmte Puppe spielte Margot Robbie 2023 im Kino?','Barbie','Polly Pocket','Bratz','Sindy','Ken wurde von Ryan Gosling gespielt.'],
+['film',1,'Was für ein Tier ist Dumbo?','Ein Elefant','Eine Maus','Ein Esel','Ein Hund','Mit seinen riesigen Ohren kann er fliegen.'],
+['film',2,'Wie heißt der Hammer des Marvel-Helden Thor?','Mjölnir','Excalibur','Gungnir','Stormbreaker','Stormbreaker ist Thors Axt aus den späteren Filmen.'],
+['natur',1,'Welches Tier trägt sein Haus auf dem Rücken?','Schnecke','Igel','Käfer','Ameise','Nacktschnecken haben dagegen kein Haus.'],
+['natur',1,'Welches dieser Tiere hält Winterschlaf?','Igel','Fuchs','Reh','Wildschwein','Dabei sinkt seine Körpertemperatur auf wenige Grad.'],
+['natur',1,'Wie viele Arme hat ein Oktopus?','8','6','10','12','Kalmare haben zehn Fangarme.'],
+['natur',1,'Welches Tier baut Dämme in Bächen und Flüssen?','Biber','Fischotter','Nutria','Waschbär','So staut er das Wasser um seine Burg.'],
+['natur',1,'Welche Farbe haben die Blüten des Löwenzahns?','Gelb','Weiß','Blau','Rot','Später wird daraus die „Pusteblume“.'],
+['natur',2,'Welcher Nadelbaum verliert im Winter seine Nadeln?','Lärche','Fichte','Tanne','Kiefer','Im Herbst färben sich ihre Nadeln goldgelb.'],
+['essen',1,'Wie heißt der kleine, starke Kaffee aus Italien?','Espresso','Latte macchiato','Filterkaffee','Eiskaffee','Er wird mit hohem Druck gebrüht.'],
+['essen',1,'Welche Zutat lässt Brotteig aufgehen?','Hefe','Salz','Essig','Zucker','Auch Sauerteig oder Backpulver lockern Teig auf.'],
+['essen',1,'Welches Obst ist gelb, krumm und kommt oft aus Südamerika?','Banane','Zitrone','Mango','Ananas','Bananen wachsen an Stauden, nicht an Bäumen.'],
+]){if(!SEEN_Q.has(r[2])){SEEN_Q.add(r[2]);Q_RAW.push(r)}}
+})();
+
 const CATS={
   geo:{n:'Geografie',c:'#5bb8ff'},
   gesch:{n:'Geschichte',c:'#d9a77c'},
@@ -1105,15 +3973,16 @@ const CATS={
 };
 const CAT_KEYS=Object.keys(CATS);
 /* Schätzskala: pro Frage fest verschoben, damit die Antwort nicht immer in der Mitte liegt (auf allen Geräten gleich) */
-function estRange(id,v,lo,hi){const span=hi-lo,st=span<=200?1:Math.pow(10,Math.floor(Math.log10(span/200)));let x=Math.sin(id*12.9898+78.233)*43758.5453;x-=Math.floor(x);
-  const u=span>=1000?st*10:span>=100?10:span>=20?5:1;let a=Math.floor((v-(.2+.6*x)*span)/u)*u;if(lo>=0&&a<0)a=0;let b=Math.ceil((a+span)/u)*u;if(b<=v)b=Math.ceil((v+1)/u)*u;return[a,b]}
+function estRange(id,v,lo,hi,u){const span=hi-lo,st=span<=200?1:Math.pow(10,Math.floor(Math.log10(span/200)));let x=Math.sin(id*12.9898+78.233)*43758.5453;x-=Math.floor(x);
+  const yr=u==='Jahr';u=span>=1000?st*10:span>=100?10:span>=20?5:1;let a=Math.floor((v-(.2+.6*x)*span)/u)*u;if(lo>=0&&a<0)a=0;let b=Math.ceil((a+span)/u)*u;if(b<=v)b=Math.ceil((v+1)/u)*u;
+  if(yr&&b>2030){const sh=b-2030;a-=sh;b-=sh}return[a,b]}
 const Q=Q_RAW.map((r,id)=>typeof r[3]==='number'
-  ?{id,c:r[0],d:r[1],q:r[2],est:true,v:r[3],lo:estRange(id,r[3],r[4],r[5])[0],hi:estRange(id,r[3],r[4],r[5])[1],u:r[6]||'',tol:r[7],info:r[8]||''}
+  ?{id,c:r[0],d:r[1],q:r[2],est:true,v:r[3],lo:estRange(id,r[3],r[4],r[5],r[6])[0],hi:estRange(id,r[3],r[4],r[5],r[6])[1],u:r[6]||'',tol:r[7],info:r[8]||''}
   :{id,c:r[0],d:r[1],q:r[2],opts:[r[3],r[4],r[5],r[6]].filter(x=>x!=null),info:r[7]||''});
 /* Challenge-Codes: Buchstabe = Fragen-Stand. Neue Fragen nur hinten anhängen, dann bleiben alte Codes gültig. */
-const CH_VER={A:Q.length};const CH_CUR='A';
+const CH_VER={A:696,B:Q.length};const CH_CUR='B';
 /* ab welchem Tag ein Fragen-Stand ins Tagesquiz kommt */
-const CH_FROM={A:'2026-01-01'};
+const CH_FROM={A:'2026-01-01',B:'2026-11-01'};
 const PCOL=['#ff5b4f','#4aa8ff','#ffd447','#5fe08a','#c58bff','#ff9a3c','#3fe0d0','#ff7ac8'];
 
 /* ---------- Hilfen ---------- */
