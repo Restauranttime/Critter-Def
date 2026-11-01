@@ -11,7 +11,7 @@ let code = fs.readFileSync(src, 'utf8');
 const a = code.indexOf('// ==LOGIK-ANFANG=='), b = code.indexOf('// ==LOGIK-ENDE==');
 if (a < 0 || b < 0) { console.error('Logik-Markierungen nicht gefunden'); process.exit(1); }
 code = code.slice(a, b);
-const api = new Function(code + `;return {newGame,addClub,startGame,advance,liveStep,enterPhase,pubView,privView,applyAction,pValue,teamPreview,tableOrder,
+const api = new Function(code + `;return {newGame,addClub,startGame,advance,liveStep,draftStep,enterPhase,pubView,privView,applyAction,pValue,teamPreview,tableOrder,
   setNow:f=>{NOW=f}, setSeed:s=>{SEED=s>>>0}, CARDS, FORMS};`)();
 
 let clock = 1e12;
