@@ -30,6 +30,9 @@
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;background:var(--deep);color:#fff;font-family:var(--f);overflow:hidden;overscroll-behavior:none}
+/* In der Home-Bildschirm-App ist --vh die feste Bildschirmhöhe (iOS meldet dort eine zu kleine Fensterhöhe) */
+html{min-height:var(--vh,100%)}
+.full{position:fixed;top:0;left:0;right:0;height:var(--vh,100%)}
 body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;font-size:15px;line-height:1.35}
 button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;touch-action:manipulation}
 button:disabled{cursor:default;opacity:.45}
@@ -95,7 +98,7 @@ input{font:inherit;color:inherit}
 /* ==========================================================================
    STARTSEITE
    ========================================================================== */
-#start{position:fixed;inset:0;overflow:auto;display:flex;align-items:center;justify-content:center;padding:calc(24px + var(--safe-t)) 20px calc(24px + var(--safe-b));background:var(--navy)}
+#start{position:fixed;top:0;left:0;right:0;height:var(--vh,100%);overflow:auto;display:flex;align-items:center;justify-content:center;padding:calc(24px + var(--safe-t)) 20px calc(24px + var(--safe-b));background:var(--navy)}
 .start-in{width:100%;max-width:440px;display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center}
 .start-in img{width:132px;height:132px;border-radius:30px;box-shadow:0 14px 40px #000a}
 .wordmark{font-weight:900;font-style:italic;font-stretch:115%;font-size:28px;letter-spacing:.02em;line-height:1}
@@ -111,7 +114,7 @@ input{font:inherit;color:inherit}
 /* ==========================================================================
    SPIELBRETT (iPad)
    ========================================================================== */
-#board{position:fixed;inset:0;background:var(--deep);overflow:hidden}
+#board{position:fixed;top:0;left:0;right:0;height:var(--vh,100%);background:var(--deep);overflow:hidden}
 .sq{position:absolute;display:flex;align-items:center;justify-content:center;background:#0B1C3A;border:1px solid var(--line);color:var(--dim);font-weight:800;font-stretch:75%;font-size:12px}
 .sq.alt{background:#0E2346}
 .sq.ten{background:var(--lime);border-color:var(--lime);color:var(--ink)}
@@ -284,7 +287,7 @@ input{font:inherit;color:inherit}
 /* ==========================================================================
    HANDY (Spielermappe)
    ========================================================================== */
-#phone{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--navy)}
+#phone{position:fixed;top:0;left:0;right:0;height:var(--vh,100%);display:flex;flex-direction:column;background:var(--navy)}
 #ph-head{flex-shrink:0;display:flex;align-items:center;gap:12px;padding:calc(12px + var(--safe-t)) 16px 12px;background:var(--deep)}
 #ph-head .sk{width:10px;height:36px;transform:skewX(-14deg);flex-shrink:0}
 #ph-head .nm{flex:1;min-width:0}
@@ -361,7 +364,7 @@ input{font:inherit;color:inherit}
 .fchips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
 .fchips button{flex-shrink:0;height:38px;padding:0 12px;background:var(--panel);font-stretch:80%;font-weight:800;font-size:16px}
 .fchips button.on{background:var(--lime);color:var(--ink)}
-.sheet{position:fixed;inset:0;z-index:50;background:#040D1FB3;display:flex;flex-direction:column;justify-content:flex-end;animation:fin .15s}
+.sheet{position:fixed;top:0;left:0;right:0;height:var(--vh,100%);z-index:50;background:#040D1FB3;display:flex;flex-direction:column;justify-content:flex-end;animation:fin .15s}
 .sheet .in{max-height:78vh;overflow:auto;background:var(--navy);padding:16px 16px calc(16px + var(--safe-b));display:flex;flex-direction:column;gap:10px}
 .sheet .in h3{margin:0;font-size:16px}
 .mbig{display:flex;align-items:stretch;height:56px;background:#fff;color:var(--ink)}
@@ -372,7 +375,7 @@ input{font:inherit;color:inherit}
 .evl{display:flex;flex-direction:column;gap:6px;font-size:14px}
 .evl div{display:flex;gap:10px}
 .evl b{font-stretch:75%;color:var(--lime);min-width:32px}
-.dscreen{position:fixed;inset:0;z-index:40;background:var(--navy);display:flex;flex-direction:column;padding:calc(16px + var(--safe-t)) 18px calc(18px + var(--safe-b));gap:14px;overflow:auto}
+.dscreen{position:fixed;top:0;left:0;right:0;height:var(--vh,100%);z-index:40;background:var(--navy);display:flex;flex-direction:column;padding:calc(16px + var(--safe-t)) 18px calc(18px + var(--safe-b));gap:14px;overflow:auto}
 .dscreen h2{margin:8px 0 0;font-stretch:75%;font-weight:800;font-style:italic;font-size:30px;line-height:1.05}
 .dvs{background:#fff;color:var(--ink)}
 .dvs .g{display:grid;grid-template-columns:1fr 40px 1fr;align-items:center;padding:12px 14px}
@@ -1795,6 +1798,27 @@ function toast(msg, ms) {
   const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t);
   setTimeout(() => t.remove(), ms || 2800);
 }
+/* Home-Bildschirm-App: iOS meldet dort eine zu kleine Fensterhöhe (unten bliebe ein Streifen frei).
+   Deshalb richtet sich die Seite dann fest nach der Bildschirmhöhe – wie bei Funkenwerk und Tiefgang. */
+let FULLPX = -1;
+function applyGap() {
+  const app = navigator.standalone || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches;
+  const portrait = innerHeight >= innerWidth, full = portrait ? Math.max(screen.height, screen.width) : Math.min(screen.height, screen.width);
+  const v = app && full > 0 ? full : 0;
+  if (v === FULLPX) return false;
+  FULLPX = v;
+  if (v) document.documentElement.style.setProperty('--vh', v + 'px'); else document.documentElement.style.removeProperty('--vh');
+  return true;
+}
+function viewH() { return FULLPX > 0 ? FULLPX : innerHeight; }
+function onViewChange() { applyGap(); if (window.BOARD_ON && typeof boardResize === 'function') boardResize(); }
+applyGap();
+addEventListener('resize', onViewChange);
+if (window.visualViewport) visualViewport.addEventListener('resize', onViewChange);
+addEventListener('orientationchange', () => setTimeout(onViewChange, 300));
+addEventListener('pageshow', () => setTimeout(onViewChange, 100));
+// Die Seite darf nie verrutschen
+addEventListener('scroll', () => { if (scrollX || scrollY) scrollTo(0, 0); });
 let WAKE = null;
 async function wakeLock() { try { if ('wakeLock' in navigator && document.visibilityState === 'visible') WAKE = await navigator.wakeLock.request('screen'); } catch (_) {} }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && (window.BOARD_ON || window.PHONE_ON)) wakeLock(); });
@@ -1912,7 +1936,7 @@ async function boardStart(save) {
   if (!B.timer) B.timer = setInterval(boardTick, 100);
   markDirty();
 }
-window.addEventListener('resize', () => { if (window.BOARD_ON && $('#track')) { boardLayout(); B.mainKey = ''; markDirty(); } });
+function boardResize() { if (window.BOARD_ON && $('#track')) { boardLayout(); B.mainKey = ''; markDirty(); } }
 function markDirty() { B.dirty = true; }
 
 /* ---------- Aktionen der Handys ---------- */
@@ -1999,7 +2023,7 @@ function onPhaseSound() { const ph = B.G.phase; if (ph === 'spiel') SND.whistle(
 
 /* ---------- Brett-Geometrie: Ruhm-Leiste rundherum ---------- */
 function boardLayout() {
-  const W = window.innerWidth, Hh = window.innerHeight;
+  const W = window.innerWidth, Hh = viewH();
   const portrait = Hh > W * 1.05;
   const cols = portrait ? 21 : 31, rows = portrait ? 31 : 21;
   const cs = Math.max(16, Math.floor(Math.min((W - 10) / cols, (Hh - 10) / rows)));
