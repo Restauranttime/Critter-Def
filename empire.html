@@ -501,6 +501,42 @@ input{font:inherit;color:inherit}
 .rvpad button{display:flex;align-items:center;justify-content:center;padding:6px 0;background:var(--panel);border-radius:10px}
 .rvpad button.on{background:var(--lime)}
 .btn.lbl2{font-size:16px;letter-spacing:.05em}
+
+/* Menü auf dem Brett */
+.pausebox.menu{position:fixed;top:0;left:0;right:0;height:var(--vh,100%);z-index:70;overflow:auto;justify-content:flex-start;padding:30px 20px}
+.menubox{width:min(760px,100%);display:flex;flex-direction:column;gap:14px}
+.ruhminfo{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;font-size:13px}
+.ruhminfo div{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--line)}
+.ruhminfo b{color:var(--lime);white-space:nowrap}
+/* Karten-Tisch vor dem Spieltag */
+.cstage{flex:1;display:flex;flex-direction:column;gap:14px;min-height:0}
+.cs-head{display:flex;align-items:center;gap:14px}
+.bcards{flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;align-content:center;perspective:1200px}
+.bcard{min-height:230px;display:flex}
+.bcard>div{flex:1}
+.bc-back{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--deep);box-shadow:inset 0 0 0 3px var(--lime);color:var(--lime);text-align:center;padding:14px;animation:cpulse 1.8s ease-in-out infinite}
+.bc-back .ico{width:54px;height:54px}
+.bc-back b{font-weight:900;font-style:italic;letter-spacing:.2em}
+.bc-back span{font-size:12px;color:var(--muted)}
+.bc-front{display:flex;flex-direction:column;gap:8px;background:#fff;color:var(--ink);padding:14px 16px;border-top:6px solid var(--lime)}
+.bc-front .lbl{color:var(--ink2)}
+.bc-front h4{margin:0;font-stretch:75%;font-weight:900;font-style:italic;font-size:24px;line-height:1.05}
+.bc-front p{margin:0;font-size:13px;color:var(--ink2)}
+.bc-front .ch{margin-top:auto;font-size:13px;font-weight:800;color:var(--ink)}
+.bc-front .ch.mut{color:var(--ink2);font-weight:600}
+.bcard.flipin{animation:bflip .8s cubic-bezier(.3,.9,.3,1.05)}
+@keyframes bflip{0%{transform:rotateY(90deg) scale(.9)}100%{transform:rotateY(0) scale(1)}}
+/* Versions-Hinweis */
+.verbox{position:fixed;top:0;left:0;right:0;height:var(--vh,100%);z-index:99;background:#040D1FF2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center}
+.verbox h2{margin:0;font-stretch:75%;font-weight:900;font-style:italic;font-size:28px}
+.verbox p{margin:0;color:var(--muted);max-width:360px}
+
+.cflip.wait{animation:none;transform:rotateY(180deg)}
+.cflip.wait .cbk{animation:cpulse 1.6s ease-in-out infinite}
+.cflip.shown{animation:none;transform:none}
+.cflip.go{animation:cflip2 .9s cubic-bezier(.3,.9,.3,1.05) both}
+@keyframes cflip2{0%{transform:rotateY(180deg)}100%{transform:rotateY(0)}}
+.cface.cbk .tap{font-size:12px;font-style:normal;font-weight:700;letter-spacing:.06em;color:#fff;margin-top:6px}
 </style>
 </head>
 <body>
@@ -621,7 +657,7 @@ function pStatus(G, p) {
 /* ---------- Spiel anlegen ---------- */
 function newGame(settings) {
   return {
-    v: 2, created: NOW(), settings: Object.assign({ seasons: 3, len: 'kurz', dice: 'handy', mlen: 'kurz' }, settings || {}),
+    v: 3, created: NOW(), settings: Object.assign({ seasons: 3, len: 'kurz', dice: 'handy', mlen: 'kurz', cards: 'jeder2' }, settings || {}),
     phase: 'lobby', phaseAt: NOW(), season: 1, md: 0, mdg: 0, nid: 1, names: {},
     clubs: [], market: [], deck: [], news: [], schedule: [], seasonLen: 0, winterAt: -1,
     live: null, reveal: null, results: null, report: null, final: null, hist: [], ready: {}, rdelta: {}
@@ -763,14 +799,19 @@ function matchOf(G, c) { return G.phase === 'spiel' && G.live ? G.live.ms.find(m
 /* Darf der Verein noch aufstellen, Karten öffnen usw.? Im Spieltag nur, solange sein Spiel nicht angepfiffen ist. */
 function canPrepare(G, c) {
   if (G.phase !== 'spiel') return ['saisonstart', 'winter', 'bieten', 'aufdecken', 'ergebnis'].includes(G.phase);
+  if (G.live && G.live.stage === 'cards') return true;
   const m = matchOf(G, c); return !m || !m.started; // spielfrei: darf trotzdem Karte aufdecken und aufstellen
 }
-function readyMap(G) { return G.phase === 'spiel' && G.live && G.live.stage === 'ht' ? G.live.htReady : G.ready; }
-function needsReady(G) { return INPUT_PHASES.includes(G.phase) || (G.phase === 'spiel' && !!G.live && (G.live.stage === 'pre' || G.live.stage === 'ht')); }
+function cardsDone(G) { const o = {}; for (const c of G.clubs) o[c.id] = !c.card || c.card.o != null; return o; }
+function readyMap(G) { if (G.phase === 'spiel' && G.live) { if (G.live.stage === 'ht') return G.live.htReady; if (G.live.stage === 'cards') return cardsDone(G); } return G.ready; }
+function needsReady(G) { return INPUT_PHASES.includes(G.phase) || (G.phase === 'spiel' && !!G.live && ['cards', 'pre', 'ht'].includes(G.live.stage)); }
 function humans(G) { return G.clubs.filter(c => !c.bot); }
 function mustReady(G) {
   const h = humans(G);
-  if (G.phase === 'spiel') { const m = curMatch(G); if (!m || !needsReady(G)) return []; return h.filter(c => c.id === m.h || c.id === m.a); }
+  if (G.phase === 'spiel') {
+    if (G.live && G.live.stage === 'cards') return h.filter(c => c.card);
+    const m = curMatch(G); if (!m || !needsReady(G)) return []; return h.filter(c => c.id === m.h || c.id === m.a);
+  }
   return h;
 }
 function allReady(G) { const r = readyMap(G); return mustReady(G).every(c => r[c.id]); }
@@ -793,6 +834,7 @@ function advance(G, force) {
     enterPhase(G, 'spiel');
   } else if (ph === 'spiel') {
     const L = G.live; if (!L) return false;
+    if (L.stage === 'cards') { endCards(G); return true; }
     if (L.stage === 'pre') { kickoff(G, NOW()); return true; }
     if (L.stage === 'ht') { endHalftime(G, NOW()); return true; }
     return false;
@@ -1004,10 +1046,17 @@ function rph(G) { return G.settings.mlen === 'normal' ? 6 : 5; }
 function startMatchday(G) {
   const day = G.schedule[G.md];
   for (const c of G.clubs) { c.card = null; fixLineup(G, c); }
-  if (G.md % 2 === 1) for (const c of G.clubs) drawCard(G, c);
+  const cf = G.settings.cards || 'jeder2';
+  if (cf === 'jeder' || (cf === 'jeder2' && G.md % 2 === 1)) for (const c of G.clubs) drawCard(G, c);
   const ms = day.pairs.map(([h, a]) => ({ id: 'm' + (G.nid++), h, a, hg: 0, ag: 0, r: 0, min: 0, zone: 2, ev: [], duel: null, ad: null,
     started: false, done: false, htDone: false, next: 0, st: { h: { poss: 0, sh: 0, yc: 0, rc: 0 }, a: { poss: 0, sh: 0, yc: 0, rc: 0 } }, side: null }));
-  G.live = { ms, cur: 0, stage: 'pre', kickAt: 0, htUntil: 0, htReady: {}, postUntil: 0, bye: day.bye };
+  // Ereigniskarten kommen für alle gleichzeitig vor dem ersten Anpfiff
+  G.live = { ms, cur: 0, stage: G.clubs.some(c => c.card) ? 'cards' : 'pre', kickAt: 0, cardsAt: 0, htUntil: 0, htReady: {}, postUntil: 0, bye: day.bye };
+}
+function endCards(G) {
+  const L = G.live; if (!L || L.stage !== 'cards') return;
+  for (const c of G.clubs) if (c.card && c.card.o == null) decideCard(G, c, cardDefault(c.card));
+  L.stage = 'pre'; L.kickAt = 0; L.cardsAt = 0;
 }
 function kickoff(G, now) {
   const L = G.live; const m = L && L.ms[L.cur]; if (!m || m.started) return;
@@ -1022,25 +1071,31 @@ function kickoff(G, now) {
     for (const x of m.side[sd].slots) { const p = playerOf(c, x.id); if (p) p.apps++; }
     calcSide(G, m, sd);
   }
-  m.started = true; m.next = now + 1800;
+  m.started = true; m.next = now + 1800; m.R = rph(G);
   L.stage = 'live'; L.kickAt = 0;
   mEv(m, 'kick', null, 'Anpfiff');
 }
 function calcSide(G, m, sd) { const S = m.side[sd]; S.v = lineValues(G, clubById(G, m[sd]), S.slots, S.form, S.taktik, S.einsatz, S.mods); }
 function other(sd) { return sd === 'h' ? 'a' : 'h'; }
 function mEv(m, t, sd, text, extra) { m.ev.push(Object.assign({ t, sd, min: m.min, text }, extra || {})); if (m.ev.length > 40) m.ev.shift(); }
-function minuteFor(G, r) { const R = rph(G); return r <= R ? clamp(Math.round((r - 0.15 - rnd() * 0.7) * 45 / R), 1, 45) : clamp(45 + Math.round((r - R - 0.15 - rnd() * 0.7) * 45 / R), 46, 90); }
+function minuteFor(R, r) { return r <= R ? clamp(Math.round((r - 0.15 - rnd() * 0.7) * 45 / R), 1, 45) : clamp(45 + Math.round((r - R - 0.15 - rnd() * 0.7) * 45 / R), 46, 90); }
 
 function shiftTimes(G, dt) {
   if (!G.live || !dt) return;
   const L = G.live;
-  L.htUntil += dt; if (L.kickAt) L.kickAt += dt; if (L.postUntil) L.postUntil += dt;
+  L.htUntil += dt; if (L.kickAt) L.kickAt += dt; if (L.postUntil) L.postUntil += dt; if (L.cardsAt) L.cardsAt += dt;
   for (const m of L.ms) { m.next += dt; if (m.duel) { m.duel.t0 += dt; m.duel.dl += dt; } }
 }
 function liveStep(G, now) {
   if (G.phase !== 'spiel' || !G.live || G.paused) return false;
   const L = G.live; const m = L.ms[L.cur];
   if (!m) { finishMatchday(G); return true; }
+  if (L.stage === 'cards') {
+    const done = G.clubs.every(c => !c.card || c.card.o != null);
+    if (done && !L.cardsAt) { L.cardsAt = now + 3500; return true; }
+    if (done && now >= L.cardsAt) { endCards(G); return true; }
+    return false;
+  }
   if (L.stage === 'pre') {
     const ok = [m.h, m.a].every(id => { const c = clubById(G, id); return c.bot || G.ready[c.id]; });
     if (ok && !L.kickAt) { L.kickAt = now + 3000; return true; }
@@ -1067,7 +1122,7 @@ function liveStep(G, now) {
     return ch;
   }
   if (now < m.next) return false;
-  const R = rph(G);
+  const R = m.R || rph(G);
   if (m.r === R && !m.htDone) {
     L.stage = 'ht'; L.htUntil = now + T.ht; L.htReady = {};
     mEv(m, 'ht', null, 'Halbzeit');
@@ -1085,7 +1140,7 @@ function endHalftime(G, now) {
   if (m) { m.htDone = true; m.next = now + 1500; }
 }
 function matchRound(G, m, now) {
-  m.r++; m.min = minuteFor(G, m.r);
+  m.r++; m.min = minuteFor(m.R || rph(G), m.r);
   m.ad = null;
   const H = m.side.h, A = m.side.a;
   let pH = 0.5 + 0.05 * clamp(H.v.M - A.v.M, -4, 4) + 0.03;
@@ -1542,7 +1597,7 @@ function applyAction(G, c, a) {
     }
     case 'bids': return err(setBids(G, c, a.b || {}));
     case 'card': if (!canPrepare(G, c)) return err('Jetzt nicht.'); return err(decideCard(G, c, a.i | 0));
-    case 'lineup': if (!canPrepare(G, c)) return err('Die Aufstellung änderst du vor deinem Spiel.'); return err(setLineup(G, c, a.lu));
+    case 'lineup': if (a.seq) c.luSeq = a.seq | 0; if (!canPrepare(G, c)) return err('Die Aufstellung änderst du vor deinem Spiel.'); return err(setLineup(G, c, a.lu));
     case 'build': return err(build(G, c, a.k));
     case 'roll': return err(rollDuel(G, c, a.d, { coin: !!a.coin, trait: !!a.trait, v: Array.isArray(a.v) ? a.v : null }) ? null : 'Zu spät – der Wurf ist schon gefallen.');
     case 'ht': return err(setHalftime(G, c, a));
@@ -1628,7 +1683,7 @@ function botWantsCoin(G, m, c, role) {
   const d = m.duel;
   if (d.kind === 'elf') return rnd() < 0.6;
   const diff = Math.abs(m.hg - m.ag);
-  return m.r >= rph(G) * 2 - 3 && diff <= 1 && rnd() < 0.5;
+  return m.r >= (m.R || rph(G)) * 2 - 3 && diff <= 1 && rnd() < 0.5;
 }
 
 /* ---------- Ansichten: was die Handys sehen dürfen ---------- */
@@ -1647,12 +1702,12 @@ function duelPub(m) {
 function liveSummary(G) {
   const L = G.live; if (!L) return null;
   const now = NOW();
-  return { stage: L.stage, cur: L.cur, kickLeft: L.kickAt ? Math.max(0, Math.ceil((L.kickAt - now) / 1000)) : 0, htLeft: L.stage === 'ht' ? Math.max(0, Math.ceil((L.htUntil - now) / 1000)) : 0, bye: L.bye, paused: !!G.paused,
+  return { stage: L.stage, cardsLeft: L.cardsAt ? Math.max(0, Math.ceil((L.cardsAt - now) / 1000)) : 0, cur: L.cur, kickLeft: L.kickAt ? Math.max(0, Math.ceil((L.kickAt - now) / 1000)) : 0, htLeft: L.stage === 'ht' ? Math.max(0, Math.ceil((L.htUntil - now) / 1000)) : 0, bye: L.bye, paused: !!G.paused,
     ms: L.ms.map(m => ({ id: m.id, h: m.h, a: m.a, hg: m.hg, ag: m.ag, min: m.min, r: m.r, zone: m.zone, started: m.started, done: m.done, ev: m.ev.slice(-8), ad: m.ad, duel: duelPub(m), st: m.st, v: m.side ? { h: m.side.h.v, a: m.side.a.v } : null })) };
 }
 function pubView(G) {
   const ph = G.phase;
-  const v = { v: 2, ph, season: G.season, seasons: G.settings.seasons, md: G.md, len: G.seasonLen, winterAt: G.winterAt, set: G.settings,
+  const v = { v: 3, ver: typeof APP_VERSION !== 'undefined' ? APP_VERSION : '', ph, season: G.season, seasons: G.settings.seasons, md: G.md, len: G.seasonLen, winterAt: G.winterAt, set: G.settings,
     clubs: G.clubs.map(c => pubClub(G, c)), rc: readyCount(G), news: G.news.slice(-10), hist: G.hist, final: G.final, paused: !!G.paused };
   if (G.schedule[G.md]) v.fx = G.schedule[G.md];
   if (ph === 'bieten') v.market = G.market.map(k => ({ id: k.id, p: pubPlayer(G, k.p), min: k.min, from: k.from }));
@@ -1665,7 +1720,7 @@ function pubView(G) {
 function privView(G, c) {
   const lu = c.lu;
   const v = { id: c.id, money: c.money, coins: c.coins, st: c.st, sponsor: c.sponsor, offers: G.phase === 'saisonstart' ? c.offers : null, listed: c.listed, bids: c.bids,
-    lu, prev: lu ? teamPreview(G, c) : null, mods: c.mods, flags: c.flags, dice: G.settings.dice, canPrep: canPrepare(G, c), ready: !!G.ready[c.id],
+    lu, luSeq: c.luSeq || 0, prev: lu ? teamPreview(G, c) : null, mods: c.mods, flags: c.flags, dice: G.settings.dice, canPrep: canPrepare(G, c), ready: !!G.ready[c.id],
     players: c.players.map(p => Object.assign(pubPlayer(G, p), { goals: p.goals, gt: p.gt, apps: p.apps, yc: p.yc, st: pStatus(G, p), am: !!p.amateur })),
     card: c.card ? { id: c.card.id + '-' + G.season + '-' + G.md, open: !!c.card.open, t: c.card.t, d: c.card.d, o: c.card.o, res: c.card.res, opts: c.card.opts } : null,
     fin: c.fin.slice(-12), rlog: c.rlog.slice(-20), salary: c.players.reduce((a, p) => a + pSalary(p), 0),
@@ -1856,7 +1911,7 @@ function makeClient(handlers) {
 /* ==========================================================================
    GEMEINSAME BAUSTEINE (Brett und Handy)
    ========================================================================== */
-const APP_VERSION = '2';
+const APP_VERSION = '3';
 const $ = (s, r) => (r || document).querySelector(s);
 const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
@@ -1987,6 +2042,7 @@ const SND = {
 function showStart(err) {
   window.BOARD_ON = window.PHONE_ON = false;
   ['board', 'phone'].forEach(id => { const e = document.getElementById(id); if (e) e.hidden = true; });
+  ['bmenu', 'cardov'].forEach(id => { const e = document.getElementById(id); if (e) e.remove(); });
   const s = $('#start'); s.hidden = false;
   const saves = boardSaves();
   const ph = ST.get('phone', null);
@@ -2126,7 +2182,7 @@ function boardTick() {
       if (now - B.readyAt > 1200) { B.readyAt = 0; advance(G); onPhaseSound(); markDirty(); }
     } else B.readyAt = 0;
     if (G.phase === 'aufdecken' && G.reveal && now - B.rvAt > 7000 && G.reveal.i < G.reveal.res.length - 1) { G.reveal.i++; B.rvAt = now; markDirty(); }
-    if (G.phase === 'spiel' && G.live && (G.live.stage === 'ht' || G.live.kickAt)) markDirty();
+    if (G.phase === 'spiel' && G.live && (G.live.stage === 'ht' || G.live.kickAt || G.live.cardsAt)) markDirty();
     if (G.phase === 'spiel' && G.live && G.live.ms.some(m => m.duel && !m.duel.res)) markDirty();
   }
   if (B.dirty && now - B.lastFlush > 140) flush(now);
@@ -2209,7 +2265,7 @@ function headHtml() {
   else if (ph === 'ende') mid = '<b>SIEGEREHRUNG</b>';
   else {
     mid = 'SAISON <b>' + G.season + '</b>' + (G.settings.seasons > 1 ? ' VON ' + G.settings.seasons : '') + ' <span class="lime">/</span> ';
-    if (ph === 'spiel') mid += '<b>SPIELTAG ' + (G.md + 1) + '</b> VON ' + G.seasonLen + (G.live && G.live.ms.length > 1 ? ' <span class="lime">/</span> SPIEL <b>' + Math.min(G.live.cur + 1, G.live.ms.length) + '</b> VON ' + G.live.ms.length : '');
+    if (ph === 'spiel') mid += '<b>SPIELTAG ' + (G.md + 1) + '</b> VON ' + G.seasonLen + (G.live && G.live.ms.length > 1 && G.live.stage !== 'cards' ? ' <span class="lime">/</span> SPIEL <b>' + Math.min(G.live.cur + 1, G.live.ms.length) + '</b> VON ' + G.live.ms.length : '');
     else if (ph === 'ergebnis') mid += '<b>SPIELTAG ' + G.md + '</b> VON ' + G.seasonLen;
     else mid += '<b>' + phaseName(ph).toUpperCase() + '</b>';
   }
@@ -2300,8 +2356,7 @@ const RENDER = {
       '<div class="pnl"><h3>EINSTELLUNGEN</h3>' +
       '<div class="setrow"><span>Saisons</span>' + seg('seasons', [[1, '1'], [3, '3'], [5, '5']]) + '</div>' +
       '<div class="setrow"><span>Saisonlänge</span>' + seg('len', [['kurz', 'Kurz (ca. 5 Spieltage)'], ['lang', 'Lang (ca. 10)']]) + '</div>' +
-      '<div class="setrow"><span>Spiellänge</span>' + seg('mlen', [['kurz', 'Kurz (ca. 1 Min.)'], ['normal', 'Normal (ca. 1,5 Min.)']]) + '</div>' +
-      '<div class="setrow"><span>Würfeln bei Torchancen</span>' + seg('dice', [['handy', 'Am Handy'], ['echt', 'Echte Würfel'], ['auto', 'Automatisch']]) + '</div>' +
+      settingsHtml(false) +
       '<p class="mut" style="margin:6px 0 0;font-size:12px">' + esc(lobbyHint(G)) + '</p></div>' +
       '<button class="btn big" data-b="start"' + (n < 2 ? ' disabled' : '') + '>' + (n < 2 ? 'Mindestens 2 Vereine' : 'Anpfiff! Spiel starten') + '</button></div>';
   },
@@ -2422,7 +2477,19 @@ function renderLive(main) {
   }
   const m = L.ms[L.cur];
   const box = $('#lv-main');
-  if (m) {
+  if (L.stage === 'cards') {
+    if (box._k !== 'cards') { box._k = 'cards'; box._h = ''; B.bcState = {}; box.innerHTML = '<div class="cstage"><div class="cs-head"></div><div class="bcards">' + G.clubs.filter(c => c.card).map(c => '<div class="bcard" id="bc-' + c.id + '"></div>').join('') + '</div><div class="cs-foot fbar"></div></div>'; }
+    patch(box.querySelector('.cs-head'), '<span class="tag"><span>EREIGNISKARTEN</span></span><span class="mut">Vor Spieltag ' + (G.md + 1) + ' zieht jeder eine Karte. Aufgedeckt wird am Handy, dann dreht sie sich hier um.</span>');
+    for (const c of G.clubs) if (c.card) {
+      const el = document.getElementById('bc-' + c.id); if (!el) continue;
+      const st = c.card.open ? 'front' : 'back';
+      if (B.bcState[c.id] !== st) { el.className = 'bcard ' + st + (st === 'front' ? ' flipin' : ''); el._h = ''; B.bcState[c.id] = st; if (st === 'front') SND.flip(); }
+      patch(el, boardCardHtml(c));
+    }
+    const n = G.clubs.filter(c => c.card && c.card.o != null).length, of = G.clubs.filter(c => c.card).length;
+    const left = L.cardsAt ? Math.max(0, Math.ceil((L.cardsAt - Date.now()) / 1000)) : 0;
+    patch(box.querySelector('.cs-foot'), '<span class="mut">' + (left ? '<b class="lime" style="font-size:18px">Alle Karten sind entschieden – gleich geht es los …</b>' : n + ' von ' + of + ' Karten entschieden') + '</span>' + (left ? '' : '<button class="btn sm ghost" data-b="force">Nicht warten</button>'));
+  } else if (m) {
     const key = (L.stage === 'pre' ? 'pre:' : 'm:') + m.id;
     if (box._k !== key) {
       box._k = key; box._h = '';
@@ -2433,7 +2500,7 @@ function renderLive(main) {
   }
   patch($('#lv-queue'), queueHtml());
   patch($('#lv-table'), liveTable());
-  patch($('#lv-cards'), cardsHtml());
+  patch($('#lv-cards'), L.stage === 'cards' ? '<div class="pnl" style="flex:1"><h3>NEUES</h3>' + newsHtml(6) + '</div>' : cardsHtml());
   let ht = '';
   if (L.stage === 'ht' && m) {
     const left = Math.max(0, Math.ceil((L.htUntil - Date.now()) / 1000));
@@ -2442,6 +2509,12 @@ function renderLive(main) {
   }
   if (G.paused) ht += pauseHtml();
   patch($('#htbox'), ht);
+}
+function boardCardHtml(c) {
+  const cd = c.card, k = colOf(c);
+  if (!cd.open) return '<div class="bc-back">' + crest(c, 44, 15) + ic('krone') + '<b>EREIGNIS</b><span>' + esc(c.mgr) + ' deckt auf …</span></div>';
+  return '<div class="bc-front" style="border-top-color:' + k.c + '"><span class="lbl">' + esc(c.name) + '</span><h4>' + esc(cd.t) + '</h4><p>' + esc(cd.d) + '</p>' +
+    (cd.o != null ? '<span class="ch">' + esc(cd.opts ? cd.opts[cd.o].l : (cd.res || '')) + (cd.opts && cd.res ? ' · ' + esc(cd.res) : '') + '</span>' : '<span class="ch mut">entscheidet noch …</span>') + '</div>';
 }
 function patch(el, html) { if (el && el._h !== html) { el.innerHTML = html; el._h = html; } }
 function teamInfo(c) {
@@ -2574,7 +2647,7 @@ document.addEventListener('click', e => {
   const G = B.G; if (!G) return;
   SND.init();
   const k = b.dataset.b;
-  if (k === 'set') { const key = b.dataset.k; let v = b.dataset.v; if (key === 'seasons') v = +v; G.settings[key] = v; }
+  if (k === 'set') { const key = b.dataset.k; let v = b.dataset.v; if (key === 'seasons') v = +v; G.settings[key] = v; if ($('#bmenu')) boardMenu(); }
   else if (k === 'bot') { const used = new Set(G.clubs.map(c => c.name)); const nm = BOT_NAMES.find(x => !used.has(x)) || ('Computer ' + (G.clubs.length + 1)); addClub(G, { name: nm, bot: true, mgr: 'Computer' }); SND.ding(); }
   else if (k === 'kick') { const c = clubById(G, b.dataset.v); if (c) { if (c.uid) B.H.sendPriv(c.uid, JSON.stringify({ left: 1 })); removeClub(G, c.id); } }
   else if (k === 'start') { if (startGame(G)) { SND.whistle(1); B.lastPriv = {}; } }
@@ -2592,14 +2665,29 @@ document.addEventListener('click', e => {
   else if (k === 'quit') { try { sessionStorage.removeItem('fe-board'); } catch (_) {} ST.del('save-' + B.code); ST.set('saves', ST.get('saves', []).filter(x => x.code !== B.code)); try { B.H.destroy(); } catch (_) {} window.BOARD_ON = false; B.G = null; showStart(); return; }
   else if (k === 'mclose') { const m = $('#bmenu'); if (m) m.remove(); return; }
   else if (k === 'msave') { flush(Date.now() + 1e7); const m = $('#bmenu'); if (m) m.remove(); toast('Gespeichert. Auf der Startseite unter „Fortsetzen: ' + B.code + '“.'); return; }
-  else if (k === 'mquit') { try { sessionStorage.removeItem('fe-board'); } catch (_) {} B.saveAt = 0; flush(Date.now() + 1e7); try { B.H.close(); } catch (_) {} window.BOARD_ON = false; B.G = null; showStart(); return; }
+  else if (k === 'mquit') { try { sessionStorage.removeItem('fe-board'); } catch (_) {} B.saveAt = 0; flush(Date.now() + 1e7); const mm = $('#bmenu'); if (mm) mm.remove(); try { B.H.close(); } catch (_) {} window.BOARD_ON = false; B.G = null; showStart(); return; }
   B.mainKey = ''; markDirty();
 });
+const RUHM_INFO = [['Sieg', '+2'], ['Unentschieden', '+1'], ['Stadionausbau (jede Stufe)', '+2'], ['Saisonplatzierung', 'Meister +10 … Letzter 0'], ['Torschützenkönig der Saison', '+2'], ['Fans am Saisonende', '+1 je 5.000'], ['Publikumsliebling im Kader', '+1 pro Saison'], ['Ereigniskarten', 'manchmal ±1 bis 2'], ['Spielende: Vereinskasse', '+1 je 5 Mio €'], ['Schulden', '−1 pro Spieltag, am Ende weitere Abzüge']];
+function settingsHtml(inGame) {
+  const s = B.G.settings;
+  const seg = (k, opts) => '<div class="seg">' + opts.map(([v, l]) => '<button data-b="set" data-k="' + k + '" data-v="' + v + '" class="' + (String(s[k]) === String(v) ? 'on' : '') + '">' + l + '</button>').join('') + '</div>';
+  return '<div class="setrow"><span>Würfeln bei Torchancen</span>' + seg('dice', [['handy', 'Am Handy'], ['echt', 'Echte Würfel'], ['auto', 'Automatisch']]) + '</div>' +
+    '<div class="setrow"><span>Spiellänge' + (inGame ? ' (ab nächstem Spiel)' : '') + '</span>' + seg('mlen', [['kurz', 'Kurz (ca. 1 Min.)'], ['normal', 'Normal (ca. 1,5 Min.)']]) + '</div>' +
+    '<div class="setrow"><span>Ereigniskarten' + (inGame ? ' (ab nächstem Spieltag)' : '') + '</span>' + seg('cards', [['jeder', 'Jeder Spieltag'], ['jeder2', 'Jeder 2. Spieltag'], ['aus', 'Aus']]) + '</div>';
+}
+function menuHtml() {
+  return '<div class="menubox"><div class="row" style="justify-content:space-between"><div class="bigt s">MENÜ</div><button class="btn sm" data-b="mclose">Zurück zum Spiel</button></div>' +
+    '<div class="pnl"><h3>EINSTELLUNGEN</h3>' + settingsHtml(B.G.phase !== 'lobby') + '</div>' +
+    '<div class="pnl"><h3>SO GIBT ES RUHM</h3><p class="mut" style="margin:0 0 8px;font-size:13px">Die Figuren außen auf der Ruhm-Leiste zeigen den Ruhm jedes Vereins. Wer am Spielende vorne steht, gewinnt.</p><div class="ruhminfo">' +
+    RUHM_INFO.map(x => '<div><span>' + esc(x[0]) + '</span><b>' + esc(x[1]) + '</b></div>').join('') + '</div></div>' +
+    '<div class="row" style="gap:10px;flex-wrap:wrap"><button class="btn dark" data-b="msave">Jetzt speichern</button><button class="btn ghost" data-b="mquit">Speichern und zur Startseite</button></div>' +
+    '<p class="mut" style="margin:0;font-size:13px">Gespeicherte Spiele setzt du auf diesem Gerät über die Startseite fort. Die Handys kommen mit demselben Code wieder rein.</p></div>';
+}
 function boardMenu() {
-  if ($('#bmenu')) return;
-  const d = document.createElement('div'); d.id = 'bmenu'; d.className = 'pausebox'; d.style.position = 'fixed';
-  d.innerHTML = '<div class="bigt s">MENÜ</div><div class="col" style="width:min(360px,80vw)"><button class="btn wide" data-b="mclose">Zurück zum Spiel</button><button class="btn dark wide" data-b="msave">Jetzt speichern</button><button class="btn ghost wide" data-b="mquit">Speichern und zur Startseite</button></div><p class="mut" style="max-width:420px;text-align:center;font-size:13px">Gespeicherte Spiele setzt du auf diesem Gerät über die Startseite fort. Die Handys kommen mit demselben Code wieder rein.</p>';
-  document.body.appendChild(d);
+  let d = $('#bmenu');
+  if (!d) { d = document.createElement('div'); d.id = 'bmenu'; d.className = 'pausebox menu'; document.body.appendChild(d); }
+  d.innerHTML = menuHtml();
 }
 
 /* ==========================================================================
@@ -2648,6 +2736,7 @@ function phoneRender() {
   const pub = P.pub, me = P.me;
   let html;
   if (!pub) html = '<div class="bigmsg" style="margin-top:20vh">' + ic('ball') + '<h2>Warte auf das Spielbrett …</h2><p>Raum ' + esc(P.code) + '</p></div>';
+  else if (verMismatch()) html = verHtml();
   else if (!me || (pub.ph === 'lobby' && P.editJoin)) {
     if (pub.ph === 'lobby') { if (!$('#jf')) html = joinHtml(); else { updateJoinColors(); return; } }
     else html = takeoverHtml();
@@ -2661,6 +2750,14 @@ function phoneRender() {
 }
 P.tabKey = () => P.tab + ':' + (P.pub ? P.pub.ph : '');
 
+/* Spielbrett und Handy müssen dieselbe Version haben, sonst passen die Abläufe nicht zusammen */
+function boardVer() { const p = P.pub; return p ? (p.ver || String(p.v || 1)) : ''; }
+function verMismatch() { return !!P.pub && boardVer() !== APP_VERSION; }
+function verHtml() {
+  const bv = +boardVer() || 1, mv = +APP_VERSION;
+  if (bv > mv) return '<div class="verbox">' + ic('pfeil') + '<h2>Neue Version da</h2><p>Das Spielbrett hat schon Version ' + bv + ', dein Handy noch Version ' + mv + '. Einmal neu laden, dann geht es weiter – dein Verein bleibt erhalten.</p><button class="btn big" data-p="reload">Jetzt neu laden</button></div>';
+  return '<div class="verbox">' + ic('pfeil') + '<h2>iPad neu laden</h2><p>Dein Handy hat schon Version ' + mv + ', das Spielbrett noch Version ' + bv + '. Auf dem iPad: Menü › „Speichern und zur Startseite“, dann die App ganz schließen und neu öffnen und das Spiel fortsetzen.</p></div>';
+}
 function joinHtml() {
   const f = P.form || ST.get('form', { mgr: '', name: '', short: '', col: null });
   P.form = f;
@@ -2710,6 +2807,7 @@ function needsInput() {
   if (!mc) return false;
   if (['saisonstart', 'winter', 'bieten'].includes(pub.ph)) return !mc.ready;
   if (pub.ph === 'spiel' && me.match) {
+    if (pub.live && pub.live.stage === 'cards' && me.card && me.card.o == null) return true;
     if (me.match.stat === 'wait' || me.match.stat === 'pre') return !me.ready;
     if (me.match.stat === 'ht') return !me.match.htReady;
   }
@@ -2727,6 +2825,7 @@ function barHtml() {
     case 'aufdecken': return t(['AUFDECKEN'], 'Schau aufs Spielbrett!');
     case 'spiel': {
       const M = me.match; const ok = '<span class="chip on">' + ic('check') + 'Bereit</span>';
+      if (pub.live && pub.live.stage === 'cards') return t(['KARTEN'], me.card && me.card.o == null ? 'Ereigniskarte aufdecken' : 'Warten auf die anderen Karten') + (me.card && me.card.o != null ? ok : '');
       if (!M) return t(['SPIELFREI'], 'Spieltag ' + (pub.md + 1));
       if (M.stat === 'wait') return t(['SPIELTAG ' + (pub.md + 1)], 'Du spielst als Nr. ' + (M.before + 1)) + (me.ready ? ok : '');
       if (M.stat === 'pre') return t(['GLEICH'], pub.live.kickLeft ? 'Anpfiff in ' + pub.live.kickLeft + ' s' : 'Dein Spiel ist dran!') + (me.ready ? ok : '');
@@ -2810,7 +2909,8 @@ const AKT = {
     const h = M.sd === 'h' ? mc : opp, a = M.sd === 'h' ? opp : mc;
     const bug = '<div class="mbig"><span class="stripe" style="background:' + colOf(h).c + '"></span><span class="t">' + esc(h.short) + '</span><span class="s">' + (M.stat === 'wait' || M.stat === 'pre' ? '–' : M.hg + ':' + M.ag) + '</span><span class="t">' + esc(a.short) + '</span><span class="stripe" style="background:' + colOf(a).c + '"></span><span class="m">' + ({ wait: 'NR. ' + (M.before + 1), pre: 'GLEICH', ht: 'HZ', done: 'ENDE' }[M.stat] || M.min + '′') + '</span></div>';
     if (M.stat === 'wait' || M.stat === 'pre') {
-      let x = '<div class="sec">' + bug + (M.stat === 'pre' ? '<p class="hint"><b class="lime">Dein Spiel ist dran!</b> Wenn beide Manager bereit sind, pfeift das Spielbrett an.</p>' : '<p class="hint">' + (M.before === 1 ? 'Ein Spiel' : M.before + ' Spiele') + ' vor dir. Nutz die Zeit für Aufstellung und Taktik.</p>' + now) + '</div>';
+      const cardsNow = pub.live && pub.live.stage === 'cards';
+      let x = '<div class="sec">' + bug + (cardsNow ? '<p class="hint">Zuerst decken alle ihre Ereigniskarten auf, dann beginnt der Spieltag' + (M.before ? ' – dein Spiel ist das ' + (M.before + 1) + '.' : ' mit deinem Spiel') + '.</p>' : M.stat === 'pre' ? '<p class="hint"><b class="lime">Dein Spiel ist dran!</b> Wenn beide Manager bereit sind, pfeift das Spielbrett an.</p>' : '<p class="hint">' + (M.before === 1 ? 'Ein Spiel' : M.before + ' Spiele') + ' vor dir. Nutz die Zeit für Aufstellung und Taktik.</p>' + now) + '</div>';
       x += cardSec();
       x += '<div class="sec"><h2><span class="lbl">GEGNER</span><span class="mut" style="font-size:13px">' + (M.sd === 'h' ? 'Heim' : 'Auswärts') + ' gegen ' + esc(opp.name) + '</span></h2></div>';
       x += lineupEditor();
@@ -2883,18 +2983,29 @@ function cardBody(cd) {
   if (cd.o == null) return '<span class="res mut">…</span>';
   return '<span class="res">' + esc(cd.opts ? cd.opts[cd.o].l : '') + (cd.opts && cd.res ? ' · ' : '') + esc(cd.res || '') + '</span>';
 }
-/* Aufdeck-Animation: liegt außerhalb der Handy-Seite, damit Updates sie nicht neu starten */
+/* Aufdeck-Animation: liegt außerhalb der Handy-Seite, damit Updates sie nicht neu starten.
+   In der Kartenphase vor dem Spieltag erscheint die verdeckte Karte bei allen automatisch. */
 function cardOverlay() {
-  const cd = P.me && P.me.card;
+  const cd = P.me && P.me.card; const L = P.pub && P.pub.live;
+  if (cd && L && L.stage === 'cards' && cd.o == null && P.covAutoId !== cd.id && !verMismatch()) {
+    P.cov = { id: cd.id }; P.covAutoId = cd.id;
+    if (navigator.vibrate) try { navigator.vibrate([60, 40, 60]); } catch (_) {}
+  }
   let ov = document.getElementById('cardov');
   if (!P.cov || !cd || P.cov.id !== cd.id) { if (ov) ov.remove(); if (P.cov && (!cd || P.cov.id !== cd.id)) P.cov = null; return; }
   if (!ov) {
     ov = document.createElement('div'); ov.id = 'cardov'; ov.className = 'cov';
-    ov.innerHTML = '<div class="cflip"><div class="cface cbk">' + ic('krone') + '<b>EREIGNIS</b></div><div class="cface cfr"><span class="lbl" style="color:var(--ink2)">EREIGNISKARTE</span><h3>' + esc(cd.t) + '</h3><p>' + esc(cd.d) + '</p><div class="cf-body"></div></div></div>';
+    ov.innerHTML = '<div class="cflip ' + (cd.open ? 'shown' : P.cov.go ? 'go' : 'wait') + '" data-p="cardflip"><div class="cface cbk">' + ic('krone') + '<b>EREIGNIS</b><span class="tap">Tippen zum Aufdecken</span></div><div class="cface cfr"><span class="lbl" style="color:var(--ink2)">EREIGNISKARTE</span><h3>' + esc(cd.t) + '</h3><p>' + esc(cd.d) + '</p><div class="cf-body"></div></div></div>';
     document.body.appendChild(ov);
   }
   const done = cd.o != null;
   patch(ov.querySelector('.cf-body'), cardBody(cd) + (done ? '<button class="btn wide" data-p="covclose" style="margin-top:6px">Fertig</button>' : ''));
+}
+function flipCard() {
+  const cd = P.me && P.me.card; if (!cd) return;
+  const el = document.querySelector('#cardov .cflip');
+  if (el && el.classList.contains('wait')) { el.classList.remove('wait'); el.classList.add('go'); }
+  if (!cd.open) { send({ t: 'cardopen' }); if (navigator.vibrate) try { navigator.vibrate(40); } catch (_) {} }
 }
 function nextOpp() {
   const pub = P.pub, me = P.me; if (!pub.fx) return null;
@@ -2910,7 +3021,7 @@ function listSec() {
 function buildHint() { return '<button class="btn dark wide" data-p="tab" data-v="stadion" style="margin-bottom:20px">' + ic('stadion') + 'Stadion ausbauen</button>'; }
 
 /* ---------- Aufstellung ---------- */
-function luCur() { return P.luPend && Date.now() - P.luAt < 4000 ? P.luPend : P.me.lu; }
+function luCur() { return P.luPend && (P.me.luSeq || 0) < P.luPendSeq && Date.now() - P.luAt < 5000 ? P.luPend : P.me.lu; }
 const ROWY = { ST: 13, MF: 39, AB: 65, TW: 89 };
 function pitchSlots(xi, form, getP, pick) {
   const need = Object.assign({ TW: 1 }, FORMS[form]);
@@ -2931,6 +3042,7 @@ function pitchSlots(xi, form, getP, pick) {
     '<span class="ln" style="left:28%;right:28%;top:0;height:40px;border-top:0"></span><span class="ln" style="left:28%;right:28%;bottom:0;height:40px;border-bottom:0"></span>' + h + '</div>';
 }
 function linesHtml(v, ov) {
+  if (!v) return '';
   const cell = (L, n) => { const d = ov ? v[L] - ov[L] : 0; return '<div><span>' + n + '</span><b class="' + (ov ? (d > 0 ? 'up' : d < 0 ? 'dn' : '') : '') + '">' + v[L] + (ov ? '<span style="font-size:14px;color:var(--muted)"> / ' + ov[L] + '</span>' : '') + '</b></div>'; };
   return '<div class="lines">' + cell('K', 'TORWART') + cell('D', 'ABWEHR') + cell('M', 'MITTE') + cell('A', 'ANGRIFF') + '</div>';
 }
@@ -2946,7 +3058,7 @@ function lineupEditor() {
     '<h2 style="margin-top:6px"><span class="lbl">EINSATZ</span></h2><div class="seg2">' + Object.keys(EINSATZ).map(k => '<button data-p="einsatz" data-v="' + k + '" class="' + (lu.einsatz === k ? 'on' : '') + '">' + EINSATZ[k].n + '</button>').join('') + '</div>' +
     '<p class="hint">Hart: Mittelfeld +1, aber mehr Karten und Verletzungen.</p></div>';
 }
-function sendLineup(lu) { P.luPend = JSON.parse(JSON.stringify(lu)); P.luAt = Date.now(); send({ t: 'lineup', lu }); phoneRender(); }
+function sendLineup(lu) { P.luSeq = Math.max(P.luSeq || 0, P.me.luSeq || 0) + 1; P.luPendSeq = P.luSeq; P.luPend = JSON.parse(JSON.stringify(lu)); P.luAt = Date.now(); send({ t: 'lineup', lu, seq: P.luSeq }); phoneRender(); }
 function slotSheet(pos, i) {
   const lu = luCur(); const cur = (lu.xi[pos] || [])[i];
   const inXi = new Set(POS.flatMap(x => lu.xi[x] || []));
@@ -3117,6 +3229,9 @@ function ligaHtml() {
   if (pub.fx && pub.ph !== 'lobby') h += '<div class="sec"><h2><span class="lbl">NÄCHSTER SPIELTAG</span></h2>' + pub.fx.pairs.map(([a, b]) => '<div class="kv"><span>' + esc(cPub(a).name) + '</span><b>–</b><span>' + esc(cPub(b).name) + '</span></div>').join('') + (pub.fx.bye ? '<p class="hint">Spielfrei: ' + esc(cPub(pub.fx.bye).name) + '</p>' : '') + '</div>';
   if (pub.hist && pub.hist.length) h += '<div class="sec"><h2><span class="lbl">MEISTER</span></h2>' + pub.hist.map(x => '<div class="kv"><span>Saison ' + x.season + '</span><b>' + esc((cPub(x.champ) || {}).name) + '</b></div>').join('') + '</div>';
   h += '<div class="sec"><h2><span class="lbl">NEUES</span></h2><div class="evl">' + pub.news.slice().reverse().map(n => '<div><span>' + esc(n.t) + '</span></div>').join('') + '</div></div>';
+  h += '<div class="sec"><h2><span class="lbl">SO GIBT ES RUHM</span></h2><p class="hint">Die Figuren außen auf dem Spielbrett zeigen den Ruhm. Wer am Ende die meisten Ruhm-Punkte hat, gewinnt.</p>' + RUHM_INFO.map(x => '<div class="kv"><span>' + esc(x[0]) + '</span><b class="lime">' + esc(x[1]) + '</b></div>').join('') + '</div>';
+  const cf = (pub.set && pub.set.cards) || 'jeder2';
+  h += '<p class="hint">Ereigniskarten: ' + (cf === 'jeder' ? 'vor jedem Spieltag' : cf === 'aus' ? 'ausgeschaltet' : 'vor jedem 2. Spieltag (2., 4., 6. …)') + ', für alle gleichzeitig.</p>';
   h += '<p class="hint" style="text-align:center">Football Empire · Version ' + APP_VERSION + '</p>';
   return h;
 }
@@ -3153,9 +3268,11 @@ document.addEventListener('click', e => {
       return;
     }
     case 'card': send({ t: 'card', i: +v }); return;
-    case 'cardopen': if (me.card && !me.card.open) { P.cov = { id: me.card.id }; send({ t: 'cardopen' }); if (navigator.vibrate) try { navigator.vibrate(40); } catch (_) {} cardOverlay(); } return;
+    case 'cardopen': if (me.card && !me.card.open) { P.cov = { id: me.card.id, go: true }; P.covAutoId = me.card.id; cardOverlay(); flipCard(); } return;
+    case 'cardflip': flipCard(); return;
+    case 'reload': location.replace(location.pathname + '?raum=' + P.code + (LOCAL ? '&lokal=1' : '') + '&v=' + Date.now()); return;
     case 'covclose': P.cov = null; cardOverlay(); phoneRender(); return;
-    case 'covshow': if (me.card) { P.cov = { id: me.card.id }; cardOverlay(); } return;
+    case 'covshow': if (me.card) { P.cov = { id: me.card.id }; P.covAutoId = me.card.id; cardOverlay(); } return;
     case 'rv': { if (!P.dl) return; P.dl.rv = P.dl.rv || []; P.dl.rv[+b.dataset.i] = +v; sendRealRoll(); return; }
     case 'form': { const lu = JSON.parse(JSON.stringify(luCur())); lu.form = v; sendLineup(lu); return; }
     case 'taktik': { const lu = JSON.parse(JSON.stringify(luCur())); lu.taktik = v; sendLineup(lu); return; }
