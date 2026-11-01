@@ -599,6 +599,35 @@ input{font:inherit;color:inherit}
 .dwbox{background:var(--panel);padding:12px 14px;font-size:14px}
 .mypicks{display:flex;gap:4px;flex-wrap:wrap}
 .mypicks .posb{width:auto;padding:0 6px;height:22px;font-size:11px}
+
+.mbug .mn.so{background:var(--yel);color:var(--ink);font-size:14px;min-width:0;padding:0 8px}
+.mcard.big .mbug .mn.so{font-size:16px}
+.cuptree{display:flex;flex-direction:column;gap:8px;font-size:14px}
+.cuptree>div{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
+.cuptree .cr{white-space:nowrap}
+.bflash{position:absolute;left:50%;top:50px;transform:translateX(-50%);z-index:30;display:flex;align-items:stretch;max-width:92%;box-shadow:0 18px 40px #000c;animation:bfl 7s ease forwards}
+.bflash .tag{display:flex;align-items:center;font-size:18px;padding:0 18px}
+.bflash .bft{background:#fff;color:var(--ink);font-weight:800;font-size:17px;padding:12px 18px}
+@keyframes bfl{0%{opacity:0;transform:translate(-50%,-20px)}6%{opacity:1;transform:translate(-50%,0)}90%{opacity:1}100%{opacity:0}}
+
+#ph-tabs.t6{grid-template-columns:repeat(6,1fr)}
+#ph-tabs.t6 button{font-size:10px}
+.toff{background:var(--panel);padding:12px;display:flex;flex-direction:column;gap:8px}
+.toff.in{box-shadow:inset 4px 0 0 var(--lime)}
+.toh{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.tor{display:flex;flex-direction:column;gap:4px}
+.tor>div{display:flex;flex-wrap:wrap;gap:6px}
+.tp{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);padding:3px 8px 3px 3px;font-size:13px;font-weight:600}
+.tp.money{padding:3px 8px;color:var(--lime)}
+.tp .posb{width:22px;height:18px}
+.tob{display:flex;gap:6px;flex-wrap:wrap}
+.tbox{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.tmoney{display:flex;align-items:center;gap:6px;font-size:13px}
+.tmoney span{flex:1;color:var(--muted)}
+.tmoney button{height:36px;min-width:52px;background:var(--panel2);font-weight:800}
+.tmoney b{min-width:90px;text-align:center;font-stretch:75%;font-size:18px}
+.prow.sm{min-height:44px}
+.prow.sm .s{font-size:22px}
 </style>
 </head>
 <body>
@@ -953,6 +982,9 @@ function closeFin(G, c, label) {
 const INPUT_PHASES = ['profil', 'saisonstart', 'winter', 'bieten'];
 function enterPhase(G, ph) {
   G.phase = ph; G.phaseAt = NOW(); G.ready = {}; G.rdelta = {};
+  if (ph === 'saisonstart') { G.cup = null; if (G.season > 1) solidarity(G); }
+  if (ph === 'winter') solidarity(G);
+  if (ph === 'saisonende') for (const o of (G.offers || [])) if (o.st === 'open') o.st = 'expired';
   if (ph === 'profil') {
     const keys = Object.keys(PROFILES);
     for (const c of G.clubs) { c.profOffers = shuffle(keys.slice()).slice(0, 3); c.prof = null; }
@@ -1039,7 +1071,11 @@ function advance(G, force) {
     return false;
   } else if (ph === 'ergebnis') {
     G.results = null;
-    if (G.md >= G.seasonLen) enterPhase(G, 'saisonende');
+    if (G.md >= G.seasonLen) {
+      if (!G.cup) { G.cup = initCup(G); enterPhase(G, 'spiel'); }
+      else if (!G.cup.winner) enterPhase(G, 'spiel');
+      else enterPhase(G, 'saisonende');
+    }
     else if (G.md === G.winterAt) enterPhase(G, 'winter');
     else enterPhase(G, 'spiel');
   } else if (ph === 'saisonende') {
@@ -1243,14 +1279,72 @@ function teamPreview(G, c) { const lu = c.lu; return lineValues(G, c, luSlots(lu
    Wer noch nicht dran ist, stellt in der Zeit am Handy auf. */
 function rph(G) { return 6; } // feste Spiellänge: 6 Runden pro Halbzeit (ca. 1,5 Minuten)
 function startMatchday(G) {
-  const day = G.schedule[G.md];
+  const cup = !!(G.cup && !G.cup.winner && G.md >= G.seasonLen);
+  const day = cup ? cupDay(G) : G.schedule[G.md];
   for (const c of G.clubs) { c.card = null; fixLineup(G, c); }
   const cf = G.settings.cards || 'jeder2';
-  if (cf === 'jeder' || (cf === 'jeder2' && G.md % 2 === 1)) for (const c of G.clubs) drawCard(G, c);
+  if (!cup && (cf === 'jeder' || (cf === 'jeder2' && G.md % 2 === 1))) for (const c of G.clubs) drawCard(G, c);
   const ms = day.pairs.map(([h, a]) => ({ id: 'm' + (G.nid++), h, a, hg: 0, ag: 0, r: 0, min: 0, zone: 2, ev: [], duel: null, ad: null,
     started: false, done: false, htDone: false, next: 0, st: { h: { poss: 0, sh: 0, yc: 0, rc: 0 }, a: { poss: 0, sh: 0, yc: 0, rc: 0 } }, side: null }));
   // Ereigniskarten kommen für alle gleichzeitig vor dem ersten Anpfiff
-  G.live = { ms, cur: 0, stage: G.clubs.some(c => c.card) ? 'cards' : 'pre', kickAt: 0, cardsAt: 0, htUntil: 0, htReady: {}, postUntil: 0, bye: day.bye };
+  G.live = { ms, cur: 0, stage: G.clubs.some(c => c.card) ? 'cards' : 'pre', kickAt: 0, cardsAt: 0, htUntil: 0, htReady: {}, postUntil: 0, bye: day.bye, cup, cupName: cup ? G.cup.name : null, byes: cup ? G.cup.byes : [] };
+}
+
+/* ---------- Pokal: K.-o. am Saisonende, gesetzt nach Tabellenplatz ---------- */
+function initCup(G) { const seeds = tableOrder(G).map(c => c.id); return { seeds, alive: seeds.slice(), out: [], hist: [], winner: null, finalist: null, name: '', byes: [] }; }
+function cupDay(G) {
+  const C = G.cup;
+  const teams = C.alive.slice().sort((a, b) => C.seeds.indexOf(a) - C.seeds.indexOf(b));
+  const n = teams.length; let p2 = 1; while (p2 * 2 <= n) p2 *= 2;
+  let pairs = [], byes = [];
+  if (n === p2) { for (let i = 0; i < n / 2; i++) pairs.push([teams[i], teams[n - 1 - i]]); }
+  else { const m = n - p2; byes = teams.slice(0, n - 2 * m); const pl = teams.slice(n - 2 * m); for (let i = 0; i < m; i++) pairs.push([pl[i], pl[2 * m - 1 - i]]); }
+  const after = byes.length + pairs.length;
+  C.name = after === 1 ? 'Pokalfinale' : after === 2 ? 'Pokal-Halbfinale' : after <= 4 ? 'Pokal-Viertelfinale' : after <= 8 ? 'Pokal-Achtelfinale' : 'Pokalrunde';
+  C.byes = byes;
+  return { pairs, bye: null };
+}
+function soTally(m) { const s = a => a.reduce((x, y) => x + y, 0); return { h: s(m.so.h), a: s(m.so.a) }; }
+function soDecided(m) {
+  const t = soTally(m), nh = m.so.h.length, na = m.so.a.length;
+  if (nh <= 5 && na <= 5) {
+    if (t.h > t.a + (5 - na)) return 'h';
+    if (t.a > t.h + (5 - nh)) return 'a';
+    if (nh === 5 && na === 5 && t.h !== t.a) return t.h > t.a ? 'h' : 'a';
+    return null;
+  }
+  return nh === na && t.h !== t.a ? (t.h > t.a ? 'h' : 'a') : null;
+}
+function soShooter(G, m, sd) {
+  const c = clubById(G, m[sd]);
+  const ps = m.side[sd].slots.filter(x => x.pos !== 'TW').map(x => ({ p: playerOf(c, x.id), pos: x.pos })).filter(x => x.p).sort((a, b) => effS(b.p, b.pos) - effS(a.p, a.pos));
+  return ps.length ? ps[m.so[sd].length % ps.length] : null;
+}
+function finishCupRound(G) {
+  const L = G.live, C = G.cup; const res = [];
+  const ruhm0 = {}; for (const c of G.clubs) ruhm0[c.id] = c.ruhm;
+  for (const m of L.ms) {
+    const win = m.hg > m.ag ? 'h' : m.ag > m.hg ? 'a' : (m.soWin || 'h');
+    const w = m[win], l = m[other(win)];
+    C.out.push(l); addFans(clubById(G, w), 300);
+    const scorers = m.ev.filter(e => e.t === 'goal').map(e => ({ sd: e.sd, min: e.min, n: (e.text.match(/([^!]+?) trifft/) || [])[1] || '' }));
+    res.push({ h: m.h, a: m.a, hg: m.hg, ag: m.ag, so: m.so ? soTally(m) : null, w, scorers, spect: 0, st: m.st });
+    news(G, C.name + ': ' + clubById(G, m.h).name + ' ' + m.hg + ':' + m.ag + (m.so ? ' (' + soTally(m).h + ':' + soTally(m).a + ' i.E.)' : '') + ' ' + clubById(G, m.a).name, 'result');
+    if (C.name === 'Pokalfinale') { C.winner = w; C.finalist = l; }
+  }
+  C.alive = C.alive.filter(id => !C.out.includes(id));
+  if (!C.winner && C.alive.length === 1) C.winner = C.alive[0];
+  C.hist.push({ name: C.name, res, byes: C.byes.slice() });
+  if (C.winner) {
+    const w = clubById(G, C.winner); addRuhm(G, w, 5, 'Pokalsieg'); pay(G, w, 30, 'Prämie Pokalsieg');
+    news(G, w.name + ' gewinnt den Pokal!', 'title');
+    if (C.finalist) { const f = clubById(G, C.finalist); addRuhm(G, f, 2, 'Pokalfinale'); pay(G, f, 10, 'Prämie Pokalfinale'); }
+  }
+  for (const c of G.clubs) closeFin(G, c, C.name);
+  const rd = {}; for (const c of G.clubs) rd[c.id] = c.ruhm - ruhm0[c.id];
+  G.results = { season: G.season, md: G.md, cup: { name: C.name, done: !!C.winner, winner: C.winner, alive: C.alive.slice() }, list: res, bye: null, byes: C.byes.slice(), rd, table: tableOrder(G).map(c => c.id) };
+  G.live = null; G.mdg++;
+  G.phase = 'ergebnis'; G.phaseAt = NOW(); G.ready = {};
 }
 function endCards(G) {
   const L = G.live; if (!L || L.stage !== 'cards') return;
@@ -1328,7 +1422,16 @@ function liveStep(G, now) {
     for (const id of [m.h, m.a]) { const c = clubById(G, id); if (c.bot) botHalftime(G, c); }
     return true;
   }
-  if (m.r >= R * 2) { m.done = true; m.min = 90; mEv(m, 'end', null, 'Abpfiff'); L.stage = 'post'; L.postUntil = now + 5000; return true; }
+  if (m.r >= R * 2) {
+    if (L.cup && m.hg === m.ag && !m.so) { m.so = { h: [], a: [] }; m.min = 90; mEv(m, 'so', null, 'Unentschieden – Elfmeterschießen!'); m.next = now + 3000; return true; }
+    if (m.so && !m.soWin) {
+      const sd = m.so.h.length <= m.so.a.length ? 'h' : 'a';
+      startDuel(G, m, sd, 'elf', now, soShooter(G, m, sd));
+      m.duel.so = true; m.duel.notes = ['Elfmeterschießen'];
+      return true;
+    }
+    m.done = true; m.min = 90; mEv(m, 'end', null, 'Abpfiff'); L.stage = 'post'; L.postUntil = now + 5000; return true;
+  }
   matchRound(G, m, now);
   return true;
 }
@@ -1420,7 +1523,7 @@ function keeperOf(G, m, sd) {
   const best = S.slots.map(x => playerOf(c, x.id)).filter(Boolean).sort((a, b) => b.s - a.s)[0];
   return best ? { p: best, s: Math.max(1, best.s - 3) } : { p: { id: 'x', n: 'Niemand', tr: null }, s: 1 };
 }
-function startDuel(G, m, att, kind, now) {
+function startDuel(G, m, att, kind, now, forced) {
   const def = other(att);
   const c = clubById(G, m[att]); const S = m.side[att];
   const cand = S.slots.map(x => ({ p: playerOf(c, x.id), pos: x.pos })).filter(x => x.p && x.pos !== 'TW');
@@ -1430,7 +1533,7 @@ function startDuel(G, m, att, kind, now) {
     if (kind === 'elf') return s * s * (x.pos === 'ST' ? 2 : 1);
     return s * (x.pos === 'ST' ? 2.2 : x.pos === 'MF' ? 1.1 : 0.3);
   };
-  const sh = cand.length ? wpick(cand, pickW) : null;
+  const sh = forced || (cand.length ? wpick(cand, pickW) : null);
   const shooter = sh ? sh.p : { id: 'x', n: 'Niemand', s: 1, tr: null };
   const shS = sh ? effS(sh.p, sh.pos) : 1;
   const kp = keeperOf(G, m, def);
@@ -1491,6 +1594,15 @@ function resolveDuel(G, m, now) {
   const goal = t.s > t.k;
   d.res = { goal, s: t.s, k: t.k, rs: t.rs, rk: t.rk, adv: t.adv };
   const c = clubById(G, m[sd.s]);
+  if (d.so) {
+    m.so[sd.s].push(goal ? 1 : 0);
+    const t2 = soTally(m);
+    mEv(m, goal ? 'sogoal' : 'somiss', sd.s, 'Elfmeterschießen: ' + d.sh.n + (goal ? ' trifft' : t.k - t.s >= 3 ? ' verschießt' : ' scheitert an ' + d.kp.n) + ' (' + t2.h + ':' + t2.a + ')');
+    const win = soDecided(m);
+    if (win) { m.soWin = win; mEv(m, 'sowin', win, clubById(G, m[win]).name + ' gewinnt im Elfmeterschießen'); }
+    m.next = now + (goal ? 2600 : 2400);
+    return;
+  }
   if (goal) {
     if (sd.s === 'h') m.hg++; else m.ag++;
     const p = playerOf(c, d.sh.id); if (p) p.goals++;
@@ -1551,6 +1663,7 @@ function assignSlots(ps, form, hasKeeper) {
 
 /* ---------- Spieltag auswerten ---------- */
 function finishMatchday(G) {
+  if (G.live && G.live.cup) return finishCupRound(G);
   const L = G.live; const res = []; const md = G.md;
   const hg = homeGames(G), Lz = Math.max(1, G.seasonLen), fs = fanScale(G);
   for (const c of G.clubs) if (c.card && c.card.o == null) decideCard(G, c, cardDefault(c.card));
@@ -1613,6 +1726,7 @@ function seasonEnd(G) {
     if (c.sponsor && c.sponsor.bonus && i < n / 2) { pay(G, c, c.sponsor.bonus, 'Bonus ' + c.sponsor.n); R(c.id).money.push(['Sponsor-Bonus', c.sponsor.bonus]); }
     rep.table.push({ id: c.id, rank: i + 1, tab: JSON.parse(JSON.stringify(c.tab)) });
   });
+  if (G.cup && G.cup.winner) rep.awards.push({ k: 'pokal', c: G.cup.winner, t: 'Pokalsieger', d: clubById(G, G.cup.winner).name });
   // Torschützenkönig
   let best = 0; for (const c of G.clubs) for (const p of c.players) best = Math.max(best, p.goals);
   if (best > 0) for (const c of G.clubs) for (const p of c.players) if (p.goals === best) {
@@ -1664,6 +1778,101 @@ function finalScoring(G) {
   const order = G.clubs.slice().sort((a, b) => b.ruhm - a.ruhm || b.titles - a.titles || b.money - a.money);
   G.final = { order: order.map(c => c.id), rows };
   news(G, order[0].name + ' gewinnt Football Empire mit ' + order[0].ruhm + ' Ruhm!', 'title');
+}
+
+/* ---------- Geldspritze für den Letzten ---------- */
+function solidarity(G) {
+  if (G.clubs.length < 2) return;
+  const last = G.clubs.slice().sort((a, b) => a.ruhm - b.ruhm || a.money - b.money)[0];
+  pay(G, last, 30, 'Solidaritätszahlung'); closeFin(G, last, 'Solidaritätszahlung');
+  news(G, last.name + ' bekommt als Ruhm-Letzter 3 Mio € Solidaritätszahlung.', 'info');
+  G.flash = { k: 'soli', t: last.name + ' bekommt als Ruhm-Letzter 3 Mio € Solidaritätszahlung', c: last.id, at: NOW(), n: (G.flash ? G.flash.n : 0) + 1 };
+}
+
+/* ---------- Kader verändern: kündigen und tauschen ---------- */
+function canManage(G, c) {
+  if (['saisonstart', 'winter', 'bieten', 'aufdecken', 'ergebnis', 'kader', 'saisonende'].includes(G.phase)) return true;
+  if (G.phase === 'spiel') { const m = matchOf(G, c); return !m || !m.started || m.done; }
+  return false;
+}
+function onMarket(G, c, pid) { return (c.listed || []).includes(pid) || ((G.phase === 'bieten' || G.phase === 'aufdecken') && G.market.some(k => k.p.id === pid)); }
+function releaseCost(c, p) { return Math.max(1, Math.round(pSalary(p) * (c.flags.salMult || 1) * 0.5)); }
+const SQUAD_MIN = 14;
+function releasePlayer(G, c, pid) {
+  if (!canManage(G, c)) return 'Kündigen geht nur zwischen den Spielen.';
+  const p = playerOf(c, pid); if (!p) return 'Spieler nicht gefunden.';
+  if (onMarket(G, c, pid)) return 'Der Spieler steht auf der Transferliste.';
+  if (c.players.length <= SQUAD_MIN) return 'Mindestens ' + SQUAD_MIN + ' Spieler müssen im Kader bleiben.';
+  const cost = releaseCost(c, p);
+  if (c.money < cost) return 'Für die Abfindung reicht das Geld nicht.';
+  pay(G, c, -cost, 'Abfindung ' + p.n); closeFin(G, c, 'Vertragsauflösung');
+  c.players = c.players.filter(x => x.id !== pid); dropFromLineup(c, pid); fixLineup(G, c);
+  news(G, c.name + ' löst den Vertrag mit ' + p.n + ' auf.', 'transfer');
+  return null;
+}
+function tradeErr(G, o) {
+  const a = clubById(G, o.from), b = clubById(G, o.to);
+  if (!a || !b || a === b) return 'Ungültiger Tausch.';
+  if (!canManage(G, a) || !canManage(G, b)) return 'Getauscht wird nur zwischen den Spielen.';
+  for (const id of o.give.pids) { if (!playerOf(a, id)) return 'Ein angebotener Spieler ist nicht mehr da.'; if (onMarket(G, a, id)) return 'Ein angebotener Spieler steht auf der Transferliste.'; }
+  for (const id of o.get.pids) { if (!playerOf(b, id)) return 'Ein gewünschter Spieler ist nicht mehr da.'; if (onMarket(G, b, id)) return 'Ein gewünschter Spieler steht auf der Transferliste.'; }
+  if (a.money < o.give.money) return a.name + ' hat nicht genug Geld.';
+  if (b.money < o.get.money) return b.name + ' hat nicht genug Geld.';
+  const na = a.players.length - o.give.pids.length + o.get.pids.length, nb = b.players.length - o.get.pids.length + o.give.pids.length;
+  if (na < SQUAD_MIN || nb < SQUAD_MIN) return 'Nach dem Tausch hätte ein Verein weniger als ' + SQUAD_MIN + ' Spieler.';
+  if (na > SQUAD_MAX || nb > SQUAD_MAX) return 'Nach dem Tausch hätte ein Verein mehr als ' + SQUAD_MAX + ' Spieler.';
+  if (!o.give.pids.length && !o.get.pids.length) return 'Ein Tausch braucht mindestens einen Spieler.';
+  return null;
+}
+function tradeText(G, o) {
+  const a = clubById(G, o.from), b = clubById(G, o.to);
+  const side = (c, x) => x.pids.map(id => (playerOf(c, id) || {}).n).filter(Boolean).concat(x.money ? [fmtM(x.money)] : []).join(' + ') || 'nichts';
+  return { a: a.name, b: b.name, give: side(a, o.give), get: side(b, o.get) };
+}
+function makeOffer(G, c, x) {
+  G.offers = G.offers || [];
+  const to = clubById(G, x.to);
+  const clean = y => ({ pids: [...new Set((Array.isArray(y && y.pids) ? y.pids : []).map(String))].slice(0, 5), money: Math.max(0, Math.round(+(y && y.money) || 0)) });
+  const o = { id: 'o' + (G.nid++), from: c.id, to: x.to, give: clean(x.give), get: clean(x.get), st: 'open', at: NOW() };
+  if (!to) return 'Verein nicht gefunden.';
+  if (G.offers.filter(y => y.from === c.id && y.st === 'open').length >= 3) return 'Du hast schon drei offene Angebote.';
+  const e = tradeErr(G, o); if (e) return e;
+  o.txt = tradeText(G, o);
+  G.offers.push(o);
+  if (G.offers.length > 60) G.offers.splice(0, G.offers.length - 60);
+  if (to.bot) botAnswer(G, to, o);
+  return null;
+}
+function answerOffer(G, c, id, ok) {
+  const o = (G.offers || []).find(y => y.id === id);
+  if (!o || o.to !== c.id || o.st !== 'open') return 'Dieses Angebot gibt es nicht mehr.';
+  if (!ok) { o.st = 'declined'; return null; }
+  const e = tradeErr(G, o); if (e) { o.st = 'invalid'; return e; }
+  const a = clubById(G, o.from), b = clubById(G, o.to);
+  const move = (from, to, ids) => { for (const id of ids) { const p = playerOf(from, id); from.players = from.players.filter(x => x.id !== id); dropFromLineup(from, id); p.goals = 0; to.players.push(p); } };
+  o.txt = tradeText(G, o);
+  move(a, b, o.give.pids); move(b, a, o.get.pids);
+  if (o.give.money) { pay(G, a, -o.give.money, 'Tausch mit ' + b.name); pay(G, b, o.give.money, 'Tausch mit ' + a.name); }
+  if (o.get.money) { pay(G, b, -o.get.money, 'Tausch mit ' + a.name); pay(G, a, o.get.money, 'Tausch mit ' + b.name); }
+  closeFin(G, a, 'Tausch'); closeFin(G, b, 'Tausch');
+  fixLineup(G, a); fixLineup(G, b);
+  o.st = 'accepted';
+  const t = o.txt;
+  news(G, 'Tausch: ' + t.a + ' gibt ' + t.give + ' an ' + t.b + ' für ' + t.get + '.', 'transfer');
+  G.flash = { k: 'tausch', t: t.a + ' gibt ' + t.give + ' – ' + t.b + ' gibt ' + t.get, at: NOW(), n: (G.flash ? G.flash.n : 0) + 1 };
+  return null;
+}
+function withdrawOffer(G, c, id) {
+  const o = (G.offers || []).find(y => y.id === id);
+  if (!o || o.from !== c.id || o.st !== 'open') return 'Dieses Angebot ist nicht mehr offen.';
+  o.st = 'withdrawn'; return null;
+}
+/* Computer-Vereine nehmen nur gute Tauschangebote an */
+function botAnswer(G, c, o) {
+  const a = clubById(G, o.from);
+  const val = (club, ids) => ids.reduce((s, id) => { const p = playerOf(club, id); return s + (p ? pValue(p) : 0); }, 0);
+  const getVal = val(a, o.give.pids) + o.give.money, giveVal = val(c, o.get.pids) + o.get.money;
+  answerOffer(G, c, o.id, getVal >= giveVal * 1.15 + 2 && !tradeErr(G, o));
 }
 
 /* ---------- Stadion ---------- */
@@ -1812,6 +2021,11 @@ function applyAction(G, c, a) {
     case 'card': if (!canPrepare(G, c)) return err('Jetzt nicht.'); return err(decideCard(G, c, a.i | 0));
     case 'lineup': if (a.seq) c.luSeq = a.seq | 0; if (!canPrepare(G, c)) return err('Die Aufstellung änderst du vor deinem Spiel.'); return err(setLineup(G, c, a.lu));
     case 'build': return err(build(G, c, a.k));
+    case 'release': return err(releasePlayer(G, c, a.pid));
+    case 'offer': return err(makeOffer(G, c, a));
+    case 'oanswer': return err(answerOffer(G, c, a.id, !!a.ok));
+    case 'owithdraw': return err(withdrawOffer(G, c, a.id));
+    case 'tview': c.tview = a.c || null; return err(null);
     case 'roll': return err(rollDuel(G, c, a.d, { coin: !!a.coin, trait: !!a.trait, v: Array.isArray(a.v) ? a.v : null }) ? null : 'Zu spät – der Wurf ist schon gefallen.');
     case 'ht': return err(setHalftime(G, c, a));
     default: return err('Unbekannte Aktion.');
@@ -1917,14 +2131,16 @@ function duelPub(m) {
 function liveSummary(G) {
   const L = G.live; if (!L) return null;
   const now = NOW();
-  return { stage: L.stage, cardsLeft: L.cardsAt ? Math.max(0, Math.ceil((L.cardsAt - now) / 1000)) : 0, cur: L.cur, kickLeft: L.kickAt ? Math.max(0, Math.ceil((L.kickAt - now) / 1000)) : 0, htLeft: L.stage === 'ht' ? Math.max(0, Math.ceil((L.htUntil - now) / 1000)) : 0, bye: L.bye, paused: !!G.paused,
-    ms: L.ms.map(m => ({ id: m.id, h: m.h, a: m.a, hg: m.hg, ag: m.ag, min: m.min, r: m.r, zone: m.zone, started: m.started, done: m.done, ev: m.ev.slice(-8), ad: m.ad, duel: duelPub(m), st: m.st, v: m.side ? { h: m.side.h.v, a: m.side.a.v } : null })) };
+  return { cup: !!L.cup, cupName: L.cupName, byes: L.byes || [], stage: L.stage, cardsLeft: L.cardsAt ? Math.max(0, Math.ceil((L.cardsAt - now) / 1000)) : 0, cur: L.cur, kickLeft: L.kickAt ? Math.max(0, Math.ceil((L.kickAt - now) / 1000)) : 0, htLeft: L.stage === 'ht' ? Math.max(0, Math.ceil((L.htUntil - now) / 1000)) : 0, bye: L.bye, paused: !!G.paused,
+    ms: L.ms.map(m => ({ id: m.id, h: m.h, a: m.a, hg: m.hg, ag: m.ag, so: m.so ? soTally(m) : null, soWin: m.soWin || null, min: m.min, r: m.r, zone: m.zone, started: m.started, done: m.done, ev: m.ev.slice(-8), ad: m.ad, duel: duelPub(m), st: m.st, v: m.side ? { h: m.side.h.v, a: m.side.a.v } : null })) };
 }
 function pubView(G) {
   const ph = G.phase;
   const v = { v: 3, ver: typeof APP_VERSION !== 'undefined' ? APP_VERSION : '', ph, season: G.season, seasons: G.settings.seasons, md: G.md, len: G.seasonLen, winterAt: G.winterAt, set: G.settings,
     clubs: G.clubs.map(c => pubClub(G, c)), rc: readyCount(G), news: G.news.slice(-10), hist: G.hist, final: G.final, paused: !!G.paused };
   if (G.schedule[G.md]) v.fx = G.schedule[G.md];
+  if (G.cup) v.cup = { name: G.cup.name, alive: G.cup.alive, winner: G.cup.winner, seeds: G.cup.seeds, hist: G.cup.hist.map(h => ({ name: h.name, res: h.res.map(r => ({ h: r.h, a: r.a, hg: r.hg, ag: r.ag, so: r.so, w: r.w })), byes: h.byes })) };
+  if (G.flash) v.flash = G.flash;
   if (ph === 'wurf' && G.dr) { const R = G.dr; v.dr = { rolls: R.rolls, tb: R.tb, order: R.order, left: Math.max(0, Math.ceil(((R.order ? R.doneAt : R.dl) - NOW()) / 1000)) }; }
   if ((ph === 'draft' || ph === 'kader') && G.draft) {
     const D = G.draft;
@@ -1953,7 +2169,7 @@ function privView(G, c) {
     if (m) {
       const sd = m.h === c.id ? 'h' : 'a';
       const stat = !m.started ? (idx === L.cur && L.stage === 'pre' ? 'pre' : 'wait') : m.done ? 'done' : (idx === L.cur && L.stage === 'ht' ? 'ht' : 'live');
-      v.match = { id: m.id, sd, opp: m[other(sd)], hg: m.hg, ag: m.ag, min: m.min, stat, before: Math.max(0, idx - L.cur), done: m.done, ev: m.ev.slice(-6), htReady: !!L.htReady[c.id] };
+      v.match = { id: m.id, sd, opp: m[other(sd)], hg: m.hg, ag: m.ag, so: m.so ? soTally(m) : null, cup: !!L.cup, min: m.min, stat, before: Math.max(0, idx - L.cur), done: m.done, ev: m.ev.slice(-6), htReady: !!L.htReady[c.id] };
       if (m.side) {
         const S = m.side[sd];
         Object.assign(v.match, { v: S.v, ov: m.side[other(sd)].v, form: S.form, taktik: S.taktik, einsatz: S.einsatz, subs: S.subs, on: S.slots, out: S.out });
@@ -1968,6 +2184,16 @@ function privView(G, c) {
       }
     }
   }
+  // Tausch: eigene Angebote, Kader des gewählten Vereins, was gerade erlaubt ist
+  const pp = (club, id) => { const p = playerOf(club, id); return p ? { id, n: p.n, pos: p.pos, s: p.s, age: p.age, v: pValue(p) } : { id, n: '(weg)', pos: '', s: 0, age: 0, v: 0 }; };
+  v.trades = (G.offers || []).filter(o => o.from === c.id || o.to === c.id).slice(-12).reverse().map(o => {
+    const a = clubById(G, o.from), b = clubById(G, o.to);
+    return { id: o.id, from: o.from, to: o.to, st: o.st, at: o.at, give: { ps: o.give.pids.map(id => pp(a, id)), money: o.give.money }, get: { ps: o.get.pids.map(id => pp(b, id)), money: o.get.money }, txt: o.txt };
+  });
+  v.canManage = canManage(G, c);
+  v.releaseCost = c.players.reduce((o, p) => (o[p.id] = releaseCost(c, p), o), {});
+  v.onMarket = c.players.filter(p => onMarket(G, c, p.id)).map(p => p.id);
+  if (c.tview) { const t = clubById(G, c.tview); if (t && t !== c) v.tsquad = { c: t.id, money: t.money, players: t.players.map(p => Object.assign(pubPlayer(G, p), { mk: onMarket(G, t, p.id) })) }; }
   if (G.phase === 'ergebnis' && G.results) { const r = G.results.list.find(x => x.h === c.id || x.a === c.id); v.myRes = r || null; v.lastFin = c.fin[c.fin.length - 1] || null; }
   if (G.phase === 'saisonende' && G.report) v.myRep = G.report.clubs[c.id] || null;
   return v;
@@ -2132,7 +2358,7 @@ function makeClient(handlers) {
 /* ==========================================================================
    GEMEINSAME BAUSTEINE (Brett und Handy)
    ========================================================================== */
-const APP_VERSION = '4';
+const APP_VERSION = '5';
 const $ = (s, r) => (r || document).querySelector(s);
 const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
@@ -2167,7 +2393,8 @@ const ICON = {
   hoch: 'M12 19V5M6 11l6-6 6 6',
   runter: 'M12 5v14M6 13l6 6 6-6',
   plus: 'M12 5v14M5 12h14',
-  minus: 'M5 12h14'
+  minus: 'M5 12h14',
+  tausch: 'M4 8h14l-4-4M20 16H6l4 4'
 };
 function ic(n, cls) { return '<svg class="ico ' + (cls || '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + ICON[n] + '"></path></svg>'; }
 const PIPS = { 1: [4], 2: [2, 6], 3: [2, 4, 6], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
@@ -2338,6 +2565,7 @@ async function boardStart(save) {
     if (B.G.phase === 'spiel' && B.G.live && B.G.live.stage !== 'pre') { B.G.paused = true; B.G.pausedAt = save.at || Date.now(); }
   } else B.G = newGame({});
   B.G.code = code;
+  B.flashN = B.G.flash ? B.G.flash.n : 0; // alte Einblendungen nach dem Laden nicht wiederholen
   for (const c of B.G.clubs) if (!c.bot) c.conn = false;
   el.innerHTML = '<div id="track"></div><div id="pawns"></div><div id="stage"><div id="bhead"></div><div id="bmain"></div></div>';
   boardLayout();
@@ -2487,7 +2715,9 @@ function headHtml() {
   else if (ph === 'ende') mid = '<b>SIEGEREHRUNG</b>';
   else {
     mid = 'SAISON <b>' + G.season + '</b>' + (G.settings.seasons > 1 ? ' VON ' + G.settings.seasons : '') + ' <span class="lime">/</span> ';
-    if (ph === 'spiel') mid += '<b>SPIELTAG ' + (G.md + 1) + '</b> VON ' + G.seasonLen + (G.live && G.live.ms.length > 1 && G.live.stage !== 'cards' ? ' <span class="lime">/</span> SPIEL <b>' + Math.min(G.live.cur + 1, G.live.ms.length) + '</b> VON ' + G.live.ms.length : '');
+    if (ph === 'spiel' && G.live && G.live.cup) mid += '<b>' + esc(G.live.cupName.toUpperCase()) + '</b>' + (G.live.ms.length > 1 ? ' <span class="lime">/</span> SPIEL <b>' + Math.min(G.live.cur + 1, G.live.ms.length) + '</b> VON ' + G.live.ms.length : '');
+    else if (ph === 'spiel') mid += '<b>SPIELTAG ' + (G.md + 1) + '</b> VON ' + G.seasonLen + (G.live && G.live.ms.length > 1 && G.live.stage !== 'cards' ? ' <span class="lime">/</span> SPIEL <b>' + Math.min(G.live.cur + 1, G.live.ms.length) + '</b> VON ' + G.live.ms.length : '');
+    else if (ph === 'ergebnis' && G.results && G.results.cup) mid += '<b>' + esc(G.results.cup.name.toUpperCase()) + '</b>';
     else if (ph === 'ergebnis') mid += '<b>SPIELTAG ' + G.md + '</b> VON ' + G.seasonLen;
     else mid += '<b>' + phaseName(ph).toUpperCase() + '</b>';
   }
@@ -2503,6 +2733,14 @@ function boardRender() {
   const G = B.G; if (!G || !$('#bmain')) return;
   const hh = headHtml(); const he = $('#bhead'); if (he._h !== hh) { he.innerHTML = hh; he._h = hh; }
   renderPawns();
+  if (G.flash && G.flash.n !== B.flashN) {
+    B.flashN = G.flash.n;
+    if (Date.now() - G.flash.at < 15000) {
+      const f = document.createElement('div'); f.className = 'bflash';
+      f.innerHTML = '<span class="tag"><span>' + (G.flash.k === 'tausch' ? 'TAUSCH!' : 'GELDSPRITZE') + '</span></span><span class="bft">' + esc(G.flash.t) + '</span>';
+      $('#stage').appendChild(f); SND.ding(); setTimeout(() => f.remove(), 7000);
+    }
+  }
   const ph = G.phase;
   if (ph !== B.ph) { B.ph = ph; B.mainKey = ''; if (ph === 'spiel') B.evSeen = {}; }
   const main = $('#bmain');
@@ -2552,6 +2790,10 @@ function bugHtml(h, a, hg, ag, extra) {
   const kh = colOf(h), ka = colOf(a);
   return '<div class="mbug"><span class="stripe" style="background:' + kh.c + '"></span><span class="tn"><b>' + esc(h.short) + '</b><span>' + esc(h.name) + '</span></span>' +
     '<span class="sc">' + (hg == null ? '<u>–</u>' : hg + '<u>–</u>' + ag) + '</span><span class="tn r"><span>' + esc(a.name) + '</span><b>' + esc(a.short) + '</b></span><span class="stripe" style="background:' + ka.c + '"></span>' + (extra || '') + '</div>';
+}
+function cupTreeHtml() {
+  const G = B.G; if (!G.cup || !G.cup.hist.length) return '';
+  return '<div class="pnl"><h3>POKAL BISHER</h3><div class="cuptree">' + G.cup.hist.map(h => '<div><span class="lbl">' + esc(h.name.toUpperCase()) + '</span>' + h.res.map(r => { const a = clubById(G, r.h), b = clubById(G, r.a); return '<span class="cr"><b class="' + (r.w === r.h ? 'lime' : '') + '">' + esc(a.short) + '</b> ' + r.hg + ':' + r.ag + (r.so ? ' (' + r.so.h + ':' + r.so.a + ' i.E.)' : '') + ' <b class="' + (r.w === r.a ? 'lime' : '') + '">' + esc(b.short) + '</b></span>'; }).join('') + (h.byes.length ? '<span class="cr mut">Freilos: ' + h.byes.map(id => esc(clubById(G, id).short)).join(', ') + '</span>' : '') + '</div>').join('') + '</div></div>';
 }
 function scorersHtml() {
   const G = B.G; const all = [];
@@ -2639,12 +2881,21 @@ const RENDER = {
     const list = R.list.map(r => {
       const h = clubById(G, r.h), a = clubById(G, r.a);
       const sc = r.scorers.map(s => (s.sd === 'h' ? h.short : a.short) + ' ' + s.min + '′ ' + s.n).join(' · ');
-      return '<div class="resrow">' + bugHtml(h, a, r.hg, r.ag) + '<div class="sc2">' + (esc(sc) || 'Keine Tore') + ' · ' + fmtN(r.spect) + ' Zuschauer</div></div>';
+      return '<div class="resrow">' + bugHtml(h, a, r.hg, r.ag, r.so ? '<span class="mn so">i.E. ' + r.so.h + ':' + r.so.a + '</span>' : '') + '<div class="sc2">' + (esc(sc) || 'Keine Tore') + (R.cup ? ' · weiter: ' + esc(clubById(G, r.w).name) : ' · ' + fmtN(r.spect) + ' Zuschauer') + '</div></div>';
     }).join('');
+    if (R.cup) {
+      const W = R.cup.winner ? clubById(G, R.cup.winner) : null;
+      return '<div class="col" style="flex:1">' +
+        '<div class="row" style="gap:14px"><span class="tag"><span>' + esc(R.cup.name.toUpperCase()) + '</span></span><span class="mut">' + (R.byes && R.byes.length ? 'Freilos: ' + R.byes.map(id => esc(clubById(G, id).name)).join(', ') : 'K.-o.-Runde') + '</span></div>' +
+        (W ? '<div class="award" style="align-self:flex-start">' + ic('pokal') + '<div><b>POKALSIEGER SAISON ' + G.season + '</b><span>' + esc(W.name) + ' · +5 Ruhm, +3 Mio €</span></div></div>' : '') +
+        '<div class="reslist">' + list + '</div>' + cupTreeHtml() +
+        '<div style="margin-top:auto" class="fbar"><span class="mut" style="font-size:13px">' + (W ? 'Als Nächstes: Saisonabschluss.' : 'Noch im Pokal: ' + R.cup.alive.map(id => esc(clubById(G, id).short)).join(', ')) + '</span><button class="btn" data-b="next">' + (W ? 'Zum Saisonabschluss' : 'Nächste Pokalrunde') + ic('pfeil') + '</button></div></div>' +
+        '<div class="side-tab col">' + tableHtml(true, 'ABSCHLUSSTABELLE') + '<div class="pnl" style="flex:1;min-height:0"><h3>NEUES</h3>' + newsHtml(6) + '</div></div>';
+    }
     return '<div class="col" style="flex:1">' +
       '<div class="row" style="gap:14px"><span class="tag"><span>ERGEBNISSE</span></span><span class="mut">Spieltag ' + (R.md + 1) + ' · Siege bringen 2 Ruhm, Unentschieden 1</span></div>' +
       '<div class="reslist">' + list + '</div>' + scorersHtml() +
-      '<div style="margin-top:auto" class="fbar"><span class="mut" style="font-size:13px">' + (G.md >= G.seasonLen ? 'Das war der letzte Spieltag der Saison.' : G.md === G.winterAt ? 'Als Nächstes: Winterpause mit Transfermarkt.' : 'Als Nächstes: Spieltag ' + (G.md + 1) + '.') + '</span><button class="btn" data-b="next">Weiter' + ic('pfeil') + '</button></div></div>' +
+      '<div style="margin-top:auto" class="fbar"><span class="mut" style="font-size:13px">' + (G.md >= G.seasonLen ? 'Das war der letzte Spieltag der Liga. Als Nächstes: der Pokal!' : G.md === G.winterAt ? 'Als Nächstes: Winterpause mit Transfermarkt.' : 'Als Nächstes: Spieltag ' + (G.md + 1) + '.') + '</span><button class="btn" data-b="next">Weiter' + ic('pfeil') + '</button></div></div>' +
       '<div class="side-tab col">' + tableHtml(true) + '<div class="pnl" style="flex:1;min-height:0"><h3>NEUES</h3>' + newsHtml(6) + '</div></div>';
   },
   saisonende() {
@@ -2654,7 +2905,7 @@ const RENDER = {
       const gain = rc.ruhm.reduce((a, x) => a + x[1], 0);
       return '<div class="tr"><span class="p">' + t.rank + '</span><span class="dot" style="background:' + colOf(c).c + '"></span><span class="n">' + esc(c.name) + '</span><span class="v">' + t.tab.pts + '</span><span class="v b" style="width:44px;color:#1F8F45">+' + gain + '</span></div>';
     }).join('');
-    const aw = R.awards.map(a => '<div class="award">' + ic(a.k === 'meister' ? 'pokal' : 'ball') + '<div><b>' + esc(a.t.toUpperCase()) + '</b><span>' + esc(a.d) + '</span></div></div>').join('');
+    const aw = R.awards.map(a => '<div class="award">' + ic(a.k === 'tore' ? 'ball' : 'pokal') + '<div><b>' + esc(a.t.toUpperCase()) + '</b><span>' + esc(a.d) + '</span></div></div>').join('');
     const gone = [], young = [];
     for (const id in R.clubs) { const c = clubById(G, id); if (!c) continue; R.clubs[id].gone.forEach(x => gone.push(c.short + ': ' + x)); R.clubs[id].youth.forEach(x => young.push(c.short + ': ' + x)); }
     const last = G.season >= G.settings.seasons;
@@ -2744,7 +2995,7 @@ function renderDraft(main) {
   const cid = draftCur(G), c = cid ? clubById(G, cid) : null;
   const n = D.order.length, round = Math.floor(D.pick / n) + 1, left = Math.max(0, Math.ceil((D.dl - Date.now()) / 1000));
   patch($('#d-head'), c ? '<div class="dhead"><span class="tag"><span>DRAFT · RUNDE ' + Math.min(round, DRAFT_ROUNDS) + ' VON ' + DRAFT_ROUNDS + '</span></span><span class="mut">Pick ' + (D.pick + 1) + ' von ' + D.total + '</span>' +
-    '<div class="dzug">' + crest(c, 44, 15) + '<div><span class="lbl">AM ZUG</span><b>' + esc(c.name) + '</b></div><span class="dclock' + (left <= 10 ? ' hot' : '') + '">' + (c.bot ? '…' : left + ' s') + '</span></div></div>' : '');
+    '<div class="dzug">' + crest(c, 44, 15) + '<div><span class="lbl">AM ZUG</span><b>' + esc(c.name) + '</b></div><span class="dclock' + (left <= 10 ? ' hot' : '') + '">' + (c.bot ? '…' : left + ' s') + '</span></div>' + (c.bot ? '' : '<button class="btn sm ghost" data-b="force">Für ' + esc(c.mgr) + ' wählen</button>') + '</div>' : '');
   // Reihenfolge der aktuellen Runde (Schlange)
   const rIdx = Math.floor(D.pick / n), seq = rIdx % 2 === 0 ? D.order : D.order.slice().reverse();
   patch($('#d-order'), '<div class="dorder"><span class="lbl">RUNDE ' + Math.min(rIdx + 1, DRAFT_ROUNDS) + (rIdx % 2 ? ' ←' : ' →') + '</span>' + seq.map((id, i) => { const x = clubById(G, id); const done = rIdx * n + i < D.pick; return '<span class="dchip' + (id === cid ? ' cur' : done ? ' done' : '') + '"><i style="background:' + colOf(x).c + '"></i>' + esc(x.short) + '</span>'; }).join('') + '</div>');
@@ -2820,14 +3071,14 @@ function preHtml(m) {
   };
   const h = clubById(G, m.h), a = clubById(G, m.a);
   const kick = L.kickAt ? Math.max(0, Math.ceil((L.kickAt - Date.now()) / 1000)) : 0;
-  return '<span class="tag"><span>' + (L.ms.length > 1 ? 'SPIEL ' + (L.cur + 1) + ' VON ' + L.ms.length : 'DAS SPIEL DES TAGES') + '</span></span>' +
+  return '<span class="tag"><span>' + (L.cup ? esc(L.cupName.toUpperCase()) + (L.ms.length > 1 ? ' · SPIEL ' + (L.cur + 1) + ' VON ' + L.ms.length : '') : L.ms.length > 1 ? 'SPIEL ' + (L.cur + 1) + ' VON ' + L.ms.length : 'DAS SPIEL DES TAGES') + '</span></span>' + (L.cup ? '<p class="mut" style="margin:0">K.-o.-Spiel: Bei Unentschieden nach 90 Minuten gibt es Elfmeterschießen.</p>' : '') +
     '<div class="prevs">' + team(h) + '<div class="vsbig">VS</div>' + team(a) + '</div>' +
     '<p class="mut" style="margin:0;text-align:center">' + (kick ? '<b class="lime" style="font-size:22px">Anpfiff in ' + kick + ' …</b>' : 'Beide Manager drücken am Handy „Bereit“. Wer später dran ist, stellt in der Zeit schon auf.') + '</p>' +
     (kick ? '' : '<button class="btn" data-b="force">' + ic('play') + 'Anpfiff</button>');
 }
 function queueHtml() {
   const G = B.G, L = G.live;
-  return '<div class="ttab"><div class="th"><span>SPIELTAG ' + (G.md + 1) + '</span><span>' + L.ms.length + (L.ms.length === 1 ? ' SPIEL' : ' SPIELE') + '</span></div>' +
+  return '<div class="ttab"><div class="th"><span>' + (L.cup ? esc(L.cupName.toUpperCase()) : 'SPIELTAG ' + (G.md + 1)) + '</span><span>' + L.ms.length + (L.ms.length === 1 ? ' SPIEL' : ' SPIELE') + '</span></div>' +
     L.ms.map((m, i) => {
       const h = clubById(G, m.h), a = clubById(G, m.a);
       let st;
@@ -2835,8 +3086,8 @@ function queueHtml() {
       else if (i === L.cur && m.started) st = '<span class="qst live">' + (L.stage === 'ht' ? 'HZ' : m.min + '′') + '</span>';
       else if (i === L.cur) st = '<span class="qst next">GLEICH</span>';
       else st = '<span class="qst">' + (G.ready[h.id] || h.bot ? '●' : '○') + (G.ready[a.id] || a.bot ? '●' : '○') + '</span>';
-      return '<div class="tr' + (i === L.cur ? ' qcur' : '') + '"><span class="dot" style="background:' + colOf(h).c + ';margin-left:10px"></span><span class="n">' + esc(h.short) + ' <span class="mut" style="font-weight:600">' + (m.started ? m.hg + ':' + m.ag : '–') + '</span> ' + esc(a.short) + '</span><span class="dot" style="background:' + colOf(a).c + '"></span>' + st + '</div>';
-    }).join('') + (L.bye ? '<div class="tr"><span class="n" style="padding-left:10px;font-weight:600;color:var(--ink2)">Spielfrei: ' + esc(clubById(G, L.bye).name) + '</span></div>' : '') + '</div>';
+      return '<div class="tr' + (i === L.cur ? ' qcur' : '') + '"><span class="dot" style="background:' + colOf(h).c + ';margin-left:10px"></span><span class="n">' + esc(h.short) + ' <span class="mut" style="font-weight:600">' + (m.started ? m.hg + ':' + m.ag + (m.so ? ' i.E.' : '') : '–') + '</span> ' + esc(a.short) + '</span><span class="dot" style="background:' + colOf(a).c + '"></span>' + st + '</div>';
+    }).join('') + (L.cup && L.byes && L.byes.length ? '<div class="tr"><span class="n" style="padding-left:10px;font-weight:600;color:var(--ink2)">Freilos: ' + L.byes.map(id => esc(clubById(G, id).short)).join(', ') + '</span></div>' : '') + (L.bye ? '<div class="tr"><span class="n" style="padding-left:10px;font-weight:600;color:var(--ink2)">Spielfrei: ' + esc(clubById(G, L.bye).name) + '</span></div>' : '') + '</div>';
 }
 function cardsHtml() {
   const G = B.G; const cs = G.clubs.filter(c => c.card);
@@ -2870,7 +3121,8 @@ function liveTable() {
 function updateCard(m) {
   const G = B.G, L = G.live; const el = document.getElementById('mc-' + m.id); if (!el) return;
   const h = clubById(G, m.h), a = clubById(G, m.a);
-  const mn = m.done ? '<span class="mn end">ENDE</span>' : L.stage === 'ht' ? '<span class="mn ht">HZ</span>' : '<span class="mn">' + (m.r === 0 ? '0′' : m.min + '′') + '</span>';
+  const so = m.so ? soTally(m) : null;
+  const mn = (so ? '<span class="mn so">i.E. ' + so.h + ':' + so.a + '</span>' : '') + (m.done ? '<span class="mn end">ENDE</span>' : so ? '' : L.stage === 'ht' ? '<span class="mn ht">HZ</span>' : '<span class="mn">' + (m.r === 0 ? '0′' : m.min + '′') + '</span>');
   patch(el.querySelector('.mbug-w'), bugHtml(h, a, m.hg, m.ag, mn));
   const ball = el.querySelector('.ball'); const bx = ZONE_X[m.zone] + '%'; if (ball.style.left !== bx) ball.style.left = bx;
   const hl = el.querySelector('.hl'); const hx = (m.zone * 20) + '%'; if (hl.style.left !== hx) hl.style.left = hx;
@@ -2905,7 +3157,7 @@ function duelParts(m) {
   const G = B.G, d = m.duel;
   const cs = clubById(G, m[d.att]), ck = clubById(G, m[other(d.att)]);
   const t = duelTotals(d);
-  const kind = d.kind === 'elf' ? 'ELFMETER' : d.kind === 'kopf' ? 'KOPFBALL NACH ECKE' : 'TORSCHUSS';
+  const kind = d.so ? 'ELFMETERSCHIESSEN ' + soTally(m).h + ':' + soTally(m).a : d.kind === 'elf' ? 'ELFMETER' : d.kind === 'kopf' ? 'KOPFBALL NACH ECKE' : 'TORSCHUSS';
   const left = Math.max(0, Math.ceil((d.dl - Date.now()) / 1000));
   const waitS = d.rs == null, waitK = d.rk == null;
   const mode = G.settings.dice;
@@ -3005,6 +3257,14 @@ function phoneOnPriv(s) {
   let v; try { v = JSON.parse(s); } catch (_) { return; }
   if (v.err) { if (P.lastErrN >= 0 && v.err.n > P.lastErrN) { toast(v.err.m); if (P.cov && v.card && !v.card.open) P.cov = null; } P.lastErrN = v.err.n; }
   else if (P.lastErrN < 0) P.lastErrN = 0;
+  if (v.id && Array.isArray(v.trades)) {
+    P.seenOff = P.seenOff || null;
+    const inc = v.trades.filter(o => o.to === v.id && o.st === 'open').map(o => o.id);
+    if (P.seenOff) { const neu = inc.filter(id => !P.seenOff.includes(id)); if (neu.length) { const o = v.trades.find(x => x.id === neu[0]); const f = P.pub && P.pub.clubs.find(c => c.id === o.from); toast('Neues Tauschangebot' + (f ? ' von ' + f.name : '')); if (navigator.vibrate) try { navigator.vibrate([60, 40, 60]); } catch (_) {} } }
+    const done = v.trades.filter(o => o.from === v.id && o.st !== 'open').map(o => o.id + o.st);
+    if (P.seenDone) { const neu = done.filter(x => !P.seenDone.includes(x)); for (const x of neu) { const o = v.trades.find(y => x === y.id + y.st); if (o && o.st === 'accepted') toast('Dein Tauschangebot wurde angenommen!'); else if (o && o.st === 'declined') toast('Dein Tauschangebot wurde abgelehnt.'); } }
+    P.seenOff = inc; P.seenDone = done;
+  }
   if (v.left) { P.me = null; toast('Du bist nicht mehr in der Liga.'); }
   else if (v.id) P.me = v;
   phoneRender();
@@ -3081,10 +3341,11 @@ function gameHtml() {
     '<div class="mo"><b>' + fmtM(me.money) + '</b><span>' + me.coins + (me.coins === 1 ? ' Glücksmünze' : ' Glücksmünzen') + '</span></div></div>';
   const needs = needsInput();
   const bar = '<div id="ph-bar">' + barHtml() + '</div>';
-  const tabs = [['akt', 'akt', 'Aktion'], ['kader', 'team', 'Kader'], ['stadion', 'stadion', 'Stadion'], ['geld', 'geld', 'Finanzen'], ['liga', 'liga', 'Liga']];
-  const tabH = '<nav id="ph-tabs">' + tabs.map(([id, icn, l]) => '<button data-p="tab" data-v="' + id + '" class="' + (P.tab === id ? 'on' : '') + '">' + ic(icn) + l + (id === 'akt' && needs && P.tab !== 'akt' ? '<span class="bdg">!</span>' : '') + '</button>').join('') + '</nav>';
+  const tabs = [['akt', 'akt', 'Aktion'], ['kader', 'team', 'Kader'], ['tausch', 'tausch', 'Tausch'], ['stadion', 'stadion', 'Stadion'], ['geld', 'geld', 'Geld'], ['liga', 'liga', 'Liga']];
+  const inc = (me.trades || []).filter(o => o.to === me.id && o.st === 'open').length;
+  const tabH = '<nav id="ph-tabs" class="t6">' + tabs.map(([id, icn, l]) => '<button data-p="tab" data-v="' + id + '" class="' + (P.tab === id ? 'on' : '') + '">' + ic(icn) + l + (id === 'akt' && needs && P.tab !== 'akt' ? '<span class="bdg">!</span>' : '') + (id === 'tausch' && inc ? '<span class="bdg">' + inc + '</span>' : '') + '</button>').join('') + '</nav>';
   let body = '';
-  try { body = ({ akt: aktHtml, kader: kaderHtml, stadion: stadionHtml, geld: geldHtml, liga: ligaHtml })[P.tab](); }
+  try { body = ({ akt: aktHtml, kader: kaderHtml, tausch: tauschHtml, stadion: stadionHtml, geld: geldHtml, liga: ligaHtml })[P.tab](); }
   catch (e) { console.error(e); body = '<p class="hint">Fehler beim Anzeigen: ' + esc(e.message) + '</p>'; }
   let over = '';
   if (me.duel) over = duelHtmlPhone();
@@ -3121,6 +3382,8 @@ function barHtml() {
     case 'spiel': {
       const M = me.match; const ok = '<span class="chip on">' + ic('check') + 'Bereit</span>';
       if (pub.live && pub.live.stage === 'cards') return t(['KARTEN'], me.card && me.card.o == null ? 'Ereigniskarte aufdecken' : 'Warten auf die anderen Karten') + (me.card && me.card.o != null ? ok : '');
+      if (!M && pub.live && pub.live.cup) return t(['POKAL'], (pub.live.byes || []).includes(me.id) ? 'Freilos – du bist weiter' : 'Du bist ausgeschieden');
+      if (M && pub.live && pub.live.cup && M.stat === 'wait') return t(['POKAL'], pub.live.cupName + ' · du spielst als Nr. ' + (M.before + 1)) + (me.ready ? ok : '');
       if (!M) return t(['SPIELFREI'], 'Spieltag ' + (pub.md + 1));
       if (M.stat === 'wait') return t(['SPIELTAG ' + (pub.md + 1)], 'Du spielst als Nr. ' + (M.before + 1)) + (me.ready ? ok : '');
       if (M.stat === 'pre') return t(['GLEICH'], pub.live.kickLeft ? 'Anpfiff in ' + pub.live.kickLeft + ' s' : 'Dein Spiel ist dran!') + (me.ready ? ok : '');
@@ -3246,10 +3509,11 @@ const AKT = {
   spiel() {
     const pub = P.pub, me = P.me, M = me.match;
     const now = curInfo();
+    if (!M && pub.live && pub.live.cup) return '<div class="bigmsg">' + ic('pokal') + ((pub.live.byes || []).includes(me.id) ? '<h2>Freilos!</h2><p>Als gut platzierter Verein bist du in der nächsten Pokalrunde.</p>' : '<h2>Ausgeschieden</h2><p>Für dich ist der Pokal vorbei. Schau den anderen auf dem Spielbrett zu.</p>') + '</div>' + now;
     if (!M) return '<div class="bigmsg">' + ic('ball') + '<h2>Spielfrei</h2><p>Dein Verein hat diesen Spieltag frei. Das Testspiel bringt etwas Geld.</p></div>' + now + cardSec();
     const opp = cPub(M.opp), mc = myPub();
     const h = M.sd === 'h' ? mc : opp, a = M.sd === 'h' ? opp : mc;
-    const bug = '<div class="mbig"><span class="stripe" style="background:' + colOf(h).c + '"></span><span class="t">' + esc(h.short) + '</span><span class="s">' + (M.stat === 'wait' || M.stat === 'pre' ? '–' : M.hg + ':' + M.ag) + '</span><span class="t">' + esc(a.short) + '</span><span class="stripe" style="background:' + colOf(a).c + '"></span><span class="m">' + ({ wait: 'NR. ' + (M.before + 1), pre: 'GLEICH', ht: 'HZ', done: 'ENDE' }[M.stat] || M.min + '′') + '</span></div>';
+    const bug = '<div class="mbig"><span class="stripe" style="background:' + colOf(h).c + '"></span><span class="t">' + esc(h.short) + '</span><span class="s">' + (M.stat === 'wait' || M.stat === 'pre' ? '–' : M.hg + ':' + M.ag + (M.so ? '<small style="font-size:13px;margin-left:6px">' + M.so.h + ':' + M.so.a + ' i.E.</small>' : '')) + '</span><span class="t">' + esc(a.short) + '</span><span class="stripe" style="background:' + colOf(a).c + '"></span><span class="m">' + ({ wait: 'NR. ' + (M.before + 1), pre: 'GLEICH', ht: 'HZ', done: 'ENDE' }[M.stat] || M.min + '′') + '</span></div>';
     if (M.stat === 'wait' || M.stat === 'pre') {
       const cardsNow = pub.live && pub.live.stage === 'cards';
       let x = '<div class="sec">' + bug + (cardsNow ? '<p class="hint">Zuerst decken alle ihre Ereigniskarten auf, dann beginnt der Spieltag' + (M.before ? ' – dein Spiel ist das ' + (M.before + 1) + '.' : ' mit deinem Spiel') + '.</p>' : M.stat === 'pre' ? '<p class="hint"><b class="lime">Dein Spiel ist dran!</b> Wenn beide Manager bereit sind, pfeift das Spielbrett an.</p>' : '<p class="hint">' + (M.before === 1 ? 'Ein Spiel' : M.before + ' Spiele') + ' vor dir. Nutz die Zeit für Aufstellung und Taktik.</p>' + now) + '</div>';
@@ -3265,7 +3529,8 @@ const AKT = {
     const ev = M.ev.slice().reverse().filter(e => !['ht', 'kick'].includes(e.t)).map(e => '<div><b>' + e.min + '′</b><span>' + esc(e.text) + '</span></div>').join('');
     if (M.stat === 'done') {
       const my = M.sd === 'h' ? M.hg : M.ag, ot = M.sd === 'h' ? M.ag : M.hg;
-      return '<div class="sec">' + bug + '<p class="hint"><b>' + (my > ot ? 'Sieg!' : my === ot ? 'Unentschieden.' : 'Niederlage.') + '</b> Die anderen Spiele laufen noch.</p>' + now + '</div>' +
+      const won = M.so ? (M.sd === 'h' ? M.so.h > M.so.a : M.so.a > M.so.h) : my > ot;
+      return '<div class="sec">' + bug + '<p class="hint"><b>' + (M.cup ? (won ? 'Weiter im Pokal!' : 'Ausgeschieden.') : my > ot ? 'Sieg!' : my === ot ? 'Unentschieden.' : 'Niederlage.') + '</b> Die anderen Spiele laufen noch.</p>' + now + '</div>' +
         '<div class="sec"><h2><span class="lbl">SPIELVERLAUF</span></h2><div class="evl">' + (ev || '<div class="mut">Keine besonderen Vorkommnisse.</div>') + '</div></div>';
     }
     return '<div class="sec">' + bug + '<p class="hint">Dein Spiel läuft auf dem Spielbrett. Bei Torchancen meldet sich dein Handy zum Würfeln.</p></div>' +
@@ -3277,7 +3542,8 @@ const AKT = {
     const r = me.myRes;
     if (r) {
       const hc = cPub(r.h), ac = cPub(r.a); const my = r.h === me.id ? r.hg : r.ag, ot = r.h === me.id ? r.ag : r.hg;
-      h += '<div class="bigmsg"><h2>' + (my > ot ? 'Sieg!' : my === ot ? 'Unentschieden' : 'Niederlage') + '</h2><p>' + esc(hc.name) + ' ' + r.hg + ':' + r.ag + ' ' + esc(ac.name) + '</p></div>';
+      const cupR = P.pub.results && P.pub.results.cup;
+      h += '<div class="bigmsg"><h2>' + (cupR ? (r.w === me.id ? (cupR.winner === me.id ? 'POKALSIEGER!' : 'Weiter im Pokal!') : 'Ausgeschieden') : my > ot ? 'Sieg!' : my === ot ? 'Unentschieden' : 'Niederlage') + '</h2><p>' + esc(hc.name) + ' ' + r.hg + ':' + r.ag + (r.so ? ' (' + r.so.h + ':' + r.so.a + ' i.E.)' : '') + ' ' + esc(ac.name) + '</p></div>';
     } else h += '<div class="bigmsg"><h2>Spielfrei</h2></div>';
     if (mc.rd) h += '<div class="kv"><span>Ruhm an diesem Spieltag</span><b class="' + (mc.rd > 0 ? 'pos' : 'neg') + '">' + (mc.rd > 0 ? '+' : '') + mc.rd + '</b></div>';
     if (me.lastFin) h += '<div class="sec" style="margin-top:14px"><h2><span class="lbl">' + esc(me.lastFin.label.toUpperCase()) + '</span></h2>' + me.lastFin.items.map(x => '<div class="kv"><span>' + esc(x.t) + '</span><b class="' + (x.v >= 0 ? 'pos' : 'neg') + '">' + fmtMs(x.v) + '</b></div>').join('') + '<div class="kv"><span><b>Summe</b></span><b>' + fmtMs(me.lastFin.sum) + '</b></div></div>';
@@ -3516,6 +3782,50 @@ window.addEventListener('devicemotion', e => {
 });
 
 /* ---------- Kader, Stadion, Finanzen, Liga ---------- */
+/* ---------- Tauschbörse ---------- */
+function offerSide(x) { return (x.ps.length ? x.ps.map(p => '<span class="tp">' + (p.pos ? '<span class="posb pos-' + p.pos + '">' + p.s + '</span>' : '') + esc(p.n) + '</span>').join('') : '') + (x.money ? '<span class="tp money">' + fmtM(x.money) + '</span>' : '') || '<span class="mut">nichts</span>'; }
+function tauschHtml() {
+  const me = P.me, pub = P.pub;
+  const offs = me.trades || [];
+  const inc = offs.filter(o => o.to === me.id && o.st === 'open'), out = offs.filter(o => o.from === me.id && o.st === 'open'), old = offs.filter(o => o.st !== 'open').slice(0, 5);
+  let h = '';
+  if (!me.canManage) h += '<p class="hint" style="margin-bottom:12px"><b class="lime">Dein Spiel läuft gerade.</b> Tauschen geht wieder, sobald es vorbei ist.</p>';
+  if (inc.length) h += '<div class="sec"><h2><span class="lbl">ANGEBOTE AN DICH</span></h2>' + inc.map(o => {
+    const f = cPub(o.from);
+    return '<div class="toff in"><div class="toh"><b>' + esc(f.name) + '</b><span class="mut">' + esc(f.mgr) + '</span></div>' +
+      '<div class="tor"><span class="lbl">DU BEKOMMST</span><div>' + offerSide(o.give) + '</div></div><div class="tor"><span class="lbl">DU GIBST</span><div>' + offerSide(o.get) + '</div></div>' +
+      '<div class="tob"><button class="btn sm" data-p="tyes" data-v="' + o.id + '"' + (me.canManage ? '' : ' disabled') + '>Annehmen</button><button class="btn sm dark" data-p="tno" data-v="' + o.id + '">Ablehnen</button><button class="btn sm ghost" data-p="tcounter" data-v="' + o.id + '">Gegenangebot</button></div></div>';
+  }).join('') + '</div>';
+  if (out.length) h += '<div class="sec"><h2><span class="lbl">DEINE OFFENEN ANGEBOTE</span></h2>' + out.map(o => {
+    const t = cPub(o.to);
+    return '<div class="toff"><div class="toh"><b>An ' + esc(t.name) + '</b><span class="mut">wartet …</span></div><div class="tor"><span class="lbl">DU GIBST</span><div>' + offerSide(o.give) + '</div></div><div class="tor"><span class="lbl">DU BEKOMMST</span><div>' + offerSide(o.get) + '</div></div>' +
+      '<div class="tob"><button class="btn sm dark" data-p="twd" data-v="' + o.id + '">Zurückziehen</button></div></div>';
+  }).join('') + '</div>';
+  // Neues Angebot zusammenstellen
+  const T = P.tr || (P.tr = { to: null, give: [], gm: 0, get: [], tm: 0 });
+  const others = pub.clubs.filter(c => c.id !== me.id);
+  h += '<div class="sec"><h2><span class="lbl">NEUES ANGEBOT</span></h2><p class="hint">Stell Spieler und Geld zusammen. Der andere Manager nimmt am Handy an oder lehnt ab, Computer-Vereine entscheiden sofort.</p>' +
+    '<div class="fchips">' + others.map(c => '<button data-p="tto" data-v="' + c.id + '" class="' + (T.to === c.id ? 'on' : '') + '">' + esc(c.short) + '</button>').join('') + '</div>';
+  if (T.to) {
+    const tc = cPub(T.to); const ts = me.tsquad && me.tsquad.c === T.to ? me.tsquad : null;
+    const mk = new Set(me.onMarket || []);
+    const mine = me.players.slice().sort((a, b) => POS.indexOf(a.pos) - POS.indexOf(b.pos) || b.s - a.s);
+    const val = (ids, list) => ids.reduce((x, id) => { const p = list.find(y => y.id === id); return x + (p ? p.v : 0); }, 0);
+    const giveV = val(T.give, mine) + T.gm, getV = ts ? val(T.get, ts.players) + T.tm : 0;
+    const prow = (p, sel, act, dis) => '<button class="prow sm' + (sel ? ' sel' : '') + '" data-p="' + act + '" data-v="' + p.id + '"' + (dis ? ' disabled' : '') + '><span class="s">' + p.s + '</span><span class="i"><b>' + esc(p.n) + trChip(p.tr) + '</b><span>' + posB(p.pos) + ' ' + p.age + ' J. · Wert ' + fmtM(p.v) + (dis ? ' · auf der Transferliste' : '') + '</span></span></button>';
+    const money = (k, v) => '<div class="tmoney"><span>Geld dazu</span><button data-p="tm" data-k="' + k + '" data-d="-5">−0,5</button><b>' + fmtM(v) + '</b><button data-p="tm" data-k="' + k + '" data-d="5">+0,5</button></div>';
+    h += '<div class="tbox"><span class="lbl">DU GIBST</span>' + money('gm', T.gm) + '<div class="plist">' + mine.map(p => prow(p, T.give.includes(p.id), 'tg', mk.has(p.id))).join('') + '</div></div>' +
+      '<div class="tbox"><span class="lbl">DU BEKOMMST VON ' + esc(tc.name.toUpperCase()) + '</span>' + money('tm', T.tm) +
+      (ts ? '<div class="plist">' + ts.players.slice().sort((a, b) => POS.indexOf(a.pos) - POS.indexOf(b.pos) || b.s - a.s).map(p => prow(p, T.get.includes(p.id), 'tw', p.mk)).join('') + '</div>' : '<p class="hint">Kader wird geladen …</p>') + '</div>' +
+      '<div class="sumbar"><div class="row"><span>Du gibst: <b>' + fmtM(giveV) + '</b></span><span>Du bekommst: <b>' + fmtM(getV) + '</b></span></div><button class="btn big wide" data-p="tsend"' + (me.canManage && (T.give.length || T.get.length) ? '' : ' disabled') + '>Angebot senden</button></div>';
+  }
+  h += '</div>';
+  if (old.length) h += '<div class="sec"><h2><span class="lbl">VERLAUF</span></h2>' + old.map(o => {
+    const other = cPub(o.from === me.id ? o.to : o.from); const st = { accepted: 'angenommen', declined: 'abgelehnt', withdrawn: 'zurückgezogen', invalid: 'nicht mehr möglich', expired: 'abgelaufen' }[o.st] || o.st;
+    return '<div class="kv"><span>' + (o.from === me.id ? 'An ' : 'Von ') + esc(other ? other.short : '') + ': ' + esc(o.txt ? (o.from === me.id ? o.txt.give + ' ↔ ' + o.txt.get : o.txt.get + ' ↔ ' + o.txt.give) : '') + '</span><b class="' + (o.st === 'accepted' ? 'pos' : 'mut') + '">' + st + '</b></div>';
+  }).join('') + '</div>';
+  return h;
+}
 function kaderHtml() {
   const me = P.me;
   const lu = me.lu; const inXi = new Set(lu ? POS.flatMap(x => lu.xi[x] || []) : []);
@@ -3537,7 +3847,8 @@ function playerSheet(pid) {
     '<div class="kv"><span>Tore (Saison / gesamt)</span><b>' + p.goals + ' / ' + (p.gt + p.goals) + '</b></div><div class="kv"><span>Einsätze</span><b>' + p.apps + '</b></div>' +
     (p.yc ? '<div class="kv"><span>Gelbe Karten</span><b>' + p.yc + ' (bei 3 gesperrt)</b></div>' : '') +
     (p.st ? '<div class="kv"><span>Status</span><b class="st-inj">' + esc(p.st.n) + ', noch ' + p.st.left + (p.st.left === 1 ? ' Spiel' : ' Spiele') + '</b></div>' : '') +
-    '<p class="hint" style="margin-top:8px">Junge Spieler mit Talent werden am Saisonende oft besser, ab 31 lassen sie nach.</p>' };
+    '<p class="hint" style="margin-top:8px">Junge Spieler mit Talent werden am Saisonende oft besser, ab 31 lassen sie nach.</p>' +
+    (P.me.canManage && !(P.me.onMarket || []).includes(p.id) ? '<button class="btn dark wide" data-p="release" data-v="' + p.id + '">Vertrag auflösen · Abfindung ' + fmtM(P.me.releaseCost[p.id] || 0) + '</button><p class="hint">Der Spieler geht sofort. Mindestens 14 Spieler müssen im Kader bleiben.</p>' : '') };
   phoneRender();
 }
 function stadionHtml() {
@@ -3619,6 +3930,16 @@ document.addEventListener('click', e => {
       return;
     }
     case 'card': send({ t: 'card', i: +v }); return;
+    case 'release': { const pp = pl(v); if (pp && confirm(pp.n + ' wirklich entlassen? Abfindung: ' + fmtM(me.releaseCost[v] || 0))) { send({ t: 'release', pid: v }); P.sheet = null; phoneRender(); } return; }
+    case 'tto': { P.tr = { to: v, give: [], gm: 0, get: [], tm: 0 }; send({ t: 'tview', c: v }); phoneRender(); return; }
+    case 'tg': { const T = P.tr; T.give = T.give.includes(v) ? T.give.filter(x => x !== v) : T.give.concat(v).slice(0, 5); phoneRender(); return; }
+    case 'tw': { const T = P.tr; T.get = T.get.includes(v) ? T.get.filter(x => x !== v) : T.get.concat(v).slice(0, 5); phoneRender(); return; }
+    case 'tm': { const T = P.tr; const k = b.dataset.k; T[k] = Math.max(0, (T[k] || 0) + (+b.dataset.d)); if (k === 'gm' && T.gm > Math.max(0, me.money)) T.gm = Math.max(0, me.money); phoneRender(); return; }
+    case 'tsend': { const T = P.tr; if (!T || !T.to) return; send({ t: 'offer', to: T.to, give: { pids: T.give, money: T.gm }, get: { pids: T.get, money: T.tm } }); toast('Angebot gesendet.'); P.tr = { to: T.to, give: [], gm: 0, get: [], tm: 0 }; phoneRender(); return; }
+    case 'tyes': send({ t: 'oanswer', id: v, ok: true }); return;
+    case 'tno': send({ t: 'oanswer', id: v, ok: false }); return;
+    case 'twd': send({ t: 'owithdraw', id: v }); return;
+    case 'tcounter': { const o = (me.trades || []).find(x => x.id === v); if (!o) return; send({ t: 'oanswer', id: v, ok: false }); P.tr = { to: o.from, give: o.get.ps.map(p => p.id), gm: o.get.money, get: o.give.ps.map(p => p.id), tm: o.give.money }; send({ t: 'tview', c: o.from }); toast('Ändere das Angebot und sende es zurück.'); phoneRender(); return; }
     case 'cardopen': if (me.card && !me.card.open) { P.cov = { id: me.card.id, go: true }; P.covAutoId = me.card.id; cardOverlay(); flipCard(); } return;
     case 'cardflip': flipCard(); return;
     case 'reload': location.replace(location.pathname + '?raum=' + P.code + (LOCAL ? '&lokal=1' : '') + '&v=' + Date.now()); return;
