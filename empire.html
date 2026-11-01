@@ -657,7 +657,7 @@ function pStatus(G, p) {
 /* ---------- Spiel anlegen ---------- */
 function newGame(settings) {
   return {
-    v: 3, created: NOW(), settings: Object.assign({ seasons: 3, len: 'kurz', dice: 'handy', mlen: 'kurz', cards: 'jeder2' }, settings || {}),
+    v: 3, created: NOW(), settings: Object.assign({ seasons: 3, dice: 'handy', cards: 'jeder2' }, settings || {}),
     phase: 'lobby', phaseAt: NOW(), season: 1, md: 0, mdg: 0, nid: 1, names: {},
     clubs: [], market: [], deck: [], news: [], schedule: [], seasonLen: 0, winterAt: -1,
     live: null, reveal: null, results: null, report: null, final: null, hist: [], ready: {}, rdelta: {}
@@ -739,16 +739,21 @@ function roundRobin(ids) {
 function makeSchedule(G) {
   const ids = shuffle(G.clubs.map(c => c.id));
   const R = roundRobin(ids);
-  const target = G.settings.len === 'lang' ? 10 : 5;
-  const k = Math.ceil(target / R.length);
+  // Eine Saison ist immer Hin- und Rückrunde: gegen jeden einmal zu Hause, einmal auswärts
   const sch = [];
-  for (let rep = 0; rep < k; rep++) for (const r of R) sch.push({ pairs: r.pairs.map(([h, a]) => rep % 2 ? [a, h] : [h, a]), bye: r.bye });
+  for (let rep = 0; rep < 2; rep++) for (const r of R) sch.push({ pairs: r.pairs.map(([h, a]) => rep % 2 ? [a, h] : [h, a]), bye: r.bye });
   G.schedule = sch;
   G.seasonLen = sch.length;
   G.winterAt = sch.length >= 4 ? Math.floor(sch.length / 2) : -1;
 }
 
-/* ---------- Nachrichten, Ruhm, Geld ---------- */
+/* ---------- Nachrichten, Ruhm, Geld ----------
+   Einnahmen und Gehälter sind pro Saison festgelegt und werden auf die Spieltage verteilt.
+   So ist eine Saison mit 2 Spielern (2 Spieltage) genauso viel wert wie mit 6 (10 Spieltage). */
+const SEASON = { tv: 24, ticketPer1000: 1, vipPerLevel: 10, shopPerLevel: 5, winBonus: 50 };
+function share(total, L, i) { L = Math.max(1, L); return Math.round(total * (i + 1) / L) - Math.round(total * i / L); }
+function homeGames(G) { const id = G.clubs[0] && G.clubs[0].id; return Math.max(1, G.schedule.filter(d => d.pairs.some(p => p[0] === id)).length); }
+function fanScale(G) { return 5 / Math.max(1, G.clubs.length - 1); }
 function news(G, t, k) { G.news.push({ t, k: k || 'info', s: G.season, md: G.md, at: NOW() }); if (G.news.length > 60) G.news.splice(0, G.news.length - 60); }
 function addRuhm(G, c, v, why) {
   if (!v) return;
@@ -857,7 +862,7 @@ function sponsorOffers(G, c) {
   const nm = () => pick(SP_PRE) + ' ' + pick(SP_SUF);
   return [
     { k: 'fest', n: nm(), now: 38 + fame, win: 0, bonus: 0, d: 'Fester Betrag, sofort' },
-    { k: 'erfolg', n: nm(), now: 12 + Math.round(fame / 2), win: 9, bonus: 0, d: 'Kleiner Sockel plus Prämie für jeden Sieg' },
+    { k: 'erfolg', n: nm(), now: 12 + Math.round(fame / 2), win: Math.max(1, Math.round(SEASON.winBonus / (2 * Math.max(1, G.clubs.length - 1)))), bonus: 0, d: 'Kleiner Sockel plus Prämie für jeden Sieg' },
     { k: 'risiko', n: nm(), now: 16, win: 0, bonus: 52 + fame, d: 'Großer Bonus, wenn du die Saison in der oberen Tabellenhälfte beendest' }
   ];
 }
@@ -1042,7 +1047,7 @@ function teamPreview(G, c) { const lu = c.lu; return lineValues(G, c, luSlots(lu
 /* ---------- Spieltag: ein Spiel nach dem anderen ----------
    stage: 'pre' (Anpfiff-Bildschirm, beide Manager drücken Bereit), 'live', 'ht' (Halbzeit), 'post' (Endstand kurz zeigen).
    Wer noch nicht dran ist, stellt in der Zeit am Handy auf. */
-function rph(G) { return G.settings.mlen === 'normal' ? 6 : 5; }
+function rph(G) { return 6; } // feste Spiellänge: 6 Runden pro Halbzeit (ca. 1,5 Minuten)
 function startMatchday(G) {
   const day = G.schedule[G.md];
   for (const c of G.clubs) { c.card = null; fixLineup(G, c); }
@@ -1353,6 +1358,7 @@ function assignSlots(ps, form, hasKeeper) {
 /* ---------- Spieltag auswerten ---------- */
 function finishMatchday(G) {
   const L = G.live; const res = []; const md = G.md;
+  const hg = homeGames(G), Lz = Math.max(1, G.seasonLen), fs = fanScale(G);
   for (const c of G.clubs) if (c.card && c.card.o == null) decideCard(G, c, cardDefault(c.card));
   const ruhm0 = {}; for (const c of G.clubs) ruhm0[c.id] = c.ruhm;
   for (const m of L.ms) {
@@ -1360,9 +1366,9 @@ function finishMatchday(G) {
     const upd = (c, gf, ga) => {
       c.tab.sp++; c.tab.gf += gf; c.tab.ga += ga;
       const r = gf > ga ? 'S' : gf === ga ? 'U' : 'N';
-      if (r === 'S') { c.tab.s++; c.tab.pts += 3; addRuhm(G, c, 2, 'Sieg'); addFans(c, 600); if (c.sponsor && c.sponsor.win) pay(G, c, c.sponsor.win, 'Siegprämie ' + c.sponsor.n); }
-      else if (r === 'U') { c.tab.u++; c.tab.pts += 1; addRuhm(G, c, 1, 'Unentschieden'); addFans(c, 100); }
-      else { c.tab.n++; addFans(c, -300); }
+      if (r === 'S') { c.tab.s++; c.tab.pts += 3; addRuhm(G, c, 2, 'Sieg'); addFans(c, 600 * fs); if (c.sponsor && c.sponsor.win) pay(G, c, c.sponsor.win, 'Siegprämie ' + c.sponsor.n); }
+      else if (r === 'U') { c.tab.u++; c.tab.pts += 1; addRuhm(G, c, 1, 'Unentschieden'); addFans(c, 100 * fs); }
+      else { c.tab.n++; addFans(c, -300 * fs); }
       c.tab.form.push(r); if (c.tab.form.length > 5) c.tab.form.shift();
       return r;
     };
@@ -1370,22 +1376,22 @@ function finishMatchday(G) {
     // Zuschauer
     const cap = 15000 + 6000 * h.st.tri;
     const spect = Math.min(cap, Math.round(h.fans * (0.92 + rnd() * 0.12)));
-    let tick = Math.round(spect / 1000 * 0.3);
+    let tick = Math.max(1, Math.round(spect / 1000 * SEASON.ticketPer1000 / hg));
     if (h.flags.ausverkauft) { tick *= 2; delete h.flags.ausverkauft; }
     pay(G, h, tick, 'Zuschauer (' + fmtN(spect) + ')');
-    if (h.st.vip) pay(G, h, 2 * h.st.vip, 'VIP-Logen');
+    if (h.st.vip) pay(G, h, Math.max(1, Math.round(SEASON.vipPerLevel * h.st.vip / hg)), 'VIP-Logen');
     m.spect = spect;
     const scorers = m.ev.filter(e => e.t === 'goal').map(e => ({ sd: e.sd, min: e.min, n: (e.text.match(/([^!]+?) trifft/) || [])[1] || '' }));
     res.push({ h: m.h, a: m.a, hg: m.hg, ag: m.ag, scorers, spect, st: m.st });
     news(G, h.name + ' ' + m.hg + ':' + m.ag + ' ' + a.name, 'result');
   }
   for (const c of G.clubs) {
-    pay(G, c, 4, 'TV-Geld');
-    if (c.st.shop) pay(G, c, c.st.shop, 'Fanshop');
+    pay(G, c, share(SEASON.tv, Lz, md), 'TV-Geld');
+    if (c.st.shop) { const v = share(SEASON.shopPerLevel * c.st.shop, Lz, md); if (v) pay(G, c, v, 'Fanshop'); }
     if (L.bye === c.id) pay(G, c, 3, 'Testspiel (spielfrei)');
-    const sal = Math.round(c.players.reduce((a, p) => a + pSalary(p), 0) / Math.max(1, G.seasonLen));
+    const sal = share(c.players.reduce((a, p) => a + pSalary(p), 0), Lz, md);
     pay(G, c, -sal, 'Gehälter');
-    if (c.money < 0) { const z = Math.max(1, Math.round(-c.money * 0.05)); pay(G, c, -z, 'Zinsen'); addRuhm(G, c, -1, 'Schulden'); }
+    if (c.money < 0) { const z = Math.max(1, Math.round(-c.money * 0.25 / Lz)); pay(G, c, -z, 'Zinsen'); addRuhm(G, c, -1, 'Schulden'); }
     closeFin(G, c, 'Spieltag ' + (md + 1));
   }
   const rd = {}; for (const c of G.clubs) rd[c.id] = c.ruhm - ruhm0[c.id];
@@ -2111,7 +2117,7 @@ async function boardStart(save) {
   B.H = H; B.code = code; B.lastPub = ''; B.lastPriv = {}; B.evSeen = {}; B.rollSeen = {}; B.mainKey = '';
   if (save && save.G) {
     B.G = save.G; if (B.G.seed) SEED = B.G.seed >>> 0;
-    const S = B.G.settings; if (S.dice === 'selbst') S.dice = 'handy'; if (!S.mlen) S.mlen = 'kurz';
+    const S = B.G.settings; if (S.dice === 'selbst') S.dice = 'handy'; delete S.mlen; delete S.len; if (!S.cards) S.cards = 'jeder2';
     // Spielstände aus der ersten Version (alle Spiele gleichzeitig): Spieltag neu beginnen
     if (B.G.phase === 'vorbereitung' || (B.G.phase === 'spiel' && B.G.live && !B.G.live.stage)) { B.G.live = null; enterPhase(B.G, 'spiel'); }
     if (B.G.phase === 'spiel' && B.G.live && B.G.live.stage !== 'pre') { B.G.paused = true; B.G.pausedAt = save.at || Date.now(); }
@@ -2355,7 +2361,6 @@ const RENDER = {
       '</div><div class="row" style="margin-top:10px;gap:10px"><button class="btn sm dark" data-b="bot"' + (n >= 8 ? ' disabled' : '') + '>' + ic('plus') + 'Computer-Verein</button><span class="mut" style="font-size:12px">Optional, füllt die Liga auf.</span></div></div>' +
       '<div class="pnl"><h3>EINSTELLUNGEN</h3>' +
       '<div class="setrow"><span>Saisons</span>' + seg('seasons', [[1, '1'], [3, '3'], [5, '5']]) + '</div>' +
-      '<div class="setrow"><span>Saisonlänge</span>' + seg('len', [['kurz', 'Kurz (ca. 5 Spieltage)'], ['lang', 'Lang (ca. 10)']]) + '</div>' +
       settingsHtml(false) +
       '<p class="mut" style="margin:6px 0 0;font-size:12px">' + esc(lobbyHint(G)) + '</p></div>' +
       '<button class="btn big" data-b="start"' + (n < 2 ? ' disabled' : '') + '>' + (n < 2 ? 'Mindestens 2 Vereine' : 'Anpfiff! Spiel starten') + '</button></div>';
@@ -2446,10 +2451,10 @@ const RENDER = {
 };
 function lobbyHint(G) {
   const s = G.settings, n = Math.max(2, G.clubs.length);
-  const mdays = s.len === 'lang' ? 10 : 5, games = Math.floor(n / 2), per = s.mlen === 'normal' ? 2.2 : 1.6;
-  const min = Math.round(s.seasons * (mdays * (games * per + 1.5) + 8));
+  const mdays = n % 2 ? 2 * n : 2 * (n - 1), games = Math.floor(n / 2), per = 2.2;
+  const min = Math.round(s.seasons * (mdays * (games * per + 1) + 8));
   const dice = s.dice === 'echt' ? 'Bei Torchancen würfeln Schütze und Torwart mit echten Würfeln am Tisch und tippen die Zahl am Handy ein.' : s.dice === 'auto' ? 'Torchancen würfelt das iPad automatisch.' : 'Bei Torchancen würfeln Schütze und Torwart am Handy (schütteln oder tippen).';
-  return 'Geschätzte Dauer mit ' + n + ' Vereinen: ' + (min >= 90 ? 'ca. ' + (Math.round(min / 30) / 2).toString().replace('.', ',') + ' Std.' : 'ca. ' + Math.round(min / 5) * 5 + ' Min.') + '. ' + dice;
+  return 'Eine Saison: Hin- und Rückrunde, also ' + mdays + ' Spieltage. Geschätzte Dauer mit ' + n + ' Vereinen: ' + (min >= 90 ? 'ca. ' + (Math.round(min / 30) / 2).toString().replace('.', ',') + ' Stunden' : 'ca. ' + Math.round(min / 5) * 5 + ' Minuten') + '. ' + dice;
 }
 function transferStart(winter) {
   const G = B.G;
@@ -2673,7 +2678,6 @@ function settingsHtml(inGame) {
   const s = B.G.settings;
   const seg = (k, opts) => '<div class="seg">' + opts.map(([v, l]) => '<button data-b="set" data-k="' + k + '" data-v="' + v + '" class="' + (String(s[k]) === String(v) ? 'on' : '') + '">' + l + '</button>').join('') + '</div>';
   return '<div class="setrow"><span>Würfeln bei Torchancen</span>' + seg('dice', [['handy', 'Am Handy'], ['echt', 'Echte Würfel'], ['auto', 'Automatisch']]) + '</div>' +
-    '<div class="setrow"><span>Spiellänge' + (inGame ? ' (ab nächstem Spiel)' : '') + '</span>' + seg('mlen', [['kurz', 'Kurz (ca. 1 Min.)'], ['normal', 'Normal (ca. 1,5 Min.)']]) + '</div>' +
     '<div class="setrow"><span>Ereigniskarten' + (inGame ? ' (ab nächstem Spieltag)' : '') + '</span>' + seg('cards', [['jeder', 'Jeder Spieltag'], ['jeder2', 'Jeder 2. Spieltag'], ['aus', 'Aus']]) + '</div>';
 }
 function menuHtml() {
