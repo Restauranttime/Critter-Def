@@ -537,6 +537,68 @@ input{font:inherit;color:inherit}
 .cflip.go{animation:cflip2 .9s cubic-bezier(.3,.9,.3,1.05) both}
 @keyframes cflip2{0%{transform:rotateY(180deg)}100%{transform:rotateY(0)}}
 .cface.cbk .tap{font-size:12px;font-style:normal;font-weight:700;letter-spacing:.06em;color:#fff;margin-top:6px}
+
+/* Vereinsprofile */
+.proflist{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.proflist div{background:var(--panel2);padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.proflist b{font-size:15px}
+.proflist span{font-size:13px;color:var(--muted)}
+/* Draft-Reihenfolge auswürfeln */
+.wgrid{flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;align-content:center}
+.wclub{background:var(--panel);padding:14px;display:flex;flex-direction:column;gap:12px;min-height:170px}
+.wtop{display:flex;align-items:center;gap:10px}
+.wtop b{display:block;font-size:15px}
+.wtop .mut{font-size:12px}
+.wrank{margin-left:auto;font-stretch:70%;font-weight:900;font-style:italic;font-size:40px;color:var(--lime);line-height:1}
+.wdice{display:flex;align-items:center;gap:14px;justify-content:center;flex:1}
+.wtb{display:flex;flex-direction:column;align-items:center;gap:6px}
+/* Draft-Tafel */
+.dhead{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.dzug{margin-left:auto;display:flex;align-items:center;gap:12px;background:#fff;color:var(--ink);padding:6px 6px 6px 8px}
+.dzug b{display:block;font-stretch:75%;font-weight:900;font-style:italic;font-size:22px;line-height:1}
+.dzug .lbl{color:var(--ink2)}
+.dclock{min-width:64px;text-align:center;background:var(--lime);font-stretch:75%;font-weight:900;font-size:24px;padding:6px 8px}
+.dclock.hot{background:var(--red);color:#fff}
+.dorder{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.dchip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;background:var(--panel2);font-weight:800;font-size:13px}
+.dchip i{width:8px;height:16px}
+.dchip.cur{background:var(--lime);color:var(--ink)}
+.dchip.done{opacity:.45}
+.dpool{flex:1;min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.dcol{display:flex;flex-direction:column;min-height:0;background:var(--panel)}
+.dch{padding:6px 10px;font-size:11px;font-weight:900;letter-spacing:.1em}
+.dlist{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column}
+.dt{display:grid;grid-template-columns:26px minmax(0,1fr);grid-template-rows:auto auto;column-gap:6px;padding:4px 8px;border-bottom:1px solid var(--line)}
+.dt .ds{grid-row:span 2;align-self:center;font-stretch:70%;font-weight:900;font-style:italic;font-size:22px;text-align:center}
+.dt .dn{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dt .dm{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dlast{display:flex;align-items:stretch;min-height:44px;background:var(--panel);animation:slin .4s ease-out}
+.dlast .tag{display:flex;align-items:center}
+.dlt{display:flex;align-items:center;gap:8px;padding:0 14px;font-size:15px}
+.dteam{background:var(--panel);padding:8px 10px;display:flex;flex-direction:column;gap:6px}
+.dteam.cur{box-shadow:inset 4px 0 0 var(--lime)}
+.dtn{display:flex;align-items:center;gap:8px;font-size:13px}
+.dtn .mut{font-size:11px;margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dtp{display:flex;gap:3px;flex-wrap:wrap}
+.dtp .posb{width:24px;height:18px;font-size:11px}
+/* Kader-Präsentation */
+.kgrid{flex:1;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;align-content:start}
+.kpanel{background:var(--panel);border-top:5px solid var(--lime);padding:12px 14px;display:flex;flex-direction:column;gap:10px;animation:slin .5s ease-out both}
+.ktop{display:flex;align-items:center;gap:10px}
+.ktop b{display:block;font-size:15px}
+.ktop .mut{font-size:12px}
+.kvals{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.08em}
+.kvals b{display:block;font-stretch:75%;font-weight:900;font-style:italic;font-size:22px;color:#fff;letter-spacing:0}
+.kps{display:flex;flex-direction:column;gap:3px;font-size:12px}
+.kps div{display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kps .posb{width:26px;height:16px;font-size:9px}
+/* Handy: Draft */
+.dturn{background:var(--lime);color:var(--ink);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.dturn b{font-stretch:75%;font-weight:900;font-style:italic;font-size:24px}
+.dturn .clk{font-stretch:75%;font-weight:900;font-size:26px}
+.dwbox{background:var(--panel);padding:12px 14px;font-size:14px}
+.mypicks{display:flex;gap:4px;flex-wrap:wrap}
+.mypicks .posb{width:auto;padding:0 6px;height:22px;font-size:11px}
 </style>
 </head>
 <body>
@@ -622,7 +684,7 @@ const SP_PRE = ['Nordwind', 'Goldquell', 'Sonnhof', 'Blitzblank', 'Alpenglück',
 const SP_SUF = ['Energie', 'Versicherung', 'Logistik', 'Brauerei', 'Telekom', 'Reisen', 'Bank', 'Motoren', 'Molkerei', 'Software', 'Bau', 'Getränke'];
 
 /* Zeiten (ms) für den Live-Ablauf auf dem Brett */
-const T = { round: 1700, attack: 1300, goal: 3800, miss: 2700, duel: 30000, auto: 1400, ht: 45000, kick: 1100 };
+const T = { pick: 45000, botPick: 1600, round: 1700, attack: 1300, goal: 3800, miss: 2700, duel: 30000, auto: 1400, ht: 45000, kick: 1100 };
 const SQUAD_MAX = 25;
 const MAXV = 2; // ein Stärkeunterschied zählt höchstens so viel
 
@@ -642,7 +704,7 @@ function pValue(p) {
   if (p.tr && TRAITS[p.tr]) v *= TRAITS[p.tr].good ? 1.1 : 0.85;
   return Math.max(1, Math.round(v));
 }
-function pSalary(p) { return Math.max(1, Math.round(pValue(p) * 0.22)); } // pro Saison
+function pSalary(p) { return Math.max(1, Math.round(pValue(p) * 0.19)); } // pro Saison
 function randTrait(pos, goodOnly) {
   const keys = Object.keys(TRAITS).filter(k => TRAITS[k].pos.includes(pos) && (!goodOnly || TRAITS[k].good));
   return keys.length ? pick(keys) : null;
@@ -709,15 +771,126 @@ function startSquad(G, c) {
   c.lu = autoLineup(G, c, '4-4-2', 'bal', 'fair');
 }
 
+/* Grundkader: 8 gleich starke Spieler für alle, die 8 entscheidenden kommen aus dem Draft */
+const BASE_SQUAD = [['TW', 4], ['AB', 5], ['AB', 4], ['AB', 4], ['MF', 5], ['MF', 4], ['MF', 4], ['ST', 4]];
+function baseSquad(G, c) {
+  c.players = BASE_SQUAD.map(([pos, s]) => { const age = ri(20, 31); return makePlayer(G, pos, s, age, age <= 23 ? ri(0, 1) : 0, null); });
+}
+const DRAFT_ROUNDS = 8;
 function startGame(G) {
   if (G.phase !== 'lobby' || G.clubs.length < 2) return false;
   shuffle(G.clubs);
-  for (const c of G.clubs) startSquad(G, c);
+  for (const c of G.clubs) baseSquad(G, c);
   G.deck = [];
   makeSchedule(G);
   news(G, 'Anpfiff für Football Empire: ' + G.clubs.length + ' Vereine, ' + G.settings.seasons + (G.settings.seasons === 1 ? ' Saison' : ' Saisons') + '.');
-  enterPhase(G, 'saisonstart');
+  enterPhase(G, 'profil');
   return true;
+}
+
+/* ---------- Vereinsprofile ---------- */
+const PROFILES = {
+  tradition: { n: 'Traditionsverein', d: '+6.000 Fans von Anfang an: mehr Zuschauer, mehr Ruhm durch Fans', fx: (G, c) => addFans(c, 6000) },
+  talente: { n: 'Talentschmiede', d: 'Jugendakademie Stufe 1 gratis (+2 Ruhm) und zwei Top-Talente (17 Jahre, ★★★)', fx: (G, c) => { c.st.acad = 1; addRuhm(G, c, 2, 'Jugendakademie'); for (let i = 0; i < 2; i++) c.players.push(makePlayer(G, pick(['AB', 'MF', 'ST']), 3, 17, 3, null)); } },
+  investor: { n: 'Investorenklub', d: '+8 Mio € Startgeld, aber am Spielende −6 Ruhm', fx: (G, c) => { pay(G, c, 80, 'Investor'); closeFin(G, c, 'Vereinsprofil'); c.flags.profInvestor = 1; } },
+  kult: { n: 'Kultklub', d: 'Fanshop Stufe 1 gratis (+2 Ruhm) und +3.000 Fans', fx: (G, c) => { c.st.shop = 1; addRuhm(G, c, 2, 'Fanshop'); addFans(c, 3000); } },
+  glueck: { n: 'Glücksritter', d: '3 Glücksmünzen extra und +2 Mio €', fx: (G, c) => { c.coins += 3; pay(G, c, 20, 'Glücksritter'); closeFin(G, c, 'Vereinsprofil'); } },
+  spar: { n: 'Sparfuchs', d: 'Alle Gehälter dauerhaft 20 % günstiger', fx: (G, c) => { c.flags.salMult = 0.8; } },
+  ausbildung: { n: 'Ausbildungsverein', d: 'Trainingszentrum Stufe 1 gratis (+2 Ruhm): Spieler entwickeln sich besser, weniger Verletzungen', fx: (G, c) => { c.st.train = 1; addRuhm(G, c, 2, 'Trainingszentrum'); } }
+};
+function applyProfiles(G) {
+  for (const c of G.clubs) {
+    if (!c.prof || !PROFILES[c.prof]) c.prof = (c.profOffers && c.profOffers[0]) || 'tradition';
+    PROFILES[c.prof].fx(G, c);
+    news(G, c.name + ' ist ' + PROFILES[c.prof].n + '.', 'info');
+  }
+}
+function clubSalary(c) { return Math.round(c.players.reduce((a, p) => a + pSalary(p), 0) * (c.flags.salMult || 1)); }
+
+/* ---------- Draft-Reihenfolge auswürfeln ---------- */
+function resolveOrder(G) {
+  const R = G.dr; R.tb = {};
+  const ids = G.clubs.map(c => c.id);
+  const key = id => [R.rolls[id]].concat(R.tb[id] || []);
+  // Gleichstand: nur die Betroffenen würfeln nach, bis alle verschieden sind
+  for (let guard = 0; guard < 20; guard++) {
+    const groups = {};
+    for (const id of ids) { const k = key(id).join('-'); (groups[k] = groups[k] || []).push(id); }
+    const ties = Object.values(groups).filter(g => g.length > 1);
+    if (!ties.length) break;
+    for (const g of ties) for (const id of g) (R.tb[id] = R.tb[id] || []).push(d6());
+  }
+  const cmp = (a, b) => { const ka = key(a), kb = key(b); for (let i = 0; i < Math.max(ka.length, kb.length); i++) { const d = (kb[i] || 0) - (ka[i] || 0); if (d) return d; } return 0; };
+  R.order = ids.slice().sort(cmp);
+}
+
+/* ---------- Schlangen-Draft ---------- */
+function genDraftPool(G) {
+  const n = G.clubs.length, size = n * 10;
+  const nTW = Math.max(n + 1, Math.round(size * 0.12)), nAB = Math.round(size * 0.3), nMF = Math.round(size * 0.3);
+  const poss = [];
+  for (let i = 0; i < size; i++) poss.push(i < nTW ? 'TW' : i < nTW + nAB ? 'AB' : i < nTW + nAB + nMF ? 'MF' : 'ST');
+  const pool = poss.map(pos => {
+    const s = wpick([4, 5, 6, 7, 8, 9, 10], x => ({ 4: 12, 5: 25, 6: 28, 7: 20, 8: 10, 9: 4, 10: 1 })[x]);
+    const age = s >= 8 ? ri(23, 31) : ri(18, 32);
+    const tal = age <= 23 ? wpick([0, 1, 2, 3], x => [3, 4, 3, 1][x]) : 0;
+    const tr = rnd() < 0.35 ? randTrait(pos, rnd() < 0.8) : null;
+    return makePlayer(G, pos, s, age, tal, tr);
+  });
+  pool.sort((a, b) => POS.indexOf(a.pos) - POS.indexOf(b.pos) || b.s - a.s || a.age - b.age);
+  return pool;
+}
+function draftCur(G) {
+  const D = G.draft; if (!D || D.pick >= D.total) return null;
+  const n = D.order.length, r = Math.floor(D.pick / n), i = D.pick % n;
+  return D.order[r % 2 === 0 ? i : n - 1 - i];
+}
+function doPick(G, c, pid, now) {
+  const D = G.draft; if (!D || draftCur(G) !== c.id) return false;
+  const k = D.pool.findIndex(p => p.id === pid); if (k < 0) return false;
+  const p = D.pool.splice(k, 1)[0];
+  c.players.push(p);
+  D.picks.push({ c: c.id, p: pubPlayer(G, p), n: D.pick + 1, round: Math.floor(D.pick / D.order.length) + 1, auto: !!D.autoNext });
+  D.autoNext = false;
+  D.last = D.picks[D.picks.length - 1];
+  D.pick++; D.t0 = now; D.dl = now + T.pick;
+  if (D.pick >= D.total) enterPhase(G, 'kader');
+  return true;
+}
+function autoPickFor(G, c) {
+  const want = { TW: 2, AB: 5, MF: 5, ST: 4 }, cnt = { TW: 0, AB: 0, MF: 0, ST: 0 };
+  c.players.forEach(p => cnt[p.pos]++);
+  let best = null, bs = -99;
+  for (const p of G.draft.pool) {
+    const need = want[p.pos] - cnt[p.pos];
+    const sc = p.s + (need > 0 ? 1 + 0.4 * need : -1.5 * (1 - need)) + (p.pos === 'TW' && cnt.TW >= 2 ? -4 : 0) + (p.age <= 21 ? 0.3 * p.tal : 0) + (p.tr && TRAITS[p.tr] && !TRAITS[p.tr].good ? -0.6 : 0) + rnd() * 0.4;
+    if (sc > bs) { bs = sc; best = p; }
+  }
+  return best;
+}
+function autoPick(G, now) {
+  const cid = draftCur(G); if (!cid) return false;
+  const c = clubById(G, cid); const p = autoPickFor(G, c); if (!p) return false;
+  G.draft.autoNext = !c.bot;
+  return doPick(G, c, p.id, now);
+}
+/* Takt für Würfeln und Draft (läuft auf dem Brett wie liveStep) */
+function draftStep(G, now) {
+  if (G.paused) return false;
+  if (G.phase === 'wurf') {
+    const R = G.dr; let ch = false;
+    if (!R.order) {
+      for (const c of G.clubs) if (R.rolls[c.id] == null && (((c.bot || G.settings.dice === 'auto') && now >= R.t0 + T.auto) || now >= R.dl)) { R.rolls[c.id] = d6(); ch = true; }
+      if (G.clubs.every(c => R.rolls[c.id] != null)) { resolveOrder(G); R.doneAt = now + 6000; ch = true; }
+    } else if (now >= R.doneAt) { enterPhase(G, 'draft'); ch = true; }
+    return ch;
+  }
+  if (G.phase === 'draft') {
+    const D = G.draft; const cid = draftCur(G); if (!cid) return false;
+    const c = clubById(G, cid);
+    if ((c.bot && now >= D.t0 + T.botPick) || now >= D.dl) return autoPick(G, now);
+  }
+  return false;
 }
 
 /* ---------- Spielplan ---------- */
@@ -777,10 +950,20 @@ function closeFin(G, c, label) {
 }
 
 /* ---------- Phasen ---------- */
-const INPUT_PHASES = ['saisonstart', 'winter', 'bieten'];
+const INPUT_PHASES = ['profil', 'saisonstart', 'winter', 'bieten'];
 function enterPhase(G, ph) {
   G.phase = ph; G.phaseAt = NOW(); G.ready = {}; G.rdelta = {};
-  if (ph === 'saisonstart') {
+  if (ph === 'profil') {
+    const keys = Object.keys(PROFILES);
+    for (const c of G.clubs) { c.profOffers = shuffle(keys.slice()).slice(0, 3); c.prof = null; }
+  } else if (ph === 'wurf') {
+    G.dr = { rolls: {}, tb: {}, order: null, t0: NOW(), dl: NOW() + T.duel, doneAt: 0 };
+  } else if (ph === 'draft') {
+    G.draft = { pool: genDraftPool(G), order: G.dr.order.slice(), pick: 0, total: G.clubs.length * DRAFT_ROUNDS, t0: NOW(), dl: NOW() + T.pick, picks: [], last: null };
+  } else if (ph === 'kader') {
+    for (const c of G.clubs) { c.lu = null; fixLineup(G, c); }
+    G.draft.pool = [];
+  } else if (ph === 'saisonstart') {
     G.md = 0;
     for (const c of G.clubs) { c.offers = sponsorOffers(G, c); c.sponsor = null; c.listed = []; c.bids = {}; }
   } else if (ph === 'winter') {
@@ -826,7 +1009,18 @@ function readyCount(G) { const r = readyMap(G); const h = mustReady(G); return {
 function advance(G, force) {
   const ph = G.phase;
   if (needsReady(G) && !force && !allReady(G)) return false;
-  if (ph === 'saisonstart') {
+  if (ph === 'profil') {
+    applyProfiles(G);
+    enterPhase(G, 'wurf');
+  } else if (ph === 'wurf') {
+    const R = G.dr;
+    if (!R.order) { for (const c of G.clubs) if (R.rolls[c.id] == null) R.rolls[c.id] = d6(); resolveOrder(G); R.doneAt = NOW() + 6000; if (!force) return true; }
+    enterPhase(G, 'draft');
+  } else if (ph === 'draft') {
+    return autoPick(G, NOW());
+  } else if (ph === 'kader') {
+    enterPhase(G, 'saisonstart');
+  } else if (ph === 'saisonstart') {
     for (const c of G.clubs) if (!c.sponsor) chooseSponsor(G, c, 0);
     enterPhase(G, 'bieten');
   } else if (ph === 'winter') {
@@ -1389,7 +1583,7 @@ function finishMatchday(G) {
     pay(G, c, share(SEASON.tv, Lz, md), 'TV-Geld');
     if (c.st.shop) { const v = share(SEASON.shopPerLevel * c.st.shop, Lz, md); if (v) pay(G, c, v, 'Fanshop'); }
     if (L.bye === c.id) pay(G, c, 3, 'Testspiel (spielfrei)');
-    const sal = share(c.players.reduce((a, p) => a + pSalary(p), 0), Lz, md);
+    const sal = share(clubSalary(c), Lz, md);
     pay(G, c, -sal, 'Gehälter');
     if (c.money < 0) { const z = Math.max(1, Math.round(-c.money * 0.25 / Lz)); pay(G, c, -z, 'Zinsen'); addRuhm(G, c, -1, 'Schulden'); }
     closeFin(G, c, 'Spieltag ' + (md + 1));
@@ -1464,6 +1658,7 @@ function finalScoring(G) {
     if (c.money >= 50) { const v = Math.floor(c.money / 50); addRuhm(G, c, v, 'Vereinskasse'); parts.push(['Vereinskasse ' + fmtM(c.money), v]); }
     if (c.money < 0) { const v = -Math.ceil(-c.money / 20); addRuhm(G, c, v, 'Schulden'); parts.push(['Schulden ' + fmtM(c.money), v]); }
     if (c.flags.investor) { addRuhm(G, c, -5, 'Investor'); parts.push(['Investor', -5]); }
+    if (c.flags.profInvestor) { addRuhm(G, c, -6, 'Investorenklub'); parts.push(['Investorenklub', -6]); }
     rows.push({ id: c.id, parts });
   }
   const order = G.clubs.slice().sort((a, b) => b.ruhm - a.ruhm || b.titles - a.titles || b.money - a.money);
@@ -1592,9 +1787,21 @@ function applyAction(G, c, a) {
       if (!needsReady(G)) return err('Gerade gibt es nichts zu bestätigen.');
       if (a.v === false) { delete G.ready[c.id]; return err(null); }
       if (ph === 'saisonstart' && !c.sponsor) return err('Wähle zuerst einen Sponsor.');
+      if (ph === 'profil' && !c.prof) return err('Wähle zuerst ein Vereinsprofil.');
       G.ready[c.id] = true; return err(null);
     }
     case 'cardopen': if (!canPrepare(G, c)) return err('Jetzt nicht.'); return err(openCard(G, c) ? null : 'Keine verdeckte Karte.');
+    case 'profil': if (ph !== 'profil' || !c.profOffers) return err('Jetzt nicht.'); if (c.profOffers[a.i | 0]) c.prof = c.profOffers[a.i | 0]; return err(null);
+    case 'droll': {
+      if (ph !== 'wurf' || !G.dr || G.dr.order) return err('Jetzt wird nicht gewürfelt.');
+      if (G.dr.rolls[c.id] != null) return err('Du hast schon gewürfelt.');
+      const v = a.v | 0; G.dr.rolls[c.id] = v >= 1 && v <= 6 ? v : d6(); return err(null);
+    }
+    case 'pick': {
+      if (ph !== 'draft') return err('Gerade wird nicht gedraftet.');
+      if (draftCur(G) !== c.id) return err('Du bist noch nicht dran.');
+      return err(doPick(G, c, a.pid, NOW()) ? null : 'Dieser Spieler ist schon weg.');
+    }
     case 'sponsor': if (ph !== 'saisonstart') return err('Jetzt nicht.'); return err(chooseSponsor(G, c, a.i | 0) ? null : 'Sponsor schon gewählt.');
     case 'list': {
       if (ph !== 'saisonstart' && ph !== 'winter') return err('Spieler setzt du nur im Transferfenster auf die Liste.');
@@ -1624,6 +1831,7 @@ function botBestForm(G, c) {
 }
 function botAct(G, c) {
   const ph = G.phase;
+  if (ph === 'profil') { c.prof = pick(c.profOffers); G.ready[c.id] = true; return; }
   if (ph === 'saisonstart') {
     const strong = tableStrength(G, c) >= 0;
     chooseSponsor(G, c, strong ? 2 : 0);
@@ -1699,7 +1907,8 @@ function pubClub(G, c) {
   return { id: c.id, name: c.name, short: c.short, col: c.col, mgr: c.mgr, bot: c.bot, ruhm: c.ruhm, fans: c.fans, st: c.st, tab: c.tab, titles: c.titles, conn: c.bot || c.conn, ready: !!readyMap(G)[c.id] || (!!G.ready[c.id] && !(G.live && G.live.stage === 'ht' && curMatch(G) && (curMatch(G).h === c.id || curMatch(G).a === c.id))), coins: c.coins, np: c.players.length,
     // Ereigniskarte: erst sichtbar, wenn sie am Handy aufgedeckt wurde
     card: cd ? (cd.open ? { open: true, t: cd.t, d: cd.d, o: cd.o, ol: cd.o != null && cd.opts ? cd.opts[cd.o].l : null, res: cd.res, dec: !!cd.opts } : { open: false }) : null,
-    rd: G.rdelta[c.id] || 0 };
+    rd: G.rdelta[c.id] || 0,
+    prof: G.phase !== 'profil' && c.prof && PROFILES[c.prof] ? { k: c.prof, n: PROFILES[c.prof].n, d: PROFILES[c.prof].d } : null, profChosen: !!c.prof };
 }
 function duelPub(m) {
   const d = m.duel; if (!d) return null;
@@ -1716,6 +1925,12 @@ function pubView(G) {
   const v = { v: 3, ver: typeof APP_VERSION !== 'undefined' ? APP_VERSION : '', ph, season: G.season, seasons: G.settings.seasons, md: G.md, len: G.seasonLen, winterAt: G.winterAt, set: G.settings,
     clubs: G.clubs.map(c => pubClub(G, c)), rc: readyCount(G), news: G.news.slice(-10), hist: G.hist, final: G.final, paused: !!G.paused };
   if (G.schedule[G.md]) v.fx = G.schedule[G.md];
+  if (ph === 'wurf' && G.dr) { const R = G.dr; v.dr = { rolls: R.rolls, tb: R.tb, order: R.order, left: Math.max(0, Math.ceil(((R.order ? R.doneAt : R.dl) - NOW()) / 1000)) }; }
+  if ((ph === 'draft' || ph === 'kader') && G.draft) {
+    const D = G.draft;
+    v.draft = { order: D.order, pick: D.pick, total: D.total, rounds: DRAFT_ROUNDS, cur: draftCur(G), left: Math.max(0, Math.ceil((D.dl - NOW()) / 1000)), last: D.last, picks: D.picks,
+      pool: D.pool.map(p => pubPlayer(G, p)) };
+  }
   if (ph === 'bieten') v.market = G.market.map(k => ({ id: k.id, p: pubPlayer(G, k.p), min: k.min, from: k.from }));
   if (ph === 'aufdecken' && G.reveal) v.reveal = { i: G.reveal.i, n: G.reveal.res.length, res: G.reveal.res.slice(0, G.reveal.i + 1) };
   if (ph === 'spiel') v.live = liveSummary(G);
@@ -1729,7 +1944,7 @@ function privView(G, c) {
     lu, luSeq: c.luSeq || 0, prev: lu ? teamPreview(G, c) : null, mods: c.mods, flags: c.flags, dice: G.settings.dice, canPrep: canPrepare(G, c), ready: !!G.ready[c.id],
     players: c.players.map(p => Object.assign(pubPlayer(G, p), { goals: p.goals, gt: p.gt, apps: p.apps, yc: p.yc, st: pStatus(G, p), am: !!p.amateur })),
     card: c.card ? { id: c.card.id + '-' + G.season + '-' + G.md, open: !!c.card.open, t: c.card.t, d: c.card.d, o: c.card.o, res: c.card.res, opts: c.card.opts } : null,
-    fin: c.fin.slice(-12), rlog: c.rlog.slice(-20), salary: c.players.reduce((a, p) => a + pSalary(p), 0),
+    fin: c.fin.slice(-12), rlog: c.rlog.slice(-20), salary: clubSalary(c), prof: c.prof ? { k: c.prof, n: PROFILES[c.prof].n, d: PROFILES[c.prof].d } : null, profOffers: G.phase === 'profil' && c.profOffers ? c.profOffers.map(k => ({ k, n: PROFILES[k].n, d: PROFILES[k].d })) : null,
     costs: BUILD_KEYS.reduce((o, k) => (o[k] = buildCost(c, k), o), {}) };
   if (G.phase === 'spiel' && G.live) {
     const L = G.live;
@@ -1917,7 +2132,7 @@ function makeClient(handlers) {
 /* ==========================================================================
    GEMEINSAME BAUSTEINE (Brett und Handy)
    ========================================================================== */
-const APP_VERSION = '3';
+const APP_VERSION = '4';
 const $ = (s, r) => (r || document).querySelector(s);
 const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
@@ -2012,7 +2227,7 @@ let WAKE = null;
 async function wakeLock() { try { if ('wakeLock' in navigator && document.visibilityState === 'visible') WAKE = await navigator.wakeLock.request('screen'); } catch (_) {} }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && (window.BOARD_ON || window.PHONE_ON)) wakeLock(); });
 function phaseName(ph) {
-  return ({ lobby: 'Lobby', saisonstart: 'Saisonstart', winter: 'Winterpause', bieten: 'Transfermarkt', aufdecken: 'Aufdecken', vorbereitung: 'Vorbereitung', spiel: 'Spieltag', ergebnis: 'Ergebnisse', saisonende: 'Saisonende', ende: 'Spielende' })[ph] || ph;
+  return ({ lobby: 'Lobby', profil: 'Vereinsprofil', wurf: 'Draft-Reihenfolge', draft: 'Draft', kader: 'Kader', saisonstart: 'Saisonstart', winter: 'Winterpause', bieten: 'Transfermarkt', aufdecken: 'Aufdecken', vorbereitung: 'Vorbereitung', spiel: 'Spieltag', ergebnis: 'Ergebnisse', saisonende: 'Saisonende', ende: 'Spielende' })[ph] || ph;
 }
 
 /* ---------- Klänge (nur Web Audio, keine Dateien) ---------- */
@@ -2183,6 +2398,7 @@ function boardTick() {
   const now = Date.now();
   if (!G.paused) {
     if (G.phase === 'spiel') { if (liveStep(G, now)) markDirty(); }
+    else if (G.phase === 'wurf' || G.phase === 'draft') { draftStep(G, now); markDirty(); }
     else if (needsReady(G) && humans(G).length && allReady(G)) {
       if (!B.readyAt) B.readyAt = now;
       if (now - B.readyAt > 1200) { B.readyAt = 0; advance(G); onPhaseSound(); markDirty(); }
@@ -2291,6 +2507,8 @@ function boardRender() {
   if (ph !== B.ph) { B.ph = ph; B.mainKey = ''; if (ph === 'spiel') B.evSeen = {}; }
   const main = $('#bmain');
   if (ph === 'spiel') { renderLive(main); return; }
+  if (ph === 'wurf') { renderWurf(main); return; }
+  if (ph === 'draft') { renderDraft(main); return; }
   const html = (RENDER[ph] || (() => ''))() + (G.paused ? pauseHtml() : '');
   if (html !== B.mainKey) { main.innerHTML = html; B.mainKey = html; afterRender(ph); }
 }
@@ -2364,6 +2582,24 @@ const RENDER = {
       settingsHtml(false) +
       '<p class="mut" style="margin:6px 0 0;font-size:12px">' + esc(lobbyHint(G)) + '</p></div>' +
       '<button class="btn big" data-b="start"' + (n < 2 ? ' disabled' : '') + '>' + (n < 2 ? 'Mindestens 2 Vereine' : 'Anpfiff! Spiel starten') + '</button></div>';
+  },
+  profil() {
+    return '<div class="col" style="flex:1"><div class="row" style="gap:14px"><span class="tag"><span>VEREINSPROFIL</span></span><span class="mut">Jeder wählt am Handy geheim eines von drei Profilen. Aufgedeckt wird, wenn alle gewählt haben.</span></div>' +
+      '<h1 class="bigt">Wer seid ihr?</h1><div class="pnl" style="flex:1;min-height:0;overflow:auto"><h3>DIE PROFILE</h3>' + profListHtml() + '</div>' +
+      '<div class="fbar"><div>' + readyChips() + '</div><button class="btn sm ghost" data-b="force">Nicht warten</button></div></div>' +
+      '<div class="side-tab col"><div class="pnl"><h3>SO GEHT ES WEITER</h3><p class="mut" style="margin:0;font-size:14px">1. Vereinsprofil wählen<br>2. Draft-Reihenfolge auswürfeln<br>3. Schlangen-Draft: ' + DRAFT_ROUNDS + ' Spieler pro Verein<br>4. Saison 1 mit Sponsor und Transfermarkt</p></div></div>';
+  },
+  kader() {
+    const G = B.G, D = G.draft;
+    const cards = D.order.map(id => {
+      const c = clubById(G, id), v = teamPreview(G, c), k = colOf(c);
+      const ps = D.picks.filter(x => x.c === id).map(x => x.p).sort((a, b) => POS.indexOf(a.pos) - POS.indexOf(b.pos) || b.s - a.s);
+      return '<div class="kpanel" style="border-top-color:' + k.c + '"><div class="ktop">' + crest(c, 36, 13) + '<div><b>' + esc(c.name) + '</b><span class="mut">' + esc(c.prof ? PROFILES[c.prof].n : '') + '</span></div></div>' +
+        '<div class="kvals"><span>TW <b>' + v.K + '</b></span><span>ABW <b>' + v.D + '</b></span><span>MIT <b>' + v.M + '</b></span><span>ANG <b>' + v.A + '</b></span></div>' +
+        '<div class="kps">' + ps.map(p => '<div><span class="posb pos-' + p.pos + '">' + p.pos + '</span><b>' + p.s + '</b> ' + esc(p.n) + '</div>').join('') + '</div></div>';
+    }).join('');
+    return '<div class="col" style="flex:1;min-width:0"><div class="row" style="gap:14px"><span class="tag"><span>DIE KADER STEHEN</span></span><span class="mut">Das hat jeder im Draft geholt. Am Handy lässt sich jetzt die Aufstellung anpassen.</span></div>' +
+      '<div class="kgrid">' + cards + '</div><div class="fbar"><span></span><button class="btn" data-b="next">Weiter zu Saison 1' + ic('pfeil') + '</button></div></div>';
   },
   saisonstart() { return transferStart(false); },
   winter() { return transferStart(true); },
@@ -2469,6 +2705,55 @@ function transferStart(winter) {
     '<div class="pnl" style="margin-top:auto"><h3>WER IST BEREIT?</h3>' + readyChips() + '</div>' +
     '<div class="fbar"><span></span><button class="btn sm ghost" data-b="force">Nicht warten</button></div></div>' +
     '<div class="side-tab col">' + ruhmHtml() + '<div class="pnl" style="flex:1;min-height:0"><h3>NEUES</h3>' + newsHtml(6) + '</div></div>';
+}
+
+/* ---------- Vereinsprofile, Draft-Reihenfolge, Draft ---------- */
+function profListHtml() {
+  return '<div class="proflist">' + Object.keys(PROFILES).map(k => '<div><b>' + esc(PROFILES[k].n) + '</b><span>' + esc(PROFILES[k].d) + '</span></div>').join('') + '</div>';
+}
+function profChosenHtml() {
+  const G = B.G;
+  return '<div class="ttab"><div class="th"><span>VEREINSPROFILE</span><span></span></div>' + G.clubs.map(c => '<div class="tr" style="height:auto;padding:6px 12px 6px 0"><span class="dot" style="background:' + colOf(c).c + ';margin-left:10px"></span><span class="n">' + esc(c.short) + ' <span style="font-weight:600;color:var(--ink2)">' + esc(c.prof ? PROFILES[c.prof].n : '–') + '</span></span></div>').join('') + '</div>';
+}
+function renderWurf(main) {
+  const G = B.G, R = G.dr; if (!R) return;
+  if (B.mainKey !== 'wurf') {
+    B.mainKey = 'wurf';
+    main.innerHTML = '<div class="col" style="flex:1"><div class="row" style="gap:14px"><span class="tag"><span>DRAFT-REIHENFOLGE</span></span><span class="mut">Alle würfeln gleichzeitig' + (G.settings.dice === 'echt' ? ' mit echten Würfeln und tippen die Zahl am Handy ein' : G.settings.dice === 'auto' ? ' – das iPad würfelt für alle' : ' am Handy') + '. Die höchste Zahl wählt im Draft zuerst.</span></div>' +
+      '<div class="wgrid">' + G.clubs.map(c => '<div class="wclub" id="wc-' + c.id + '"></div>').join('') + '</div><div class="fbar" id="w-foot"></div></div>' +
+      '<div class="side-tab col">' + profChosenHtml() + '</div>';
+  }
+  for (const c of G.clubs) {
+    const v = R.rolls[c.id], tb = R.tb[c.id] || [], rank = R.order ? R.order.indexOf(c.id) + 1 : 0;
+    patch(document.getElementById('wc-' + c.id), '<div class="wtop">' + crest(c, 40, 14) + '<div><b>' + esc(c.name) + '</b><span class="mut">' + (c.bot ? 'Computer' : esc(c.mgr)) + '</span></div>' + (rank ? '<span class="wrank">' + rank + '.</span>' : '') + '</div>' +
+      '<div class="wdice">' + (v == null ? dieHtml(1, 'roll', 74) : dieHtml(v, 'land' + (rank === 1 ? ' lime' : ''), 74)) + (tb.length ? '<div class="wtb"><span class="lbl">STECHEN</span>' + tb.map(x => dieHtml(x, 'land', 34)).join('') + '</div>' : '') + '</div>');
+  }
+  const left = R.order ? 0 : Math.max(0, Math.ceil((R.dl - Date.now()) / 1000));
+  patch($('#w-foot'), R.order ? '<span><b class="lime" style="font-size:18px">Reihenfolge steht:</b> ' + R.order.map((id, i) => (i + 1) + '. ' + esc(clubById(G, id).short)).join(' · ') + '</span><button class="btn sm" data-b="force">Zum Draft' + ic('pfeil') + '</button>'
+    : '<span class="mut">' + G.clubs.filter(c => R.rolls[c.id] != null).length + ' von ' + G.clubs.length + ' haben gewürfelt · sonst würfelt das iPad in ' + left + ' s</span><button class="btn sm ghost" data-b="force">Für alle würfeln</button>');
+}
+function dTile(p) {
+  return '<div class="dt"><span class="ds">' + p.s + '</span><span class="dn">' + esc(lastName(p.n)) + '</span><span class="dm">' + p.age + (p.age <= 23 && p.tal ? ' ' + '★'.repeat(p.tal) : '') + (p.tr ? ' · ' + esc(TRAITS[p.tr].n) : '') + '</span></div>';
+}
+function renderDraft(main) {
+  const G = B.G, D = G.draft; if (!D) return;
+  if (B.mainKey !== 'draft') {
+    B.mainKey = 'draft';
+    main.innerHTML = '<div class="col" style="flex:1;min-width:0"><div id="d-head"></div><div id="d-order"></div><div class="dpool" id="d-pool"></div><div id="d-last"></div></div><div class="side-tab col" id="d-teams" style="overflow:hidden"></div>';
+  }
+  const cid = draftCur(G), c = cid ? clubById(G, cid) : null;
+  const n = D.order.length, round = Math.floor(D.pick / n) + 1, left = Math.max(0, Math.ceil((D.dl - Date.now()) / 1000));
+  patch($('#d-head'), c ? '<div class="dhead"><span class="tag"><span>DRAFT · RUNDE ' + Math.min(round, DRAFT_ROUNDS) + ' VON ' + DRAFT_ROUNDS + '</span></span><span class="mut">Pick ' + (D.pick + 1) + ' von ' + D.total + '</span>' +
+    '<div class="dzug">' + crest(c, 44, 15) + '<div><span class="lbl">AM ZUG</span><b>' + esc(c.name) + '</b></div><span class="dclock' + (left <= 10 ? ' hot' : '') + '">' + (c.bot ? '…' : left + ' s') + '</span></div></div>' : '');
+  // Reihenfolge der aktuellen Runde (Schlange)
+  const rIdx = Math.floor(D.pick / n), seq = rIdx % 2 === 0 ? D.order : D.order.slice().reverse();
+  patch($('#d-order'), '<div class="dorder"><span class="lbl">RUNDE ' + Math.min(rIdx + 1, DRAFT_ROUNDS) + (rIdx % 2 ? ' ←' : ' →') + '</span>' + seq.map((id, i) => { const x = clubById(G, id); const done = rIdx * n + i < D.pick; return '<span class="dchip' + (id === cid ? ' cur' : done ? ' done' : '') + '"><i style="background:' + colOf(x).c + '"></i>' + esc(x.short) + '</span>'; }).join('') + '</div>');
+  const cols = POS.map(pos => { const ps = D.pool.filter(p => p.pos === pos); return '<div class="dcol"><div class="dch pos-' + pos + '">' + POSN[pos].toUpperCase() + ' · ' + ps.length + '</div><div class="dlist">' + ps.map(dTile).join('') + '</div></div>'; }).join('');
+  patch($('#d-pool'), cols);
+  const L = D.last;
+  if (L) { const x = clubById(G, L.c); patch($('#d-last'), '<div class="dlast" data-k="' + L.n + '"><span class="tag"><span>PICK ' + L.n + '</span></span><span class="dlt"><span class="dot" style="background:' + colOf(x).c + '"></span><b>' + esc(x.name) + '</b> wählt ' + esc(L.p.n) + ' <span class="mut">(' + POSN[L.p.pos] + ', Stärke ' + L.p.s + ')</span>' + (L.auto ? ' <span class="mut">· automatisch</span>' : '') + '</span></div>'); }
+  else patch($('#d-last'), '<div class="dlast"><span class="mut">Wer dran ist, wählt am Handy. Nach 45 Sekunden wählt das iPad automatisch.</span></div>');
+  patch($('#d-teams'), D.order.map(id => { const x = clubById(G, id); const ps = D.picks.filter(k => k.c === id); return '<div class="dteam' + (id === cid ? ' cur' : '') + '"><div class="dtn"><span class="dot" style="background:' + colOf(x).c + '"></span><b>' + esc(x.short) + '</b><span class="mut">' + esc(x.prof ? PROFILES[x.prof].n : '') + '</span></div><div class="dtp">' + (ps.length ? ps.map(k => '<span class="posb pos-' + k.p.pos + '">' + k.p.s + '</span>').join('') : '<span class="mut">noch niemand</span>') + '</div></div>'; }).join(''));
 }
 
 /* ---------- Spieltag: ein Spiel nach dem anderen ---------- */
@@ -2809,7 +3094,9 @@ function gameHtml() {
 function needsInput() {
   const pub = P.pub, me = P.me; const mc = myPub();
   if (!mc) return false;
-  if (['saisonstart', 'winter', 'bieten'].includes(pub.ph)) return !mc.ready;
+  if (['profil', 'saisonstart', 'winter', 'bieten'].includes(pub.ph)) return !mc.ready;
+  if (pub.ph === 'wurf') return !!pub.dr && !pub.dr.order && pub.dr.rolls[me.id] == null && pub.set.dice !== 'auto';
+  if (pub.ph === 'draft') return !!pub.draft && pub.draft.cur === me.id;
   if (pub.ph === 'spiel' && me.match) {
     if (pub.live && pub.live.stage === 'cards' && me.card && me.card.o == null) return true;
     if (me.match.stat === 'wait' || me.match.stat === 'pre') return !me.ready;
@@ -2823,6 +3110,10 @@ function barHtml() {
   const rd = mc.ready ? '<span class="chip on">' + ic('check') + 'Bereit</span>' : '';
   switch (pub.ph) {
     case 'lobby': return t(['LOBBY'], 'Warten auf den Anpfiff');
+    case 'profil': return t(['PROFIL'], 'Vereinsprofil wählen') + rd;
+    case 'wurf': return t(['WÜRFELN'], 'Draft-Reihenfolge auswürfeln');
+    case 'draft': return pub.draft && pub.draft.cur === me.id ? t(['DU BIST DRAN', 'red'], 'Wähle einen Spieler · ' + pub.draft.left + ' s') : t(['DRAFT'], 'Runde ' + Math.min(Math.floor(pub.draft.pick / pub.draft.order.length) + 1, pub.draft.rounds) + ' von ' + pub.draft.rounds);
+    case 'kader': return t(['KADER'], 'Die Teams stehen');
     case 'saisonstart': return t(['SAISON ' + pub.season], 'Sponsor, Transferliste, Stadion') + rd;
     case 'winter': return t(['WINTER'], 'Transferliste und Stadion') + rd;
     case 'bieten': return t(['MARKT'], 'Geheime Gebote abgeben') + rd;
@@ -2854,6 +3145,53 @@ function aktHtml() {
   return (AKT[ph] || (() => '<p class="hint">…</p>'))();
 }
 const AKT = {
+  profil() {
+    const me = P.me; const mc = myPub();
+    const offers = me.profOffers || [];
+    return '<div class="sec"><h2><span class="lbl">DEIN VEREINSPROFIL</span></h2><p class="hint">Wähle geheim eines von drei Profilen. Das iPad deckt alle auf, wenn jeder gewählt hat.</p>' +
+      offers.map((o, i) => '<button class="offer' + (me.prof && me.prof.k === o.k ? ' on' : '') + '" data-p="prof" data-v="' + i + '"><b>' + esc(o.n) + '</b><span>' + esc(o.d) + '</span></button>').join('') + '</div>' +
+      (me.prof ? readyBtnX(mc.ready, 'Bereit') : '<div class="sumbar"><span class="hint" style="text-align:center">Tippe auf ein Profil.</span></div>');
+  },
+  wurf() {
+    const pub = P.pub, me = P.me; const R = pub.dr; if (!R) return '';
+    const mine = R.rolls[me.id];
+    if (R.order) {
+      const rank = R.order.indexOf(me.id) + 1;
+      return '<div class="bigmsg">' + dieHtml(mine, 'land lime', 110) + '<h2>Du wählst als Nr. ' + rank + '</h2><p>' + R.order.map((id, i) => (i + 1) + '. ' + esc(cPub(id).short)).join(' · ') + '</p><p>Gleich beginnt der Draft. Danach geht es in umgekehrter Reihenfolge zurück.</p></div>';
+    }
+    if (mine != null) return '<div class="bigmsg">' + dieHtml(mine, 'land lime', 130) + '<h2>Du hast eine ' + mine + '</h2><p>Warte auf die anderen …</p></div>';
+    if (pub.set.dice === 'auto') return '<div class="bigmsg">' + dieHtml(1, 'roll lime', 130) + '<h2>Das iPad würfelt</h2><p>Die höchste Zahl wählt im Draft zuerst.</p></div>';
+    if (pub.set.dice === 'echt') return '<div class="bigmsg"><h2>Wer wählt zuerst?</h2><p>Würfle mit deinem echten Würfel und tippe die Augenzahl ein. Die höchste Zahl wählt im Draft zuerst.</p></div>' +
+      '<div class="rvpad">' + [1, 2, 3, 4, 5, 6].map(n => '<button data-p="drv" data-v="' + n + '" aria-label="' + n + '">' + dieHtml(n, '', 46) + '</button>').join('') + '</div><p class="hint" style="text-align:center;margin-top:14px">Sonst würfelt das iPad in ' + R.left + ' s.</p>';
+    return '<div class="dcenter">' + (P.drolling ? dieHtml(1, 'roll lime', 140) : dieHtml(6, 'lime', 140)) + '<h2 style="margin:0;font-stretch:75%;font-weight:900;font-style:italic;font-size:26px">Wer wählt zuerst?</h2><p class="hint" style="text-align:center;margin:0">Die höchste Zahl wählt im Draft zuerst. Sonst würfelt das iPad in ' + R.left + ' s.</p>' +
+      (MOTION_OK ? '<div class="shakehint">' + ic('shake') + 'Handy schütteln oder Knopf drücken</div>' : '') + '</div>' +
+      '<div class="sumbar"><button class="btn big wide" data-p="droll"' + (P.drolling ? ' disabled' : '') + '>WÜRFELN</button></div>';
+  },
+  draft() {
+    const pub = P.pub, me = P.me, D = pub.draft; if (!D) return '';
+    const n = D.order.length, my = D.cur === me.id;
+    let until = 0; for (let k = D.pick; k < D.total; k++) { const r = Math.floor(k / n), i = k % n; if (D.order[r % 2 === 0 ? i : n - 1 - i] === me.id) break; until++; }
+    const mine = D.picks.filter(x => x.c === me.id);
+    const cnt = { TW: 0, AB: 0, MF: 0, ST: 0 }; me.players.forEach(p => cnt[p.pos]++);
+    let h = my ? '<div class="dturn"><b>DU BIST DRAN!</b><span class="clk">' + D.left + ' s</span></div>'
+      : '<div class="dwbox">Am Zug: <b>' + esc((cPub(D.cur) || {}).name || '') + '</b>' + (until ? ' · du bist in ' + until + (until === 1 ? ' Pick' : ' Picks') + ' dran' : '') + '</div>';
+    h += '<div class="sec" style="margin-top:12px"><h2><span class="lbl">DEINE PICKS (' + mine.length + ' VON ' + D.rounds + ')</span><span class="mut" style="font-size:12px">Kader: TW ' + cnt.TW + ' · AB ' + cnt.AB + ' · MF ' + cnt.MF + ' · ST ' + cnt.ST + '</span></h2>' +
+      '<div class="mypicks">' + (mine.length ? mine.map(x => '<span class="posb pos-' + x.p.pos + '">' + x.p.s + ' ' + esc(lastName(x.p.n)) + '</span>').join('') : '<span class="hint">Noch niemand.</span>') + '</div></div>';
+    const fil = P.dfil || 'alle';
+    h += '<div class="fchips" style="margin-bottom:10px">' + [['alle', 'Alle'], ['TW', 'TW'], ['AB', 'AB'], ['MF', 'MF'], ['ST', 'ST']].map(([k, l]) => '<button data-p="dfil" data-v="' + k + '" class="' + (fil === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div>';
+    const list = D.pool.filter(p => fil === 'alle' || p.pos === fil);
+    if (P.dsel && !D.pool.some(p => p.id === P.dsel)) P.dsel = null;
+    h += '<div class="plist">' + list.map(p => '<button class="prow' + (P.dsel === p.id ? ' sel' : '') + '" data-p="dsel" data-v="' + p.id + '"' + (my ? '' : ' disabled') + '><span class="s">' + p.s + '</span><span class="i"><b>' + esc(p.n) + trChip(p.tr) + '</b><span>' + posB(p.pos) + ' ' + p.age + ' J. ' + (p.age <= 23 ? stars(p.tal) : '') + ' · Gehalt ' + fmtM(p.sal) + '/Saison</span></span></button>').join('') + '</div>';
+    if (my) { const sel = D.pool.find(p => p.id === P.dsel); h += '<div class="sumbar">' + (sel ? '<button class="btn big wide lbl2" data-p="dconfirm">' + esc(lastName(sel.n)) + ' verpflichten</button>' : '<span class="hint" style="text-align:center">Tippe auf einen Spieler.</span>') + '</div>'; }
+    return h;
+  },
+  kader() {
+    const me = P.me, pub = P.pub; const D = pub.draft;
+    const mine = D ? D.picks.filter(x => x.c === me.id).map(x => x.p) : [];
+    return '<div class="bigmsg">' + ic('team') + '<h2>Dein Team steht!</h2><p>' + (me.prof ? 'Profil: <b>' + esc(me.prof.n) + '</b>. ' : '') + 'Schau aufs Spielbrett, dort werden alle Kader gezeigt.</p></div>' +
+      '<div class="sec"><h2><span class="lbl">DEINE DRAFT-PICKS</span></h2><div class="plist">' + mine.map(p => '<div class="prow"><span class="s">' + p.s + '</span><span class="i"><b>' + esc(p.n) + trChip(p.tr) + '</b><span>' + posB(p.pos) + ' ' + p.age + ' J.</span></span></div>').join('') + '</div></div>' +
+      lineupEditor();
+  },
   lobby() {
     const mc = myPub(), pub = P.pub;
     return '<div class="bigmsg">' + crest(mc, 72, 24) + '<h2>' + esc(mc.name) + '</h2><p>Du bist dabei. Sobald alle da sind, startet das Spielbrett die Partie.</p></div>' +
@@ -3052,6 +3390,7 @@ function linesHtml(v, ov) {
 }
 function lineupEditor() {
   const me = P.me; const lu = luCur();
+  if (!lu) return '';
   const mods = me.mods && me.mods.length ? '<p class="hint">Karten-Effekt nächstes Spiel: ' + me.mods.map(m => LINEN[m.l] + ' ' + (m.v > 0 ? '+' : '') + m.v).join(', ') + '</p>' : '';
   return '<div class="sec"><h2><span class="lbl">AUFSTELLUNG</span><button class="btn sm dark" data-p="best">Beste Elf</button></h2>' +
     '<div class="fchips">' + FORM_KEYS.map(f => '<button data-p="form" data-v="' + f + '" class="' + (lu.form === f ? 'on' : '') + '">' + f + '</button>').join('') + '</div>' +
@@ -3166,12 +3505,14 @@ function doRollPhone() {
   setTimeout(() => { if (P.dl && P.dl.rolling && P.me && P.me.duel && !P.me.duel.rolled) { P.dl.rolling = false; phoneRender(); } }, 6000);
 }
 window.addEventListener('devicemotion', e => {
-  if (!window.PHONE_ON || !P.me || !P.me.duel || P.me.duel.rolled || P.me.duel.real || (P.dl && P.dl.rolling)) return;
+  if (!window.PHONE_ON || !P.me || !P.pub) return;
+  const wurf = P.pub.ph === 'wurf' && P.pub.dr && !P.pub.dr.order && P.pub.dr.rolls[P.me.id] == null && P.pub.set.dice === 'handy' && !P.drolling;
+  if (!wurf && (!P.me.duel || P.me.duel.rolled || P.me.duel.real || (P.dl && P.dl.rolling))) return;
   const a = e.acceleration && e.acceleration.x != null ? e.acceleration : null;
   let mag;
   if (a) mag = Math.sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
   else { const g = e.accelerationIncludingGravity || {}; const m2 = Math.sqrt((g.x || 0) ** 2 + (g.y || 0) ** 2 + (g.z || 0) ** 2); mag = Math.abs(m2 - (P.lastMag || m2)); P.lastMag = m2; }
-  if (mag > 14 && Date.now() - P.shakeAt > 1500) { P.shakeAt = Date.now(); MOTION_OK = true; doRollPhone(); }
+  if (mag > 14 && Date.now() - P.shakeAt > 1500) { P.shakeAt = Date.now(); MOTION_OK = true; if (wurf) { P.drolling = true; send({ t: 'droll' }); phoneRender(); setTimeout(() => { P.drolling = false; phoneRender(); }, 3000); } else doRollPhone(); }
 });
 
 /* ---------- Kader, Stadion, Finanzen, Liga ---------- */
@@ -3257,6 +3598,12 @@ document.addEventListener('click', e => {
     case 'ready': send({ t: 'ready', v: true }); return;
     case 'unready': send({ t: 'ready', v: false }); return;
     case 'sponsor': send({ t: 'sponsor', i: +v }); return;
+    case 'prof': send({ t: 'profil', i: +v }); if (me.profOffers && me.profOffers[+v]) { me.prof = me.profOffers[+v]; phoneRender(); } return;
+    case 'droll': if (!P.drolling) { P.drolling = true; send({ t: 'droll' }); if (navigator.vibrate) try { navigator.vibrate(100); } catch (_) {} phoneRender(); setTimeout(() => { P.drolling = false; phoneRender(); }, 3000); } return;
+    case 'drv': send({ t: 'droll', v: +v }); return;
+    case 'dfil': P.dfil = v; phoneRender(); return;
+    case 'dsel': P.dsel = v; phoneRender(); return;
+    case 'dconfirm': if (P.dsel) { send({ t: 'pick', pid: P.dsel }); if (navigator.vibrate) try { navigator.vibrate(60); } catch (_) {} P.dsel = null; } return;
     case 'list': { let ids = me.listed.slice(); if (ids.includes(v)) ids = ids.filter(x => x !== v); else { if (ids.length >= 3) { toast('Höchstens 3 Spieler.'); return; } ids.push(v); } me.listed = ids; send({ t: 'list', ids }); phoneRender(); return; }
     case 'bid': {
       const card = (P.pub.market || []).find(x => x.id === v); if (!card) return;
