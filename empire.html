@@ -135,11 +135,13 @@ input{font:inherit;color:inherit}
 .sq{position:absolute;display:flex;align-items:center;justify-content:center;background:#0B1C3A;border:1px solid var(--line);color:var(--dim);font-weight:800;font-stretch:75%;font-size:12px}
 .sq.alt{background:#0E2346}
 .sq.ten{background:var(--lime);border-color:var(--lime);color:var(--ink)}
-.pawn{position:absolute;z-index:5;transition:left 1.6s cubic-bezier(.5,0,.3,1),top 1.6s cubic-bezier(.5,0,.3,1);filter:drop-shadow(0 3px 2px #000b);pointer-events:none}
+.pawn{position:absolute;z-index:5;transition:left .3s cubic-bezier(.4,0,.3,1),top .3s cubic-bezier(.4,0,.3,1);filter:drop-shadow(0 3px 2px #000b);pointer-events:none}
+.pawn .pb{position:relative}
+.pawn.mv{z-index:8;filter:drop-shadow(0 0 5px #fff) drop-shadow(0 0 12px #ffffffa0) drop-shadow(0 3px 2px #000b)}
 .pawn .lap{position:absolute;right:-8px;top:-6px;background:#fff;color:var(--ink);font-size:9px;font-weight:900;padding:0 3px}
 .pawn .rd{position:absolute;left:50%;top:-20px;transform:translateX(-50%);background:var(--lime);color:var(--ink);font-size:11px;font-weight:900;padding:1px 5px;white-space:nowrap;animation:rdup 1.2s ease-out}
 .pawn .rd.neg{background:var(--red);color:#fff}
-.pawn .rd.dn{top:auto;bottom:-18px}
+.pawn.dn .rd{top:auto;bottom:-18px}
 @keyframes rdup{from{opacity:0;transform:translate(-50%,8px)}}
 #stage{position:absolute;display:flex;flex-direction:column;gap:12px;min-width:0;min-height:0}
 #bhead{display:flex;align-items:center;justify-content:space-between;gap:12px;height:40px;flex-shrink:0}
@@ -2851,7 +2853,7 @@ async function boardStart(save) {
   try { code = await H.create(save ? save.code : null); }
   catch (e) { showStart(netErrorText(e)); window.BOARD_ON = false; return; }
   try { sessionStorage.setItem('fe-board', code); } catch (_) {}
-  B.H = H; B.code = code; B.lastPub = ''; B.lastPriv = {}; B.evSeen = {}; B.rollSeen = {}; B.mainKey = '';
+  B.H = H; B.code = code; B.lastPub = ''; B.lastPriv = {}; B.evSeen = {}; B.rollSeen = {}; B.mainKey = ''; pawnsReset();
   if (save && save.G) {
     B.G = save.G; if (B.G.seed) SEED = B.G.seed >>> 0;
     const S = B.G.settings; if (S.dice === 'selbst') S.dice = 'handy'; delete S.mlen; delete S.len; if (!S.fields) S.fields = ({ jeder: 'viel', jeder2: 'normal', aus: 'aus' })[S.cards] || 'normal'; delete S.cards;
@@ -2980,31 +2982,75 @@ function boardLayout() {
   st.style.width = ((cols - 2) * cs - 2 * pad + 3) + 'px'; st.style.height = ((rows - 2) * cs - 2 * pad + 3) + 'px';
   $('#pawns').innerHTML = '';
 }
+/* ---------- Spielfiguren: ziehen Feld für Feld zum neuen Ruhm-Stand, eine nach der anderen ----------
+   B.pv: wo die Figur gerade gezeigt wird, B.pq: wer noch ziehen muss, B.pmv: wer gerade zieht */
 function renderPawns() {
-  const G = B.G, L = B.lay; if (!L) return;
+  const G = B.G, L = B.lay; if (!L || !G) return;
   const box = $('#pawns'); if (!box) return;
+  B.pv = B.pv || {}; B.pq = B.pq || [];
   const w = Math.round(L.cs * 0.62);
-  const bySq = {};
   const showRd = ['ergebnis', 'saisonende', 'ende'].includes(G.phase) || (G.phase !== 'lobby' && Object.keys(G.rdelta).length);
-  for (const c of G.clubs) { const sq = c.ruhm % 100; (bySq[sq] = bySq[sq] || []).push(c); }
   const seen = new Set();
   for (const c of G.clubs) {
     seen.add(c.id);
     let el = document.getElementById('pw-' + c.id);
-    if (!el) { el = document.createElement('div'); el.className = 'pawn'; el.id = 'pw-' + c.id; box.appendChild(el); el.style.left = L.pos[0].x + 'px'; el.style.top = L.pos[0].y + 'px'; }
-    const sq = c.ruhm % 100, group = bySq[sq], k = group.indexOf(c);
-    const p = L.pos[sq];
-    const off = (k - (group.length - 1) / 2) * Math.min(L.cs * 0.28, 12);
-    const rd = G.rdelta[c.id] || 0;
-    const html = pawnSvg(colOf(c).c, w) + (c.ruhm >= 100 ? '<span class="lap">+' + Math.floor(c.ruhm / 100) * 100 + '</span>' : '') + (showRd && rd ? '<span class="rd' + (rd < 0 ? ' neg' : '') + (p.y - L.pos[0].y < L.cs ? ' dn' : '') + '">' + (rd > 0 ? '+' : '') + rd + '</span>' : '');
+    if (!el) { el = document.createElement('div'); el.className = 'pawn'; el.id = 'pw-' + c.id; box.appendChild(el); }
+    if (B.pv[c.id] == null) B.pv[c.id] = c.ruhm; // nach Laden oder Beitreten: sofort an den richtigen Platz
+    if (B.pv[c.id] !== c.ruhm && B.pmv !== c.id && !B.pq.includes(c.id)) B.pq.push(c.id);
+    const rd = G.rdelta[c.id] || 0, shown = B.pv[c.id];
+    const html = '<div class="pb">' + pawnSvg(colOf(c).c, w) + (shown >= 100 ? '<span class="lap">+' + Math.floor(shown / 100) * 100 + '</span>' : '') +
+      (showRd && rd ? '<span class="rd' + (rd < 0 ? ' neg' : '') + '">' + (rd > 0 ? '+' : '') + rd + '</span>' : '') + '</div>';
     if (el._h !== html) { el.innerHTML = html; el._h = html; }
+    el.title = c.name + ': ' + c.ruhm + ' Ruhm';
+  }
+  for (const el of Array.from(box.children)) { const id = el.id.slice(3); if (!seen.has(id)) { el.remove(); delete B.pv[id]; } }
+  placePawns();
+  if (!B.pmv && B.pq.length) pawnNext();
+}
+function placePawns() {
+  const G = B.G, L = B.lay; if (!L || !G) return;
+  const w = Math.round(L.cs * 0.62), sqOf = id => (((B.pv[id] || 0) % 100) + 100) % 100;
+  const bySq = {};
+  for (const c of G.clubs) (bySq[sqOf(c.id)] = bySq[sqOf(c.id)] || []).push(c.id);
+  for (const c of G.clubs) {
+    const el = document.getElementById('pw-' + c.id); if (!el) continue;
+    const sq = sqOf(c.id), grp = bySq[sq], k = grp.indexOf(c.id), p = L.pos[sq];
+    const off = (k - (grp.length - 1) / 2) * Math.min(L.cs * 0.28, 12);
     const lx = Math.round(p.x + (L.sz - w) / 2 + off) + 'px', ly = Math.round(p.y + L.sz / 2 - w * 1.05 + (k % 2) * 3) + 'px';
     if (el.style.left !== lx) el.style.left = lx;
     if (el.style.top !== ly) el.style.top = ly;
-    el.title = c.name + ': ' + c.ruhm + ' Ruhm';
+    el.classList.toggle('dn', p.y - L.pos[0].y < L.cs);
   }
-  for (const el of Array.from(box.children)) if (!seen.has(el.id.slice(3))) el.remove();
 }
+function pawnNext() {
+  const G = B.G; if (!G) { B.pq = []; B.pmv = null; return; }
+  let id = null;
+  while (B.pq.length) { const x = B.pq.shift(), c = clubById(G, x); if (c && B.pv[x] !== c.ruhm) { id = x; break; } }
+  if (!id) { B.pmv = null; return; }
+  B.pmv = id;
+  // Tempo: kurze Züge gemütlich, viele Felder (z. B. Saisonende) schneller, damit alles in wenigen Sekunden durch ist
+  const total = [id].concat(B.pq).reduce((a, x) => { const c = clubById(G, x); return a + (c ? Math.abs(c.ruhm - B.pv[x]) : 0); }, 0);
+  const ms = Math.max(90, Math.min(340, Math.round(6500 / Math.max(1, total))));
+  const el0 = document.getElementById('pw-' + id); if (el0) { el0.classList.add('mv'); el0.style.transitionDuration = Math.min(ms, 300) + 'ms'; }
+  const step = () => {
+    const c = B.G && clubById(B.G, id), el = document.getElementById('pw-' + id);
+    if (!c || !window.BOARD_ON) { B.pmv = null; return; }
+    const d = Math.sign(c.ruhm - B.pv[id]);
+    if (!d) {
+      if (el) { el.classList.remove('mv'); el.style.transitionDuration = ''; }
+      B.pmv = null; B.ptimer = setTimeout(pawnNext, 300); return;
+    }
+    B.pv[id] += d; placePawns(); pawnHop(id, ms);
+    B.ptimer = setTimeout(step, ms);
+  };
+  B.ptimer = setTimeout(step, 200);
+}
+function pawnHop(id, ms) {
+  const e = document.querySelector('#pw-' + id + ' .pb'); if (!e || !e.animate) return;
+  try { e.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-' + Math.round(B.lay.cs * 0.38) + 'px)', offset: 0.45 }, { transform: 'translateY(0)' }], { duration: Math.max(80, ms - 15), easing: 'ease-out' }); } catch (_) {}
+}
+function pawnsBusy() { return !!B.pmv || !!(B.pq && B.pq.length); }
+function pawnsReset() { clearTimeout(B.ptimer); B.pv = {}; B.pq = []; B.pmv = null; }
 
 /* Ereignisfelder auf die Ruhm-Leiste malen */
 function paintFields() {
@@ -3016,8 +3062,9 @@ function paintFields() {
     el.className = cls; el.innerHTML = k ? fieldIcon(k) : (n % 5 === 0 ? String(n) : ''); el.title = k ? FIELD_N[k] : '';
   });
 }
-function showFlash(f) {
+function showFlash(f, tries) {
   if (!window.BOARD_ON || !$('#stage') || !B.G) return;
+  if (f.k === 'feld' && pawnsBusy() && (tries || 0) < 80) { setTimeout(() => showFlash(f, (tries || 0) + 1), 250); return; }
   const el = document.createElement('div'); el.className = 'bflash' + (f.k === 'feld' ? ' feld' : '');
   const tag = f.k === 'tausch' ? 'TAUSCH!' : f.k === 'feld' ? 'EREIGNISFELD' : 'GELDSPRITZE';
   const body = f.k === 'feld' && f.hits ? f.hits.map(h => { const c = clubById(B.G, h.c); return c ? '<span class="fhit">' + crest(c, 28, 11) + fieldChip(h.k) + '</span>' : ''; }).join('') + '<span class="fhn">Karte vor dem nächsten Anpfiff</span>' : esc(f.t);
@@ -3520,7 +3567,7 @@ document.addEventListener('click', e => {
     const old = G; const N = newGame(old.settings); N.code = B.code;
     for (const c of old.clubs) addClub(N, { uid: c.uid, name: c.name, short: c.short, col: c.col, mgr: c.mgr, bot: c.bot });
     for (const c of N.clubs) { const o = old.clubs.find(x => x.uid === c.uid && x.name === c.name); c.conn = o ? o.conn : true; }
-    B.G = N; B.lastPriv = {}; B.mainKey = ''; ST.del('save-' + B.code);
+    B.G = N; B.lastPriv = {}; B.mainKey = ''; pawnsReset(); ST.del('save-' + B.code);
   }
   else if (k === 'quit') { try { sessionStorage.removeItem('fe-board'); } catch (_) {} ST.del('save-' + B.code); ST.set('saves', ST.get('saves', []).filter(x => x.code !== B.code)); try { B.H.destroy(); } catch (_) {} window.BOARD_ON = false; B.G = null; showStart(); return; }
   else if (k === 'mclose') { const m = $('#bmenu'); if (m) m.remove(); return; }
