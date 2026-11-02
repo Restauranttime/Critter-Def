@@ -2634,6 +2634,7 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&
 const ST = {
   get(k, d) { try { const v = localStorage.getItem('fe-' + k); return v == null ? d : JSON.parse(v); } catch (_) { return d; } },
   set(k, v) { try { localStorage.setItem('fe-' + k, JSON.stringify(v)); } catch (_) {} },
+  tryset(k, v) { try { localStorage.setItem('fe-' + k, JSON.stringify(v)); return true; } catch (_) { return false; } },
   del(k) { try { localStorage.removeItem('fe-' + k); } catch (_) {} }
 };
 const ICON = {
@@ -3100,7 +3101,12 @@ function flush(now, force) { // force: sofort speichern (Menü), ohne die Zeitst
     B.saveAt = now;
     const label = G.clubs.map(c => c.short).join(' · ') + ' – Saison ' + G.season + ', ' + phaseName(G.phase);
     const sv = { code: B.code, at: now, label, G };
-    ST.set('save-' + B.code, sv);
+    let okS = ST.tryset('save-' + B.code, sv);
+    if (!okS) { // Speicher voll: älteste andere Spielstände löschen, bis dieser hineinpasst
+      const others = ST.get('saves', []).filter(x => x.code !== B.code).sort((x, y) => x.at - y.at);
+      while (!okS && others.length) { ST.del('save-' + others.shift().code); okS = ST.tryset('save-' + B.code, sv); }
+      if (!okS && !B.saveWarn) { B.saveWarn = true; toast('Speicher auf dem iPad ist voll – der Spielstand kann gerade nicht gesichert werden.', 6000); }
+    }
     const idx = ST.get('saves', []).filter(x => x.code !== B.code); idx.push({ code: B.code, at: now, label });
     while (idx.length > 8) { const old = idx.shift(); ST.del('save-' + old.code); } // ältester Spielstand fliegt ganz raus
     ST.set('saves', idx);
