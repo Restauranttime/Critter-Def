@@ -645,6 +645,64 @@ input{font:inherit;color:inherit}
 .tmoney b{min-width:90px;text-align:center;font-stretch:75%;font-size:18px}
 .prow.sm{min-height:44px}
 .prow.sm .s{font-size:22px}
+/* ---------- Ereignisfelder: Glück (grün, Kleeblatt), Pech (rot, schwarze Katze), Entscheidung (gold, Wegweiser) ---------- */
+.fic{display:block;flex-shrink:0}
+.fic .lf{stroke:var(--fsep,#fff);stroke-width:1.1}
+.f-g{background:linear-gradient(160deg,#3DD47F,#178A47);color:#fff;--fsep:#1E9A55}
+.f-p{background:linear-gradient(160deg,#FF6B78,#C81E33);color:var(--ink);--fsep:#E33A4C}
+.f-e{background:linear-gradient(160deg,#FFE680,#E8A912);color:var(--ink);--fsep:#F4C53A}
+.sq.ev{border:0;box-shadow:inset 0 0 0 1px #ffffff40,inset 0 -2px 0 #00000030}
+.sq .fic{width:76%;height:76%}
+.sq.lit{z-index:4;animation:sqlit .7s ease-in-out 11 alternate}
+@keyframes sqlit{from{transform:scale(1);box-shadow:0 0 0 2px #fff}to{transform:scale(1.4);box-shadow:0 0 0 3px #fff,0 0 24px 8px #ffffff90}}
+.fchip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 6px;font-weight:800;font-size:13px;white-space:nowrap;line-height:1.2}
+.fchip .fic{width:20px;height:20px}
+.flegend{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:2px 0 4px}
+.flegend>span:not(.fchip){flex:1 1 220px;font-size:12px;color:var(--muted);line-height:1.35}
+.lhint{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--muted);font-weight:600}
+.lhint .fchip{font-size:12px;padding:3px 8px 3px 5px}
+.lhint .fchip .fic{width:17px;height:17px}
+.lhint>span:not(.fchip){margin-left:4px}
+.sec .lhint{justify-content:flex-start}
+/* Kartenrücken nach Sorte (Handy-Overlay, Aktion-Reiter, Brett) */
+.cbk.k-g,.bc-back.k-g{background:repeating-linear-gradient(135deg,#ffffff12 0 10px,transparent 10px 20px),radial-gradient(circle at 50% 38%,#43DA86,#14773A 78%);color:#fff;--fsep:#22A65E;box-shadow:inset 0 0 0 3px #ffffff66,0 30px 60px #000c}
+.cbk.k-p,.bc-back.k-p{background:repeating-linear-gradient(135deg,#ffffff12 0 10px,transparent 10px 20px),radial-gradient(circle at 50% 38%,#FF7380,#A8132A 78%);color:var(--ink);box-shadow:inset 0 0 0 3px #ffffff66,0 30px 60px #000c}
+.cbk.k-e,.bc-back.k-e{background:repeating-linear-gradient(135deg,#ffffff1c 0 10px,transparent 10px 20px),radial-gradient(circle at 50% 38%,#FFEA8A,#D99A08 78%);color:var(--ink);--fsep:#F7CF45;box-shadow:inset 0 0 0 3px #ffffff80,0 30px 60px #000c}
+.cface.cbk .fic{width:132px;height:132px;filter:drop-shadow(0 6px 10px #0005)}
+.cface.cbk.k-g .tap{color:#E7FFEF}.cface.cbk.k-p .tap{color:#3B0711}.cface.cbk.k-e .tap{color:#4A3300}
+.cback-btn .cbk .fic{width:38px;height:38px}
+.cback-btn .cbk{box-shadow:inset 0 0 0 2px #ffffff66}
+.bc-back .fic{width:70px;height:70px;filter:drop-shadow(0 4px 8px #0005)}
+.bc-back.k-g span,.bc-back.k-p span,.bc-back.k-e span{color:inherit;opacity:.85}
+/* Kartenvorderseite: Farbe und Sorte oben */
+.cfr.k-g,.gcard.k-g,.bc-front.k-g{border-top-color:#22A45C}
+.cfr.k-p,.gcard.k-p,.bc-front.k-p{border-top-color:var(--red)}
+.cfr.k-e,.gcard.k-e,.bc-front.k-e{border-top-color:#F0B416}
+.ckl{display:flex;align-items:center;gap:6px}
+.ckl .fic{width:18px;height:18px}
+.k-g .ckl{color:#178A47!important}.k-p .ckl{color:#C81E33!important}.k-e .ckl{color:#A87400!important}
+.ecard.k-g{border-top-color:#22A45C}.ecard.k-p{border-top-color:var(--red)}.ecard.k-e{border-top-color:#F0B416}
+.ecard.k-g .ckl{color:#5BE397!important}.ecard.k-p .ckl{color:#FF8A95!important}.ecard.k-e .ckl{color:#FFD43B!important}
+.ecard.back b .fic{width:22px;height:22px;display:inline-block;vertical-align:middle}
+.ecard.back.k-g b{color:#5BE397}.ecard.back.k-p b{color:#FF8A95}.ecard.back.k-e b{color:#FFD43B}
+.gcard,.bc-front{position:relative}
+.stamp{position:absolute;top:46%;left:50%;transform:translate(-50%,-50%) rotate(-12deg);border:4px solid #1E9A55;color:#1E9A55;background:#ffffffd9;font-weight:900;font-style:italic;font-size:28px;letter-spacing:.12em;padding:4px 14px;pointer-events:none;animation:stampin .45s cubic-bezier(.3,1.4,.5,1) both}
+@keyframes stampin{from{transform:translate(-50%,-50%) rotate(-12deg) scale(2.2);opacity:0}to{transform:translate(-50%,-50%) rotate(-12deg) scale(1);opacity:1}}
+.bc-front .stamp{font-size:20px}
+/* Glücksmünze gegen Pech */
+.cov{flex-direction:column;gap:18px}
+.coinbar{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px 12px;background:var(--panel);padding:12px 14px;font-size:13px;width:min(330px,86vw);text-align:left;color:#fff;box-shadow:0 10px 30px #0008}
+.coinbar>.ico{width:32px;height:32px;color:var(--yel)}
+.coinbar>span{min-width:0;line-height:1.35}
+.coinbar .btn{grid-column:1/-1;width:100%}
+.sec .coinbar{width:auto;margin-top:8px;box-shadow:none}
+/* Hinweis am Handy: Karte kommt */
+.sec.pendsec{display:flex;flex-direction:row;align-items:center;gap:12px;padding:12px 14px;font-size:14px;line-height:1.35}
+.pendsec .fic{width:42px;height:42px}
+/* Einblendung auf dem Brett */
+.bflash.feld .bft{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.fhit{display:inline-flex;align-items:center;gap:6px}
+.fhn{font-size:13px;font-weight:600;color:var(--ink2)}
 </style>
 </head>
 <body>
@@ -765,7 +823,7 @@ function pStatus(G, p) {
 /* ---------- Spiel anlegen ---------- */
 function newGame(settings) {
   return {
-    v: 3, created: NOW(), settings: Object.assign({ seasons: 3, dice: 'handy', cards: 'jeder2' }, settings || {}),
+    v: 3, created: NOW(), settings: Object.assign({ seasons: 3, dice: 'handy', fields: 'normal' }, settings || {}), fields: makeFields(), decks: {},
     phase: 'lobby', phaseAt: NOW(), season: 1, md: 0, mdg: 0, nid: 1, names: {},
     clubs: [], market: [], deck: [], news: [], schedule: [], seasonLen: 0, winterAt: -1,
     live: null, reveal: null, results: null, report: null, final: null, hist: [], ready: {}, rdelta: {}
@@ -788,7 +846,7 @@ function addClub(G, o) {
   const c = {
     id: 'c' + (G.nid++), uid: o.uid || null, bot: !!o.bot, name, short, col, mgr: String(o.mgr || (o.bot ? 'Computer' : 'Manager')).slice(0, 14),
     money: 100, ruhm: 0, fans: 12000, coins: 1, st: { tri: 0, vip: 0, shop: 0, train: 0, acad: 0 },
-    players: [], lu: null, sponsor: null, offers: null, listed: [], bids: {}, card: null, mods: [], flags: {},
+    players: [], lu: null, sponsor: null, offers: null, listed: [], bids: {}, card: null, pend: [], rpos: 0, mods: [], flags: {},
     tab: blankTab(), titles: 0, fin: [], rlog: [], conn: true, seen: NOW(), dev: null
   };
   G.clubs.push(c);
@@ -995,9 +1053,57 @@ function closeFin(G, c, label) {
   c.finCur = [];
 }
 
+/* ---------- Ereignisfelder auf der Ruhm-Leiste ----------
+   Jedes Spiel bekommt ein neu gemischtes Brett mit Glücks-, Pech- und Entscheidungsfeldern.
+   Bleibt eine Figur genau auf so einem Feld stehen (nur vorwärts), zieht der Verein vor dem
+   nächsten Anpfiff die passende Karte. Stufe 1 gilt bei „Normal“ und „Viele“, Stufe 2 nur bei „Viele“.
+   Auf den Fünfer-Feldern stehen die Zahlen, dort gibt es keine Ereignisse. */
+const FIELD_N = { g: 'Glücksfeld', p: 'Pechfeld', e: 'Entscheidungsfeld' };
+const CARD_KN = { g: 'Glückskarte', p: 'Pechkarte', e: 'Entscheidungskarte' };
+const FIELD_LV = { viel: 2, normal: 1, aus: 0 };
+function makeFields() {
+  const cand = []; for (let n = 1; n < 100; n++) if (n % 5) cand.push(n);
+  const take = (pool, count, gap) => { const out = []; for (const n of shuffle(pool.slice())) { if (out.length >= count) break; if (out.every(x => Math.abs(x - n) >= gap)) out.push(n); } return out; };
+  const l1 = take(cand, 33, 2);
+  const l2 = take(cand.filter(n => !l1.includes(n)), 12, 1);
+  const F = {};
+  // je drei Felder hintereinander enthalten jede Sorte einmal: gleich viele und gut verteilt
+  const deal = (list, l) => { let bag = []; for (const n of list.sort((a, b) => a - b)) { if (!bag.length) bag = shuffle(['g', 'p', 'e']); F[n] = { k: bag.pop(), l }; } };
+  deal(l1, 1); deal(l2, 2);
+  return F;
+}
+function fieldAt(G, ruhm) {
+  const lv = FIELD_LV[G.settings.fields] != null ? FIELD_LV[G.settings.fields] : 1;
+  const f = G.fields && G.fields[((ruhm % 100) + 100) % 100];
+  return f && f.l <= lv ? f.k : null;
+}
+function visibleFields(G) { const o = {}; for (let n = 1; n < 100; n++) { const k = fieldAt(G, n); if (k) o[n] = k; } return o; }
+function pushFlash(G, o) {
+  o.n = Math.max(G.flashN || 0, G.flash ? G.flash.n : 0) + 1; o.at = NOW();
+  G.flashN = o.n; G.flash = o; G.flashes = (G.flashes || []).concat(o).slice(-4);
+}
+/* Wo die Figuren jetzt stehen bleiben: Ereignisfelder auswerten (quiet: nur Stand merken) */
+function landCheck(G, quiet) {
+  const hits = [];
+  for (const c of G.clubs) {
+    if (c.rpos == null) c.rpos = c.ruhm;
+    if (!quiet && c.ruhm > c.rpos) {
+      const k = fieldAt(G, c.ruhm);
+      if (k) {
+        c.pend = c.pend || []; if (c.pend.length < 3) c.pend.push(k);
+        hits.push({ c: c.id, k, pos: c.ruhm % 100 });
+        news(G, c.name + ' bleibt auf einem ' + FIELD_N[k] + ' stehen', 'card');
+      }
+    }
+    c.rpos = c.ruhm;
+  }
+  if (hits.length) pushFlash(G, { k: 'feld', hits, t: hits.map(h => clubById(G, h.c).name + ': ' + FIELD_N[h.k]).join(' · ') });
+}
+
 /* ---------- Phasen ---------- */
 const INPUT_PHASES = ['profil', 'saisonstart', 'winter', 'bieten'];
 function enterPhase(G, ph) {
+  landCheck(G, ph === 'ende' || ph === 'profil');
   G.phase = ph; G.phaseAt = NOW(); G.ready = {}; G.rdelta = {};
   if (ph === 'saisonstart') { G.cup = null; if (G.season > 1) solidarity(G); }
   if (ph === 'winter') solidarity(G);
@@ -1299,8 +1405,8 @@ function startMatchday(G) {
   const cup = !!(G.cup && !G.cup.winner && G.md >= G.seasonLen);
   const day = cup ? cupDay(G) : G.schedule[G.md];
   for (const c of G.clubs) { c.card = null; fixLineup(G, c); }
-  const cf = G.settings.cards || 'jeder2';
-  if (!cup && (cf === 'jeder' || (cf === 'jeder2' && G.md % 2 === 1))) for (const c of G.clubs) drawCard(G, c);
+  // Wer auf einem Ereignisfeld stehen geblieben ist, zieht jetzt seine Karte (eine pro Spieltag)
+  for (const c of G.clubs) { if (G.settings.fields === 'aus') c.pend = []; if (c.pend && c.pend.length) drawCard(G, c, c.pend.shift()); }
   const ms = day.pairs.map(([h, a]) => ({ id: 'm' + (G.nid++), h, a, hg: 0, ag: 0, r: 0, min: 0, zone: 2, ev: [], duel: null, ad: null,
     started: false, done: false, htDone: false, next: 0, st: { h: { poss: 0, sh: 0, yc: 0, rc: 0 }, a: { poss: 0, sh: 0, yc: 0, rc: 0 } }, side: null }));
   // Ereigniskarten kommen für alle gleichzeitig vor dem ersten Anpfiff
@@ -1361,11 +1467,13 @@ function finishCupRound(G) {
   const rd = {}; for (const c of G.clubs) rd[c.id] = c.ruhm - ruhm0[c.id];
   G.results = { season: G.season, md: G.md, cup: { name: C.name, done: !!C.winner, winner: C.winner, alive: C.alive.slice() }, list: res, bye: null, byes: C.byes.slice(), rd, table: tableOrder(G).map(c => c.id) };
   G.live = null; G.mdg++;
+  landCheck(G);
   G.phase = 'ergebnis'; G.phaseAt = NOW(); G.ready = {};
 }
 function endCards(G) {
   const L = G.live; if (!L || L.stage !== 'cards') return;
   for (const c of G.clubs) if (c.card && c.card.o == null) decideCard(G, c, cardDefault(c.card));
+  landCheck(G);
   L.stage = 'pre'; L.kickAt = 0; L.cardsAt = 0;
 }
 function kickoff(G, now) {
@@ -1723,6 +1831,7 @@ function finishMatchday(G) {
   G.lastTable = G.results.table;
   G.live = null;
   G.mdg++; G.md++;
+  landCheck(G);
   G.phase = 'ergebnis'; G.phaseAt = NOW(); G.ready = {};
 }
 function tableOrder(G) {
@@ -1803,7 +1912,7 @@ function solidarity(G) {
   const last = G.clubs.slice().sort((a, b) => a.ruhm - b.ruhm || a.money - b.money)[0];
   pay(G, last, 30, 'Solidaritätszahlung'); closeFin(G, last, 'Solidaritätszahlung');
   news(G, last.name + ' bekommt als Ruhm-Letzter 3 Mio € Solidaritätszahlung.', 'info');
-  G.flash = { k: 'soli', t: last.name + ' bekommt als Ruhm-Letzter 3 Mio € Solidaritätszahlung', c: last.id, at: NOW(), n: (G.flash ? G.flash.n : 0) + 1 };
+  pushFlash(G, { k: 'soli', t: last.name + ' bekommt als Ruhm-Letzter 3 Mio € Solidaritätszahlung', c: last.id });
 }
 
 /* ---------- Kader verändern: kündigen und tauschen ---------- */
@@ -1876,7 +1985,7 @@ function answerOffer(G, c, id, ok) {
   o.st = 'accepted';
   const t = o.txt;
   news(G, 'Tausch: ' + t.a + ' gibt ' + t.give + ' an ' + t.b + ' für ' + t.get + '.', 'transfer');
-  G.flash = { k: 'tausch', t: t.a + ' gibt ' + t.give + ' – ' + t.b + ' gibt ' + t.get, at: NOW(), n: (G.flash ? G.flash.n : 0) + 1 };
+  pushFlash(G, { k: 'tausch', t: t.a + ' gibt ' + t.give + ' – ' + t.b + ' gibt ' + t.get });
   return null;
 }
 function withdrawOffer(G, c, id) {
@@ -1958,17 +2067,25 @@ const CARDS = [
   { id: 'muenze', t: 'Glückspfennig', d: 'Im Mittelkreis liegt eine alte Münze.', fx: (G, c) => { c.coins++; return '+1 Glücksmünze'; } },
   { id: 'sponsorzoff', t: 'Sponsor verärgert', d: 'Der Hauptsponsor kürzt nach schlechter Presse.', fx: (G, c) => (pay(G, c, -10, 'Sponsor-Kürzung'), '−1 Mio €') },
   { id: 'fanclub', t: 'Neuer Fanclub', d: 'In der Nachbarstadt gründet sich ein Fanclub.', fx: (G, c) => (addFans(c, 1500), '+1.500 Fans') },
+  { id: 'flutlicht', t: 'Flutlicht-Ausfall', d: 'Mitten im Training gehen die Lichter aus. Die Reparatur ist teuer.', fx: (G, c) => (pay(G, c, -6, 'Flutlicht-Reparatur'), '−0,6 Mio €') },
+  { id: 'fanprotest', t: 'Fanproteste', d: 'Die Kurve ist mit den Ticketpreisen unzufrieden.', fx: (G, c) => (addFans(c, -1500), '−1.500 Fans') },
+  { id: 'buspanne', t: 'Buspanne', d: 'Der Mannschaftsbus bleibt auf der Autobahn liegen.', fx: (G, c) => (c.mods.push({ l: 'M', v: -1 }), 'Nächstes Spiel: Mittelfeld −1') },
+  { id: 'formkrise', t: 'Formkrise', d: 'Deine Stürmer treffen im Training nicht mal das Tor.', fx: (G, c) => (c.mods.push({ l: 'A', v: -1 }), 'Nächstes Spiel: Angriff −1') },
+  { id: 'muenzeweg', t: 'Glücksmünze verloren', d: 'Irgendwo in der Kabine ist sie verschwunden.', prep: (G, c) => c.coins > 0 ? {} : null, fx: (G, c) => { c.coins = Math.max(0, c.coins - 1); return '−1 Glücksmünze'; } },
   { id: 'twtrainer', t: 'Torwarttraining', d: 'Ein Spezialtrainer arbeitet mit deinen Torhütern.', fx: (G, c) => (c.mods.push({ l: 'K', v: 1 }), 'Nächstes Spiel: Torwart +1') }
 ];
 const CARD = {}; CARDS.forEach(k => CARD[k.id] = k);
+const PECH_IDS = ['rasen', 'grippe', 'steuer', 'pech', 'pyro', 'geruecht', 'sponsorzoff', 'flutlicht', 'fanprotest', 'buspanne', 'formkrise', 'muenzeweg'];
+function cardKind(id) { const k = CARD[id]; return !k ? 'g' : k.opts ? 'e' : PECH_IDS.includes(id) ? 'p' : 'g'; }
 function fillText(s, x) { return String(s || '').replace(/\{(\w+)\}/g, (_, k) => x && x[k] != null ? x[k] : ''); }
-function drawCard(G, c) {
-  for (let tries = 0; tries < 20; tries++) {
-    if (!G.deck.length) G.deck = shuffle(CARDS.map(k => k.id));
-    const id = G.deck.pop(); const k = CARD[id];
+function drawCard(G, c, kind) {
+  kind = kind || 'g'; G.decks = G.decks || {};
+  for (let tries = 0; tries < 25; tries++) {
+    if (!G.decks[kind] || !G.decks[kind].length) G.decks[kind] = shuffle(CARDS.filter(k => cardKind(k.id) === kind).map(k => k.id));
+    const id = G.decks[kind].pop(); const k = CARD[id];
     let x = {};
     if (k.prep) { x = k.prep(G, c); if (!x) continue; }
-    c.card = { id, x, t: k.t, d: fillText(k.d, x), o: null, res: null, open: false, opts: k.opts ? k.opts.map(o => ({ l: fillText(o.l, x), ok: !o.can || !!o.can(G, c), def: !!o.def })) : null };
+    c.card = { id, kind, x, t: k.t, d: fillText(k.d, x), o: null, res: null, open: false, opts: k.opts ? k.opts.map(o => ({ l: fillText(o.l, x), ok: !o.can || !!o.can(G, c), def: !!o.def })) : null };
     return;
   }
 }
@@ -1980,6 +2097,16 @@ function openCard(G, c) {
   if (cd.opts) cd.opts.forEach((o, i) => { const f = k.opts[i].can; o.ok = !f || !!f(G, c); });
   if (!k.opts) { const r = k.fx(G, c, cd.x); cd.o = 0; cd.res = typeof r === 'string' ? r : null; closeFin(G, c, 'Ereigniskarte'); news(G, c.name + ': ' + k.t, 'card'); }
   return true;
+}
+/* Pechkarte ungesehen mit einer Glücksmünze abwehren: die Karte dreht sich um, wirkt aber nicht */
+function coinBlock(G, c) {
+  const cd = c.card;
+  if (!cd || cd.open) return 'Keine verdeckte Karte.';
+  if ((cd.kind || cardKind(cd.id)) !== 'p') return 'Nur Pechkarten lassen sich abwehren.';
+  if (c.coins < 1) return 'Du hast keine Glücksmünze.';
+  c.coins--; cd.open = true; cd.blocked = true; cd.o = 0; cd.opts = null; cd.res = 'Mit Glücksmünze abgewehrt';
+  news(G, c.name + ' wehrt „' + cd.t + '“ mit einer Glücksmünze ab', 'card');
+  return null;
 }
 function cardDefault(cd) { if (!cd.opts) return 0; const i = cd.opts.findIndex(o => o.def && o.ok); return i >= 0 ? i : cd.opts.findIndex(o => o.ok); }
 function decideCard(G, c, i) {
@@ -2017,6 +2144,7 @@ function applyAction(G, c, a) {
       G.ready[c.id] = true; return err(null);
     }
     case 'cardopen': if (!canPrepare(G, c)) return err('Jetzt nicht.'); return err(openCard(G, c) ? null : 'Keine verdeckte Karte.');
+    case 'cardcoin': if (!canPrepare(G, c)) return err('Jetzt nicht.'); return err(coinBlock(G, c));
     case 'profil': if (ph !== 'profil' || !c.profOffers) return err('Jetzt nicht.'); if (c.profOffers[a.i | 0]) c.prof = c.profOffers[a.i | 0]; return err(null);
     case 'droll': {
       if (ph !== 'wurf' || !G.dr || G.dr.order) return err('Jetzt wird nicht gewürfelt.');
@@ -2089,6 +2217,7 @@ function botAct(G, c) {
     c.bids = b;
     G.ready[c.id] = true;
   } else if (ph === 'spiel') {
+    if (c.card && !c.card.open && (c.card.kind || cardKind(c.card.id)) === 'p' && c.coins >= 2) coinBlock(G, c);
     if (c.card && !c.card.open) openCard(G, c);
     if (c.card && c.card.o == null) {
       const k = CARD[c.card.id];
@@ -2137,7 +2266,8 @@ function pubClub(G, c) {
   const cd = c.card;
   return { id: c.id, name: c.name, short: c.short, col: c.col, mgr: c.mgr, bot: c.bot, ruhm: c.ruhm, fans: c.fans, st: c.st, tab: c.tab, titles: c.titles, conn: c.bot || c.conn, ready: !!readyMap(G)[c.id] || (!!G.ready[c.id] && !(G.live && G.live.stage === 'ht' && curMatch(G) && (curMatch(G).h === c.id || curMatch(G).a === c.id))), coins: c.coins, np: c.players.length,
     // Ereigniskarte: erst sichtbar, wenn sie am Handy aufgedeckt wurde
-    card: cd ? (cd.open ? { open: true, t: cd.t, d: cd.d, o: cd.o, ol: cd.o != null && cd.opts ? cd.opts[cd.o].l : null, res: cd.res, dec: !!cd.opts } : { open: false }) : null,
+    card: cd ? (cd.open ? { open: true, k: cd.kind || cardKind(cd.id), t: cd.t, d: cd.d, o: cd.o, ol: cd.o != null && cd.opts ? cd.opts[cd.o].l : null, res: cd.res, dec: !!cd.opts, blocked: !!cd.blocked } : { open: false, k: cd.kind || cardKind(cd.id) }) : null,
+    pend: c.pend || [],
     rd: G.rdelta[c.id] || 0,
     prof: G.phase !== 'profil' && c.prof && PROFILES[c.prof] ? { k: c.prof, n: PROFILES[c.prof].n, d: PROFILES[c.prof].d } : null, profChosen: !!c.prof };
 }
@@ -2154,7 +2284,7 @@ function liveSummary(G) {
 function pubView(G) {
   const ph = G.phase;
   const v = { v: 3, ver: typeof APP_VERSION !== 'undefined' ? APP_VERSION : '', ph, season: G.season, seasons: G.settings.seasons, md: G.md, len: G.seasonLen, winterAt: G.winterAt, set: G.settings,
-    clubs: G.clubs.map(c => pubClub(G, c)), rc: readyCount(G), news: G.news.slice(-10), hist: G.hist, final: G.final, paused: !!G.paused };
+    clubs: G.clubs.map(c => pubClub(G, c)), fields: visibleFields(G), rc: readyCount(G), news: G.news.slice(-10), hist: G.hist, final: G.final, paused: !!G.paused };
   if (G.schedule[G.md]) v.fx = G.schedule[G.md];
   if (G.cup) v.cup = { name: G.cup.name, alive: G.cup.alive, winner: G.cup.winner, seeds: G.cup.seeds, hist: G.cup.hist.map(h => ({ name: h.name, res: h.res.map(r => ({ h: r.h, a: r.a, hg: r.hg, ag: r.ag, so: r.so, w: r.w })), byes: h.byes })) };
   if (G.flash) v.flash = G.flash;
@@ -2176,7 +2306,8 @@ function privView(G, c) {
   const v = { id: c.id, money: c.money, coins: c.coins, st: c.st, sponsor: c.sponsor, offers: G.phase === 'saisonstart' ? c.offers : null, listed: c.listed, bids: c.bids,
     lu, luSeq: c.luSeq || 0, prev: lu ? teamPreview(G, c) : null, mods: c.mods, flags: c.flags, dice: G.settings.dice, canPrep: canPrepare(G, c), ready: !!G.ready[c.id],
     players: c.players.map(p => Object.assign(pubPlayer(G, p), { goals: p.goals, gt: p.gt, apps: p.apps, yc: p.yc, st: pStatus(G, p), am: !!p.amateur })),
-    card: c.card ? { id: c.card.id + '-' + G.season + '-' + G.md, open: !!c.card.open, t: c.card.t, d: c.card.d, o: c.card.o, res: c.card.res, opts: c.card.opts } : null,
+    card: c.card ? { id: c.card.id + '-' + G.season + '-' + G.md, k: c.card.kind || cardKind(c.card.id), blocked: !!c.card.blocked, open: !!c.card.open, t: c.card.t, d: c.card.d, o: c.card.o, res: c.card.res, opts: c.card.opts } : null,
+    pend: c.pend || [],
     fin: c.fin.slice(-12), rlog: c.rlog.slice(-20), salary: clubSalary(c), prof: c.prof ? { k: c.prof, n: PROFILES[c.prof].n, d: PROFILES[c.prof].d } : null, profOffers: G.phase === 'profil' && c.profOffers ? c.profOffers.map(k => ({ k, n: PROFILES[k].n, d: PROFILES[k].d })) : null,
     costs: BUILD_KEYS.reduce((o, k) => (o[k] = buildCost(c, k), o), {}) };
   if (G.phase === 'spiel' && G.live) {
@@ -2375,7 +2506,7 @@ function makeClient(handlers) {
 /* ==========================================================================
    GEMEINSAME BAUSTEINE (Brett und Handy)
    ========================================================================== */
-const APP_VERSION = '5';
+const APP_VERSION = '6';
 const $ = (s, r) => (r || document).querySelector(s);
 const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
@@ -2415,6 +2546,29 @@ const ICON = {
   qr: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2.5v2.5H14zM17.5 17.5H20V20h-2.5zM14 20h2M20 14v2',
   muell: 'M4 7h16M9.5 7V4h5v3M6 7l1 13h10l1-13M10 11v5.5M14 11v5.5'
 };
+/* ---------- Grafiken der Ereignisfelder: Kleeblatt (Glück), schwarze Katze (Pech), Wegweiser (Entscheidung) ---------- */
+const FIELD_LABEL = { g: 'Glück', p: 'Pech', e: 'Entscheidung' };
+const CLOVER_LEAF = 'M12 11.4C9.3 9.8 7.5 8.1 7.5 6.2 7.5 4.6 8.7 3.4 10.1 3.4c.9 0 1.5.4 1.9 1.1.4-.7 1-1.1 1.9-1.1 1.4 0 2.6 1.2 2.6 2.8 0 1.9-1.8 3.6-4.5 5.2z';
+function fieldIcon(k, cls) {
+  const o = '<svg class="fic ' + (cls || '') + '" viewBox="0 0 24 24" aria-hidden="true">';
+  if (k === 'g') return o + '<path d="M12.6 12.8c1 2.9 2.7 5.6 5.8 8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path>' +
+    [0, 90, 180, 270].map(r => '<path class="lf" fill="currentColor" transform="rotate(' + r + ' 12 12)" d="' + CLOVER_LEAF + '"></path>').join('') + '</svg>';
+  if (k === 'p') return o + '<path d="M16.6 20.9c3.7.4 5-2.1 4.1-4.6-.4-1.2-1.6-1.7-2.4-1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>' +
+    '<path fill="currentColor" d="M6.6 21.6c0-4.6 1.5-7.9 3.7-8.9h3.4c2.2 1 3.7 4.3 3.7 8.9z"></path>' +
+    '<path fill="currentColor" d="M7.9 8.7c0-1.3.4-2.4 1-3.2L8.6 2.6l2.5 1.9c.3-.1.6-.1.9-.1s.6 0 .9.1l2.5-1.9-.3 2.9c.6.8 1 1.9 1 3.2 0 2.5-1.8 4.3-4.1 4.3S7.9 11.2 7.9 8.7z"></path>' +
+    '<ellipse cx="10.35" cy="8.7" rx=".9" ry="1.15" fill="#FFD43B"></ellipse><ellipse cx="13.65" cy="8.7" rx=".9" ry="1.15" fill="#FFD43B"></ellipse></svg>';
+  return o + '<rect x="11" y="2.4" width="2" height="18.8" rx=".7" fill="currentColor"></rect><path d="M8.4 21.4h7.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path>' +
+    '<path fill="currentColor" d="M4.4 4.6h12.2l3 2.8-3 2.8H4.4z"></path><path fill="currentColor" d="M19.6 11.9H7.4l-3 2.8 3 2.8h12.2z"></path>' +
+    '<path class="lf" d="M6.6 7.4h7.2M10.4 14.7h7.2" stroke-width="1.1" stroke-linecap="round"></path></svg>';
+}
+function fieldChip(k) { return '<span class="fchip f-' + k + '">' + fieldIcon(k) + FIELD_LABEL[k] + '</span>'; }
+/* Wohin bringt ein Sieg (+2) oder ein Unentschieden (+1) die Figur? (nur Liga, im Pokal gibt es keinen Ruhm pro Spiel) */
+function landHint(fields, ruhm, cup) {
+  if (cup || !fields) return '';
+  const w = fields[(ruhm + 2) % 100], d = fields[(ruhm + 1) % 100];
+  if (!w && !d) return '';
+  return '<span class="lhint">' + (w ? '<span>Bei Sieg</span>' + fieldChip(w) : '') + (d ? '<span>Bei Remis</span>' + fieldChip(d) : '') + '</span>';
+}
 function ic(n, cls) { return '<svg class="ico ' + (cls || '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + ICON[n] + '"></path></svg>'; }
 const PIPS = { 1: [4], 2: [2, 6], 3: [2, 4, 6], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
 function dieHtml(v, cls, size) {
@@ -2700,13 +2854,15 @@ async function boardStart(save) {
   B.H = H; B.code = code; B.lastPub = ''; B.lastPriv = {}; B.evSeen = {}; B.rollSeen = {}; B.mainKey = '';
   if (save && save.G) {
     B.G = save.G; if (B.G.seed) SEED = B.G.seed >>> 0;
-    const S = B.G.settings; if (S.dice === 'selbst') S.dice = 'handy'; delete S.mlen; delete S.len; if (!S.cards) S.cards = 'jeder2';
+    const S = B.G.settings; if (S.dice === 'selbst') S.dice = 'handy'; delete S.mlen; delete S.len; if (!S.fields) S.fields = ({ jeder: 'viel', jeder2: 'normal', aus: 'aus' })[S.cards] || 'normal'; delete S.cards;
+    if (!B.G.fields) B.G.fields = makeFields(); if (!B.G.decks) B.G.decks = {};
+    for (const c of B.G.clubs) { if (c.rpos == null) c.rpos = c.ruhm; if (!c.pend) c.pend = []; }
     // Spielstände aus der ersten Version (alle Spiele gleichzeitig): Spieltag neu beginnen
     if (B.G.phase === 'vorbereitung' || (B.G.phase === 'spiel' && B.G.live && !B.G.live.stage)) { B.G.live = null; enterPhase(B.G, 'spiel'); }
     if (B.G.phase === 'spiel' && B.G.live && B.G.live.stage !== 'pre') { B.G.paused = true; B.G.pausedAt = save.at || Date.now(); }
   } else B.G = newGame({});
   B.G.code = code;
-  B.flashN = B.G.flash ? B.G.flash.n : 0; // alte Einblendungen nach dem Laden nicht wiederholen
+  B.flashN = Math.max(B.G.flashN || 0, B.G.flash ? B.G.flash.n : 0); // alte Einblendungen nach dem Laden nicht wiederholen
   for (const c of B.G.clubs) if (!c.bot) c.conn = false;
   el.innerHTML = '<div id="track"></div><div id="pawns"></div><div id="stage"><div id="bhead"></div><div id="bmain"></div></div>';
   boardLayout();
@@ -2816,7 +2972,7 @@ function boardLayout() {
     if (n <= a) { x = n; y = 0; } else if (n <= b) { x = cols - 1; y = n - a; } else if (n <= c2) { x = cols - 1 - (n - b); y = rows - 1; } else { x = 0; y = rows - 1 - (n - c2); }
     pos.push({ x: x0 + x * cs, y: y0 + y * cs });
   }
-  B.lay = { cs, sz, pos };
+  B.lay = { cs, sz, pos }; B.fk = '';
   $('#track').innerHTML = pos.map((p, n) => '<div class="sq' + (n % 10 === 0 ? ' ten' : n % 2 ? ' alt' : '') + '" style="left:' + p.x + 'px;top:' + p.y + 'px;width:' + sz + 'px;height:' + sz + 'px;font-size:' + Math.max(9, Math.round(cs * 0.33)) + 'px">' + (n % 5 === 0 ? n : '') + '</div>').join('');
   const st = $('#stage');
   const pad = 10;
@@ -2850,6 +3006,26 @@ function renderPawns() {
   for (const el of Array.from(box.children)) if (!seen.has(el.id.slice(3))) el.remove();
 }
 
+/* Ereignisfelder auf die Ruhm-Leiste malen */
+function paintFields() {
+  const G = B.G, tr = $('#track'); if (!G || !tr) return;
+  Array.from(tr.children).forEach((el, n) => {
+    const k = fieldAt(G, n);
+    const cls = 'sq' + (k ? ' ev f-' + k : n % 10 === 0 ? ' ten' : n % 2 ? ' alt' : '');
+    if (el.className.replace(' lit', '') === cls) return;
+    el.className = cls; el.innerHTML = k ? fieldIcon(k) : (n % 5 === 0 ? String(n) : ''); el.title = k ? FIELD_N[k] : '';
+  });
+}
+function showFlash(f) {
+  if (!window.BOARD_ON || !$('#stage') || !B.G) return;
+  const el = document.createElement('div'); el.className = 'bflash' + (f.k === 'feld' ? ' feld' : '');
+  const tag = f.k === 'tausch' ? 'TAUSCH!' : f.k === 'feld' ? 'EREIGNISFELD' : 'GELDSPRITZE';
+  const body = f.k === 'feld' && f.hits ? f.hits.map(h => { const c = clubById(B.G, h.c); return c ? '<span class="fhit">' + crest(c, 28, 11) + fieldChip(h.k) + '</span>' : ''; }).join('') + '<span class="fhn">Karte vor dem nächsten Anpfiff</span>' : esc(f.t);
+  el.innerHTML = '<span class="tag"><span>' + tag + '</span></span><span class="bft">' + body + '</span>';
+  $('#stage').appendChild(el); SND.ding(); setTimeout(() => el.remove(), 7000);
+  if (f.k === 'feld' && f.hits) for (const h of f.hits) { const sq = $('#track') && $('#track').children[h.pos]; if (sq) { sq.classList.add('lit'); setTimeout(() => sq.classList.remove('lit'), 8000); } }
+}
+
 /* ---------- Kopfzeile ---------- */
 function headHtml() {
   const G = B.G, ph = G.phase;
@@ -2875,15 +3051,12 @@ function headHtml() {
 function boardRender() {
   const G = B.G; if (!G || !$('#bmain')) return;
   const hh = headHtml(); const he = $('#bhead'); if (he._h !== hh) { he.innerHTML = hh; he._h = hh; }
+  const fk = G.settings.fields + ':' + (G.fields ? 1 : 0);
+  if (B.fk !== fk) { B.fk = fk; paintFields(); }
   renderPawns();
-  if (G.flash && G.flash.n !== B.flashN) {
-    B.flashN = G.flash.n;
-    if (Date.now() - G.flash.at < 15000) {
-      const f = document.createElement('div'); f.className = 'bflash';
-      f.innerHTML = '<span class="tag"><span>' + (G.flash.k === 'tausch' ? 'TAUSCH!' : 'GELDSPRITZE') + '</span></span><span class="bft">' + esc(G.flash.t) + '</span>';
-      $('#stage').appendChild(f); SND.ding(); setTimeout(() => f.remove(), 7000);
-    }
-  }
+  // Einblendungen nacheinander zeigen (Tausch, Geldspritze, Ereignisfeld)
+  const fls = (G.flashes && G.flashes.length ? G.flashes : G.flash ? [G.flash] : []).filter(f => f.n > (B.flashN || 0));
+  if (fls.length) { B.flashN = fls[fls.length - 1].n; fls.forEach((f, i) => { if (Date.now() - f.at < 15000) setTimeout(() => showFlash(f), i * 3800); }); }
   const ph = G.phase;
   if (ph !== B.ph) { B.ph = ph; B.mainKey = ''; if (ph === 'spiel') B.evSeen = {}; }
   const main = $('#bmain');
@@ -3163,7 +3336,7 @@ function renderLive(main) {
   const box = $('#lv-main');
   if (L.stage === 'cards') {
     if (box._k !== 'cards') { box._k = 'cards'; box._h = ''; B.bcState = {}; box.innerHTML = '<div class="cstage"><div class="cs-head"></div><div class="bcards">' + G.clubs.filter(c => c.card).map(c => '<div class="bcard" id="bc-' + c.id + '"></div>').join('') + '</div><div class="cs-foot fbar"></div></div>'; }
-    patch(box.querySelector('.cs-head'), '<span class="tag"><span>EREIGNISKARTEN</span></span><span class="mut">Vor Spieltag ' + (G.md + 1) + ' zieht jeder eine Karte. Aufgedeckt wird am Handy, dann dreht sie sich hier um.</span>');
+    patch(box.querySelector('.cs-head'), '<span class="tag"><span>EREIGNISKARTEN</span></span><span class="mut">Wer auf einem Ereignisfeld stehen geblieben ist, zieht jetzt seine Karte. Aufgedeckt wird am Handy, dann dreht sie sich hier um.</span>');
     for (const c of G.clubs) if (c.card) {
       const el = document.getElementById('bc-' + c.id); if (!el) continue;
       const st = c.card.open ? 'front' : 'back';
@@ -3196,8 +3369,9 @@ function renderLive(main) {
 }
 function boardCardHtml(c) {
   const cd = c.card, k = colOf(c);
-  if (!cd.open) return '<div class="bc-back">' + crest(c, 44, 15) + ic('krone') + '<b>EREIGNIS</b><span>' + esc(c.mgr) + ' deckt auf …</span></div>';
-  return '<div class="bc-front" style="border-top-color:' + k.c + '"><span class="lbl">' + esc(c.name) + '</span><h4>' + esc(cd.t) + '</h4><p>' + esc(cd.d) + '</p>' +
+  const kk = cd.kind || cardKind(cd.id);
+  if (!cd.open) return '<div class="bc-back k-' + kk + '">' + crest(c, 40, 14) + fieldIcon(kk) + '<b>' + FIELD_LABEL[kk].toUpperCase() + '</b><span>' + esc(c.mgr) + ' deckt auf …</span></div>';
+  return '<div class="bc-front k-' + kk + '">' + (cd.blocked ? '<span class="stamp">ABGEWEHRT</span>' : '') + '<span class="lbl ckl">' + fieldIcon(kk) + esc(c.name) + '</span><h4>' + esc(cd.t) + '</h4><p>' + esc(cd.d) + '</p>' +
     (cd.o != null ? '<span class="ch">' + esc(cd.opts ? cd.opts[cd.o].l : (cd.res || '')) + (cd.opts && cd.res ? ' · ' + esc(cd.res) : '') + '</span>' : '<span class="ch mut">entscheidet noch …</span>') + '</div>';
 }
 function patch(el, html) { if (el && el._h !== html) { el.innerHTML = html; el._h = html; } }
@@ -3206,11 +3380,11 @@ function teamInfo(c) {
   return 'Platz ' + (ord.indexOf(c.id) + 1) + (c.tab.form.length ? '<span class="frm">' + c.tab.form.map(f => '<i class="f' + f + '">' + f + '</i>').join('') + '</span>' : '');
 }
 function preHtml(m) {
-  const G = B.G, L = G.live;
+  const G = B.G, L = G.live, vf = visibleFields(G);
   const team = c => {
     const r = c.bot || !!G.ready[c.id];
     return '<div class="pteam">' + crest(c, 92, 30) + '<b>' + esc(c.name) + '</b><span class="mut">' + (c.bot ? 'Computer' : 'Manager ' + esc(c.mgr)) + ' · ' + teamInfo(c) + '</span>' +
-      '<span class="wchip' + (r ? ' rdy' : '') + '"><span class="stripe" style="background:' + colOf(c).c + '"></span>' + (r ? 'Bereit' + ic('check', 'ck') : 'stellt noch auf …') + (!c.bot && !c.conn ? ' <span class="mut">(offline)</span>' : '') + '</span></div>';
+      '<span class="wchip' + (r ? ' rdy' : '') + '"><span class="stripe" style="background:' + colOf(c).c + '"></span>' + (r ? 'Bereit' + ic('check', 'ck') : 'stellt noch auf …') + (!c.bot && !c.conn ? ' <span class="mut">(offline)</span>' : '') + '</span>' + landHint(vf, c.ruhm, L.cup) + '</div>';
   };
   const h = clubById(G, m.h), a = clubById(G, m.a);
   const kick = L.kickAt ? Math.max(0, Math.ceil((L.kickAt - Date.now()) / 1000)) : 0;
@@ -3237,8 +3411,9 @@ function cardsHtml() {
   if (!cs.length) return '<div class="pnl" style="flex:1"><h3>NEUES</h3>' + newsHtml(5) + '</div>';
   return '<div class="lbl">EREIGNISKARTEN</div>' + cs.map(c => {
     const cd = c.card, k = colOf(c);
-    if (!cd.open) return '<div class="ecard back" style="border-top-color:' + k.c + '"><span class="lbl">' + esc(c.name) + '</span><b>' + ic('karte') + ' Karte noch verdeckt</b></div>';
-    return '<div class="ecard" style="border-top-color:' + k.c + '"><span class="lbl">' + esc(c.name) + '</span><b>' + esc(cd.t) + '</b><p>' + esc(cd.d) + '</p>' +
+    const kk = cd.kind || cardKind(cd.id);
+    if (!cd.open) return '<div class="ecard back k-' + kk + '"><span class="lbl">' + esc(c.name) + '</span><b>' + fieldIcon(kk) + ' ' + esc(CARD_KN[kk]) + ' noch verdeckt</b></div>';
+    return '<div class="ecard k-' + kk + '"><span class="lbl ckl">' + fieldIcon(kk) + esc(c.name) + '</span><b>' + esc(cd.t) + (cd.blocked ? ' – abgewehrt' : '') + '</b><p>' + esc(cd.d) + '</p>' +
       (cd.o != null ? '<span class="ch">' + esc(cd.opts ? cd.opts[cd.o].l : (cd.res || '')) + (cd.opts && cd.res ? ' · ' + esc(cd.res) : '') + '</span>' : '<span class="ch mut">entscheidet noch …</span>') + '</div>';
   }).join('');
 }
@@ -3358,7 +3533,8 @@ function settingsHtml(inGame) {
   const s = B.G.settings;
   const seg = (k, opts) => '<div class="seg">' + opts.map(([v, l]) => '<button data-b="set" data-k="' + k + '" data-v="' + v + '" class="' + (String(s[k]) === String(v) ? 'on' : '') + '">' + l + '</button>').join('') + '</div>';
   return '<div class="setrow"><span>Würfeln bei Torchancen</span>' + seg('dice', [['handy', 'Am Handy'], ['echt', 'Echte Würfel'], ['auto', 'Automatisch']]) + '</div>' +
-    '<div class="setrow"><span>Ereigniskarten' + (inGame ? ' (ab nächstem Spieltag)' : '') + '</span>' + seg('cards', [['jeder', 'Jeder Spieltag'], ['jeder2', 'Jeder 2. Spieltag'], ['aus', 'Aus']]) + '</div>';
+    '<div class="setrow"><span>Ereignisfelder</span>' + seg('fields', [['viel', 'Viele'], ['normal', 'Normal'], ['aus', 'Aus']]) + '</div>' +
+    (s.fields === 'aus' ? '' : '<div class="flegend">' + fieldChip('g') + fieldChip('p') + fieldChip('e') + '<span>Bleibt eine Figur auf so einem Feld stehen, zieht ihr Verein vor dem nächsten Anpfiff die passende Karte. Pech lässt sich mit einer Glücksmünze abwehren.</span></div>');
 }
 function menuHtml() {
   return '<div class="menubox"><div class="row" style="justify-content:space-between"><div class="bigt s">MENÜ</div><button class="btn sm" data-b="mclose">Zurück zum Spiel</button></div>' +
@@ -3400,6 +3576,10 @@ function phoneOnPriv(s) {
   let v; try { v = JSON.parse(s); } catch (_) { return; }
   if (v.err) { if (P.lastErrN >= 0 && v.err.n > P.lastErrN) { toast(v.err.m); if (P.cov && v.card && !v.card.open) P.cov = null; } P.lastErrN = v.err.n; }
   else if (P.lastErrN < 0) P.lastErrN = 0;
+  if (v.id && Array.isArray(v.pend)) {
+    if (P.pendN != null && v.pend.length > P.pendN) { toast('Ereignisfeld! Vor dem nächsten Anpfiff ziehst du eine ' + CARD_KN[v.pend[v.pend.length - 1]] + '.', 4000); if (navigator.vibrate) try { navigator.vibrate([50, 40, 50]); } catch (_) {} }
+    P.pendN = v.pend.length;
+  }
   if (v.id && Array.isArray(v.trades)) {
     P.seenOff = P.seenOff || null;
     const inc = v.trades.filter(o => o.to === v.id && o.st === 'open').map(o => o.id);
@@ -3549,7 +3729,13 @@ function readyBtn(extra) { return readyBtnX(myPub().ready, 'Bereit', extra); }
 /* ---------- Aktion je Phase ---------- */
 function aktHtml() {
   const ph = P.pub.ph;
-  return (AKT[ph] || (() => '<p class="hint">…</p>'))();
+  return (['lobby', 'profil', 'ende'].includes(ph) ? '' : pendSec()) + (AKT[ph] || (() => '<p class="hint">…</p>'))();
+}
+/* Auf einem Ereignisfeld stehen geblieben: Karte kommt vor dem nächsten Anpfiff */
+function pendSec() {
+  const pd = (P.me && P.me.pend) || []; if (!pd.length) return '';
+  return '<div class="sec pendsec f-' + pd[0] + '">' + fieldIcon(pd[0]) + '<span><b>Ereignisfeld!</b> Vor dem nächsten Anpfiff ziehst du ' + pd.map(k => 'eine ' + CARD_KN[k]).join(', danach ') + '.' +
+    (pd.includes('p') && P.me.coins > 0 ? ' Eine Pechkarte kannst du mit einer Glücksmünze abwehren.' : '') + '</span></div>';
 }
 const AKT = {
   profil() {
@@ -3662,6 +3848,7 @@ const AKT = {
       const cardsNow = pub.live && pub.live.stage === 'cards';
       let x = '<div class="sec">' + bug + (cardsNow ? '<p class="hint">Zuerst decken alle ihre Ereigniskarten auf, dann beginnt der Spieltag' + (M.before ? ' – dein Spiel ist das ' + (M.before + 1) + '.' : ' mit deinem Spiel') + '.</p>' : M.stat === 'pre' ? '<p class="hint"><b class="lime">Dein Spiel ist dran!</b> Wenn beide Manager bereit sind, pfeift das Spielbrett an.</p>' : '<p class="hint">' + (M.before === 1 ? 'Ein Spiel' : M.before + ' Spiele') + ' vor dir. Nutz die Zeit für Aufstellung und Taktik.</p>' + now) + '</div>';
       x += cardSec();
+      { const mp = myPub(), lh = mp ? landHint(pub.fields, mp.ruhm, pub.live && pub.live.cup) : ''; if (lh) x += '<div class="sec"><h2><span class="lbl">RUHM-LEISTE</span></h2>' + lh + '</div>'; }
       x += '<div class="sec"><h2><span class="lbl">GEGNER</span><span class="mut" style="font-size:13px">' + (M.sd === 'h' ? 'Heim' : 'Auswärts') + ' gegen ' + esc(opp.name) + '</span></h2></div>';
       x += lineupEditor();
       const cd = me.card;
@@ -3727,10 +3914,12 @@ function curInfo() {
 /* Ereigniskarte: verdeckt, bis man sie antippt */
 function cardSec() {
   const cd = P.me.card; if (!cd) return '';
-  if (!cd.open) return '<div class="sec"><button class="cback-btn" data-p="cardopen"><span class="cbk">' + ic('krone') + '<b>EREIGNIS</b></span><span class="cbt"><b>Du hast eine Ereigniskarte gezogen</b><span>Tippen zum Aufdecken. Erst dann sehen die anderen sie auf dem Spielbrett.</span></span></button></div>';
-  return '<div class="sec"><div class="gcard"><span class="lbl" style="color:var(--ink2)">EREIGNISKARTE</span><h3>' + esc(cd.t) + '</h3><p>' + esc(cd.d) + '</p>' + cardBody(cd) + '</div></div>';
+  const k = cd.k || 'g';
+  if (!cd.open) return '<div class="sec"><button class="cback-btn" data-p="cardopen"><span class="cbk k-' + k + '">' + fieldIcon(k) + '<b>' + FIELD_LABEL[k].toUpperCase() + '</b></span><span class="cbt"><b>Du hast eine ' + esc(CARD_KN[k]) + ' gezogen</b><span>Tippen zum Aufdecken. Erst dann sehen die anderen sie auf dem Spielbrett.</span></span></button>' + (k === 'p' && P.me.coins > 0 ? coinBarHtml() : '') + '</div>';
+  return '<div class="sec"><div class="gcard k-' + k + '"><span class="lbl ckl">' + fieldIcon(k) + esc(CARD_KN[k]) + '</span><h3>' + esc(cd.t) + '</h3><p>' + esc(cd.d) + '</p>' + cardBody(cd) + '</div></div>';
 }
 function cardBody(cd) {
+  if (cd.blocked) return '<span class="stamp">ABGEWEHRT</span><span class="res">Mit einer Glücksmünze abgewehrt – die Karte wirkt nicht.</span>';
   if (cd.o == null && cd.opts) return cd.opts.map((o, i) => '<button class="opt" data-p="card" data-v="' + i + '"' + (o.ok ? '' : ' disabled') + '>' + esc(o.l) + '</button>').join('');
   if (cd.o == null) return '<span class="res mut">…</span>';
   return '<span class="res">' + esc(cd.opts ? cd.opts[cd.o].l : '') + (cd.opts && cd.res ? ' · ' : '') + esc(cd.res || '') + '</span>';
@@ -3745,13 +3934,21 @@ function cardOverlay() {
   }
   let ov = document.getElementById('cardov');
   if (!P.cov || !cd || P.cov.id !== cd.id) { if (ov) ov.remove(); if (P.cov && (!cd || P.cov.id !== cd.id)) P.cov = null; return; }
+  const k = cd.k || 'g';
   if (!ov) {
     ov = document.createElement('div'); ov.id = 'cardov'; ov.className = 'cov';
-    ov.innerHTML = '<div class="cflip ' + (cd.open ? 'shown' : P.cov.go ? 'go' : 'wait') + '" data-p="cardflip"><div class="cface cbk">' + ic('krone') + '<b>EREIGNIS</b><span class="tap">Tippen zum Aufdecken</span></div><div class="cface cfr"><span class="lbl" style="color:var(--ink2)">EREIGNISKARTE</span><h3>' + esc(cd.t) + '</h3><p>' + esc(cd.d) + '</p><div class="cf-body"></div></div></div>';
+    ov.innerHTML = '<div class="cflip ' + (cd.open ? 'shown' : P.cov.go ? 'go' : 'wait') + '" data-p="cardflip">' +
+      '<div class="cface cbk k-' + k + '">' + fieldIcon(k) + '<b>' + FIELD_LABEL[k].toUpperCase() + '</b><span class="tap">Tippen zum Aufdecken</span></div>' +
+      '<div class="cface cfr k-' + k + '"><span class="lbl ckl">' + fieldIcon(k) + esc(CARD_KN[k]) + '</span><h3>' + esc(cd.t) + '</h3><p>' + esc(cd.d) + '</p><div class="cf-body"></div></div></div>' +
+      '<div class="cov-coin"></div>';
     document.body.appendChild(ov);
   }
   const done = cd.o != null;
   patch(ov.querySelector('.cf-body'), cardBody(cd) + (done ? '<button class="btn wide" data-p="covclose" style="margin-top:6px">Fertig</button>' : ''));
+  patch(ov.querySelector('.cov-coin'), !cd.open && k === 'p' && P.me.coins > 0 ? coinBarHtml() : '');
+}
+function coinBarHtml() {
+  return '<div class="coinbar">' + ic('muenze') + '<span><b>Pechkarte!</b> Mit einer Glücksmünze wehrst du sie ab, ohne sie aufzudecken. Du hast ' + P.me.coins + (P.me.coins === 1 ? ' Münze' : ' Münzen') + '.</span><button class="btn sm white" data-p="cardcoin">Münze einsetzen</button></div>';
 }
 function flipCard() {
   const cd = P.me && P.me.card; if (!cd) return;
@@ -4030,8 +4227,7 @@ function ligaHtml() {
   if (pub.hist && pub.hist.length) h += '<div class="sec"><h2><span class="lbl">MEISTER</span></h2>' + pub.hist.map(x => '<div class="kv"><span>Saison ' + x.season + '</span><b>' + esc((cPub(x.champ) || {}).name) + '</b></div>').join('') + '</div>';
   h += '<div class="sec"><h2><span class="lbl">NEUES</span></h2><div class="evl">' + pub.news.slice().reverse().map(n => '<div><span>' + esc(n.t) + '</span></div>').join('') + '</div></div>';
   h += '<div class="sec"><h2><span class="lbl">SO GIBT ES RUHM</span></h2><p class="hint">Die Figuren außen auf dem Spielbrett zeigen den Ruhm. Wer am Ende die meisten Ruhm-Punkte hat, gewinnt.</p>' + RUHM_INFO.map(x => '<div class="kv"><span>' + esc(x[0]) + '</span><b class="lime">' + esc(x[1]) + '</b></div>').join('') + '</div>';
-  const cf = (pub.set && pub.set.cards) || 'jeder2';
-  h += '<p class="hint">Ereigniskarten: ' + (cf === 'jeder' ? 'vor jedem Spieltag' : cf === 'aus' ? 'ausgeschaltet' : 'vor jedem 2. Spieltag (2., 4., 6. …)') + ', für alle gleichzeitig.</p>';
+  if (pub.set && pub.set.fields !== 'aus') h += '<div class="sec"><h2><span class="lbl">EREIGNISFELDER</span></h2><div class="flegend">' + fieldChip('g') + fieldChip('p') + fieldChip('e') + '</div><p class="hint" style="margin-top:8px">Bleibt deine Figur auf der Ruhm-Leiste auf so einem Feld stehen, ziehst du vor dem nächsten Anpfiff die passende Karte. Eine Pechkarte kannst du vor dem Aufdecken mit einer Glücksmünze abwehren.</p></div>';
   h += '<p class="hint" style="text-align:center">Football Empire · Version ' + APP_VERSION + '</p>';
   return h;
 }
@@ -4086,6 +4282,11 @@ document.addEventListener('click', e => {
     case 'tcounter': { const o = (me.trades || []).find(x => x.id === v); if (!o) return; send({ t: 'oanswer', id: v, ok: false }); P.tr = { to: o.from, give: o.get.ps.map(p => p.id), gm: o.get.money, get: o.give.ps.map(p => p.id), tm: o.give.money }; send({ t: 'tview', c: o.from }); toast('Ändere das Angebot und sende es zurück.'); phoneRender(); return; }
     case 'cardopen': if (me.card && !me.card.open) { P.cov = { id: me.card.id, go: true }; P.covAutoId = me.card.id; cardOverlay(); flipCard(); } return;
     case 'cardflip': flipCard(); return;
+    case 'cardcoin': if (me.card && !me.card.open && me.card.k === 'p' && me.coins > 0) {
+      const el = document.querySelector('#cardov .cflip');
+      if (el) { if (el.classList.contains('wait')) { el.classList.remove('wait'); el.classList.add('go'); } } else { P.cov = { id: me.card.id, go: true }; P.covAutoId = me.card.id; cardOverlay(); }
+      send({ t: 'cardcoin' }); if (navigator.vibrate) try { navigator.vibrate(40); } catch (_) {}
+    } return;
     case 'reload': location.replace(location.pathname + '?raum=' + P.code + (LOCAL ? '&lokal=1' : '') + '&v=' + Date.now()); return;
     case 'covclose': P.cov = null; cardOverlay(); phoneRender(); return;
     case 'covshow': if (me.card) { P.cov = { id: me.card.id }; P.covAutoId = me.card.id; cardOverlay(); } return;
