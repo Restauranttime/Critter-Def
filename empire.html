@@ -705,6 +705,9 @@ input{font:inherit;color:inherit}
 .bflash.feld .bft{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
 .fhit{display:inline-flex;align-items:center;gap:6px}
 .fhn{font-size:13px;font-weight:600;color:var(--ink2)}
+.updbox{display:flex;align-items:center;gap:12px;background:var(--panel2);box-shadow:inset 3px 0 0 var(--lime);padding:10px 12px;font-size:13px;text-align:left;color:var(--muted)}
+.updbox b{color:#fff}
+.updbox .btn{flex-shrink:0}
 </style>
 </head>
 <body>
@@ -2668,6 +2671,7 @@ function showStart(err) {
   ['board', 'phone'].forEach(id => { const e = document.getElementById(id); if (e) e.hidden = true; });
   ['bmenu', 'cardov'].forEach(id => { const e = document.getElementById(id); if (e) e.remove(); });
   if (SCAN.on) scanClose();
+  setTimeout(checkUpdate, 400);
   const s = $('#start'); s.hidden = false;
   const saves = boardSaves();
   const ph = ST.get('phone', null);
@@ -2833,6 +2837,33 @@ function scanClose() {
   const o = $('#scanov'); if (o) o.remove();
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && SCAN.on) scanClose(); });
+
+/* ---------- Neue Version erkennen ----------
+   GitHub Pages hält die Seite bis zu 10 Minuten im Zwischenspeicher, und die Home-Bildschirm-App bleibt
+   oft im Speicher. Die Startseite fragt deshalb selbst nach, ob es eine neuere Version gibt, erneuert den
+   Zwischenspeicher und lädt sie (auf der Startseite geht dabei nichts verloren). */
+let UPD_AT = 0;
+function refreshCache() { try { return fetch(location.pathname, { cache: 'reload' }).catch(() => {}); } catch (_) { return Promise.resolve(); } }
+async function checkUpdate() {
+  if (LOCAL || window.BOARD_ON || window.PHONE_ON || Date.now() - UPD_AT < 60000) return;
+  UPD_AT = Date.now();
+  let txt = '';
+  try { const r = await fetch(location.pathname + '?vc=' + Date.now(), { cache: 'no-store' }); if (!r.ok) return; txt = await r.text(); } catch (_) { return; }
+  const m = txt.match(/APP_VERSION = '(\d+)'/); if (!m || +m[1] <= +APP_VERSION) return;
+  const nv = m[1];
+  await Promise.race([refreshCache(), new Promise(r => setTimeout(r, 2500))]);
+  if (window.BOARD_ON || window.PHONE_ON || $('#start').hidden) return; // inzwischen im Spiel: dort fragt das Handy selbst
+  let tried = null; try { tried = sessionStorage.getItem('fe-upd'); } catch (_) {}
+  if (tried === nv) { // schon einmal versucht: Knopf statt Endlosschleife
+    if (!$('#updbox')) { const d = document.createElement('div'); d.id = 'updbox'; d.className = 'updbox'; d.innerHTML = '<span><b>Version ' + nv + ' ist da.</b> Falls hier noch Version ' + APP_VERSION + ' steht: App ganz schließen und neu öffnen.</span><button class="btn sm" data-s="upd" data-v="' + nv + '">Neu laden</button>'; const s = $('#start .start-btns'); if (s) s.prepend(d); }
+    return;
+  }
+  try { sessionStorage.setItem('fe-upd', nv); } catch (_) {}
+  toast('Version ' + nv + ' ist da und wird geladen …', 2500);
+  setTimeout(() => location.replace(location.pathname + '?v=' + nv), 900);
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !window.BOARD_ON && !window.PHONE_ON) setTimeout(checkUpdate, 300); });
+document.addEventListener('click', e => { const b = e.target.closest('[data-s="upd"]'); if (b) location.replace(location.pathname + '?v=' + b.dataset.v + '&t=' + Date.now()); });
 
 /* ==========================================================================
    SPIELBRETT (iPad): Gastgeber, rechnet alles und zeigt das Brett
@@ -4334,7 +4365,7 @@ document.addEventListener('click', e => {
       if (el) { if (el.classList.contains('wait')) { el.classList.remove('wait'); el.classList.add('go'); } } else { P.cov = { id: me.card.id, go: true }; P.covAutoId = me.card.id; cardOverlay(); }
       send({ t: 'cardcoin' }); if (navigator.vibrate) try { navigator.vibrate(40); } catch (_) {}
     } return;
-    case 'reload': location.replace(location.pathname + '?raum=' + P.code + (LOCAL ? '&lokal=1' : '') + '&v=' + Date.now()); return;
+    case 'reload': { const go = () => location.replace(location.pathname + '?raum=' + P.code + (LOCAL ? '&lokal=1' : '') + '&v=' + Date.now()); Promise.race([refreshCache(), new Promise(r => setTimeout(r, 2500))]).then(go, go); return; }
     case 'covclose': P.cov = null; cardOverlay(); phoneRender(); return;
     case 'covshow': if (me.card) { P.cov = { id: me.card.id }; P.covAutoId = me.card.id; cardOverlay(); } return;
     case 'rv': { if (!P.dl) return; P.dl.rv = P.dl.rv || []; P.dl.rv[+b.dataset.i] = +v; sendRealRoll(); return; }
