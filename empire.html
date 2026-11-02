@@ -1052,10 +1052,19 @@ function addRuhm(G, c, v, why) {
   const r0 = c.ruhm;
   c.ruhm = Math.max(0, c.ruhm + v);
   const n10 = Math.floor(c.ruhm / 10) - Math.floor(r0 / 10);
-  if (n10 > 0) pay(G, c, SEASON.ten * n10, n10 > 1 ? n10 + ' grüne Felder auf der Ruhm-Leiste' : 'Grünes Feld ' + Math.floor(c.ruhm / 10) * 10 + ' auf der Ruhm-Leiste');
+  if (n10 > 0) {
+    let nc = 0; for (let k = Math.floor(r0 / 10) + 1; k <= Math.floor(c.ruhm / 10); k++) if (k % 2 === 0) nc++;
+    c.coins += nc;
+    pay(G, c, SEASON.ten * n10, (n10 > 1 ? n10 + ' grüne Felder auf der Ruhm-Leiste' : 'Grünes Feld ' + Math.floor(c.ruhm / 10) * 10 + ' auf der Ruhm-Leiste') + (nc ? ' (+' + nc + (nc === 1 ? ' Glücksmünze)' : ' Glücksmünzen)') : ''));
+  }
   c.rlog.push({ s: G.season, md: G.md, v, why });
   if (c.rlog.length > 80) c.rlog.splice(0, c.rlog.length - 80);
   G.rdelta[c.id] = (G.rdelta[c.id] || 0) + v;
+}
+function bigWin(G, c, diff) {
+  c.coins++;
+  news(G, c.name + ' gewinnt mit ' + diff + ' Toren Unterschied: +1 Glücksmünze', 'info');
+  pushFlash(G, { k: 'muenzen', t: c.name + ' gewinnt mit ' + diff + ' Toren Unterschied: +1 Glücksmünze' });
 }
 function withBank(G, f) { const b = G.bankMode; G.bankMode = true; try { return f(); } finally { G.bankMode = b; } }
 function payBank(G) {
@@ -1143,6 +1152,9 @@ function enterPhase(G, ph) {
   } else if (ph === 'saisonstart') {
     G.md = 0;
     for (const c of G.clubs) c.ruhmS0 = c.ruhm;
+    for (const c of G.clubs) c.coins += 2;
+    news(G, 'Saison ' + G.season + ': Jeder Verein bekommt 2 Glücksmünzen.', 'info');
+    pushFlash(G, { k: 'muenzen', t: 'Saison ' + G.season + ': Jeder Verein bekommt 2 Glücksmünzen' });
     for (const c of G.clubs) { c.offers = sponsorOffers(G, c); c.sponsor = null; c.listed = []; c.bids = {}; }
   } else if (ph === 'winter') {
     for (const c of G.clubs) { c.listed = []; c.bids = {}; }
@@ -1485,6 +1497,7 @@ function finishCupRound(G) {
     const win = m.hg > m.ag ? 'h' : m.ag > m.hg ? 'a' : (m.soWin || 'h');
     const w = m[win], l = m[other(win)];
     C.out.push(l); addFans(clubById(G, w), 300);
+    if (Math.abs(m.hg - m.ag) >= 3) bigWin(G, clubById(G, w), Math.abs(m.hg - m.ag));
     const scorers = m.ev.filter(e => e.t === 'goal').map(e => ({ sd: e.sd, min: e.min, n: (e.text.match(/([^!]+?) trifft/) || [])[1] || '' }));
     res.push({ h: m.h, a: m.a, hg: m.hg, ag: m.ag, so: m.so ? soTally(m) : null, w, scorers, spect: 0, st: m.st });
     news(G, C.name + ': ' + clubById(G, m.h).name + ' ' + m.hg + ':' + m.ag + (m.so ? ' (' + soTally(m).h + ':' + soTally(m).a + ' i.E.)' : '') + ' ' + clubById(G, m.a).name, 'result');
@@ -1836,6 +1849,7 @@ function finishMatchday(G) {
     const upd = (c, gf, ga) => {
       c.tab.sp++; c.tab.gf += gf; c.tab.ga += ga;
       const r = gf > ga ? 'S' : gf === ga ? 'U' : 'N';
+      if (gf - ga >= 3) bigWin(G, c, gf - ga);
       if (r === 'S') { c.tab.s++; c.tab.pts += 3; addRuhm(G, c, 2, 'Sieg'); addFans(c, 600 * fs); if (c.sponsor && c.sponsor.win) pay(G, c, c.sponsor.win, 'Siegprämie ' + c.sponsor.n); }
       else if (r === 'U') { c.tab.u++; c.tab.pts += 1; addRuhm(G, c, 1, 'Unentschieden'); addFans(c, 100 * fs); }
       else { c.tab.n++; addFans(c, -300 * fs); }
@@ -2603,7 +2617,7 @@ function makeClient(handlers) {
 /* ==========================================================================
    GEMEINSAME BAUSTEINE (Brett und Handy)
    ========================================================================== */
-const APP_VERSION = '7';
+const APP_VERSION = '8';
 const $ = (s, r) => (r || document).querySelector(s);
 const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
@@ -3167,7 +3181,7 @@ function pawnNext() {
       B.pmv = null; B.ptimer = setTimeout(pawnNext, 450); return;
     }
     B.pv[id] += d; placePawns(); pawnHop(id, ms); camTo(id);
-    if (d > 0 && B.pv[id] % 10 === 0) coinPop(B.pv[id] % 100);
+    if (d > 0 && B.pv[id] % 10 === 0) coinPop(B.pv[id] % 100, B.pv[id] % 20 === 0);
     B.ptimer = setTimeout(step, ms);
   };
   B.ptimer = setTimeout(step, B.camOn ? 450 : 800);
@@ -3183,9 +3197,9 @@ function camTo(id) {
 }
 function camReset() { const bz = $('#bz'); if (bz && bz.style.transform) { bz.style.transform = ''; bz.classList.remove('zoom'); B.camOffAt = Date.now(); } B.camOn = false; }
 /* Über ein grünes Zehnerfeld gezogen: +0,5 Mio € */
-function coinPop(sq) {
+function coinPop(sq, coin) {
   const L = B.lay, p = L && L.pos[sq], box = $('#pawns'); if (!p || !box) return;
-  const e = document.createElement('div'); e.className = 'coinpop'; e.textContent = '+0,5 Mio €';
+  const e = document.createElement('div'); e.className = 'coinpop'; e.textContent = '+0,5 Mio €' + (coin ? ' · +1 Glücksmünze' : '');
   e.style.left = Math.round(p.x + L.sz / 2) + 'px'; e.style.top = Math.round(p.y - 4) + 'px';
   box.appendChild(e); setTimeout(() => e.remove(), 1800);
   const sqEl = $('#track') && $('#track').children[sq]; if (sqEl) { sqEl.classList.add('tenhit'); setTimeout(() => sqEl.classList.remove('tenhit'), 900); }
@@ -3209,9 +3223,9 @@ function paintFields() {
 }
 function showFlash(f, tries) {
   if (!window.BOARD_ON || !$('#stage') || !B.G) return;
-  if (f.k === 'feld' && (pawnsBusy() || B.camOn || Date.now() - (B.camOffAt || 0) < 800) && (tries || 0) < 120) { setTimeout(() => showFlash(f, (tries || 0) + 1), 250); return; }
+  if ((pawnsBusy() || B.camOn || Date.now() - (B.camOffAt || 0) < 800) && (tries || 0) < 120) { setTimeout(() => showFlash(f, (tries || 0) + 1), 250); return; }
   const el = document.createElement('div'); el.className = 'bflash' + (f.k === 'feld' ? ' feld' : '');
-  const tag = f.k === 'tausch' ? 'TAUSCH!' : f.k === 'feld' ? 'EREIGNISFELD' : 'GELDSPRITZE';
+  const tag = f.k === 'tausch' ? 'TAUSCH!' : f.k === 'feld' ? 'EREIGNISFELD' : f.k === 'muenzen' ? 'GLÜCKSMÜNZEN' : 'GELDSPRITZE';
   const body = f.k === 'feld' && f.hits ? f.hits.map(h => { const c = clubById(B.G, h.c); return c ? '<span class="fhit">' + crest(c, 28, 11) + fieldChip(h.k) + '</span>' : ''; }).join('') + '<span class="fhn">Karte vor dem nächsten Anpfiff</span>' : esc(f.t);
   el.innerHTML = '<span class="tag"><span>' + tag + '</span></span><span class="bft">' + body + '</span>';
   $('#stage').appendChild(el); SND.ding(); setTimeout(() => el.remove(), 7000);
@@ -3728,7 +3742,7 @@ function settingsHtml(inGame) {
   const seg = (k, opts) => '<div class="seg">' + opts.map(([v, l]) => '<button data-b="set" data-k="' + k + '" data-v="' + v + '" class="' + (String(s[k]) === String(v) ? 'on' : '') + '">' + l + '</button>').join('') + '</div>';
   return '<div class="setrow"><span>Würfeln bei Torchancen</span>' + seg('dice', [['handy', 'Am Handy'], ['echt', 'Echte Würfel'], ['auto', 'Automatisch']]) + '</div>' +
     '<div class="setrow"><span>Ereignisfelder</span>' + seg('fields', [['viel', 'Viele'], ['normal', 'Normal'], ['aus', 'Aus']]) + '</div>' +
-    (s.fields === 'aus' ? '' : '<div class="flegend">' + fieldChip('g') + fieldChip('p') + fieldChip('e') + '<span>Bleibt eine Figur auf so einem Feld stehen, zieht ihr Verein vor dem nächsten Anpfiff die passende Karte. Pech lässt sich mit einer Glücksmünze abwehren. Wer über ein grünes Zehnerfeld zieht, bekommt 0,5 Mio €.</span></div>');
+    (s.fields === 'aus' ? '' : '<div class="flegend">' + fieldChip('g') + fieldChip('p') + fieldChip('e') + '<span>Bleibt eine Figur auf so einem Feld stehen, zieht ihr Verein vor dem nächsten Anpfiff die passende Karte. Pech lässt sich mit einer Glücksmünze abwehren. Wer über ein grünes Zehnerfeld zieht, bekommt 0,5 Mio €, auf jedem zweiten (20, 40, …) dazu eine Glücksmünze.</span></div>');
 }
 function menuHtml() {
   return '<div class="menubox"><div class="row" style="justify-content:space-between"><div class="bigt s">MENÜ</div><button class="btn sm" data-b="mclose">Zurück zum Spiel</button></div>' +
@@ -3770,6 +3784,10 @@ function phoneOnPriv(s) {
   let v; try { v = JSON.parse(s); } catch (_) { return; }
   if (v.err) { if (P.lastErrN >= 0 && v.err.n > P.lastErrN) { toast(v.err.m); if (P.cov && v.card && !v.card.open) P.cov = null; } P.lastErrN = v.err.n; }
   else if (P.lastErrN < 0) P.lastErrN = 0;
+  if (v.id && typeof v.coins === 'number') {
+    if (P.coinsN != null && v.coins > P.coinsN) toast('+' + (v.coins - P.coinsN) + (v.coins - P.coinsN === 1 ? ' Glücksmünze' : ' Glücksmünzen') + ' · jetzt ' + v.coins, 3500);
+    P.coinsN = v.coins;
+  }
   if (v.id && Array.isArray(v.pend)) {
     if (P.pendN != null && v.pend.length > P.pendN) { toast('Ereignisfeld! Vor dem nächsten Anpfiff ziehst du eine ' + CARD_KN[v.pend[v.pend.length - 1]] + '.', 4000); if (navigator.vibrate) try { navigator.vibrate([50, 40, 50]); } catch (_) {} }
     P.pendN = v.pend.length;
@@ -4415,7 +4433,8 @@ function geldHtml() {
   let h = '<div class="sec"><div class="kv"><span>Vereinskasse</span><b class="' + (me.money < 0 ? 'neg' : '') + '">' + fmtM(me.money) + '</b></div><div class="kv"><span>Gehälter pro Saison</span><b>' + fmtM(me.salary) + '</b></div>' +
     (me.sponsor ? '<div class="kv"><span>Sponsor</span><b>' + esc(me.sponsor.n) + '</b></div>' : '') +
     '<div class="kv"><span>Glücksmünzen</span><b>' + me.coins + '</b></div>' +
-    '<p class="hint">Schulden kosten Zinsen und jeden Spieltag 1 Ruhm. Am Spielende bringt die Vereinskasse je 5 Mio € 1 Ruhm. Jedes grüne Zehnerfeld auf der Ruhm-Leiste bringt 0,5 Mio €.</p></div>' + fcSec();
+    '<p class="hint">Schulden kosten Zinsen und jeden Spieltag 1 Ruhm. Am Spielende bringt die Vereinskasse je 5 Mio € 1 Ruhm. Jedes grüne Zehnerfeld auf der Ruhm-Leiste bringt 0,5 Mio €.</p>' +
+    '<p class="hint"><b>Glücksmünzen</b> gibt es zu jeder Saison (2), für einen Sieg mit 3 Toren Unterschied (1) und auf jedem zweiten grünen Feld der Ruhm-Leiste (20, 40, …). Einsetzen: im Würfel-Duell für einen zweiten Würfel oder gegen eine Pechkarte.</p></div>' + fcSec();
   for (const f of me.fin.slice().reverse()) {
     h += '<div class="sec"><h2><span class="lbl">' + esc(f.label.toUpperCase()) + ' · SAISON ' + f.s + '</span><b class="' + (f.sum >= 0 ? 'pos' : 'neg') + '">' + fmtMs(f.sum) + '</b></h2>' + f.items.map(x => '<div class="kv"><span>' + esc(x.t) + '</span><b class="' + (x.v >= 0 ? 'pos' : 'neg') + '">' + fmtMs(x.v) + '</b></div>').join('') + '</div>';
   }
@@ -4433,7 +4452,7 @@ function ligaHtml() {
   if (pub.hist && pub.hist.length) h += '<div class="sec"><h2><span class="lbl">MEISTER</span></h2>' + pub.hist.map(x => '<div class="kv"><span>Saison ' + x.season + '</span><b>' + esc((cPub(x.champ) || {}).name) + '</b></div>').join('') + '</div>';
   h += '<div class="sec"><h2><span class="lbl">NEUES</span></h2><div class="evl">' + pub.news.slice().reverse().map(n => '<div><span>' + esc(n.t) + '</span></div>').join('') + '</div></div>';
   h += '<div class="sec"><h2><span class="lbl">SO GIBT ES RUHM</span></h2><p class="hint">Die Figuren außen auf dem Spielbrett zeigen den Ruhm. Wer am Ende die meisten Ruhm-Punkte hat, gewinnt.</p>' + RUHM_INFO.map(x => '<div class="kv"><span>' + esc(x[0]) + '</span><b class="lime">' + esc(x[1]) + '</b></div>').join('') + '</div>';
-  if (pub.set && pub.set.fields !== 'aus') h += '<div class="sec"><h2><span class="lbl">EREIGNISFELDER</span></h2><div class="flegend">' + fieldChip('g') + fieldChip('p') + fieldChip('e') + '</div><p class="hint" style="margin-top:8px">Bleibt deine Figur auf der Ruhm-Leiste auf so einem Feld stehen, ziehst du vor dem nächsten Anpfiff die passende Karte. Eine Pechkarte kannst du vor dem Aufdecken mit einer Glücksmünze abwehren. Wer über ein grünes Zehnerfeld zieht, bekommt 0,5 Mio €.</p></div>';
+  if (pub.set && pub.set.fields !== 'aus') h += '<div class="sec"><h2><span class="lbl">EREIGNISFELDER</span></h2><div class="flegend">' + fieldChip('g') + fieldChip('p') + fieldChip('e') + '</div><p class="hint" style="margin-top:8px">Bleibt deine Figur auf der Ruhm-Leiste auf so einem Feld stehen, ziehst du vor dem nächsten Anpfiff die passende Karte. Eine Pechkarte kannst du vor dem Aufdecken mit einer Glücksmünze abwehren. Wer über ein grünes Zehnerfeld zieht, bekommt 0,5 Mio €, auf jedem zweiten (20, 40, …) dazu eine Glücksmünze.</p></div>';
   h += '<p class="hint" style="text-align:center">Football Empire · Version ' + APP_VERSION + '</p>';
   return h;
 }
