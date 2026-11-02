@@ -2617,7 +2617,7 @@ function makeClient(handlers) {
 /* ==========================================================================
    GEMEINSAME BAUSTEINE (Brett und Handy)
    ========================================================================== */
-const APP_VERSION = '8';
+const APP_VERSION = '9';
 const $ = (s, r) => (r || document).querySelector(s);
 const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
@@ -3209,7 +3209,7 @@ function pawnHop(id, ms) {
   try { e.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-' + Math.round(B.lay.cs * 0.38) + 'px)', offset: 0.45 }, { transform: 'translateY(0)' }], { duration: Math.max(80, ms - 15), easing: 'ease-out' }); } catch (_) {}
 }
 function pawnsBusy() { return !!B.pbusy || !!B.pmv || !!(B.pq && B.pq.length); }
-function pawnsReset() { clearTimeout(B.ptimer); B.pv = {}; B.pq = []; B.pmv = null; B.pbusy = false; camReset(); }
+function pawnsReset() { clearTimeout(B.ptimer); B.pv = {}; B.pq = []; B.pmv = null; B.pbusy = false; camReset(); clearTimeout(B.flashT); B.flashT = null; B.flashQ = []; }
 
 /* Ereignisfelder auf die Ruhm-Leiste malen */
 function paintFields() {
@@ -3221,9 +3221,21 @@ function paintFields() {
     el.className = cls; el.innerHTML = k ? fieldIcon(k) : (n % 5 === 0 ? String(n) : ''); el.title = k ? FIELD_N[k] : '';
   });
 }
-function showFlash(f, tries) {
+/* Einblendungen der Reihe nach: erst wenn die Figuren gezogen sind, dann eine nach der anderen (nie übereinander) */
+function flashPump() {
+  if (B.flashT) return;
+  const f = (B.flashQ || []).shift(); if (!f) return;
+  const go = tries => {
+    if (!window.BOARD_ON || !B.G) { B.flashQ = []; B.flashT = null; return; }
+    if ((pawnsBusy() || B.camOn || Date.now() - (B.camOffAt || 0) < 800) && tries < 120) { B.flashT = setTimeout(() => go(tries + 1), 250); return; }
+    showFlash(f);
+    B.flashT = setTimeout(() => { B.flashT = null; flashPump(); }, 4200);
+  };
+  go(0);
+}
+function showFlash(f) {
   if (!window.BOARD_ON || !$('#stage') || !B.G) return;
-  if ((pawnsBusy() || B.camOn || Date.now() - (B.camOffAt || 0) < 800) && (tries || 0) < 120) { setTimeout(() => showFlash(f, (tries || 0) + 1), 250); return; }
+  for (const old of document.querySelectorAll('#stage .bflash')) old.remove();
   const el = document.createElement('div'); el.className = 'bflash' + (f.k === 'feld' ? ' feld' : '');
   const tag = f.k === 'tausch' ? 'TAUSCH!' : f.k === 'feld' ? 'EREIGNISFELD' : f.k === 'muenzen' ? 'GLÜCKSMÜNZEN' : 'GELDSPRITZE';
   const body = f.k === 'feld' && f.hits ? f.hits.map(h => { const c = clubById(B.G, h.c); return c ? '<span class="fhit">' + crest(c, 28, 11) + fieldChip(h.k) + '</span>' : ''; }).join('') + '<span class="fhn">Karte vor dem nächsten Anpfiff</span>' : esc(f.t);
@@ -3262,7 +3274,7 @@ function boardRender() {
   renderPawns();
   // Einblendungen nacheinander zeigen (Tausch, Geldspritze, Ereignisfeld)
   const fls = (G.flashes && G.flashes.length ? G.flashes : G.flash ? [G.flash] : []).filter(f => f.n > (B.flashN || 0));
-  if (fls.length) { B.flashN = fls[fls.length - 1].n; fls.forEach((f, i) => { if (Date.now() - f.at < 15000) setTimeout(() => showFlash(f), i * 3800); }); }
+  if (fls.length) { B.flashN = fls[fls.length - 1].n; B.flashQ = B.flashQ || []; fls.forEach(f => { if (Date.now() - f.at < 15000) B.flashQ.push(f); }); flashPump(); }
   const ph = G.phase;
   if (ph !== B.ph) { B.ph = ph; B.mainKey = ''; if (ph === 'spiel') B.evSeen = {}; }
   const main = $('#bmain');
