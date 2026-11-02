@@ -143,6 +143,7 @@ input{font:inherit;color:inherit}
 .pawn .rd.neg{background:var(--red);color:#fff}
 .pawn.dn .rd{top:auto;bottom:-18px}
 @keyframes rdup{from{opacity:0;transform:translate(-50%,8px)}}
+#bz{position:absolute;top:0;left:0;width:100%;height:100%;transform-origin:0 0;transition:transform .7s cubic-bezier(.45,0,.25,1);will-change:transform}
 #stage{position:absolute;display:flex;flex-direction:column;gap:12px;min-width:0;min-height:0}
 #bhead{display:flex;align-items:center;justify-content:space-between;gap:12px;height:40px;flex-shrink:0}
 #bhead .brand{display:flex;align-items:center;gap:10px;min-width:0}
@@ -705,6 +706,17 @@ input{font:inherit;color:inherit}
 .bflash.feld .bft{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
 .fhit{display:inline-flex;align-items:center;gap:6px}
 .fhn{font-size:13px;font-weight:600;color:var(--ink2)}
+.updbox{display:flex;align-items:center;gap:12px;background:var(--panel2);box-shadow:inset 3px 0 0 var(--lime);padding:10px 12px;font-size:13px;text-align:left;color:var(--muted)}
+.updbox b{color:#fff}
+.updbox .btn{flex-shrink:0}
+.coinpop{position:absolute;z-index:9;transform:translate(-50%,-100%);background:var(--lime);color:var(--ink);font-weight:900;font-size:12px;padding:2px 7px;white-space:nowrap;pointer-events:none;box-shadow:0 4px 12px #0008;animation:coinup 1.8s ease-out forwards}
+@keyframes coinup{0%{opacity:0;transform:translate(-50%,-60%) scale(.6)}15%{opacity:1;transform:translate(-50%,-110%) scale(1.1)}70%{opacity:1;transform:translate(-50%,-160%) scale(1)}100%{opacity:0;transform:translate(-50%,-200%) scale(1)}}
+.sq.tenhit{z-index:4;animation:tenhit .9s ease-out}
+@keyframes tenhit{0%{transform:scale(1)}30%{transform:scale(1.35);box-shadow:0 0 0 3px #fff,0 0 22px 6px var(--lime)}100%{transform:scale(1)}}
+.hint.warn{color:#FF9AA4}
+.fcsec .fcend{border-top:2px solid var(--line2);padding-top:8px}
+.fcsec .fcend span{font-weight:800;color:#fff}
+.fcsec .fcend b{font-size:18px}
 </style>
 </head>
 <body>
@@ -771,9 +783,9 @@ const TRAITS = {
 };
 const BASEV = [0, 2, 4, 6, 10, 16, 25, 38, 55, 80, 120];
 const BUILD = {
-  tri: { n: 'Tribüne', d: '+6.000 Plätze im Stadion', cost: [30, 45, 60] },
-  vip: { n: 'VIP-Logen', d: '+0,2 Mio € pro Heimspiel', cost: [25, 35, 50] },
-  shop: { n: 'Fanshop', d: '+0,1 Mio € pro Spieltag und +800 Fans', cost: [20, 30, 45] },
+  tri: { n: 'Tribüne', d: '+6.000 Plätze im Stadion – bringt erst mehr Geld, wenn mehr Fans kommen wollen, als Plätze da sind', cost: [30, 45, 60] },
+  vip: { n: 'VIP-Logen', d: '+1 Mio € pro Saison, verteilt auf die Heimspiele', cost: [25, 35, 50] },
+  shop: { n: 'Fanshop', d: '+0,5 Mio € pro Saison, verteilt auf die Spieltage, und +800 Fans', cost: [20, 30, 45] },
   train: { n: 'Trainingszentrum', d: 'Spieler entwickeln sich besser, weniger Verletzungen', cost: [30, 45, 60] },
   acad: { n: 'Jugendakademie', d: 'Mehr und bessere Talente am Saisonende', cost: [25, 35, 50] }
 };
@@ -810,7 +822,7 @@ function pValue(p) {
   if (p.tr && TRAITS[p.tr]) v *= TRAITS[p.tr].good ? 1.1 : 0.85;
   return Math.max(1, Math.round(v));
 }
-function pSalary(p) { return Math.max(1, Math.round(pValue(p) * 0.19)); } // pro Saison
+function pSalary(p) { return Math.max(1, Math.round(pValue(p) * 0.16)); } // pro Saison
 function randTrait(pos, goodOnly) {
   const keys = Object.keys(TRAITS).filter(k => TRAITS[k].pos.includes(pos) && (!goodOnly || TRAITS[k].good));
   return keys.length ? pick(keys) : null;
@@ -1029,17 +1041,25 @@ function makeSchedule(G) {
 /* ---------- Nachrichten, Ruhm, Geld ----------
    Einnahmen und Gehälter sind pro Saison festgelegt und werden auf die Spieltage verteilt.
    So ist eine Saison mit 2 Spielern (2 Spieltage) genauso viel wert wie mit 6 (10 Spieltage). */
-const SEASON = { tv: 24, ticketPer1000: 1, vipPerLevel: 10, shopPerLevel: 5, winBonus: 50 };
+const SEASON = { tv: 32, ticketPer1000: 1, vipPerLevel: 10, shopPerLevel: 5, winBonus: 60, goalBonus: 18, ten: 5 };
 function share(total, L, i) { L = Math.max(1, L); return Math.round(total * (i + 1) / L) - Math.round(total * i / L); }
 function homeGames(G) { const id = G.clubs[0] && G.clubs[0].id; return Math.max(1, G.schedule.filter(d => d.pairs.some(p => p[0] === id)).length); }
 function fanScale(G) { return 5 / Math.max(1, G.clubs.length - 1); }
 function news(G, t, k) { G.news.push({ t, k: k || 'info', s: G.season, md: G.md, at: NOW() }); if (G.news.length > 60) G.news.splice(0, G.news.length - 60); }
 function addRuhm(G, c, v, why) {
   if (!v) return;
+  if (G.bankMode) { (c.rbank = c.rbank || []).push([v, why]); return; } // Ausbau und Karten: zählt erst am Ende des nächsten Spieltags
+  const r0 = c.ruhm;
   c.ruhm = Math.max(0, c.ruhm + v);
+  const n10 = Math.floor(c.ruhm / 10) - Math.floor(r0 / 10);
+  if (n10 > 0) pay(G, c, SEASON.ten * n10, n10 > 1 ? n10 + ' grüne Felder auf der Ruhm-Leiste' : 'Grünes Feld ' + Math.floor(c.ruhm / 10) * 10 + ' auf der Ruhm-Leiste');
   c.rlog.push({ s: G.season, md: G.md, v, why });
   if (c.rlog.length > 80) c.rlog.splice(0, c.rlog.length - 80);
   G.rdelta[c.id] = (G.rdelta[c.id] || 0) + v;
+}
+function withBank(G, f) { const b = G.bankMode; G.bankMode = true; try { return f(); } finally { G.bankMode = b; } }
+function payBank(G) {
+  for (const c of G.clubs) { const b = c.rbank || []; c.rbank = []; for (const [v, why] of b) addRuhm(G, c, v, why); }
 }
 function addFans(c, v) { c.fans = Math.max(3000, Math.round(c.fans + v)); }
 function pay(G, c, v, why) { // v positiv = Einnahme
@@ -1122,6 +1142,7 @@ function enterPhase(G, ph) {
     G.draft.pool = [];
   } else if (ph === 'saisonstart') {
     G.md = 0;
+    for (const c of G.clubs) c.ruhmS0 = c.ruhm;
     for (const c of G.clubs) { c.offers = sponsorOffers(G, c); c.sponsor = null; c.listed = []; c.bids = {}; }
   } else if (ph === 'winter') {
     for (const c of G.clubs) { c.listed = []; c.bids = {}; }
@@ -1213,18 +1234,29 @@ function advance(G, force) {
 
 /* ---------- Sponsoren ---------- */
 function sponsorOffers(G, c) {
-  const fame = Math.round(c.fans / 2500) + Math.floor(c.ruhm / 12);
+  const fame = Math.round(c.fans / 2500) + Math.floor(c.ruhm / 12), h = Math.round(fame / 2);
+  const n = Math.max(2, G.clubs.length), mpc = 2 * (n - 1); // Ligaspiele pro Verein und Saison
   const nm = () => pick(SP_PRE) + ' ' + pick(SP_SUF);
-  return [
-    { k: 'fest', n: nm(), now: 38 + fame, win: 0, bonus: 0, d: 'Fester Betrag, sofort' },
-    { k: 'erfolg', n: nm(), now: 12 + Math.round(fame / 2), win: Math.max(1, Math.round(SEASON.winBonus / (2 * Math.max(1, G.clubs.length - 1)))), bonus: 0, d: 'Kleiner Sockel plus Prämie für jeden Sieg' },
-    { k: 'risiko', n: nm(), now: 16, win: 0, bonus: 52 + fame, d: 'Großer Bonus, wenn du die Saison in der oberen Tabellenhälfte beendest' }
-  ];
+  const M = fmtM;
+  const all = {
+    fest: () => { const now = 40 + fame; return { now, v: M(now), d: 'Fester Betrag: die Hälfte sofort, der Rest in Raten an jedem Spieltag' }; },
+    erfolg: () => { const now = 14 + h, win = Math.max(1, Math.round(SEASON.winBonus / mpc)); return { now, win, v: M(now) + ' + ' + M(win) + ' pro Sieg', d: 'Kleiner Sockel plus Prämie für jeden Sieg in der Liga' }; },
+    risiko: () => { const now = 16, bonus = 56 + fame; return { now, bonus, v: M(now) + ' + ' + M(bonus) + ' Bonus', d: 'Großer Bonus, wenn du die Saison in der oberen Tabellenhälfte beendest' }; },
+    tore: () => { const now = 16 + h, goal = Math.max(1, Math.round(SEASON.goalBonus / mpc)); return { now, goal, v: M(now) + ' + ' + M(goal) + ' pro Tor', d: 'Prämie für jedes Tor, das du in der Liga schießt' }; },
+    heim: () => { const now = 14 + h, homeWin = Math.max(1, Math.round(SEASON.winBonus * 1.6 / mpc)); return { now, homeWin, v: M(now) + ' + ' + M(homeWin) + ' pro Heimsieg', d: 'Hohe Prämie für jeden Sieg im eigenen Stadion' }; },
+    fans: () => { const now = 8, fanRate = 3; return { now, fanRate, v: M(now) + ' + ' + M(fanRate) + ' je 1.000 Fans', d: 'Am Saisonende abgerechnet: je mehr Fans, desto mehr Geld' }; },
+    pokal: () => { const now = 20 + h, cupFinal = 25, cupWin = 20; return { now, cupFinal, cupWin, v: M(now) + ' + ' + M(cupFinal) + ' fürs Pokalfinale', d: 'Erreichst du das Pokalfinale, gibt es ' + M(cupFinal) + ', als Pokalsieger noch ' + M(cupWin) + ' dazu' }; },
+    image: () => { const now = 14, ruhmRate = 3; return { now, ruhmRate, v: M(now) + ' + ' + M(ruhmRate) + ' je Ruhm', d: 'Für jeden Ruhm-Punkt, den du in der Saison holst (abgerechnet am Saisonende, vor den Saisonprämien)' }; },
+    jugend: () => { const now = 16, youth = 6; return { now, youth, v: M(now) + ' + ' + M(youth) + ' je Talent', d: 'Für jeden Spieler bis 21 Jahre in deinem Kader am Saisonende' }; }
+  };
+  const keys = ['fest'].concat(shuffle(Object.keys(all).filter(k => k !== 'fest')).slice(0, 2));
+  return keys.map(k => Object.assign({ k, n: nm(), win: 0, bonus: 0 }, all[k]()));
 }
 function chooseSponsor(G, c, i) {
   if (c.sponsor || !c.offers || !c.offers[i]) return false;
-  c.sponsor = c.offers[i];
-  pay(G, c, c.sponsor.now, 'Sponsor ' + c.sponsor.n);
+  c.sponsor = Object.assign({}, c.offers[i]);
+  const first = Math.ceil(c.sponsor.now / 2); c.sponsor.rest = c.sponsor.now - first;
+  pay(G, c, first, 'Sponsor ' + c.sponsor.n + ' (erste Hälfte)');
   closeFin(G, c, 'Sponsorvertrag');
   return true;
 }
@@ -1448,6 +1480,7 @@ function soShooter(G, m, sd) {
 function finishCupRound(G) {
   const L = G.live, C = G.cup; const res = [];
   const ruhm0 = {}; for (const c of G.clubs) ruhm0[c.id] = c.ruhm;
+  payBank(G);
   for (const m of L.ms) {
     const win = m.hg > m.ag ? 'h' : m.ag > m.hg ? 'a' : (m.soWin || 'h');
     const w = m[win], l = m[other(win)];
@@ -1464,6 +1497,8 @@ function finishCupRound(G) {
     const w = clubById(G, C.winner); addRuhm(G, w, 5, 'Pokalsieg'); pay(G, w, 30, 'Prämie Pokalsieg');
     news(G, w.name + ' gewinnt den Pokal!', 'title');
     if (C.finalist) { const f = clubById(G, C.finalist); addRuhm(G, f, 2, 'Pokalfinale'); pay(G, f, 10, 'Prämie Pokalfinale'); }
+    for (const x of [w, C.finalist && clubById(G, C.finalist)]) if (x && x.sponsor && x.sponsor.cupFinal) pay(G, x, x.sponsor.cupFinal, 'Pokal-Sponsor ' + x.sponsor.n + ': Finale');
+    if (w.sponsor && w.sponsor.cupWin) pay(G, w, w.sponsor.cupWin, 'Pokal-Sponsor ' + w.sponsor.n + ': Pokalsieg');
   }
   for (const c of G.clubs) closeFin(G, c, C.name);
   const rd = {}; for (const c of G.clubs) rd[c.id] = c.ruhm - ruhm0[c.id];
@@ -1795,6 +1830,7 @@ function finishMatchday(G) {
   const hg = homeGames(G), Lz = Math.max(1, G.seasonLen), fs = fanScale(G);
   for (const c of G.clubs) if (c.card && c.card.o == null) decideCard(G, c, cardDefault(c.card));
   const ruhm0 = {}; for (const c of G.clubs) ruhm0[c.id] = c.ruhm;
+  payBank(G);
   for (const m of L.ms) {
     const h = clubById(G, m.h), a = clubById(G, m.a);
     const upd = (c, gf, ga) => {
@@ -1806,7 +1842,12 @@ function finishMatchday(G) {
       c.tab.form.push(r); if (c.tab.form.length > 5) c.tab.form.shift();
       return r;
     };
-    upd(h, m.hg, m.ag); upd(a, m.ag, m.hg);
+    const rh = upd(h, m.hg, m.ag), ra = upd(a, m.ag, m.hg);
+    if (rh === 'S' && h.sponsor && h.sponsor.homeWin) pay(G, h, h.sponsor.homeWin, 'Heimsieg-Prämie ' + h.sponsor.n);
+    for (const [c, gf, r] of [[h, m.hg, rh], [a, m.ag, ra]]) {
+      if (gf && c.sponsor && c.sponsor.goal) pay(G, c, gf * c.sponsor.goal, 'Torprämie ' + c.sponsor.n + ' (' + gf + (gf === 1 ? ' Tor)' : ' Tore)'));
+      if (c.flags.wette) { delete c.flags.wette; if (r === 'S') pay(G, c, 15, 'Wette gewonnen'); else pay(G, c, -5, 'Wette verloren'); }
+    }
     // Zuschauer
     const cap = 15000 + 6000 * h.st.tri;
     const spect = Math.min(cap, Math.round(h.fans * (0.92 + rnd() * 0.12)));
@@ -1821,6 +1862,7 @@ function finishMatchday(G) {
   }
   for (const c of G.clubs) {
     pay(G, c, share(SEASON.tv, Lz, md), 'TV-Geld');
+    if (c.sponsor && c.sponsor.rest) { const v = share(c.sponsor.rest, Lz, md); if (v) pay(G, c, v, 'Sponsor-Rate ' + c.sponsor.n); }
     if (c.st.shop) { const v = share(SEASON.shopPerLevel * c.st.shop, Lz, md); if (v) pay(G, c, v, 'Fanshop'); }
     if (L.bye === c.id) pay(G, c, 3, 'Testspiel (spielfrei)');
     const sal = share(clubSalary(c), Lz, md);
@@ -1842,11 +1884,20 @@ function tableOrder(G) {
 
 /* ---------- Saisonende ---------- */
 function seasonEnd(G) {
+  payBank(G);
   const order = tableOrder(G); const n = order.length;
   const rep = { season: G.season, table: [], awards: [], clubs: {} };
   const R = id => rep.clubs[id] || (rep.clubs[id] = { ruhm: [], money: [], dev: [], youth: [], gone: [] });
+  for (const c of G.clubs) {
+    const sp = c.sponsor; if (!sp) continue;
+    let v = 0, t = '';
+    if (sp.fanRate) { v = Math.round(c.fans / 1000 * sp.fanRate); t = 'Fan-Sponsor (' + fmtN(c.fans) + ' Fans)'; }
+    if (sp.ruhmRate) { const g = Math.max(0, c.ruhm - (c.ruhmS0 || 0)); v = g * sp.ruhmRate; t = 'Image-Sponsor (' + g + ' Ruhm)'; }
+    if (sp.youth) { const y = c.players.filter(p => p.age <= 21).length; v = y * sp.youth; t = 'Nachwuchs-Sponsor (' + y + (y === 1 ? ' Talent)' : ' Talente)'); }
+    if (v) { pay(G, c, v, t); R(c.id).money.push([t, v]); }
+  }
   order.forEach((c, i) => {
-    const prize = Math.round(50 - 40 * i / Math.max(1, n - 1));
+    const prize = Math.round(60 - 40 * i / Math.max(1, n - 1));
     const rr = Math.round(10 * (n - 1 - i) / Math.max(1, n - 1));
     pay(G, c, prize, 'Prämie Platz ' + (i + 1)); R(c.id).money.push(['Prämie Platz ' + (i + 1), prize]);
     addRuhm(G, c, rr, 'Platz ' + (i + 1)); R(c.id).ruhm.push(['Platz ' + (i + 1), rr]);
@@ -1894,6 +1945,7 @@ function seasonEnd(G) {
   G.report = rep;
 }
 function finalScoring(G) {
+  payBank(G);
   const rows = [];
   for (const c of G.clubs) {
     const parts = [];
@@ -2017,7 +2069,7 @@ function build(G, c, k) {
   c.st[k]++;
   delete c.flags.discount;
   if (k === 'shop') addFans(c, 800);
-  addRuhm(G, c, 2, BUILD[k].n);
+  withBank(G, () => addRuhm(G, c, 2, BUILD[k].n));
   news(G, c.name + ' baut: ' + BUILD[k].n + ' Stufe ' + c.st[k] + '.', 'build');
   return null;
 }
@@ -2069,6 +2121,34 @@ const CARDS = [
   { id: 'muenze', t: 'Glückspfennig', d: 'Im Mittelkreis liegt eine alte Münze.', fx: (G, c) => { c.coins++; return '+1 Glücksmünze'; } },
   { id: 'sponsorzoff', t: 'Sponsor verärgert', d: 'Der Hauptsponsor kürzt nach schlechter Presse.', fx: (G, c) => (pay(G, c, -10, 'Sponsor-Kürzung'), '−1 Mio €') },
   { id: 'fanclub', t: 'Neuer Fanclub', d: 'In der Nachbarstadt gründet sich ein Fanclub.', fx: (G, c) => (addFans(c, 1500), '+1.500 Fans') },
+  // Glück
+  { id: 'tvspiel', t: 'Topspiel im Free-TV', d: 'Dein nächstes Spiel läuft live im Fernsehen.', fx: (G, c) => (pay(G, c, 12, 'TV-Topspiel'), '+1,2 Mio €') },
+  { id: 'abwehrcoach', t: 'Abwehr-Spezialist', d: 'Ein Taktikfuchs schult deine Viererkette.', fx: (G, c) => (c.mods.push({ l: 'D', v: 1 }), 'Nächstes Spiel: Abwehr +1') },
+  { id: 'erbe', t: 'Unerwartetes Erbe', d: 'Ein treues Vereinsmitglied vermacht dem Klub sein Vermögen.', fx: (G, c) => (pay(G, c, 20, 'Erbe'), '+2 Mio €') },
+  { id: 'formhoch', t: 'Formhoch', d: '{p} ist in der Form seines Lebens.', prep: (G, c) => { const p = bestP(c, x => x.pos === 'ST' && x.s < 10); return p ? { pid: p.id, p: p.n } : null; }, fx: (G, c, x) => { const p = playerOf(c, x.pid); if (p) p.s = Math.min(10, p.s + 1); return x.p + ' +1 Stärke'; } },
+  { id: 'retro', t: 'Retro-Trikot-Hype', d: 'Das Retro-Trikot ist überall ausverkauft.', fx: (G, c) => { pay(G, c, 8, 'Retro-Trikot'); addFans(c, 500); return '+0,8 Mio €, +500 Fans'; } },
+  { id: 'namensrecht', t: 'Stadion-Namensrechte', d: 'Eine Firma zahlt dafür, dass dein Stadion ihren Namen trägt.', fx: (G, c) => (pay(G, c, 15, 'Namensrechte'), '+1,5 Mio €') },
+  { id: 'juwel', t: 'Nachwuchs-Juwel', d: 'Ein 16-Jähriger aus der Region will unbedingt zu dir: Stärke 2, Talent ★★★.', prep: (G, c) => c.players.length < SQUAD_MAX ? {} : null, fx: (G, c) => { const p = makePlayer(G, pick(['AB', 'MF', 'ST']), 2, 16, 3, null); c.players.push(p); return p.n + ' (' + POSN[p.pos] + ') ist da'; } },
+  // Pech
+  { id: 'kreuzband', t: 'Kreuzbandriss', d: '{p} verletzt sich im Training schwer.', prep: (G, c) => { const p = bestP(c, x => x.pos === 'MF' && available(G, x)); return p ? { pid: p.id, p: p.n } : null; }, fx: (G, c, x) => { const p = playerOf(c, x.pid); if (p) p.outUntil = Math.max(p.outUntil || 0, G.mdg + 3); return x.p + ' fällt drei Spiele aus'; } },
+  { id: 'hacker', t: 'Hackerangriff', d: 'Unbekannte legen deinen Ticketshop lahm.', fx: (G, c) => (pay(G, c, -8, 'Hackerangriff'), '−0,8 Mio €') },
+  { id: 'unwetter', t: 'Unwetter', d: 'Ein Sturm deckt das Tribünendach ab.', fx: (G, c) => (pay(G, c, -10, 'Sturmschaden'), '−1 Mio €') },
+  { id: 'lustlos', t: 'Lustloser Profi', d: '{p} hat keine Lust mehr und lässt im Training nach.', prep: (G, c) => { const ps = c.players.filter(p => p.s >= 4 && p.age >= 24); return ps.length ? (p => ({ pid: p.id, p: p.n }))(pick(ps)) : null; }, fx: (G, c, x) => { const p = playerOf(c, x.pid); if (p) p.s = Math.max(1, p.s - 1); return x.p + ' −1 Stärke'; } },
+  { id: 'schiri', t: 'Ärger mit dem Schiedsrichter', d: 'Nach Protesten gegen den Schiri verhängt der Verband eine Strafe.', fx: (G, c) => { pay(G, c, -5, 'Verbandsstrafe'); addRuhm(G, c, -1, 'Schiri-Ärger'); return '−0,5 Mio €, −1 Ruhm'; } },
+  { id: 'twkrise', t: 'Torwart in der Krise', d: 'Dein Keeper hat in den letzten Tagen jeden Ball fallen lassen.', fx: (G, c) => (c.mods.push({ l: 'K', v: -1 }), 'Nächstes Spiel: Torwart −1') },
+  // Entscheidung
+  { id: 'asienreise', t: 'Testspiel in Asien', d: 'Ein Veranstalter lädt zu einem lukrativen Freundschaftsspiel ein.',
+    opts: [{ l: 'Mitreisen: +2 Mio €, nächstes Spiel Mittelfeld −1', fx: (G, c) => { pay(G, c, 20, 'Asienreise'); c.mods.push({ l: 'M', v: -1 }); } }, { l: 'Ablehnen', def: 1, fx: () => {} }] },
+  { id: 'konzert', t: 'Konzert im Stadion', d: 'Ein Weltstar will in deinem Stadion auftreten.',
+    opts: [{ l: 'Zusagen: +1,5 Mio €, nächstes Spiel Abwehr −1 (Rasen leidet)', fx: (G, c) => { pay(G, c, 15, 'Stadionkonzert'); c.mods.push({ l: 'D', v: -1 }); } }, { l: 'Absagen', def: 1, fx: () => {} }] },
+  { id: 'routinier', t: 'Routinier sucht Verein', d: 'Ein 33-jähriger Ex-Nationalspieler (Stärke 7) will bei dir seine Karriere ausklingen lassen.', prep: (G, c) => c.players.length < SQUAD_MAX ? {} : null,
+    opts: [{ l: 'Verpflichten: −1 Mio € Handgeld', can: (G, c) => c.money >= 10, fx: (G, c) => { pay(G, c, -10, 'Handgeld Routinier'); const p = makePlayer(G, pick(['AB', 'MF', 'ST']), 7, 33, 0, null); c.players.push(p); return p.n + ' (' + POSN[p.pos] + ') ist da'; } }, { l: 'Ablehnen', def: 1, fx: () => {} }] },
+  { id: 'wette', t: 'Wette mit dem Präsidenten', d: 'Der Präsident wettet mit dir um dein nächstes Spiel.',
+    opts: [{ l: 'Annehmen: Sieg +1,5 Mio €, sonst −0,5 Mio €', fx: (G, c) => { c.flags.wette = 1; } }, { l: 'Ablehnen', def: 1, fx: () => {} }] },
+  { id: 'freibier', t: 'Freibier für alle', d: 'Die Fans fragen, ob der Verein beim nächsten Heimspiel eine Runde ausgibt.',
+    opts: [{ l: 'Ausgeben: −0,8 Mio €, +2.000 Fans', can: (G, c) => c.money >= 8, fx: (G, c) => { pay(G, c, -8, 'Freibier'); addFans(c, 2000); } }, { l: 'Lieber sparen: −300 Fans', def: 1, fx: (G, c) => addFans(c, -300) }] },
+  { id: 'hoehentraining', t: 'Höhentrainingslager', d: 'In den Bergen ist noch ein Platz frei.',
+    opts: [{ l: 'Buchen: −1,2 Mio €, nächstes Spiel Angriff +1 und Mittelfeld +1', can: (G, c) => c.money >= 12, fx: (G, c) => { pay(G, c, -12, 'Höhentrainingslager'); c.mods.push({ l: 'A', v: 1 }, { l: 'M', v: 1 }); } }, { l: 'Nein danke', def: 1, fx: () => {} }] },
   { id: 'flutlicht', t: 'Flutlicht-Ausfall', d: 'Mitten im Training gehen die Lichter aus. Die Reparatur ist teuer.', fx: (G, c) => (pay(G, c, -6, 'Flutlicht-Reparatur'), '−0,6 Mio €') },
   { id: 'fanprotest', t: 'Fanproteste', d: 'Die Kurve ist mit den Ticketpreisen unzufrieden.', fx: (G, c) => (addFans(c, -1500), '−1.500 Fans') },
   { id: 'buspanne', t: 'Buspanne', d: 'Der Mannschaftsbus bleibt auf der Autobahn liegen.', fx: (G, c) => (c.mods.push({ l: 'M', v: -1 }), 'Nächstes Spiel: Mittelfeld −1') },
@@ -2077,7 +2157,7 @@ const CARDS = [
   { id: 'twtrainer', t: 'Torwarttraining', d: 'Ein Spezialtrainer arbeitet mit deinen Torhütern.', fx: (G, c) => (c.mods.push({ l: 'K', v: 1 }), 'Nächstes Spiel: Torwart +1') }
 ];
 const CARD = {}; CARDS.forEach(k => CARD[k.id] = k);
-const PECH_IDS = ['rasen', 'grippe', 'steuer', 'pech', 'pyro', 'geruecht', 'sponsorzoff', 'flutlicht', 'fanprotest', 'buspanne', 'formkrise', 'muenzeweg'];
+const PECH_IDS = ['rasen', 'grippe', 'steuer', 'pech', 'pyro', 'geruecht', 'sponsorzoff', 'flutlicht', 'fanprotest', 'buspanne', 'formkrise', 'muenzeweg', 'kreuzband', 'hacker', 'unwetter', 'lustlos', 'schiri', 'twkrise'];
 function cardKind(id) { const k = CARD[id]; return !k ? 'g' : k.opts ? 'e' : PECH_IDS.includes(id) ? 'p' : 'g'; }
 function fillText(s, x) { return String(s || '').replace(/\{(\w+)\}/g, (_, k) => x && x[k] != null ? x[k] : ''); }
 function drawCard(G, c, kind) {
@@ -2097,7 +2177,7 @@ function openCard(G, c) {
   cd.open = true;
   const k = CARD[cd.id];
   if (cd.opts) cd.opts.forEach((o, i) => { const f = k.opts[i].can; o.ok = !f || !!f(G, c); });
-  if (!k.opts) { const r = k.fx(G, c, cd.x); cd.o = 0; cd.res = typeof r === 'string' ? r : null; closeFin(G, c, 'Ereigniskarte'); news(G, c.name + ': ' + k.t, 'card'); }
+  if (!k.opts) { const r = withBank(G, () => k.fx(G, c, cd.x)); cd.o = 0; cd.res = typeof r === 'string' ? r : null; closeFin(G, c, 'Ereigniskarte'); news(G, c.name + ': ' + k.t, 'card'); }
   return true;
 }
 /* Pechkarte ungesehen mit einer Glücksmünze abwehren: die Karte dreht sich um, wirkt aber nicht */
@@ -2117,7 +2197,7 @@ function decideCard(G, c, i) {
   if (cd.o != null || !cd.opts) return null;
   const k = CARD[cd.id]; const o = k.opts[i]; if (!o) return 'Ungültige Wahl.';
   if (o.can && !o.can(G, c)) return 'Das geht gerade nicht.';
-  const r = o.fx(G, c, cd.x);
+  const r = withBank(G, () => o.fx(G, c, cd.x));
   cd.o = i; cd.res = typeof r === 'string' ? r : null;
   closeFin(G, c, 'Ereigniskarte');
   news(G, c.name + ': ' + k.t + ' – ' + cd.opts[i].l, 'card');
@@ -2225,7 +2305,7 @@ function botAct(G, c) {
       const k = CARD[c.card.id];
       let i = cardDefault(c.card);
       const firstOk = c.card.opts.findIndex(o => o.ok);
-      if (firstOk >= 0 && ['goenner', 'investor', 'doku', 'scout', 'talent', 'cotrainer', 'lager'].includes(k.id) && c.money > 30) i = firstOk;
+      if (firstOk >= 0 && ['goenner', 'investor', 'doku', 'scout', 'talent', 'cotrainer', 'lager', 'routinier', 'hoehentraining', 'freibier', 'wette', 'asienreise'].includes(k.id) && c.money > 30) i = firstOk;
       if (k.id === 'investor' && c.money > 0) i = cardDefault(c.card);
       if (k.id === 'goenner' && c.money < 30) i = 0;
       decideCard(G, c, i);
@@ -2260,6 +2340,21 @@ function botWantsCoin(G, m, c, role) {
   if (d.kind === 'elf') return rnd() < 0.6;
   const diff = Math.abs(m.hg - m.ag);
   return m.r >= (m.R || rph(G)) * 2 - 3 && diff <= 1 && rnd() < 0.5;
+}
+
+/* Was bis zum Saisonende noch sicher kommt (ohne Siege, Tore und andere Prämien) */
+function forecast(G, c) {
+  if (!['saisonstart', 'winter', 'bieten', 'aufdecken', 'spiel', 'ergebnis'].includes(G.phase) || !G.schedule.length) return null;
+  const L = Math.max(1, G.seasonLen), md0 = Math.min(G.md, L);
+  const salT = clubSalary(c), rest = c.sponsor && c.sponsor.rest || 0;
+  let tv = 0, sal = 0, rate = 0, shop = 0;
+  for (let md = md0; md < L; md++) { tv += share(SEASON.tv, L, md); sal += share(salT, L, md); if (rest) rate += share(rest, L, md); if (c.st.shop) shop += share(SEASON.shopPerLevel * c.st.shop, L, md); }
+  const hg = homeGames(G), homeLeft = G.schedule.slice(md0).filter(d => d.pairs.some(p => p[0] === c.id)).length;
+  const spect = Math.min(15000 + 6000 * c.st.tri, c.fans);
+  const tick = homeLeft * (Math.max(1, Math.round(spect / 1000 * SEASON.ticketPer1000 / hg)) + (c.st.vip ? Math.max(1, Math.round(SEASON.vipPerLevel * c.st.vip / hg)) : 0));
+  const prize = 20; // Prämie für den letzten Platz, mehr gibt es für jeden Platz weiter oben
+  const sum = tv + rate + shop + tick + prize - sal;
+  return { md: L - md0, tv, rate, shop, tick, prize, sal, sum, end: c.money + sum };
 }
 
 /* ---------- Ansichten: was die Handys sehen dürfen ---------- */
@@ -2310,7 +2405,7 @@ function privView(G, c) {
     players: c.players.map(p => Object.assign(pubPlayer(G, p), { goals: p.goals, gt: p.gt, apps: p.apps, yc: p.yc, st: pStatus(G, p), am: !!p.amateur })),
     card: c.card ? { id: c.card.id + '-' + G.season + '-' + G.md, k: c.card.kind || cardKind(c.card.id), blocked: !!c.card.blocked, open: !!c.card.open, t: c.card.t, d: c.card.d, o: c.card.o, res: c.card.res, opts: c.card.opts } : null,
     pend: c.pend || [],
-    fin: c.fin.slice(-12), rlog: c.rlog.slice(-20), salary: clubSalary(c), prof: c.prof ? { k: c.prof, n: PROFILES[c.prof].n, d: PROFILES[c.prof].d } : null, profOffers: G.phase === 'profil' && c.profOffers ? c.profOffers.map(k => ({ k, n: PROFILES[k].n, d: PROFILES[k].d })) : null,
+    fin: c.fin.slice(-12), rlog: c.rlog.slice(-20), fc: forecast(G, c), rbank: (c.rbank || []).reduce((a, x) => a + x[0], 0), salary: clubSalary(c), prof: c.prof ? { k: c.prof, n: PROFILES[c.prof].n, d: PROFILES[c.prof].d } : null, profOffers: G.phase === 'profil' && c.profOffers ? c.profOffers.map(k => ({ k, n: PROFILES[k].n, d: PROFILES[k].d })) : null,
     costs: BUILD_KEYS.reduce((o, k) => (o[k] = buildCost(c, k), o), {}) };
   if (G.phase === 'spiel' && G.live) {
     const L = G.live;
@@ -2508,7 +2603,7 @@ function makeClient(handlers) {
 /* ==========================================================================
    GEMEINSAME BAUSTEINE (Brett und Handy)
    ========================================================================== */
-const APP_VERSION = '6';
+const APP_VERSION = '7';
 const $ = (s, r) => (r || document).querySelector(s);
 const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
@@ -2668,6 +2763,7 @@ function showStart(err) {
   ['board', 'phone'].forEach(id => { const e = document.getElementById(id); if (e) e.hidden = true; });
   ['bmenu', 'cardov'].forEach(id => { const e = document.getElementById(id); if (e) e.remove(); });
   if (SCAN.on) scanClose();
+  setTimeout(checkUpdate, 400);
   const s = $('#start'); s.hidden = false;
   const saves = boardSaves();
   const ph = ST.get('phone', null);
@@ -2834,6 +2930,33 @@ function scanClose() {
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && SCAN.on) scanClose(); });
 
+/* ---------- Neue Version erkennen ----------
+   GitHub Pages hält die Seite bis zu 10 Minuten im Zwischenspeicher, und die Home-Bildschirm-App bleibt
+   oft im Speicher. Die Startseite fragt deshalb selbst nach, ob es eine neuere Version gibt, erneuert den
+   Zwischenspeicher und lädt sie (auf der Startseite geht dabei nichts verloren). */
+let UPD_AT = 0;
+function refreshCache() { try { return fetch(location.pathname, { cache: 'reload' }).catch(() => {}); } catch (_) { return Promise.resolve(); } }
+async function checkUpdate() {
+  if (LOCAL || window.BOARD_ON || window.PHONE_ON || Date.now() - UPD_AT < 60000) return;
+  UPD_AT = Date.now();
+  let txt = '';
+  try { const r = await fetch(location.pathname + '?vc=' + Date.now(), { cache: 'no-store' }); if (!r.ok) return; txt = await r.text(); } catch (_) { return; }
+  const m = txt.match(/APP_VERSION = '(\d+)'/); if (!m || +m[1] <= +APP_VERSION) return;
+  const nv = m[1];
+  await Promise.race([refreshCache(), new Promise(r => setTimeout(r, 2500))]);
+  if (window.BOARD_ON || window.PHONE_ON || $('#start').hidden) return; // inzwischen im Spiel: dort fragt das Handy selbst
+  let tried = null; try { tried = sessionStorage.getItem('fe-upd'); } catch (_) {}
+  if (tried === nv) { // schon einmal versucht: Knopf statt Endlosschleife
+    if (!$('#updbox')) { const d = document.createElement('div'); d.id = 'updbox'; d.className = 'updbox'; d.innerHTML = '<span><b>Version ' + nv + ' ist da.</b> Falls hier noch Version ' + APP_VERSION + ' steht: App ganz schließen und neu öffnen.</span><button class="btn sm" data-s="upd" data-v="' + nv + '">Neu laden</button>'; const s = $('#start .start-btns'); if (s) s.prepend(d); }
+    return;
+  }
+  try { sessionStorage.setItem('fe-upd', nv); } catch (_) {}
+  toast('Version ' + nv + ' ist da und wird geladen …', 2500);
+  setTimeout(() => location.replace(location.pathname + '?v=' + nv), 900);
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !window.BOARD_ON && !window.PHONE_ON) setTimeout(checkUpdate, 300); });
+document.addEventListener('click', e => { const b = e.target.closest('[data-s="upd"]'); if (b) location.replace(location.pathname + '?v=' + b.dataset.v + '&t=' + Date.now()); });
+
 /* ==========================================================================
    SPIELBRETT (iPad): Gastgeber, rechnet alles und zeigt das Brett
    ========================================================================== */
@@ -2866,7 +2989,7 @@ async function boardStart(save) {
   B.G.code = code;
   B.flashN = Math.max(B.G.flashN || 0, B.G.flash ? B.G.flash.n : 0); // alte Einblendungen nach dem Laden nicht wiederholen
   for (const c of B.G.clubs) if (!c.bot) c.conn = false;
-  el.innerHTML = '<div id="track"></div><div id="pawns"></div><div id="stage"><div id="bhead"></div><div id="bmain"></div></div>';
+  el.innerHTML = '<div id="bz"><div id="track"></div><div id="pawns"></div><div id="stage"><div id="bhead"></div><div id="bmain"></div></div></div>';
   boardLayout();
   if (!B.timer) B.timer = setInterval(boardTick, 100);
   markDirty();
@@ -3005,7 +3128,7 @@ function renderPawns() {
   }
   for (const el of Array.from(box.children)) { const id = el.id.slice(3); if (!seen.has(id)) { el.remove(); delete B.pv[id]; } }
   placePawns();
-  if (!B.pmv && B.pq.length) pawnNext();
+  if (!B.pbusy && B.pq.length) pawnNext();
 }
 function placePawns() {
   const G = B.G, L = B.lay; if (!L || !G) return;
@@ -3023,34 +3146,56 @@ function placePawns() {
   }
 }
 function pawnNext() {
-  const G = B.G; if (!G) { B.pq = []; B.pmv = null; return; }
+  const G = B.G; if (!G) { B.pq = []; B.pmv = null; B.pbusy = false; camReset(); return; }
+  B.pbusy = true;
   let id = null;
   while (B.pq.length) { const x = B.pq.shift(), c = clubById(G, x); if (c && B.pv[x] !== c.ruhm) { id = x; break; } }
-  if (!id) { B.pmv = null; return; }
+  if (!id) { B.pmv = null; B.pbusy = false; B.ptimer = setTimeout(() => { if (!pawnsBusy()) camReset(); }, 500); return; }
   B.pmv = id;
-  // Tempo: kurze Züge gemütlich, viele Felder (z. B. Saisonende) schneller, damit alles in wenigen Sekunden durch ist
-  const total = [id].concat(B.pq).reduce((a, x) => { const c = clubById(G, x); return a + (c ? Math.abs(c.ruhm - B.pv[x]) : 0); }, 0);
-  const ms = Math.max(90, Math.min(340, Math.round(6500 / Math.max(1, total))));
-  const el0 = document.getElementById('pw-' + id); if (el0) { el0.classList.add('mv'); el0.style.transitionDuration = Math.min(ms, 300) + 'ms'; }
+  // 0,5 s pro Feld; sehr lange Wege (z. B. Saisonende) etwas schneller, damit niemand ewig wartet
+  const steps = Math.abs(clubById(G, id).ruhm - B.pv[id]);
+  const queued = B.pq.reduce((a, x) => { const c = clubById(G, x); return a + (c ? Math.abs(c.ruhm - B.pv[x]) : 0); }, steps);
+  const ms = queued > 40 || steps > 10 ? Math.max(180, Math.min(500, Math.round(3500 / steps))) : 500;
+  const el0 = document.getElementById('pw-' + id); if (el0) { el0.classList.add('mv'); el0.style.transitionDuration = Math.min(ms, 380) + 'ms'; }
+  camTo(id);
   const step = () => {
     const c = B.G && clubById(B.G, id), el = document.getElementById('pw-' + id);
-    if (!c || !window.BOARD_ON) { B.pmv = null; return; }
+    if (!c || !window.BOARD_ON) { B.pmv = null; B.pbusy = false; camReset(); return; }
     const d = Math.sign(c.ruhm - B.pv[id]);
     if (!d) {
       if (el) { el.classList.remove('mv'); el.style.transitionDuration = ''; }
-      B.pmv = null; B.ptimer = setTimeout(pawnNext, 300); return;
+      B.pmv = null; B.ptimer = setTimeout(pawnNext, 450); return;
     }
-    B.pv[id] += d; placePawns(); pawnHop(id, ms);
+    B.pv[id] += d; placePawns(); pawnHop(id, ms); camTo(id);
+    if (d > 0 && B.pv[id] % 10 === 0) coinPop(B.pv[id] % 100);
     B.ptimer = setTimeout(step, ms);
   };
-  B.ptimer = setTimeout(step, 200);
+  B.ptimer = setTimeout(step, B.camOn ? 450 : 800);
+}
+/* Kamera: das Brett zoomt an die ziehende Figur heran und fährt mit */
+function camTo(id) {
+  const bz = $('#bz'), el = document.getElementById('pw-' + id), L = B.lay; if (!bz || !el || !L) return;
+  const W = window.innerWidth, H = viewH(), s = Math.max(1.6, Math.min(2.6, 78 / L.cs));
+  const cx = parseFloat(el.style.left) + L.cs * 0.31, cy = parseFloat(el.style.top) + L.cs * 0.4;
+  const tx = Math.min(0, Math.max(W - W * s, W / 2 - cx * s)), ty = Math.min(0, Math.max(H - H * s, H / 2 - cy * s));
+  bz.style.transform = 'translate(' + Math.round(tx) + 'px,' + Math.round(ty) + 'px) scale(' + s.toFixed(3) + ')';
+  bz.classList.add('zoom'); B.camOn = true;
+}
+function camReset() { const bz = $('#bz'); if (bz && bz.style.transform) { bz.style.transform = ''; bz.classList.remove('zoom'); B.camOffAt = Date.now(); } B.camOn = false; }
+/* Über ein grünes Zehnerfeld gezogen: +0,5 Mio € */
+function coinPop(sq) {
+  const L = B.lay, p = L && L.pos[sq], box = $('#pawns'); if (!p || !box) return;
+  const e = document.createElement('div'); e.className = 'coinpop'; e.textContent = '+0,5 Mio €';
+  e.style.left = Math.round(p.x + L.sz / 2) + 'px'; e.style.top = Math.round(p.y - 4) + 'px';
+  box.appendChild(e); setTimeout(() => e.remove(), 1800);
+  const sqEl = $('#track') && $('#track').children[sq]; if (sqEl) { sqEl.classList.add('tenhit'); setTimeout(() => sqEl.classList.remove('tenhit'), 900); }
 }
 function pawnHop(id, ms) {
   const e = document.querySelector('#pw-' + id + ' .pb'); if (!e || !e.animate) return;
   try { e.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-' + Math.round(B.lay.cs * 0.38) + 'px)', offset: 0.45 }, { transform: 'translateY(0)' }], { duration: Math.max(80, ms - 15), easing: 'ease-out' }); } catch (_) {}
 }
-function pawnsBusy() { return !!B.pmv || !!(B.pq && B.pq.length); }
-function pawnsReset() { clearTimeout(B.ptimer); B.pv = {}; B.pq = []; B.pmv = null; }
+function pawnsBusy() { return !!B.pbusy || !!B.pmv || !!(B.pq && B.pq.length); }
+function pawnsReset() { clearTimeout(B.ptimer); B.pv = {}; B.pq = []; B.pmv = null; B.pbusy = false; camReset(); }
 
 /* Ereignisfelder auf die Ruhm-Leiste malen */
 function paintFields() {
@@ -3064,7 +3209,7 @@ function paintFields() {
 }
 function showFlash(f, tries) {
   if (!window.BOARD_ON || !$('#stage') || !B.G) return;
-  if (f.k === 'feld' && pawnsBusy() && (tries || 0) < 80) { setTimeout(() => showFlash(f, (tries || 0) + 1), 250); return; }
+  if (f.k === 'feld' && (pawnsBusy() || B.camOn || Date.now() - (B.camOffAt || 0) < 800) && (tries || 0) < 120) { setTimeout(() => showFlash(f, (tries || 0) + 1), 250); return; }
   const el = document.createElement('div'); el.className = 'bflash' + (f.k === 'feld' ? ' feld' : '');
   const tag = f.k === 'tausch' ? 'TAUSCH!' : f.k === 'feld' ? 'EREIGNISFELD' : 'GELDSPRITZE';
   const body = f.k === 'feld' && f.hits ? f.hits.map(h => { const c = clubById(B.G, h.c); return c ? '<span class="fhit">' + crest(c, 28, 11) + fieldChip(h.k) + '</span>' : ''; }).join('') + '<span class="fhn">Karte vor dem nächsten Anpfiff</span>' : esc(f.t);
@@ -3537,15 +3682,17 @@ function duelParts(m) {
     return '<div class="dice2">' + dieHtml(v, 'land ' + cls, 86) + '</div>';
   };
   const adv = t.adv;
-  const sideS = '<div class="side">' + dice(d.rs, d.rs2, waitS, 'lime') + '<div class="who"><b>' + esc(d.sh.n.toUpperCase()) + '</b><span>' + esc(cs.short) + ' · Abschluss ' + d.sh.s + (d.notes.length ? ' · ' + d.notes.map(esc).join(', ') : '') + (d.trait ? ' · Torjäger +2' : '') + (d.coinS ? ' · Münze' : '') + '</span>' +
+  const sR = d.att === 'a' ? ' r' : '', kR = d.att === 'a' ? '' : ' r';
+  const sideS = '<div class="side' + sR + '">' + dice(d.rs, d.rs2, waitS, 'lime') + '<div class="who"><b>' + esc(d.sh.n.toUpperCase()) + '</b><span>' + esc(cs.short) + ' · Abschluss ' + d.sh.s + (d.notes.length ? ' · ' + d.notes.map(esc).join(', ') : '') + (d.trait ? ' · Torjäger +2' : '') + (d.coinS ? ' · Münze' : '') + '</span>' +
     (waitS ? '' : '<span class="sum">' + (adv > 0 ? t.rs + ' + ' + adv + ' = <span>' + t.s + '</span>' : '<span>' + t.s + '</span>') + '</span>') + '</div></div>';
-  const sideK = '<div class="side r">' + dice(d.rk, d.rk2, waitK, '') + '<div class="who"><b>' + esc(d.kp.n.toUpperCase()) + '</b><span>' + esc(ck.short) + ' · Torwart ' + d.kp.s + (d.kb ? ' · Katze +1' : '') + (d.coinK ? ' · Münze' : '') + '</span>' +
+  const sideK = '<div class="side' + kR + '">' + dice(d.rk, d.rk2, waitK, '') + '<div class="who"><b>' + esc(d.kp.n.toUpperCase()) + '</b><span>' + esc(ck.short) + ' · Torwart ' + d.kp.s + (d.kb ? ' · Katze +1' : '') + (d.coinK ? ' · Münze' : '') + '</span>' +
     (waitK ? '' : '<span class="sum">' + (adv < 0 ? t.rk + ' + ' + (-adv) + ' = <span>' + t.k + '</span>' : '<span>' + t.k + '</span>') + '</span>') + '</div></div>';
   const vs = '<span class="vs">VS' + (adv ? '<small>VORTEIL<br>+' + Math.abs(adv) + ' ' + (adv > 0 ? 'SCHÜTZE' : 'TORWART') + '</small>' : '') + '</span>';
+  const [lft, rgt] = d.att === 'a' ? [sideK, sideS] : [sideS, sideK];
   let res = '';
   if (d.res) res = d.res.goal ? '<div class="res"><span class="tag"><span>TOR!</span></span><span class="rt">' + esc(d.sh.n) + ' trifft für ' + esc(cs.name) + '</span></div>'
     : '<div class="res"><span class="tag white"><span>' + (t.k - t.s >= 3 ? 'DANEBEN' : 'GEHALTEN') + '</span></span><span class="rt">' + (t.k - t.s >= 3 ? esc(d.sh.n) + ' verfehlt das Tor' : esc(d.kp.n) + ' pariert') + '</span></div>';
-  return { head: '<div class="dk"><span class="tag"><span>' + kind + '</span></span><span class="dwait">' + esc(wait) + '</span></div>', main: '<div class="dg">' + sideS + vs + sideK + '</div>' + res };
+  return { head: '<div class="dk"><span class="tag"><span>' + kind + '</span></span><span class="dwait">' + esc(wait) + '</span></div>', main: '<div class="dg">' + lft + vs + rgt + '</div>' + res };
 }
 
 /* ---------- Knöpfe auf dem Brett ---------- */
@@ -3581,7 +3728,7 @@ function settingsHtml(inGame) {
   const seg = (k, opts) => '<div class="seg">' + opts.map(([v, l]) => '<button data-b="set" data-k="' + k + '" data-v="' + v + '" class="' + (String(s[k]) === String(v) ? 'on' : '') + '">' + l + '</button>').join('') + '</div>';
   return '<div class="setrow"><span>Würfeln bei Torchancen</span>' + seg('dice', [['handy', 'Am Handy'], ['echt', 'Echte Würfel'], ['auto', 'Automatisch']]) + '</div>' +
     '<div class="setrow"><span>Ereignisfelder</span>' + seg('fields', [['viel', 'Viele'], ['normal', 'Normal'], ['aus', 'Aus']]) + '</div>' +
-    (s.fields === 'aus' ? '' : '<div class="flegend">' + fieldChip('g') + fieldChip('p') + fieldChip('e') + '<span>Bleibt eine Figur auf so einem Feld stehen, zieht ihr Verein vor dem nächsten Anpfiff die passende Karte. Pech lässt sich mit einer Glücksmünze abwehren.</span></div>');
+    (s.fields === 'aus' ? '' : '<div class="flegend">' + fieldChip('g') + fieldChip('p') + fieldChip('e') + '<span>Bleibt eine Figur auf so einem Feld stehen, zieht ihr Verein vor dem nächsten Anpfiff die passende Karte. Pech lässt sich mit einer Glücksmünze abwehren. Wer über ein grünes Zehnerfeld zieht, bekommt 0,5 Mio €.</span></div>');
 }
 function menuHtml() {
   return '<div class="menubox"><div class="row" style="justify-content:space-between"><div class="bigt s">MENÜ</div><button class="btn sm" data-b="mclose">Zurück zum Spiel</button></div>' +
@@ -3842,11 +3989,11 @@ const AKT = {
   saisonstart() {
     const me = P.me; let h = '';
     if (!me.sponsor && me.offers) {
-      h += '<div class="sec"><h2><span class="lbl">SPONSOR WÄHLEN</span></h2><p class="hint">Ein Vertrag pro Saison. Er wird sofort gezahlt bzw. gilt die ganze Saison.</p>' +
-        me.offers.map((o, i) => '<button class="offer" data-p="sponsor" data-v="' + i + '"><b>' + esc(o.n) + '</b><span class="v">' + fmtM(o.now) + (o.win ? ' + ' + fmtM(o.win) + ' pro Sieg' : '') + (o.bonus ? ' + ' + fmtM(o.bonus) + ' Bonus' : '') + '</span><span>' + esc(o.d) + '</span></button>').join('') + '</div>';
+      h += '<div class="sec"><h2><span class="lbl">SPONSOR WÄHLEN</span></h2><p class="hint">Ein Vertrag pro Saison. Vom Grundbetrag gibt es die Hälfte sofort, den Rest in Raten an jedem Spieltag. Prämien kommen dazu.</p>' +
+        me.offers.map((o, i) => '<button class="offer" data-p="sponsor" data-v="' + i + '"><b>' + esc(o.n) + '</b><span class="v">' + spV(o) + '</span><span>' + esc(o.d) + '</span></button>').join('') + '</div>';
     } else if (me.sponsor) {
       const o = me.sponsor;
-      h += '<div class="sec"><h2><span class="lbl">SPONSOR</span></h2><div class="offer on"><b>' + esc(o.n) + '</b><span class="v">' + fmtM(o.now) + (o.win ? ' + ' + fmtM(o.win) + ' pro Sieg' : '') + (o.bonus ? ' + ' + fmtM(o.bonus) + ' Bonus' : '') + '</span><span>' + esc(o.d) + '</span></div></div>';
+      h += '<div class="sec"><h2><span class="lbl">SPONSOR</span></h2><div class="offer on"><b>' + esc(o.n) + '</b><span class="v">' + spV(o) + '</span><span>' + esc(o.d) + '</span></div></div>';
     }
     return h + listSec() + buildHint() + readyBtn();
   },
@@ -3866,7 +4013,8 @@ const AKT = {
           '<button data-p="bid" data-v="' + k.id + '" data-d="1" aria-label="0,1 Mio mehr">+,1</button><button data-p="bid" data-v="' + k.id + '" data-d="10" aria-label="1 Mio mehr">+1</button></div>') + '</div>';
     }).join('');
     return '<p class="hint" style="margin-bottom:12px">Niemand sieht deine Gebote. Das höchste Gebot gewinnt, bei Gleichstand wird gewürfelt. Gebote zusammen höchstens so viel wie dein Geld.</p><div class="plist">' + cards + '</div>' +
-      readyBtn('<div class="row"><span>Geboten: <b>' + fmtM(sum) + '</b></span><span class="mut">Übrig: ' + fmtM(me.money - sum) + '</span></div>');
+      readyBtn('<div class="row"><span>Geboten: <b>' + fmtM(sum) + '</b></span><span class="mut">Übrig: ' + fmtM(me.money - sum) + '</span></div>' +
+        (me.fc && sum ? '<p class="hint' + (me.fc.end - sum < 0 ? ' warn' : '') + '" style="margin:4px 0 0">Saisonende voraussichtlich ' + fmtM(me.fc.end - sum) + ' (ohne Prämien, ohne die Gehälter der Neuen)</p>' : ''));
   },
   aufdecken() {
     const pub = P.pub, me = P.me; const R = pub.reveal;
@@ -4239,24 +4387,35 @@ function playerSheet(pid) {
     (P.me.canManage && !(P.me.onMarket || []).includes(p.id) ? '<button class="btn dark wide" data-p="release" data-v="' + p.id + '">Vertrag auflösen · Abfindung ' + fmtM(P.me.releaseCost[p.id] || 0) + '</button><p class="hint">Der Spieler geht sofort. Mindestens 14 Spieler müssen im Kader bleiben.</p>' : '') };
   phoneRender();
 }
+function spV(o) { return o.v ? esc(o.v) : fmtM(o.now) + (o.win ? ' + ' + fmtM(o.win) + ' pro Sieg' : '') + (o.bonus ? ' + ' + fmtM(o.bonus) + ' Bonus' : ''); }
 function stadionHtml() {
   const me = P.me, mc = myPub(), ph = P.pub.ph;
   const can = BUILD_PHASES.includes(ph) && !(ph === 'spiel' && me.match && (me.match.stat === 'live' || me.match.stat === 'ht'));
   let h = '<div class="sec"><div class="kv"><span>Plätze</span><b>' + fmtN(15000 + 6000 * me.st.tri) + '</b></div><div class="kv"><span>Fans</span><b>' + fmtN(mc.fans) + '</b></div>' +
-    '<p class="hint">Jede Ausbaustufe bringt sofort +2 Ruhm. ' + (can ? '' : 'Bauen geht zwischen den Spieltagen.') + (me.flags && me.flags.discount ? ' Bauzuschuss: nächster Ausbau ' + fmtM(me.flags.discount) + ' günstiger.' : '') + '</p></div>';
+    '<p class="hint">Jede Ausbaustufe bringt +2 Ruhm, gutgeschrieben am Ende des nächsten Spieltags.' + (me.rbank ? ' <b class="lime">Wartet: +' + me.rbank + ' Ruhm.</b>' : '') + ' ' + (can ? '' : 'Bauen geht zwischen den Spieltagen.') + (me.flags && me.flags.discount ? ' Bauzuschuss: nächster Ausbau ' + fmtM(me.flags.discount) + ' günstiger.' : '') + '</p></div>';
   for (const k of BUILD_KEYS) {
     const lv = me.st[k] || 0, cost = me.costs[k];
     h += '<div class="bld"><div class="h"><b>' + BUILD[k].n + '</b><span class="lv">' + [0, 1, 2].map(i => '<i class="' + (i < lv ? 'on' : '') + '"></i>').join('') + '</span></div><p>' + esc(BUILD[k].d) + ' (pro Stufe)</p>' +
-      (cost == null ? '<span class="chip on">' + ic('check') + 'Voll ausgebaut</span>' : '<button class="btn sm' + (me.money >= cost && can ? '' : ' dark') + '" data-p="build" data-v="' + k + '"' + (me.money >= cost && can ? '' : ' disabled') + '>Stufe ' + (lv + 1) + ' bauen · ' + fmtM(cost) + '</button>') + '</div><div style="height:8px"></div>';
+      (cost == null ? '<span class="chip on">' + ic('check') + 'Voll ausgebaut</span>' : '<button class="btn sm' + (me.money >= cost && can ? '' : ' dark') + '" data-p="build" data-v="' + k + '"' + (me.money >= cost && can ? '' : ' disabled') + '>Stufe ' + (lv + 1) + ' bauen · ' + fmtM(cost) + '</button>' +
+        (me.fc && me.money >= cost && me.fc.end - cost < 0 ? '<p class="hint warn">Danach am Saisonende voraussichtlich ' + fmtM(me.fc.end - cost) + '</p>' : '')) + '</div><div style="height:8px"></div>';
   }
   return h;
+}
+/* Was bis zum Saisonende sicher kommt (ohne Siege, Tore, Pokal und bessere Platzierung) */
+function fcSec() {
+  const f = P.me.fc; if (!f) return '';
+  const row = (t, v) => v ? '<div class="kv"><span>' + t + '</span><b class="' + (v >= 0 ? 'pos' : 'neg') + '">' + fmtMs(v) + '</b></div>' : '';
+  return '<div class="sec fcsec"><h2><span class="lbl">BIS SAISONENDE' + (f.md ? ' · NOCH ' + f.md + (f.md === 1 ? ' SPIELTAG' : ' SPIELTAGE') : '') + '</span></h2>' +
+    row('Gehälter', -f.sal) + row('TV-Geld', f.tv) + row('Zuschauer und VIP (Heimspiele)', f.tick) + row('Sponsor-Raten', f.rate) + row('Fanshop', f.shop) + row('Prämie mindestens (letzter Platz)', f.prize) +
+    '<div class="kv fcend"><span>Voraussichtlich am Saisonende</span><b class="' + (f.end >= 0 ? '' : 'neg') + '">' + fmtM(f.end) + '</b></div>' +
+    '<p class="hint">Ohne Siegprämien, Tore, Pokal und bessere Platzierung – die kommen noch dazu.' + (f.end < 0 ? ' <b class="neg">Achtung: So rutschst du ins Minus.</b>' : '') + '</p></div>';
 }
 function geldHtml() {
   const me = P.me;
   let h = '<div class="sec"><div class="kv"><span>Vereinskasse</span><b class="' + (me.money < 0 ? 'neg' : '') + '">' + fmtM(me.money) + '</b></div><div class="kv"><span>Gehälter pro Saison</span><b>' + fmtM(me.salary) + '</b></div>' +
     (me.sponsor ? '<div class="kv"><span>Sponsor</span><b>' + esc(me.sponsor.n) + '</b></div>' : '') +
     '<div class="kv"><span>Glücksmünzen</span><b>' + me.coins + '</b></div>' +
-    '<p class="hint">Schulden kosten Zinsen und jeden Spieltag 1 Ruhm. Am Spielende bringt die Vereinskasse je 5 Mio € 1 Ruhm.</p></div>';
+    '<p class="hint">Schulden kosten Zinsen und jeden Spieltag 1 Ruhm. Am Spielende bringt die Vereinskasse je 5 Mio € 1 Ruhm. Jedes grüne Zehnerfeld auf der Ruhm-Leiste bringt 0,5 Mio €.</p></div>' + fcSec();
   for (const f of me.fin.slice().reverse()) {
     h += '<div class="sec"><h2><span class="lbl">' + esc(f.label.toUpperCase()) + ' · SAISON ' + f.s + '</span><b class="' + (f.sum >= 0 ? 'pos' : 'neg') + '">' + fmtMs(f.sum) + '</b></h2>' + f.items.map(x => '<div class="kv"><span>' + esc(x.t) + '</span><b class="' + (x.v >= 0 ? 'pos' : 'neg') + '">' + fmtMs(x.v) + '</b></div>').join('') + '</div>';
   }
@@ -4274,7 +4433,7 @@ function ligaHtml() {
   if (pub.hist && pub.hist.length) h += '<div class="sec"><h2><span class="lbl">MEISTER</span></h2>' + pub.hist.map(x => '<div class="kv"><span>Saison ' + x.season + '</span><b>' + esc((cPub(x.champ) || {}).name) + '</b></div>').join('') + '</div>';
   h += '<div class="sec"><h2><span class="lbl">NEUES</span></h2><div class="evl">' + pub.news.slice().reverse().map(n => '<div><span>' + esc(n.t) + '</span></div>').join('') + '</div></div>';
   h += '<div class="sec"><h2><span class="lbl">SO GIBT ES RUHM</span></h2><p class="hint">Die Figuren außen auf dem Spielbrett zeigen den Ruhm. Wer am Ende die meisten Ruhm-Punkte hat, gewinnt.</p>' + RUHM_INFO.map(x => '<div class="kv"><span>' + esc(x[0]) + '</span><b class="lime">' + esc(x[1]) + '</b></div>').join('') + '</div>';
-  if (pub.set && pub.set.fields !== 'aus') h += '<div class="sec"><h2><span class="lbl">EREIGNISFELDER</span></h2><div class="flegend">' + fieldChip('g') + fieldChip('p') + fieldChip('e') + '</div><p class="hint" style="margin-top:8px">Bleibt deine Figur auf der Ruhm-Leiste auf so einem Feld stehen, ziehst du vor dem nächsten Anpfiff die passende Karte. Eine Pechkarte kannst du vor dem Aufdecken mit einer Glücksmünze abwehren.</p></div>';
+  if (pub.set && pub.set.fields !== 'aus') h += '<div class="sec"><h2><span class="lbl">EREIGNISFELDER</span></h2><div class="flegend">' + fieldChip('g') + fieldChip('p') + fieldChip('e') + '</div><p class="hint" style="margin-top:8px">Bleibt deine Figur auf der Ruhm-Leiste auf so einem Feld stehen, ziehst du vor dem nächsten Anpfiff die passende Karte. Eine Pechkarte kannst du vor dem Aufdecken mit einer Glücksmünze abwehren. Wer über ein grünes Zehnerfeld zieht, bekommt 0,5 Mio €.</p></div>';
   h += '<p class="hint" style="text-align:center">Football Empire · Version ' + APP_VERSION + '</p>';
   return h;
 }
@@ -4334,7 +4493,7 @@ document.addEventListener('click', e => {
       if (el) { if (el.classList.contains('wait')) { el.classList.remove('wait'); el.classList.add('go'); } } else { P.cov = { id: me.card.id, go: true }; P.covAutoId = me.card.id; cardOverlay(); }
       send({ t: 'cardcoin' }); if (navigator.vibrate) try { navigator.vibrate(40); } catch (_) {}
     } return;
-    case 'reload': location.replace(location.pathname + '?raum=' + P.code + (LOCAL ? '&lokal=1' : '') + '&v=' + Date.now()); return;
+    case 'reload': { const go = () => location.replace(location.pathname + '?raum=' + P.code + (LOCAL ? '&lokal=1' : '') + '&v=' + Date.now()); Promise.race([refreshCache(), new Promise(r => setTimeout(r, 2500))]).then(go, go); return; }
     case 'covclose': P.cov = null; cardOverlay(); phoneRender(); return;
     case 'covshow': if (me.card) { P.cov = { id: me.card.id }; P.covAutoId = me.card.id; cardOverlay(); } return;
     case 'rv': { if (!P.dl) return; P.dl.rv = P.dl.rv || []; P.dl.rv[+b.dataset.i] = +v; sendRealRoll(); return; }
