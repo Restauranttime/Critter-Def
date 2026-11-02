@@ -108,7 +108,24 @@ input{font:inherit;color:inherit}
 .codebox{display:flex;gap:8px;width:100%}
 .codebox input{flex:1;min-width:0;height:56px;background:#fff;color:var(--ink);border:0;padding:0 16px;font-size:26px;font-weight:900;font-stretch:80%;letter-spacing:.3em;text-transform:uppercase;text-align:center}
 .saves{width:100%;display:flex;flex-direction:column;gap:6px}
-.saves button{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;background:var(--panel);text-align:left;font-size:14px}
+.saves .srow{display:flex;gap:2px;min-height:62px}
+.saves .sres{flex:1;min-width:0;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;background:var(--panel);text-align:left;font-size:14px}
+.saves .sdel{flex:none;width:54px;display:flex;align-items:center;justify-content:center;background:var(--panel);color:var(--muted)}
+.saves .sdel:hover,.saves .sdel:active{color:var(--red)}
+.saves .sask{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:8px 8px 8px 14px;background:#3A1020;text-align:left;font-size:14px;animation:fin .15s}
+.saves .sask>span{flex:1;min-width:0}
+.btn.red{background:var(--red);color:#fff}
+/* QR-Scanner in der App */
+.scanov{position:fixed;top:0;left:0;right:0;height:var(--vh,100%);z-index:95;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.scanov video{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}
+.scanov .sframe{position:relative;width:min(68vw,300px);height:min(68vw,300px);box-shadow:0 0 0 200vmax #040D1FB0;outline:3px solid var(--lime)}
+.scanov .sframe i{position:absolute;left:6%;right:6%;top:50%;height:2px;background:var(--lime);box-shadow:0 0 12px var(--lime);animation:scanl 1.8s ease-in-out infinite alternate}
+@keyframes scanl{from{top:8%}to{top:92%}}
+.scanov .stxt{position:absolute;top:calc(28px + var(--safe-t));left:18px;right:18px;display:flex;flex-direction:column;gap:6px;text-align:center;font-size:15px;color:#fff}
+.scanov .stxt b{font-size:22px;font-weight:900;font-style:italic;text-transform:uppercase;letter-spacing:.04em}
+.scanov .sbtn{position:absolute;left:18px;right:18px;bottom:calc(28px + var(--safe-b))}
+.apphint{background:var(--panel);border-left:3px solid var(--lime);padding:10px 12px;font-size:13px;color:var(--muted);text-align:left;line-height:1.4}
+.apphint b{color:#fff}
 .err{background:#3A1020;color:#FFC2C9;padding:12px 14px;font-size:14px;text-align:left;width:100%}
 
 /* ==========================================================================
@@ -2394,7 +2411,9 @@ const ICON = {
   runter: 'M12 5v14M6 13l6 6 6-6',
   plus: 'M12 5v14M5 12h14',
   minus: 'M5 12h14',
-  tausch: 'M4 8h14l-4-4M20 16H6l4 4'
+  tausch: 'M4 8h14l-4-4M20 16H6l4 4',
+  qr: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2.5v2.5H14zM17.5 17.5H20V20h-2.5zM14 20h2M20 14v2',
+  muell: 'M4 7h16M9.5 7V4h5v3M6 7l1 13h10l1-13M10 11v5.5M14 11v5.5'
 };
 function ic(n, cls) { return '<svg class="ico ' + (cls || '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + ICON[n] + '"></path></svg>'; }
 const PIPS = { 1: [4], 2: [2, 6], 3: [2, 4, 6], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
@@ -2432,8 +2451,9 @@ function toast(msg, ms) {
 /* Home-Bildschirm-App: iOS meldet dort eine zu kleine Fensterhöhe (unten bliebe ein Streifen frei).
    Deshalb richtet sich die Seite dann fest nach der Bildschirmhöhe – wie bei Funkenwerk und Tiefgang. */
 let FULLPX = -1;
+function isApp() { return !!(navigator.standalone || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches); }
 function applyGap() {
-  const app = navigator.standalone || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches;
+  const app = isApp();
   const portrait = innerHeight >= innerWidth, full = portrait ? Math.max(screen.height, screen.width) : Math.min(screen.height, screen.width);
   const v = app && full > 0 ? full : 0;
   if (v === FULLPX) return false;
@@ -2491,6 +2511,7 @@ function showStart(err) {
   window.BOARD_ON = window.PHONE_ON = false;
   ['board', 'phone'].forEach(id => { const e = document.getElementById(id); if (e) e.hidden = true; });
   ['bmenu', 'cardov'].forEach(id => { const e = document.getElementById(id); if (e) e.remove(); });
+  if (SCAN.on) scanClose();
   const s = $('#start'); s.hidden = false;
   const saves = boardSaves();
   const ph = ST.get('phone', null);
@@ -2504,16 +2525,38 @@ function showStart(err) {
     (recent ? '<button class="btn wide" data-s="rejoin">' + ic('pfeil') + 'Zurück ins Spiel ' + esc(recent.code) + '</button>' : '') +
     '<div class="lbl" style="text-align:left">Mitspielen (Handy)</div>' +
     '<form class="codebox" data-s="joinf"><input id="codeIn" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="CODE" aria-label="Raum-Code"><button class="btn" type="submit">Los</button></form>' +
+    (canScan() ? '<button class="btn ghost wide" data-s="scan">' + ic('qr') + 'QR-Code am iPad scannen</button>' : '') +
     '<div class="lbl" style="text-align:left;margin-top:10px">Spielbrett (iPad)</div>' +
     '<button class="btn white wide" data-s="board">' + ic('krone') + 'Neues Spielbrett öffnen</button>' +
-    (saves.length ? '<div class="saves">' + saves.map(v => '<button data-s="resume" data-v="' + esc(v.code) + '"><span><b>Fortsetzen: ' + esc(v.code) + '</b><br><span class="mut">' + esc(v.label) + '</span></span>' + ic('pfeil') + '</button>').join('') + '</div>' : '') +
+    (saves.length ? '<div class="lbl" style="text-align:left;margin-top:4px">Gespeicherte Spiele</div><div class="saves">' + saves.map(saveRow).join('') + '</div>' : '') +
     '</div>' +
     '<p style="font-size:12px">' + (LOCAL ? 'Testmodus: Verbindung nur zwischen Tabs in diesem Browser.' : 'Tipp: Über Safari › Teilen › „Zum Home-Bildschirm“ wird Football Empire zur Vollbild-App.') + '<br>Version ' + APP_VERSION + '</p>' +
     '</div>';
 }
 function boardSaves() {
   const idx = ST.get('saves', []);
-  return idx.filter(x => ST.get('save-' + x.code, null)).sort((a, b) => b.at - a.at).slice(0, 5);
+  return idx.filter(x => ST.get('save-' + x.code, null)).sort((a, b) => b.at - a.at).slice(0, 8);
+}
+function savedWhen(t) {
+  const d = new Date(t), n = new Date(), y = new Date(n.getTime() - 864e5);
+  const same = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  const hm = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  return 'Gespeichert ' + (same(d, n) ? 'heute' : same(d, y) ? 'gestern' : 'am ' + d.getDate() + '.' + (d.getMonth() + 1) + '.') + ', ' + hm + ' Uhr';
+}
+function saveRow(v) {
+  return '<div class="srow"><button class="sres" data-s="resume" data-v="' + esc(v.code) + '"><span><b>Fortsetzen: ' + esc(v.code) + '</b><br><span class="mut">' + esc(v.label) + '</span><br><span class="mut" style="font-size:12px">' + esc(savedWhen(v.at)) + '</span></span>' + ic('pfeil') + '</button>' +
+    '<button class="sdel" data-s="delask" data-v="' + esc(v.code) + '" aria-label="Spiel ' + esc(v.code) + ' löschen">' + ic('muell') + '</button></div>';
+}
+function delAskHtml(code) {
+  return '<div class="sask"><span><b>Spiel ' + esc(code) + ' löschen?</b><br><span class="mut" style="font-size:12px">Der Spielstand ist danach weg.</span></span>' +
+    '<button class="btn sm red" data-s="del" data-v="' + esc(code) + '">Löschen</button><button class="btn sm dark" data-s="delno" data-v="' + esc(code) + '">Nein</button></div>';
+}
+/* Spielstand vom iPad löschen; den Raum auf dem Server räumt nur das iPad ab, das ihn angelegt hat */
+function deleteSave(code) {
+  ST.del('save-' + code);
+  ST.set('saves', ST.get('saves', []).filter(x => x.code !== code));
+  try { if (sessionStorage.getItem('fe-board') === code) sessionStorage.removeItem('fe-board'); } catch (_) {}
+  if (!LOCAL) fbInit().then(fb => fb.db.ref('empire/' + code).remove()).catch(() => {});
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-s]'); if (!b || b.tagName === 'FORM') return;
@@ -2521,6 +2564,11 @@ document.addEventListener('click', e => {
   if (k === 'board') { SND.init(); boardStart(null); }
   else if (k === 'resume') { SND.init(); const sv = ST.get('save-' + b.dataset.v, null); if (sv) boardStart(sv); }
   else if (k === 'rejoin') { const ph = ST.get('phone', null); if (ph) phoneStart(ph.code); }
+  else if (k === 'delask') { const r = b.closest('.srow'); if (r) r.innerHTML = delAskHtml(b.dataset.v); }
+  else if (k === 'delno') { const r = b.closest('.srow'), v = boardSaves().find(x => x.code === b.dataset.v); if (r && v) r.outerHTML = saveRow(v); }
+  else if (k === 'del') { deleteSave(b.dataset.v); showStart(); toast('Spiel ' + b.dataset.v + ' gelöscht.'); }
+  else if (k === 'scan') { askMotion(); scanOpen(); }
+  else if (k === 'scanx') scanClose();
 });
 document.addEventListener('submit', e => {
   const f = e.target.closest('[data-s="joinf"]'); if (!f) return;
@@ -2536,6 +2584,99 @@ function askMotion() {
   if (MOTION_OK || !window.DeviceMotionEvent || typeof DeviceMotionEvent.requestPermission !== 'function') return;
   try { DeviceMotionEvent.requestPermission().then(r => { MOTION_OK = r === 'granted'; if (window.PHONE_ON) phoneRender(); }).catch(() => {}); } catch (_) {}
 }
+
+/* ---------- QR-Code in der App scannen ----------
+   Links aus der iPhone-Kamera öffnen immer in Safari, nie in der Home-Bildschirm-App.
+   Darum liest die App den QR-Code am iPad selbst: mit dem eingebauten Barcode-Leser des
+   Browsers, wo es ihn gibt, sonst mit jsQR (empire-qr.js, wird erst beim Scannen geladen). */
+const SCAN = { on: false, stream: null, timer: 0, dec: null, cv: null };
+function canScan() { return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia); }
+function codeFromQr(text) {
+  text = String(text || '').trim();
+  let c = '';
+  if (/^[A-Za-z]{4}$/.test(text)) c = text;
+  else { try { c = new URL(text).searchParams.get('raum') || ''; } catch (_) { c = ''; } }
+  c = c.toUpperCase().replace(/[^A-Z]/g, '');
+  return c.length === 4 ? c : '';
+}
+async function scanDecoder() {
+  if (SCAN.dec) return SCAN.dec;
+  if ('BarcodeDetector' in window) {
+    try {
+      const f = await BarcodeDetector.getSupportedFormats();
+      if (f.includes('qr_code')) {
+        const d = new BarcodeDetector({ formats: ['qr_code'] });
+        SCAN.dec = async v => { const r = await d.detect(v); return r && r[0] ? r[0].rawValue : ''; };
+        return SCAN.dec;
+      }
+    } catch (_) {}
+  }
+  if (!window.jsQR) await loadScript('empire-qr.js?v=' + APP_VERSION);
+  SCAN.cv = SCAN.cv || document.createElement('canvas');
+  SCAN.dec = async v => {
+    const w = v.videoWidth, h = v.videoHeight; if (!w || !h) return '';
+    // nur die Mitte (dort liegt der Rahmen), dafür in guter Auflösung
+    const side = Math.min(w, h) * 0.85, out = Math.min(560, Math.round(side));
+    const cv = SCAN.cv; if (cv.width !== out) { cv.width = out; cv.height = out; }
+    const g = cv.getContext('2d', { willReadFrequently: true });
+    g.drawImage(v, (w - side) / 2, (h - side) / 2, side, side, 0, 0, out, out);
+    const r = jsQR(g.getImageData(0, 0, out, out).data, out, out, { inversionAttempts: 'dontInvert' });
+    return r ? r.data : '';
+  };
+  return SCAN.dec;
+}
+async function scanOpen() {
+  if (SCAN.on) return;
+  SCAN.on = true;
+  const ov = document.createElement('div'); ov.id = 'scanov'; ov.className = 'scanov';
+  ov.innerHTML = '<video playsinline muted autoplay></video><div class="sframe"><i></i></div>' +
+    '<div class="stxt"><b>QR-Code scannen</b><span id="scanmsg">Kamera startet …</span></div>' +
+    '<button class="btn white sbtn" data-s="scanx">Abbrechen</button>';
+  document.body.appendChild(ov);
+  const msg = s => { const m = $('#scanmsg'); if (m) m.textContent = s; };
+  const decP = scanDecoder();
+  decP.catch(() => {});
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+    if (!SCAN.on) { stream.getTracks().forEach(x => x.stop()); return; }
+    SCAN.stream = stream;
+    const v = ov.querySelector('video'); v.muted = true; v.setAttribute('playsinline', ''); v.srcObject = stream;
+    try { await v.play(); } catch (_) {}
+    msg('Halte die Kamera auf den Code am Spielbrett.');
+    await decP;
+    if (SCAN.on) scanLoop(v);
+  } catch (e) {
+    const n = e && e.name;
+    scanClose();
+    toast(n === 'NotAllowedError' || n === 'SecurityError' ? 'Die Kamera ist nicht erlaubt. Gib den Code einfach ein (oder erlaube die Kamera in den iPhone-Einstellungen).'
+      : n === 'NotFoundError' || n === 'OverconstrainedError' ? 'Keine Kamera gefunden. Gib den Code einfach ein.'
+      : 'Scannen geht gerade nicht. Gib den Code einfach ein.', 5000);
+  }
+}
+function scanLoop(v) {
+  const tick = async () => {
+    if (!SCAN.on) return;
+    let txt = '';
+    try { txt = await SCAN.dec(v); } catch (_) {}
+    if (!SCAN.on) return;
+    if (txt) {
+      const code = codeFromQr(txt);
+      if (code) {
+        try { if (navigator.vibrate) navigator.vibrate(60); } catch (_) {}
+        scanClose(); phoneStart(code); return;
+      }
+      const m = $('#scanmsg'); if (m) m.textContent = 'Das ist kein Football-Empire-Code. Scanne den Code am iPad.';
+    }
+    SCAN.timer = setTimeout(tick, 150);
+  };
+  tick();
+}
+function scanClose() {
+  SCAN.on = false; clearTimeout(SCAN.timer);
+  if (SCAN.stream) { SCAN.stream.getTracks().forEach(x => x.stop()); SCAN.stream = null; }
+  const o = $('#scanov'); if (o) o.remove();
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && SCAN.on) scanClose(); });
 
 /* ==========================================================================
    SPIELBRETT (iPad): Gastgeber, rechnet alles und zeigt das Brett
@@ -2637,7 +2778,7 @@ function boardTick() {
   }
   if (B.dirty && now - B.lastFlush > 140) flush(now);
 }
-function flush(now) {
+function flush(now, force) { // force: sofort speichern (Menü), ohne die Zeitstempel zu verfälschen
   const G = B.G; B.dirty = false; B.lastFlush = now;
   G.seed = SEED;
   const pub = JSON.stringify(pubView(G));
@@ -2647,13 +2788,15 @@ function flush(now) {
     if (s !== B.lastPriv[c.uid]) { B.lastPriv[c.uid] = s; B.H.sendPriv(c.uid, s); }
   }
   boardRender();
-  if (now - B.saveAt > 4000) {
+  if (force || now - B.saveAt > 4000) {
     B.saveAt = now;
     const label = G.clubs.map(c => c.short).join(' · ') + ' – Saison ' + G.season + ', ' + phaseName(G.phase);
     const sv = { code: B.code, at: now, label, G };
     ST.set('save-' + B.code, sv);
-    const idx = ST.get('saves', []).filter(x => x.code !== B.code); idx.push({ code: B.code, at: now, label }); ST.set('saves', idx.slice(-8));
-    if (now - B.fbSaveAt > 20000) { B.fbSaveAt = now; try { B.H.save(JSON.stringify(sv)); } catch (_) {} }
+    const idx = ST.get('saves', []).filter(x => x.code !== B.code); idx.push({ code: B.code, at: now, label });
+    while (idx.length > 8) { const old = idx.shift(); ST.del('save-' + old.code); } // ältester Spielstand fliegt ganz raus
+    ST.set('saves', idx);
+    if (force || now - B.fbSaveAt > 20000) { B.fbSaveAt = now; try { B.H.save(JSON.stringify(sv)); } catch (_) {} }
   }
 }
 function onPhaseSound() { if (B.G.phase !== 'spiel') SND.flip(); }
@@ -2813,11 +2956,11 @@ const RENDER = {
     const s = G.settings;
     const seg = (k, opts) => '<div class="seg">' + opts.map(([v, l]) => '<button data-b="set" data-k="' + k + '" data-v="' + v + '" class="' + (String(s[k]) === String(v) ? 'on' : '') + '">' + l + '</button>').join('') + '</div>';
     return '<div class="lobby-l"><div class="lbl">Raum-Code</div><div class="code">' + esc(B.code) + '</div><div class="qr" id="qrbox"></div>' +
-      '<div class="url">Handy-Kamera auf den QR-Code richten. Oder Football Empire auf dem Handy öffnen und den Code eingeben.</div></div>' +
+      '<div class="url"><b>Mit der App vom Home-Bildschirm:</b> App öffnen und „QR-Code am iPad scannen“ tippen oder den Code eingeben.<br>Ohne App: einfach die Handy-Kamera auf den QR-Code richten.</div></div>' +
       '<div class="col" style="flex:1">' +
       '<div class="pnl" style="flex:1;display:flex;flex-direction:column;min-height:0"><h3>VEREINE · ' + n + ' VON 8</h3><div class="clist">' +
       (n ? G.clubs.map(c => { const k = colOf(c); return '<div class="crow"><span class="stripe" style="background:' + k.c + '"></span><span class="cn"><b>' + esc(c.name) + '</b><span>' + (c.bot ? 'Computer' : 'Manager ' + esc(c.mgr) + (c.conn ? '' : ' · offline')) + '</span></span><span class="sh">' + esc(c.short) + '</span><button data-b="kick" data-v="' + c.id + '" aria-label="Verein entfernen">' + ic('x') + '</button></div>'; }).join('')
-        : '<p class="mut" style="margin:6px 0">Noch niemand da. Scannt den QR-Code mit euren Handys.</p>') +
+        : '<p class="mut" style="margin:6px 0">Noch niemand da. Öffnet Football Empire auf euren Handys und scannt den QR-Code.</p>') +
       '</div><div class="row" style="margin-top:10px;gap:10px"><button class="btn sm dark" data-b="bot"' + (n >= 8 ? ' disabled' : '') + '>' + ic('plus') + 'Computer-Verein</button><span class="mut" style="font-size:12px">Optional, füllt die Liga auf.</span></div></div>' +
       '<div class="pnl"><h3>EINSTELLUNGEN</h3>' +
       '<div class="setrow"><span>Saisons</span>' + seg('seasons', [[1, '1'], [3, '3'], [5, '5']]) + '</div>' +
@@ -3206,8 +3349,8 @@ document.addEventListener('click', e => {
   }
   else if (k === 'quit') { try { sessionStorage.removeItem('fe-board'); } catch (_) {} ST.del('save-' + B.code); ST.set('saves', ST.get('saves', []).filter(x => x.code !== B.code)); try { B.H.destroy(); } catch (_) {} window.BOARD_ON = false; B.G = null; showStart(); return; }
   else if (k === 'mclose') { const m = $('#bmenu'); if (m) m.remove(); return; }
-  else if (k === 'msave') { flush(Date.now() + 1e7); const m = $('#bmenu'); if (m) m.remove(); toast('Gespeichert. Auf der Startseite unter „Fortsetzen: ' + B.code + '“.'); return; }
-  else if (k === 'mquit') { try { sessionStorage.removeItem('fe-board'); } catch (_) {} B.saveAt = 0; flush(Date.now() + 1e7); const mm = $('#bmenu'); if (mm) mm.remove(); try { B.H.close(); } catch (_) {} window.BOARD_ON = false; B.G = null; showStart(); return; }
+  else if (k === 'msave') { flush(Date.now(), true); const m = $('#bmenu'); if (m) m.remove(); toast('Gespeichert. Auf der Startseite unter „Fortsetzen: ' + B.code + '“.'); return; }
+  else if (k === 'mquit') { try { sessionStorage.removeItem('fe-board'); } catch (_) {} flush(Date.now(), true); const mm = $('#bmenu'); if (mm) mm.remove(); try { B.H.close(); } catch (_) {} window.BOARD_ON = false; B.G = null; showStart(); return; }
   B.mainKey = ''; markDirty();
 });
 const RUHM_INFO = [['Sieg', '+2'], ['Unentschieden', '+1'], ['Stadionausbau (jede Stufe)', '+2'], ['Saisonplatzierung', 'Meister +10 … Letzter 0'], ['Torschützenkönig der Saison', '+2'], ['Fans am Saisonende', '+1 je 5.000'], ['Publikumsliebling im Kader', '+1 pro Saison'], ['Ereigniskarten', 'manchmal ±1 bis 2'], ['Spielende: Vereinskasse', '+1 je 5 Mio €'], ['Schulden', '−1 pro Spieltag, am Ende weitere Abzüge']];
@@ -3313,6 +3456,7 @@ function joinHtml() {
   return '<div id="ph-main" style="padding:calc(20px + var(--safe-t)) 18px 30px"><form class="join" id="jf">' +
     '<div class="wordmark" style="font-size:22px">FOOTBALL <b>EMPIRE</b></div>' +
     '<p class="hint">Raum ' + esc(P.code) + ' · Gründe deinen Verein.</p>' +
+    (!P.me && !isApp() && matchMedia('(pointer: coarse)').matches ? '<div class="apphint"><b>Football Empire als App am Home-Bildschirm?</b> Die Handy-Kamera öffnet Links immer im Browser. Für Vollbild öffne lieber die App und tippe dort „QR-Code am iPad scannen“ oder gib den Code <b>' + esc(P.code) + '</b> ein.</div>' : '') +
     '<label>DEIN NAME<input id="jmgr" maxlength="14" value="' + esc(f.mgr) + '" placeholder="z. B. Lea" autocomplete="off"></label>' +
     '<label>VEREINSNAME<input id="jname" maxlength="24" value="' + esc(f.name) + '" placeholder="z. B. FC Nordlicht" autocomplete="off"></label>' +
     '<label>KÜRZEL (3 BUCHSTABEN)<input id="jshort" maxlength="3" value="' + esc(f.short) + '" placeholder="FCN" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase"></label>' +
