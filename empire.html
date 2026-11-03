@@ -717,6 +717,13 @@ input{font:inherit;color:inherit}
 .fcsec .fcend{border-top:2px solid var(--line2);padding-top:8px}
 .fcsec .fcend span{font-weight:800;color:#fff}
 .fcsec .fcend b{font-size:18px}
+.hlist{display:flex;flex-direction:column;gap:2px;font-size:14px}
+.hlist>div{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}
+.hlist .hn{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.hlist .hn>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+.hlist .hn b{color:#fff}
+.hlist .hs{font-size:12px;color:var(--muted);white-space:nowrap}
+.hlist .hs.on{color:var(--lime)}
 </style>
 </head>
 <body>
@@ -1757,7 +1764,9 @@ function doRoll(G, m, c, o) {
   }
   return true;
 }
-function duelAdv(d, trait) { return clamp(d.sh.s - d.kp.s, -MAXV, MAXV) + d.bonus + ((trait == null ? d.trait : trait) ? 2 : 0) - d.kb; }
+// Im Elfmeterschießen zählt der Vorteil höchstens ±3, sonst wäre ein Elfmeter nicht mehr zu verschießen und das Schießen endete nie
+const SO_MAXADV = 3;
+function duelAdv(d, trait) { const a = clamp(d.sh.s - d.kp.s, -MAXV, MAXV) + d.bonus + ((trait == null ? d.trait : trait) ? 2 : 0) - d.kb; return d.so ? clamp(a, -SO_MAXADV, SO_MAXADV) : a; }
 function duelTotals(d) {
   const rs = Math.max(d.rs || 0, d.rs2 || 0), rk = Math.max(d.rk || 0, d.rk2 || 0);
   const adv = duelAdv(d);
@@ -1773,7 +1782,8 @@ function resolveDuel(G, m, now) {
     m.so[sd.s].push(goal ? 1 : 0);
     const t2 = soTally(m);
     mEv(m, goal ? 'sogoal' : 'somiss', sd.s, 'Elfmeterschießen: ' + d.sh.n + (goal ? ' trifft' : t.k - t.s >= 3 ? ' verschießt' : ' scheitert an ' + d.kp.n) + ' (' + t2.h + ':' + t2.a + ')');
-    const win = soDecided(m);
+    let win = soDecided(m);
+    if (!win && m.so.h.length >= 15 && m.so.h.length === m.so.a.length) { win = rnd() < 0.5 ? 'h' : 'a'; mEv(m, 'solot', win, 'Nach 15 Elfmetern pro Team entscheidet das Los'); }
     if (win) { m.soWin = win; mEv(m, 'sowin', win, clubById(G, m[win]).name + ' gewinnt im Elfmeterschießen'); }
     m.next = now + (goal ? 2600 : 2400);
     return;
@@ -1808,7 +1818,7 @@ function setHalftime(G, c, o) {
   const sd = m.h === c.id ? 'h' : 'a'; const S = m.side[sd];
   if (o.taktik && TAKTIK[o.taktik]) S.taktik = o.taktik;
   if (o.einsatz && EINSATZ[o.einsatz]) S.einsatz = o.einsatz;
-  for (const [outId, inId] of (o.subs || [])) {
+  for (const [outId, inId] of (Array.isArray(o.subs) ? o.subs.filter(x => Array.isArray(x) && x.length === 2) : [])) {
     if (S.subs >= 3) break;
     const slot = S.slots.find(x => x.id === outId);
     const pin = playerOf(c, inId);
@@ -2384,7 +2394,7 @@ function pubClub(G, c) {
 }
 function duelPub(m) {
   const d = m.duel; if (!d) return null;
-  return { id: d.id, att: d.att, kind: d.kind, sh: d.sh, kp: d.kp, bonus: d.bonus, kb: d.kb, notes: d.notes, trait: d.trait, rs: d.rs, rk: d.rk, rs2: d.rs2, rk2: d.rk2, coinS: d.coinS, coinK: d.coinK, res: d.res, left: Math.max(0, Math.ceil((d.dl - NOW()) / 1000)) };
+  return { id: d.id, att: d.att, kind: d.kind, so: !!d.so, sh: d.sh, kp: d.kp, bonus: d.bonus, kb: d.kb, notes: d.notes, trait: d.trait, rs: d.rs, rk: d.rk, rs2: d.rs2, rk2: d.rk2, coinS: d.coinS, coinK: d.coinK, res: d.res, left: Math.max(0, Math.ceil((d.dl - NOW()) / 1000)) };
 }
 function liveSummary(G) {
   const L = G.live; if (!L) return null;
@@ -2617,13 +2627,14 @@ function makeClient(handlers) {
 /* ==========================================================================
    GEMEINSAME BAUSTEINE (Brett und Handy)
    ========================================================================== */
-const APP_VERSION = '8';
+const APP_VERSION = '9';
 const $ = (s, r) => (r || document).querySelector(s);
 const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
 const ST = {
   get(k, d) { try { const v = localStorage.getItem('fe-' + k); return v == null ? d : JSON.parse(v); } catch (_) { return d; } },
   set(k, v) { try { localStorage.setItem('fe-' + k, JSON.stringify(v)); } catch (_) {} },
+  tryset(k, v) { try { localStorage.setItem('fe-' + k, JSON.stringify(v)); return true; } catch (_) { return false; } },
   del(k) { try { localStorage.removeItem('fe-' + k); } catch (_) {} }
 };
 const ICON = {
@@ -2695,6 +2706,8 @@ function pawnSvg(color, w) {
   return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 24 30" aria-hidden="true"><circle cx="12" cy="7" r="5.5" fill="' + color + '" stroke="#fff" stroke-width="1.5"></circle><path d="M5 28h14l-2-7c2-1 3-3 3-5 0-2.5-2.5-4-5-4H9c-2.5 0-5 1.5-5 4 0 2 1 4 3 5z" fill="' + color + '" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"></path></svg>';
 }
 function colOf(c) { return COLORS[c && c.col != null ? c.col : 0] || COLORS[0]; }
+// Vibrieren erst nach der ersten Berührung (sonst meldet der Browser einen Fehler)
+function buzz(p) { try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(p); } catch (_) {} }
 function crest(c, w, fs) { const k = colOf(c); return '<span class="crest" style="width:' + w + 'px;height:' + w + 'px;background:' + k.c + ';color:' + k.f + ';font-size:' + (fs || Math.round(w * 0.36)) + 'px">' + esc(c.short) + '</span>'; }
 function stars(t) { t = t || 0; return '<span class="stars" aria-label="Talent ' + t + ' von 3">' + '★'.repeat(t) + '<i>' + '★'.repeat(3 - t) + '</i></span>'; }
 function trChip(tr) { if (!tr || !TRAITS[tr]) return ''; return '<span class="trc' + (TRAITS[tr].good ? '' : ' bad') + '">' + esc(TRAITS[tr].n) + '</span>'; }
@@ -2928,7 +2941,7 @@ function scanLoop(v) {
     if (txt) {
       const code = codeFromQr(txt);
       if (code) {
-        try { if (navigator.vibrate) navigator.vibrate(60); } catch (_) {}
+        buzz(60);
         scanClose(); phoneStart(code); return;
       }
       const m = $('#scanmsg'); if (m) m.textContent = 'Das ist kein Football-Empire-Code. Scanne den Code am iPad.';
@@ -3041,7 +3054,8 @@ function boardAction(uid, a) {
   } else if (a.t === 'hello') {
     B.lastPriv[uid] = '';
   } else if (c) {
-    const r = applyAction(G, c, a);
+    let r;
+    try { r = applyAction(G, c, a); } catch (e) { console.error('Aktion fehlgeschlagen', a, e); r = { ok: false, err: 'Das hat nicht geklappt. Bitte nochmal versuchen.' }; }
     if (r.err) fail(r.err);
     if (a.t === 'build' && r.ok) SND.ding();
   }
@@ -3087,7 +3101,12 @@ function flush(now, force) { // force: sofort speichern (Menü), ohne die Zeitst
     B.saveAt = now;
     const label = G.clubs.map(c => c.short).join(' · ') + ' – Saison ' + G.season + ', ' + phaseName(G.phase);
     const sv = { code: B.code, at: now, label, G };
-    ST.set('save-' + B.code, sv);
+    let okS = ST.tryset('save-' + B.code, sv);
+    if (!okS) { // Speicher voll: älteste andere Spielstände löschen, bis dieser hineinpasst
+      const others = ST.get('saves', []).filter(x => x.code !== B.code).sort((x, y) => x.at - y.at);
+      while (!okS && others.length) { ST.del('save-' + others.shift().code); okS = ST.tryset('save-' + B.code, sv); }
+      if (!okS && !B.saveWarn) { B.saveWarn = true; toast('Speicher auf dem iPad ist voll – der Spielstand kann gerade nicht gesichert werden.', 6000); }
+    }
     const idx = ST.get('saves', []).filter(x => x.code !== B.code); idx.push({ code: B.code, at: now, label });
     while (idx.length > 8) { const old = idx.shift(); ST.del('save-' + old.code); } // ältester Spielstand fliegt ganz raus
     ST.set('saves', idx);
@@ -3209,7 +3228,7 @@ function pawnHop(id, ms) {
   try { e.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-' + Math.round(B.lay.cs * 0.38) + 'px)', offset: 0.45 }, { transform: 'translateY(0)' }], { duration: Math.max(80, ms - 15), easing: 'ease-out' }); } catch (_) {}
 }
 function pawnsBusy() { return !!B.pbusy || !!B.pmv || !!(B.pq && B.pq.length); }
-function pawnsReset() { clearTimeout(B.ptimer); B.pv = {}; B.pq = []; B.pmv = null; B.pbusy = false; camReset(); }
+function pawnsReset() { clearTimeout(B.ptimer); B.pv = {}; B.pq = []; B.pmv = null; B.pbusy = false; camReset(); clearTimeout(B.flashT); B.flashT = null; B.flashQ = []; }
 
 /* Ereignisfelder auf die Ruhm-Leiste malen */
 function paintFields() {
@@ -3221,9 +3240,21 @@ function paintFields() {
     el.className = cls; el.innerHTML = k ? fieldIcon(k) : (n % 5 === 0 ? String(n) : ''); el.title = k ? FIELD_N[k] : '';
   });
 }
-function showFlash(f, tries) {
+/* Einblendungen der Reihe nach: erst wenn die Figuren gezogen sind, dann eine nach der anderen (nie übereinander) */
+function flashPump() {
+  if (B.flashT) return;
+  const f = (B.flashQ || []).shift(); if (!f) return;
+  const go = tries => {
+    if (!window.BOARD_ON || !B.G) { B.flashQ = []; B.flashT = null; return; }
+    if ((pawnsBusy() || B.camOn || Date.now() - (B.camOffAt || 0) < 800) && tries < 120) { B.flashT = setTimeout(() => go(tries + 1), 250); return; }
+    showFlash(f);
+    B.flashT = setTimeout(() => { B.flashT = null; flashPump(); }, 4200);
+  };
+  go(0);
+}
+function showFlash(f) {
   if (!window.BOARD_ON || !$('#stage') || !B.G) return;
-  if ((pawnsBusy() || B.camOn || Date.now() - (B.camOffAt || 0) < 800) && (tries || 0) < 120) { setTimeout(() => showFlash(f, (tries || 0) + 1), 250); return; }
+  for (const old of document.querySelectorAll('#stage .bflash')) old.remove();
   const el = document.createElement('div'); el.className = 'bflash' + (f.k === 'feld' ? ' feld' : '');
   const tag = f.k === 'tausch' ? 'TAUSCH!' : f.k === 'feld' ? 'EREIGNISFELD' : f.k === 'muenzen' ? 'GLÜCKSMÜNZEN' : 'GELDSPRITZE';
   const body = f.k === 'feld' && f.hits ? f.hits.map(h => { const c = clubById(B.G, h.c); return c ? '<span class="fhit">' + crest(c, 28, 11) + fieldChip(h.k) + '</span>' : ''; }).join('') + '<span class="fhn">Karte vor dem nächsten Anpfiff</span>' : esc(f.t);
@@ -3262,7 +3293,7 @@ function boardRender() {
   renderPawns();
   // Einblendungen nacheinander zeigen (Tausch, Geldspritze, Ereignisfeld)
   const fls = (G.flashes && G.flashes.length ? G.flashes : G.flash ? [G.flash] : []).filter(f => f.n > (B.flashN || 0));
-  if (fls.length) { B.flashN = fls[fls.length - 1].n; fls.forEach((f, i) => { if (Date.now() - f.at < 15000) setTimeout(() => showFlash(f), i * 3800); }); }
+  if (fls.length) { B.flashN = fls[fls.length - 1].n; B.flashQ = B.flashQ || []; fls.forEach(f => { if (Date.now() - f.at < 15000) B.flashQ.push(f); }); flashPump(); }
   const ph = G.phase;
   if (ph !== B.ph) { B.ph = ph; B.mainKey = ''; if (ph === 'spiel') B.evSeen = {}; }
   const main = $('#bmain');
@@ -3718,6 +3749,7 @@ document.addEventListener('click', e => {
   if (k === 'set') { const key = b.dataset.k; let v = b.dataset.v; if (key === 'seasons') v = +v; G.settings[key] = v; if ($('#bmenu')) boardMenu(); }
   else if (k === 'bot') { const used = new Set(G.clubs.map(c => c.name)); const nm = BOT_NAMES.find(x => !used.has(x)) || ('Computer ' + (G.clubs.length + 1)); addClub(G, { name: nm, bot: true, mgr: 'Computer' }); SND.ding(); }
   else if (k === 'kick') { const c = clubById(G, b.dataset.v); if (c) { if (c.uid) B.H.sendPriv(c.uid, JSON.stringify({ left: 1 })); removeClub(G, c.id); } }
+  else if (k === 'free') { const c = clubById(G, b.dataset.v); if (c && !c.bot && c.uid) { try { B.H.sendPriv(c.uid, JSON.stringify({ left: 1 })); } catch (_) {} B.lastPriv[c.uid] = ''; c.uid = null; c.conn = false; news(G, c.name + ' wartet auf ein neues Handy.', 'info'); } if ($('#bmenu')) boardMenu(); }
   else if (k === 'start') { if (startGame(G)) { SND.whistle(1); B.lastPriv = {}; } }
   else if (k === 'force') { advance(G, true); if (G.phase !== 'spiel') onPhaseSound(); }
   else if (k === 'next') { if (G.phase === 'aufdecken') { B.rvAt = Date.now(); advance(G, false); SND.flip(); } else { advance(G, false); onPhaseSound(); } }
@@ -3747,10 +3779,18 @@ function settingsHtml(inGame) {
 function menuHtml() {
   return '<div class="menubox"><div class="row" style="justify-content:space-between"><div class="bigt s">MENÜ</div><button class="btn sm" data-b="mclose">Zurück zum Spiel</button></div>' +
     '<div class="pnl"><h3>EINSTELLUNGEN</h3>' + settingsHtml(B.G.phase !== 'lobby') + '</div>' +
+    handyHtml() +
     '<div class="pnl"><h3>SO GIBT ES RUHM</h3><p class="mut" style="margin:0 0 8px;font-size:13px">Die Figuren außen auf der Ruhm-Leiste zeigen den Ruhm jedes Vereins. Wer am Spielende vorne steht, gewinnt.</p><div class="ruhminfo">' +
     RUHM_INFO.map(x => '<div><span>' + esc(x[0]) + '</span><b>' + esc(x[1]) + '</b></div>').join('') + '</div></div>' +
     '<div class="row" style="gap:10px;flex-wrap:wrap"><button class="btn dark" data-b="msave">Jetzt speichern</button><button class="btn ghost" data-b="mquit">Speichern und zur Startseite</button></div>' +
     '<p class="mut" style="margin:0;font-size:13px">Gespeicherte Spiele setzt du auf diesem Gerät über die Startseite fort. Die Handys kommen mit demselben Code wieder rein.</p></div>';
+}
+function handyHtml() {
+  const G = B.G; if (G.phase === 'lobby') return '';
+  const h = G.clubs.filter(c => !c.bot); if (!h.length) return '';
+  return '<div class="pnl"><h3>HANDYS</h3><p class="mut" style="margin:0 0 8px;font-size:13px">Akku leer oder neues Handy? Verein hier freigeben, dann am neuen Handy mit dem Code beitreten und „Übernehmen“ tippen.</p><div class="hlist">' +
+    h.map(c => '<div><span class="hn">' + crest(c, 26) + '<span><b>' + esc(c.name) + '</b> ' + esc(c.mgr) + '</span></span>' +
+      (c.uid ? '<span class="hs' + (c.conn ? ' on' : '') + '">' + (c.conn ? 'verbunden' : 'offline') + '</span><button class="btn sm ghost" data-b="free" data-v="' + c.id + '">Freigeben</button>' : '<span class="hs">frei – wartet auf ein Handy</span>') + '</div>').join('') + '</div></div>';
 }
 function boardMenu() {
   let d = $('#bmenu');
@@ -3789,18 +3829,18 @@ function phoneOnPriv(s) {
     P.coinsN = v.coins;
   }
   if (v.id && Array.isArray(v.pend)) {
-    if (P.pendN != null && v.pend.length > P.pendN) { toast('Ereignisfeld! Vor dem nächsten Anpfiff ziehst du eine ' + CARD_KN[v.pend[v.pend.length - 1]] + '.', 4000); if (navigator.vibrate) try { navigator.vibrate([50, 40, 50]); } catch (_) {} }
+    if (P.pendN != null && v.pend.length > P.pendN) { toast('Ereignisfeld! Vor dem nächsten Anpfiff ziehst du eine ' + CARD_KN[v.pend[v.pend.length - 1]] + '.', 4000); buzz([50, 40, 50]); }
     P.pendN = v.pend.length;
   }
   if (v.id && Array.isArray(v.trades)) {
     P.seenOff = P.seenOff || null;
     const inc = v.trades.filter(o => o.to === v.id && o.st === 'open').map(o => o.id);
-    if (P.seenOff) { const neu = inc.filter(id => !P.seenOff.includes(id)); if (neu.length) { const o = v.trades.find(x => x.id === neu[0]); const f = P.pub && P.pub.clubs.find(c => c.id === o.from); toast('Neues Tauschangebot' + (f ? ' von ' + f.name : '')); if (navigator.vibrate) try { navigator.vibrate([60, 40, 60]); } catch (_) {} } }
+    if (P.seenOff) { const neu = inc.filter(id => !P.seenOff.includes(id)); if (neu.length) { const o = v.trades.find(x => x.id === neu[0]); const f = P.pub && P.pub.clubs.find(c => c.id === o.from); toast('Neues Tauschangebot' + (f ? ' von ' + f.name : '')); buzz([60, 40, 60]); } }
     const done = v.trades.filter(o => o.from === v.id && o.st !== 'open').map(o => o.id + o.st);
     if (P.seenDone) { const neu = done.filter(x => !P.seenDone.includes(x)); for (const x of neu) { const o = v.trades.find(y => x === y.id + y.st); if (o && o.st === 'accepted') toast('Dein Tauschangebot wurde angenommen!'); else if (o && o.st === 'declined') toast('Dein Tauschangebot wurde abgelehnt.'); } }
     P.seenOff = inc; P.seenDone = done;
   }
-  if (v.left) { P.me = null; toast('Du bist nicht mehr in der Liga.'); }
+  if (v.left) { P.me = null; toast(P.pub && P.pub.ph !== 'lobby' ? 'Dein Verein wurde am iPad freigegeben. Tippe ihn an, um weiterzuspielen.' : 'Du bist nicht mehr in der Liga.', 4000); }
   else if (v.id) P.me = v;
   phoneRender();
 }
@@ -4143,7 +4183,7 @@ function cardOverlay() {
   const cd = P.me && P.me.card; const L = P.pub && P.pub.live;
   if (cd && L && L.stage === 'cards' && cd.o == null && P.covAutoId !== cd.id && !verMismatch()) {
     P.cov = { id: cd.id }; P.covAutoId = cd.id;
-    if (navigator.vibrate) try { navigator.vibrate([60, 40, 60]); } catch (_) {}
+    buzz([60, 40, 60]);
   }
   let ov = document.getElementById('cardov');
   if (!P.cov || !cd || P.cov.id !== cd.id) { if (ov) ov.remove(); if (P.cov && (!cd || P.cov.id !== cd.id)) P.cov = null; return; }
@@ -4167,7 +4207,7 @@ function flipCard() {
   const cd = P.me && P.me.card; if (!cd) return;
   const el = document.querySelector('#cardov .cflip');
   if (el && el.classList.contains('wait')) { el.classList.remove('wait'); el.classList.add('go'); }
-  if (!cd.open) { send({ t: 'cardopen' }); if (navigator.vibrate) try { navigator.vibrate(40); } catch (_) {} }
+  if (!cd.open) { send({ t: 'cardopen' }); buzz(40); }
 }
 function nextOpp() {
   const pub = P.pub, me = P.me; if (!pub.fx) return null;
@@ -4271,7 +4311,7 @@ function sheetHtml() {
 /* ---------- Würfel-Duell ---------- */
 function duelHtmlPhone() {
   const me = P.me, d = me.duel, mc = myPub();
-  if (!P.dl || P.dl.id !== d.id) { P.dl = { id: d.id, coin: false, trait: false, rolling: false }; if (navigator.vibrate) try { navigator.vibrate([80, 60, 80]); } catch (_) {} }
+  if (!P.dl || P.dl.id !== d.id) { P.dl = { id: d.id, coin: false, trait: false, rolling: false }; buzz([80, 60, 80]); }
   const s = d.role === 's';
   const coin = P.dl.coin && me.coins > 0, trait = P.dl.trait && d.trAvail;
   const adv = trait ? d.advT : d.adv;
@@ -4319,7 +4359,7 @@ function sendRealRoll() {
 function doRollPhone() {
   const me = P.me; if (!me || !me.duel || me.duel.rolled || me.duel.res || !P.dl || P.dl.rolling) return;
   P.dl.rolling = true;
-  if (navigator.vibrate) try { navigator.vibrate(120); } catch (_) {}
+  buzz(120);
   send({ t: 'roll', d: me.duel.id, coin: P.dl.coin && me.coins > 0, trait: P.dl.trait && me.duel.trAvail });
   phoneRender();
   setTimeout(() => { if (P.dl && P.dl.rolling && P.me && P.me.duel && !P.me.duel.rolled) { P.dl.rolling = false; phoneRender(); } }, 6000);
@@ -4475,11 +4515,11 @@ document.addEventListener('click', e => {
     case 'unready': send({ t: 'ready', v: false }); return;
     case 'sponsor': send({ t: 'sponsor', i: +v }); return;
     case 'prof': send({ t: 'profil', i: +v }); if (me.profOffers && me.profOffers[+v]) { me.prof = me.profOffers[+v]; phoneRender(); } return;
-    case 'droll': if (!P.drolling) { P.drolling = true; send({ t: 'droll' }); if (navigator.vibrate) try { navigator.vibrate(100); } catch (_) {} phoneRender(); setTimeout(() => { P.drolling = false; phoneRender(); }, 3000); } return;
+    case 'droll': if (!P.drolling) { P.drolling = true; send({ t: 'droll' }); buzz(100); phoneRender(); setTimeout(() => { P.drolling = false; phoneRender(); }, 3000); } return;
     case 'drv': send({ t: 'droll', v: +v }); return;
     case 'dfil': P.dfil = v; phoneRender(); return;
     case 'dsel': P.dsel = v; phoneRender(); return;
-    case 'dconfirm': if (P.dsel) { send({ t: 'pick', pid: P.dsel }); if (navigator.vibrate) try { navigator.vibrate(60); } catch (_) {} P.dsel = null; } return;
+    case 'dconfirm': if (P.dsel) { send({ t: 'pick', pid: P.dsel }); buzz(60); P.dsel = null; } return;
     case 'list': { let ids = me.listed.slice(); if (ids.includes(v)) ids = ids.filter(x => x !== v); else { if (ids.length >= 3) { toast('Höchstens 3 Spieler.'); return; } ids.push(v); } me.listed = ids; send({ t: 'list', ids }); phoneRender(); return; }
     case 'bid': {
       const card = (P.pub.market || []).find(x => x.id === v); if (!card) return;
@@ -4510,7 +4550,7 @@ document.addEventListener('click', e => {
     case 'cardcoin': if (me.card && !me.card.open && me.card.k === 'p' && me.coins > 0) {
       const el = document.querySelector('#cardov .cflip');
       if (el) { if (el.classList.contains('wait')) { el.classList.remove('wait'); el.classList.add('go'); } } else { P.cov = { id: me.card.id, go: true }; P.covAutoId = me.card.id; cardOverlay(); }
-      send({ t: 'cardcoin' }); if (navigator.vibrate) try { navigator.vibrate(40); } catch (_) {}
+      send({ t: 'cardcoin' }); buzz(40);
     } return;
     case 'reload': { const go = () => location.replace(location.pathname + '?raum=' + P.code + (LOCAL ? '&lokal=1' : '') + '&v=' + Date.now()); Promise.race([refreshCache(), new Promise(r => setTimeout(r, 2500))]).then(go, go); return; }
     case 'covclose': P.cov = null; cardOverlay(); phoneRender(); return;
