@@ -745,6 +745,7 @@ input{font:inherit;color:inherit}
 .rb-k .vs .w{margin:0}
 .rb-k.hell{background:#fff;color:var(--ink)}
 .rb-k.hell .t{color:var(--ink2)}.rb-k.hell .d,.rb-k.hell .c span.m{color:var(--ink2)}
+.rb-grid.wait .rb-k{animation:none;opacity:0}
 @keyframes rbin{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 .rb-scp{margin-top:12px;padding:12px 16px}
 .rb-sc{display:flex;align-items:center;gap:10px;height:30px;font-size:14px;border-bottom:1px solid var(--line)}
@@ -3218,6 +3219,7 @@ function boardTick() {
     if (G.phase === 'aufdecken' && G.reveal && now - B.rvAt > 7000 && G.reveal.i < G.reveal.res.length - 1) { G.reveal.i++; B.rvAt = now; markDirty(); }
     if (G.phase === 'spiel' && G.live && (G.live.stage === 'ht' || G.live.kickAt || G.live.cardsAt)) markDirty();
     if (G.phase === 'spiel' && G.live && G.live.ms.some(m => m.duel && !m.duel.res)) markDirty();
+    if (B.rbWait) { if (G.phase === 'saisonende') markDirty(); else B.rbWait = false; }
   }
   if (B.dirty && now - B.lastFlush > 140) flush(now);
 }
@@ -3588,6 +3590,7 @@ const RENDER = {
   saisonende() {
     const G = B.G; const R = G.report;
     if (R && R.review && !G.rbDone) { try { return reviewHtml(G, R); } catch (e) { console.error(e); G.rbDone = true; } }
+    B.rbWait = false;
     const rows = R.table.map(t => {
       const c = clubById(G, t.id); const rc = R.clubs[c.id] || { ruhm: [] };
       const gain = rc.ruhm.reduce((a, x) => a + x[1], 0);
@@ -3627,6 +3630,9 @@ const RENDER = {
 /* ---------- Saisonrückblick: die Geschichten der Saison, bevor abgerechnet wird ---------- */
 function reviewHtml(G, R) {
   const V = R.review, cc = id => clubById(G, id);
+  // Kacheln erst einblenden, wenn die Figuren gezogen sind und die Kamera wieder draußen ist (höchstens 90 s warten)
+  if (B.rbS !== R.season) { B.rbS = R.season; B.rbAt = Date.now(); }
+  const wait = (pawnsBusy() || !!B.camOn) && Date.now() - B.rbAt < 90000; B.rbWait = wait;
   const pl = (n, one, many) => n + ' ' + (n === 1 ? one : many);
   const club = id => { const c = cc(id); return '<div class="c">' + crest(c, 26) + '<span>' + esc(c.name) + '<span class="m">' + esc(c.mgr) + '</span></span></div>'; };
   const vs = g => '<div class="vs">' + crest(cc(g.h), 26) + '<div class="w">' + g.hg + ':' + g.ag + '</div>' + crest(cc(g.a), 26) + '</div>';
@@ -3656,7 +3662,7 @@ function reviewHtml(G, R) {
   return '<div class="col" style="flex:1;gap:12px;min-width:0">' +
     '<div class="row" style="gap:14px"><span class="tag"><span>SAISONRÜCKBLICK</span></span><span class="mut">Saison ' + R.season + ' · Liga und Pokal in Zahlen</span></div>' +
     '<div class="rb-zahlen">' + zahlen.map(z => '<div><b>' + z[0] + '</b>' + z[1] + '</div>').join('') + '</div>' +
-    '<div class="rb-grid">' + tiles + '</div>' +
+    '<div class="rb-grid' + (wait ? ' wait' : '') + '">' + tiles + '</div>' +
     '<div class="fbar"><span class="mut" style="font-size:13px">Am Handy steht jetzt „Deine Saison“.</span><button class="btn" data-b="next">Zum Saisonabschluss' + ic('pfeil') + '</button></div></div>' +
     '<div class="side-tab col"><div class="ttab"><div class="th"><span>ABSCHLUSSTABELLE</span><span>TORE · PKT</span></div>' + rows + '</div>' +
     (sc ? '<div class="pnl rb-scp"><h3>TORJÄGER DER SAISON</h3>' + sc + '</div>' : '') + '</div>';
