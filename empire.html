@@ -724,6 +724,63 @@ input{font:inherit;color:inherit}
 .hlist .hn b{color:#fff}
 .hlist .hs{font-size:12px;color:var(--muted);white-space:nowrap}
 .hlist .hs.on{color:var(--lime)}
+
+/* ---------- Saisonrückblick (iPad) ---------- */
+.rb-zahlen{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;background:var(--line);flex-shrink:0}
+.rb-zahlen>div{background:var(--panel);padding:10px 12px;font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--muted);min-width:0}
+.rb-zahlen b{display:block;font-stretch:75%;font-weight:900;font-style:italic;font-size:28px;line-height:1.05;color:#fff;letter-spacing:0}
+.rb-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:12px;flex:1;min-height:0}
+.rb-k{position:relative;background:var(--panel);padding:12px 14px 12px 18px;display:flex;flex-direction:column;gap:4px;min-width:0;min-height:0;overflow:hidden;animation:rbin .5s both}
+.rb-k::before{content:'';position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--kc)}
+.rb-k .t{display:flex;align-items:center;gap:7px;font-size:10.5px;font-weight:800;letter-spacing:.13em;color:var(--lime)}
+.rb-k .t svg{width:17px;height:17px;flex-shrink:0}
+.rb-k .w{font-stretch:75%;font-weight:900;font-style:italic;font-size:38px;line-height:1;margin-top:4px;white-space:nowrap}
+.rb-k .w small{font-size:20px;margin-left:4px}
+.rb-k .w small.k{font-size:15px}
+.rb-k .d{font-size:12.5px;color:var(--muted);line-height:1.3}
+.rb-k .c{margin-top:auto;display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;padding-top:8px}
+.rb-k .c>span{min-width:0;line-height:1.2;overflow:hidden;text-overflow:ellipsis}
+.rb-k .c span.m{display:block;color:var(--muted);font-weight:500;font-size:12px}
+.rb-k .vs{display:flex;align-items:center;gap:8px;margin-top:4px}
+.rb-k .vs .w{margin:0}
+.rb-k.hell{background:#fff;color:var(--ink)}
+.rb-k.hell .t{color:var(--ink2)}.rb-k.hell .d,.rb-k.hell .c span.m{color:var(--ink2)}
+.rb-grid.wait .rb-k{animation:none;opacity:0}
+@keyframes rbin{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.rb-scp{margin-top:12px;padding:12px 16px}
+.rb-sc{display:flex;align-items:center;gap:10px;height:30px;font-size:14px;border-bottom:1px solid var(--line)}
+.rb-sc:last-child{border:0}
+.rb-sc .r{width:16px;color:var(--muted);font-weight:700}
+.rb-sc .n{flex:1;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rb-sc b{font-stretch:75%;font-weight:900;font-style:italic;font-size:19px;color:var(--lime)}
+
+/* ---------- Spickzettel und „Deine Saison“ (Handy) ---------- */
+#ph-head .hlp{width:34px;height:34px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--panel2);color:#fff;font-weight:900;font-size:18px;font-style:italic;transform:skewX(-10deg)}
+#ph-head .hlp>span{transform:skewX(10deg)}
+.spick{display:flex;flex-direction:column;gap:8px}
+.spick .jetzt{background:var(--lime);color:var(--ink);padding:12px 14px}
+.spick .jetzt .l{font-size:10.5px;font-weight:800;letter-spacing:.14em;color:var(--ink2)}
+.spick .jetzt b{display:block;font-stretch:75%;font-weight:900;font-style:italic;font-size:21px;line-height:1.05;margin:3px 0 5px;text-transform:uppercase}
+.spick .jetzt p{margin:0;font-size:13.5px;line-height:1.4}
+.spick .spk{background:var(--panel)}
+.spick .sum{width:100%;display:flex;align-items:center;gap:10px;padding:12px 14px;text-align:left}
+.spick .sum svg{width:20px;height:20px;color:var(--lime);flex-shrink:0}
+.spick .sum b{flex:1;font-stretch:75%;font-weight:800;font-style:italic;font-size:18px;text-transform:uppercase;letter-spacing:.01em}
+.spick .sum .ch{width:16px;height:16px;color:var(--muted);transition:transform .15s}
+.spick .spk.open .sum .ch{transform:rotate(180deg)}
+.spick .bd{padding:0 14px 14px;font-size:13.5px;line-height:1.45;color:#D8E0EE}
+.spick .bd p{margin:0 0 8px}
+.spick .bd ol{margin:0;padding-left:20px}.spick .bd ol li{margin:0 0 4px}
+.spick .bd .kv{font-size:13.5px;padding:6px 0}
+.spick .bd .kv b{color:var(--lime);text-align:right}
+.spick .bd .nb{font-size:12px;color:var(--muted);margin:8px 0 0}
+.ds .ds-hero{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.ds .ds-hero b{font-stretch:75%;font-weight:900;font-style:italic;font-size:40px;line-height:1;color:var(--lime)}
+.ds .ds-hero span{color:var(--muted);font-size:14px}
+.ds .kvals{background:var(--panel);padding:10px 12px}
+.ds .kv b{text-align:right}
+.ds .ds-tiles{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.ds .ds-tiles>div{display:flex;flex-wrap:wrap;gap:6px}
 </style>
 </head>
 <body>
@@ -1158,7 +1215,8 @@ function enterPhase(G, ph) {
     G.draft.pool = [];
   } else if (ph === 'saisonstart') {
     G.md = 0;
-    for (const c of G.clubs) c.ruhmS0 = c.ruhm;
+    for (const c of G.clubs) { c.ruhmS0 = c.ruhm; c.moneyS0 = c.money; }
+    G.sstat = blankStat();
     for (const c of G.clubs) c.coins += 2;
     news(G, 'Saison ' + G.season + ': Jeder Verein bekommt 2 Glücksmünzen.', 'info');
     pushFlash(G, { k: 'muenzen', t: 'Saison ' + G.season + ': Jeder Verein bekommt 2 Glücksmünzen' });
@@ -1340,6 +1398,7 @@ function computeReveal(G) {
     const seller = k.from ? clubById(G, k.from) : null;
     const item = { k: k.id, p: pubPlayer(G, k.p), min: k.min, from: k.from, bids, winner, price, tie, abroad: 0 };
     if (winner) {
+      statTransfer(G, k.p, winner, k.from, price);
       const w = clubById(G, winner);
       if (seller) { seller.players = seller.players.filter(p => p.id !== k.p.id); pay(G, seller, price, 'Verkauf ' + k.p.n); dropFromLineup(seller, k.p.id); }
       pay(G, w, -price, 'Kauf ' + k.p.n);
@@ -1507,6 +1566,7 @@ function finishCupRound(G) {
     if (Math.abs(m.hg - m.ag) >= 3) bigWin(G, clubById(G, w), Math.abs(m.hg - m.ag));
     const scorers = m.ev.filter(e => e.t === 'goal').map(e => ({ sd: e.sd, min: e.min, n: (e.text.match(/([^!]+?) trifft/) || [])[1] || '' }));
     res.push({ h: m.h, a: m.a, hg: m.hg, ag: m.ag, so: m.so ? soTally(m) : null, w, scorers, spect: 0, st: m.st });
+    statMatch(G, m, 0, l, C.name);
     news(G, C.name + ': ' + clubById(G, m.h).name + ' ' + m.hg + ':' + m.ag + (m.so ? ' (' + soTally(m).h + ':' + soTally(m).a + ' i.E.)' : '') + ' ' + clubById(G, m.a).name, 'result');
     if (C.name === 'Pokalfinale') { C.winner = w; C.finalist = l; }
   }
@@ -1552,7 +1612,10 @@ function kickoff(G, now) {
 }
 function calcSide(G, m, sd) { const S = m.side[sd]; S.v = lineValues(G, clubById(G, m[sd]), S.slots, S.form, S.taktik, S.einsatz, S.mods); }
 function other(sd) { return sd === 'h' ? 'a' : 'h'; }
-function mEv(m, t, sd, text, extra) { m.ev.push(Object.assign({ t, sd, min: m.min, text }, extra || {})); if (m.ev.length > 40) m.ev.shift(); }
+function mEv(m, t, sd, text, extra) {
+  m.ev.push(Object.assign({ t, sd, min: m.min, text }, extra || {})); if (m.ev.length > 40) m.ev.shift();
+  if ((sd === 'h' || sd === 'a') && (t === 'yc' || t === 'red' || t === 'inj')) { const k = m.cnt || (m.cnt = {}); k[sd + t] = (k[sd + t] || 0) + 1; } // für den Saisonrückblick
+}
 function minuteFor(R, r) { return r <= R ? clamp(Math.round((r - 0.15 - rnd() * 0.7) * 45 / R), 1, 45) : clamp(45 + Math.round((r - R - 0.15 - rnd() * 0.7) * 45 / R), 46, 90); }
 
 function shiftTimes(G, dt) {
@@ -1882,6 +1945,7 @@ function finishMatchday(G) {
     m.spect = spect;
     const scorers = m.ev.filter(e => e.t === 'goal').map(e => ({ sd: e.sd, min: e.min, n: (e.text.match(/([^!]+?) trifft/) || [])[1] || '' }));
     res.push({ h: m.h, a: m.a, hg: m.hg, ag: m.ag, scorers, spect, st: m.st });
+    statMatch(G, m, md, null);
     news(G, h.name + ' ' + m.hg + ':' + m.ag + ' ' + a.name, 'result');
   }
   for (const c of G.clubs) {
@@ -1907,6 +1971,72 @@ function tableOrder(G) {
 }
 
 /* ---------- Saisonende ---------- */
+/* ---------- Saisonrückblick: Daten über die Saison sammeln ----------
+   Alles hier ist nur Statistik. Fehler dürfen das Spiel nie aufhalten, darum überall try/catch. */
+function blankStat() { return { games: 0, goals: 0, so: 0, yc: 0, red: 0, inj: 0, lg: [], pech: {}, injC: {}, redC: {}, tr: null, cupOut: {} }; }
+function sstat(G) { if (!G.sstat || !Array.isArray(G.sstat.lg)) G.sstat = blankStat(); return G.sstat; }
+function statMatch(G, m, md, cupLoser, cupName) {
+  try {
+    const S = sstat(G); S.games++; S.goals += m.hg + m.ag; if (m.so) S.so++;
+    const k = m.cnt || {};
+    for (const sd of ['h', 'a']) {
+      const id = m[sd], yc = k[sd + 'yc'] || 0, red = k[sd + 'red'] || 0, inj = k[sd + 'inj'] || 0;
+      S.yc += yc; S.red += red; S.inj += inj;
+      if (inj) S.injC[id] = (S.injC[id] || 0) + inj;
+      if (red) S.redC[id] = (S.redC[id] || 0) + red;
+    }
+    if (cupLoser) S.cupOut[cupLoser] = cupName;
+    else S.lg.push([m.h, m.a, m.hg, m.ag, md + 1]);
+  } catch (_) {}
+}
+function statTransfer(G, p, to, from, price) {
+  try { const S = sstat(G); if (!S.tr || price > S.tr.price) S.tr = { n: p.n, pos: p.pos, s: p.s, to, from: from || null, price }; } catch (_) {}
+}
+function buildReview(G, rep, scorers) {
+  const S = sstat(G), tab = rep.table;
+  const lg = S.lg.map(x => ({ h: x[0], a: x[1], hg: x[2], ag: x[3], md: x[4] })).filter(g => clubById(G, g.h) && clubById(G, g.a));
+  const diff = g => Math.abs(g.hg - g.ag), sum = g => g.hg + g.ag;
+  const tiles = [];
+  // höchster Sieg und Torfestival (nur Liga)
+  let big = null; for (const g of lg) if (diff(g) > 0 && (!big || diff(g) > diff(big) || (diff(g) === diff(big) && sum(g) > sum(big)))) big = g;
+  if (big) tiles.push({ k: 'big', c: big.hg > big.ag ? big.h : big.a, g: big });
+  let fest = null; for (const g of lg) if (g !== big && sum(g) >= 5 && (!fest || sum(g) > sum(fest))) fest = g;
+  if (fest) tiles.push({ k: 'fest', c: fest.hg >= fest.ag ? fest.h : fest.a, g: fest });
+  // Bestwerte je Verein; bei Gleichstand gewinnt der besser platzierte
+  const top = (f, min) => { let b = null; for (const t of tab) { const v = f(t); if (v != null && v >= min && (!b || v > b.v)) b = { c: t.id, v }; } return b; };
+  const att = top(t => t.tab.gf, 1); if (att) tiles.push({ k: 'att', c: att.c, v: att.v, sp: tab.find(t => t.id === att.c).tab.sp });
+  const def = top(t => t.tab.sp ? -t.tab.ga : null, -1e9); if (def) tiles.push({ k: 'def', c: def.c, v: -def.v, sp: tab.find(t => t.id === def.c).tab.sp });
+  const run = {}, best = {};
+  for (const g of lg) for (const [id, gf, ga] of [[g.h, g.hg, g.ag], [g.a, g.ag, g.hg]]) { run[id] = gf > ga ? (run[id] || 0) + 1 : 0; best[id] = Math.max(best[id] || 0, run[id]); }
+  const ser = top(t => best[t.id] || 0, 2); if (ser) tiles.push({ k: 'serie', c: ser.c, v: ser.v });
+  const gain = id => { const c = clubById(G, id); return c ? c.ruhm - (c.ruhmS0 || 0) : 0; };
+  const auf = top(t => gain(t.id), 1); if (auf) tiles.push({ k: 'auf', c: auf.c, v: auf.v });
+  if (S.tr && clubById(G, S.tr.to)) tiles.push({ k: 'tr', c: S.tr.to, tr: S.tr });
+  const pz = id => (S.pech[id] || 0) * 2 + (S.injC[id] || 0) + (S.redC[id] || 0);
+  const pech = top(t => pz(t.id), 1); if (pech) tiles.push({ k: 'pech', c: pech.c, p: S.pech[pech.c] || 0, inj: S.injC[pech.c] || 0, red: S.redC[pech.c] || 0 });
+  // „Deine Saison“ für jedes Handy
+  const rr = G.clubs.slice().sort((a, b) => b.ruhm - a.ruhm).map(c => c.id);
+  const clubs = {};
+  for (const t of tab) {
+    const c = clubById(G, t.id); if (!c) continue;
+    let bw = null, wl = null;
+    for (const g of lg) {
+      const home = g.h === t.id; if (!home && g.a !== t.id) continue;
+      const gf = home ? g.hg : g.ag, ga = home ? g.ag : g.hg, e = { o: home ? g.a : g.h, gf, ga, md: g.md };
+      if (gf > ga && (!bw || gf - ga > bw.gf - bw.ga || (gf - ga === bw.gf - bw.ga && gf > bw.gf))) bw = e;
+      if (gf < ga && (!wl || ga - gf > wl.ga - wl.gf || (ga - gf === wl.ga - wl.gf && ga > wl.ga))) wl = e;
+    }
+    const ts = scorers.find(x => x.c === t.id);
+    clubs[t.id] = {
+      rank: t.rank, s: t.tab.s, u: t.tab.u, n: t.tab.n, gf: t.tab.gf, ga: t.tab.ga, pts: t.tab.pts,
+      ruhm: gain(t.id), rr: rr.indexOf(t.id) + 1, money: c.moneyS0 == null ? null : c.money - c.moneyS0,
+      best: best[t.id] || 0, bw, wl, top: ts ? { n: ts.n, g: ts.g } : null,
+      cup: G.cup && G.cup.winner === t.id ? 'win' : S.cupOut[t.id] || null,
+      tiles: tiles.filter(x => x.c === t.id).map(x => x.k)
+    };
+  }
+  return { n: { games: S.games, goals: S.goals, yc: S.yc, red: S.red, inj: S.inj, so: S.so }, tiles, scorers: scorers.slice(0, 5), clubs };
+}
 function seasonEnd(G) {
   payBank(G);
   const order = tableOrder(G); const n = order.length;
@@ -1930,6 +2060,8 @@ function seasonEnd(G) {
     rep.table.push({ id: c.id, rank: i + 1, tab: JSON.parse(JSON.stringify(c.tab)) });
   });
   if (G.cup && G.cup.winner) rep.awards.push({ k: 'pokal', c: G.cup.winner, t: 'Pokalsieger', d: clubById(G, G.cup.winner).name });
+  const scorers = []; for (const c of G.clubs) for (const p of c.players) if (p.goals > 0) scorers.push({ n: p.n, c: c.id, g: p.goals });
+  scorers.sort((a, b) => b.g - a.g);
   // Torschützenkönig
   let best = 0; for (const c of G.clubs) for (const p of c.players) best = Math.max(best, p.goals);
   if (best > 0) for (const c of G.clubs) for (const p of c.players) if (p.goals === best) {
@@ -1964,6 +2096,8 @@ function seasonEnd(G) {
     }
     closeFin(G, c, 'Saisonende ' + G.season);
   }
+  try { rep.review = buildReview(G, rep, scorers); } catch (e) { rep.review = null; }
+  G.rbDone = false;
   G.hist.push({ season: G.season, table: order.map(c => ({ id: c.id, pts: c.tab.pts, gf: c.tab.gf, ga: c.tab.ga })), champ: order[0].id });
   for (const c of G.clubs) { c.tab = blankTab(); c.sponsor = null; fixLineup(G, c); }
   G.report = rep;
@@ -2192,6 +2326,7 @@ function drawCard(G, c, kind) {
     let x = {};
     if (k.prep) { x = k.prep(G, c); if (!x) continue; }
     c.card = { id, kind, x, t: k.t, d: fillText(k.d, x), o: null, res: null, open: false, opts: k.opts ? k.opts.map(o => ({ l: fillText(o.l, x), ok: !o.can || !!o.can(G, c), def: !!o.def })) : null };
+    if (kind === 'p') try { const S = sstat(G); S.pech[c.id] = (S.pech[c.id] || 0) + 1; } catch (_) {}
     return;
   }
 }
@@ -2419,7 +2554,7 @@ function pubView(G) {
   if (ph === 'aufdecken' && G.reveal) v.reveal = { i: G.reveal.i, n: G.reveal.res.length, res: G.reveal.res.slice(0, G.reveal.i + 1) };
   if (ph === 'spiel') v.live = liveSummary(G);
   if (ph === 'ergebnis') v.results = G.results;
-  if (ph === 'saisonende') v.report = G.report;
+  if (ph === 'saisonende') { v.report = G.report; v.rb = G.report && G.report.review && !G.rbDone ? 1 : 0; }
   return v;
 }
 function privView(G, c) {
@@ -2627,7 +2762,7 @@ function makeClient(handlers) {
 /* ==========================================================================
    GEMEINSAME BAUSTEINE (Brett und Handy)
    ========================================================================== */
-const APP_VERSION = '9';
+const APP_VERSION = '10';
 const $ = (s, r) => (r || document).querySelector(s);
 const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
@@ -3084,6 +3219,7 @@ function boardTick() {
     if (G.phase === 'aufdecken' && G.reveal && now - B.rvAt > 7000 && G.reveal.i < G.reveal.res.length - 1) { G.reveal.i++; B.rvAt = now; markDirty(); }
     if (G.phase === 'spiel' && G.live && (G.live.stage === 'ht' || G.live.kickAt || G.live.cardsAt)) markDirty();
     if (G.phase === 'spiel' && G.live && G.live.ms.some(m => m.duel && !m.duel.res)) markDirty();
+    if (B.rbWait) { if (G.phase === 'saisonende') markDirty(); else B.rbWait = false; }
   }
   if (B.dirty && now - B.lastFlush > 140) flush(now);
 }
@@ -3453,6 +3589,8 @@ const RENDER = {
   },
   saisonende() {
     const G = B.G; const R = G.report;
+    if (R && R.review && !G.rbDone) { try { return reviewHtml(G, R); } catch (e) { console.error(e); G.rbDone = true; } }
+    B.rbWait = false;
     const rows = R.table.map(t => {
       const c = clubById(G, t.id); const rc = R.clubs[c.id] || { ruhm: [] };
       const gain = rc.ruhm.reduce((a, x) => a + x[1], 0);
@@ -3489,6 +3627,46 @@ const RENDER = {
       '<div class="side-tab col">' + ruhmHtml() + '</div>';
   }
 };
+/* ---------- Saisonrückblick: die Geschichten der Saison, bevor abgerechnet wird ---------- */
+function reviewHtml(G, R) {
+  const V = R.review, cc = id => clubById(G, id);
+  // Kacheln erst einblenden, wenn die Figuren gezogen sind und die Kamera wieder draußen ist (höchstens 90 s warten)
+  if (B.rbS !== R.season) { B.rbS = R.season; B.rbAt = Date.now(); }
+  const wait = (pawnsBusy() || !!B.camOn) && Date.now() - B.rbAt < 90000; B.rbWait = wait;
+  const pl = (n, one, many) => n + ' ' + (n === 1 ? one : many);
+  const club = id => { const c = cc(id); return '<div class="c">' + crest(c, 26) + '<span>' + esc(c.name) + '<span class="m">' + esc(c.mgr) + '</span></span></div>'; };
+  const vs = g => '<div class="vs">' + crest(cc(g.h), 26) + '<div class="w">' + g.hg + ':' + g.ag + '</div>' + crest(cc(g.a), 26) + '</div>';
+  const big = (v, unit) => '<div class="w">' + v + '<small' + (unit.length >= 10 ? ' class="k"' : '') + '>' + unit + '</small></div>';
+  const T = {
+    big: t => ({ ic: 'ball', h: 'HÖCHSTER SIEG', w: vs(t.g), d: (t.c === t.g.a ? 'Auswärtssieg' : 'Heimsieg') + ' am ' + t.g.md + '. Spieltag', hell: 1 }),
+    fest: t => ({ ic: 'ball', h: 'TORFESTIVAL', w: vs(t.g), d: (t.g.hg + t.g.ag) + ' Tore in einem Spiel am ' + t.g.md + '. Spieltag' }),
+    att: t => ({ ic: 'hoch', h: 'BESTER STURM', w: big(t.v, t.v === 1 ? 'TOR' : 'TORE'), d: 'in ' + pl(t.sp, 'Ligaspiel', 'Ligaspielen') }),
+    def: t => ({ ic: 'krone', h: 'BESTE ABWEHR', w: big(t.v, t.v === 1 ? 'GEGENTOR' : 'GEGENTORE'), d: 'in ' + pl(t.sp, 'Ligaspiel', 'Ligaspielen') }),
+    serie: t => ({ ic: 'pfeil', h: 'LÄNGSTE SIEGESSERIE', w: big(t.v, 'SIEGE'), d: 'hintereinander in der Liga' }),
+    auf: t => ({ ic: 'pokal', h: 'AUFSTEIGER DER SAISON', w: big('+' + t.v, 'RUHM'), d: 'so viel Ruhm wie kein anderer Verein' }),
+    tr: t => ({ ic: 'markt', h: 'REKORDTRANSFER', w: big(fmtM(t.tr.price).replace(' Mio €', ''), 'MIO €'), d: esc(t.tr.n) + ' (' + POSN[t.tr.pos] + ', Stärke ' + t.tr.s + ')' + (t.tr.from && cc(t.tr.from) ? ' von ' + esc(cc(t.tr.from).short) : '') }),
+    pech: t => {
+      const parts = [[t.inj, 'VERLETZUNG', 'VERLETZUNGEN', 'Verletzung', 'Verletzungen'], [t.p, 'PECHKARTE', 'PECHKARTEN', 'Pechkarte', 'Pechkarten'], [t.red, 'ROTE KARTE', 'ROTE KARTEN', 'Rote Karte', 'Rote Karten']].filter(x => x[0] > 0);
+      const m = parts[0], rest = parts.slice(1).map(x => pl(x[0], x[3], x[4]));
+      return { ic: 'karte', h: 'PECHVOGEL', w: big(m[0], m[0] === 1 ? m[1] : m[2]), d: rest.length ? 'dazu ' + rest.join(' und ') : 'mehr Pech hatte keiner' };
+    }
+  };
+  const tiles = V.tiles.filter(t => T[t.k] && cc(t.c)).map((t, i) => {
+    const o = T[t.k](t);
+    return '<div class="rb-k' + (o.hell ? ' hell' : '') + '" style="--kc:' + colOf(cc(t.c)).c + ';animation-delay:' + (0.2 + i * 0.35).toFixed(2) + 's"><div class="t">' + ic(o.ic) + o.h + '</div>' + o.w + '<div class="d">' + o.d + '</div>' + club(t.c) + '</div>';
+  }).join('');
+  const n = V.n;
+  const zahlen = [[n.games, 'SPIELE'], [n.goals, 'TORE'], [n.games ? (n.goals / n.games).toFixed(1).replace('.', ',') : '0', 'TORE/SPIEL'], [n.yc, 'GELBE KARTEN'], [n.red, 'ROTE KARTEN'], [n.inj, 'VERLETZUNGEN']];
+  const rows = R.table.map(t => { const c = cc(t.id); return c ? '<div class="tr"><span class="p">' + t.rank + '</span><span class="dot" style="background:' + colOf(c).c + '"></span><span class="n">' + esc(c.name) + '</span><span class="v" style="width:44px">' + t.tab.gf + ':' + t.tab.ga + '</span><span class="v b" style="width:34px">' + t.tab.pts + '</span></div>' : ''; }).join('');
+  const sc = V.scorers.filter(x => cc(x.c)).map((x, i) => '<div class="rb-sc"><span class="r">' + (i + 1) + '</span>' + crest(cc(x.c), 20) + '<span class="n">' + esc(x.n) + '</span><b>' + x.g + '</b></div>').join('');
+  return '<div class="col" style="flex:1;gap:12px;min-width:0">' +
+    '<div class="row" style="gap:14px"><span class="tag"><span>SAISONRÜCKBLICK</span></span><span class="mut">Saison ' + R.season + ' · Liga und Pokal in Zahlen</span></div>' +
+    '<div class="rb-zahlen">' + zahlen.map(z => '<div><b>' + z[0] + '</b>' + z[1] + '</div>').join('') + '</div>' +
+    '<div class="rb-grid' + (wait ? ' wait' : '') + '">' + tiles + '</div>' +
+    '<div class="fbar"><span class="mut" style="font-size:13px">Am Handy steht jetzt „Deine Saison“.</span><button class="btn" data-b="next">Zum Saisonabschluss' + ic('pfeil') + '</button></div></div>' +
+    '<div class="side-tab col"><div class="ttab"><div class="th"><span>ABSCHLUSSTABELLE</span><span>TORE · PKT</span></div>' + rows + '</div>' +
+    (sc ? '<div class="pnl rb-scp"><h3>TORJÄGER DER SAISON</h3>' + sc + '</div>' : '') + '</div>';
+}
 function lobbyHint(G) {
   const s = G.settings, n = Math.max(2, G.clubs.length);
   const mdays = n % 2 ? 2 * n : 2 * (n - 1), games = Math.floor(n / 2), per = 2.2;
@@ -3746,12 +3924,14 @@ document.addEventListener('click', e => {
   const G = B.G; if (!G) return;
   SND.init();
   const k = b.dataset.b;
+  if (k === 'next' || k === 'force') { if (Date.now() - (B.nextAt || 0) < 700) return; B.nextAt = Date.now(); } // Doppeltipp überspringt sonst eine Seite
   if (k === 'set') { const key = b.dataset.k; let v = b.dataset.v; if (key === 'seasons') v = +v; G.settings[key] = v; if ($('#bmenu')) boardMenu(); }
   else if (k === 'bot') { const used = new Set(G.clubs.map(c => c.name)); const nm = BOT_NAMES.find(x => !used.has(x)) || ('Computer ' + (G.clubs.length + 1)); addClub(G, { name: nm, bot: true, mgr: 'Computer' }); SND.ding(); }
   else if (k === 'kick') { const c = clubById(G, b.dataset.v); if (c) { if (c.uid) B.H.sendPriv(c.uid, JSON.stringify({ left: 1 })); removeClub(G, c.id); } }
   else if (k === 'free') { const c = clubById(G, b.dataset.v); if (c && !c.bot && c.uid) { try { B.H.sendPriv(c.uid, JSON.stringify({ left: 1 })); } catch (_) {} B.lastPriv[c.uid] = ''; c.uid = null; c.conn = false; news(G, c.name + ' wartet auf ein neues Handy.', 'info'); } if ($('#bmenu')) boardMenu(); }
   else if (k === 'start') { if (startGame(G)) { SND.whistle(1); B.lastPriv = {}; } }
   else if (k === 'force') { advance(G, true); if (G.phase !== 'spiel') onPhaseSound(); }
+  else if (k === 'next' && G.phase === 'saisonende' && G.report && G.report.review && !G.rbDone) { G.rbDone = true; SND.flip(); }
   else if (k === 'next') { if (G.phase === 'aufdecken') { B.rvAt = Date.now(); advance(G, false); SND.flip(); } else { advance(G, false); onPhaseSound(); } }
   else if (k === 'pause') { if (G.paused) { const dt = Date.now() - (G.pausedAt || Date.now()); G.paused = false; shiftTimes(G, dt); } else { G.paused = true; G.pausedAt = Date.now(); } }
   else if (k === 'snd') { SND.on = !SND.on; ST.set('snd', SND.on); }
@@ -3819,7 +3999,12 @@ async function phoneStart(code) {
   P.C.send({ t: 'hello' });
   if (history.replaceState) { try { history.replaceState(null, '', location.pathname + '?raum=' + code + (LOCAL ? '&lokal=1' : '')); } catch (_) {} }
 }
-function phoneOnPub(s) { try { P.pub = JSON.parse(s); } catch (_) { return; } phoneRender(); }
+function phoneOnPub(s) {
+  const prev = P.pub && P.pub.ph;
+  try { P.pub = JSON.parse(s); } catch (_) { return; }
+  if (prev && prev !== 'saisonende' && P.pub.ph === 'saisonende') P.tab = 'akt'; // „Deine Saison“ gleich zeigen
+  phoneRender();
+}
 function phoneOnPriv(s) {
   let v; try { v = JSON.parse(s); } catch (_) { return; }
   if (v.err) { if (P.lastErrN >= 0 && v.err.n > P.lastErrN) { toast(v.err.m); if (P.cov && v.card && !v.card.open) P.cov = null; } P.lastErrN = v.err.n; }
@@ -3868,7 +4053,9 @@ function phoneRender() {
   if (P.conn === 'weg') html += '<div class="offline">Verbindung weg – versuche es weiter …</div>';
   if (html === P.html) { cardOverlay(); return; }
   const mainOld = $('#ph-main'); const sc = mainOld ? mainOld.scrollTop : 0; const keyOld = P.scrollKey;
+  const shOld = $('.sheet .in'); const ssc = shOld ? shOld.scrollTop : 0;
   el.innerHTML = html; P.html = html; cardOverlay();
+  const shNew = $('.sheet .in'); if (shOld && shNew) { shNew.scrollTop = ssc; shNew.parentNode.style.animation = 'none'; }
   const mainNew = $('#ph-main'); if (mainNew && keyOld === P.tabKey()) mainNew.scrollTop = sc;
   P.scrollKey = P.tabKey();
 }
@@ -3914,7 +4101,7 @@ function gameHtml() {
   const k = colOf(mc);
   const rank = pubTable().findIndex(c => c.id === me.id) + 1;
   const head = '<div id="ph-head"><span class="sk" style="background:' + k.c + '"></span><div class="nm"><b>' + esc(mc.name) + '</b><span>' + esc(mc.mgr) + (pub.ph !== 'lobby' ? ' · Platz ' + rank + ' · ' + mc.ruhm + ' Ruhm' : '') + '</span></div>' +
-    '<div class="mo"><b>' + fmtM(me.money) + '</b><span>' + me.coins + (me.coins === 1 ? ' Glücksmünze' : ' Glücksmünzen') + '</span></div></div>';
+    '<button class="hlp" data-p="help" aria-label="Spickzettel"><span>?</span></button><div class="mo"><b>' + fmtM(me.money) + '</b><span>' + me.coins + (me.coins === 1 ? ' Glücksmünze' : ' Glücksmünzen') + '</span></div></div>';
   const needs = needsInput();
   const bar = '<div id="ph-bar">' + barHtml() + '</div>';
   const tabs = [['akt', 'akt', 'Aktion'], ['kader', 'team', 'Kader'], ['tausch', 'tausch', 'Tausch'], ['stadion', 'stadion', 'Stadion'], ['geld', 'geld', 'Geld'], ['liga', 'liga', 'Liga']];
@@ -3924,6 +4111,7 @@ function gameHtml() {
   try { body = ({ akt: aktHtml, kader: kaderHtml, tausch: tauschHtml, stadion: stadionHtml, geld: geldHtml, liga: ligaHtml })[P.tab](); }
   catch (e) { console.error(e); body = '<p class="hint">Fehler beim Anzeigen: ' + esc(e.message) + '</p>'; }
   let over = '';
+  if (me.duel && P.sheet && P.sheet.spick) P.sheet = null; // Torchance: Spickzettel geht zu
   if (me.duel) over = duelHtmlPhone();
   if (P.sheet) over += sheetHtml();
   return head + bar + '<div id="ph-main">' + body + '</div>' + tabH + over;
@@ -3968,7 +4156,7 @@ function barHtml() {
       return t(['LIVE', 'red'], 'Dein Spiel läuft');
     }
     case 'ergebnis': return t(['ERGEBNIS'], 'Spieltag ' + pub.md);
-    case 'saisonende': return t(['SAISONENDE'], 'Abrechnung Saison ' + pub.season);
+    case 'saisonende': return pub.rb ? t(['RÜCKBLICK'], 'Saison ' + pub.season + ' · schau aufs iPad') : t(['SAISONENDE'], 'Abrechnung Saison ' + pub.season);
     case 'ende': return t(['ENDE'], 'Siegerehrung auf dem Brett');
   }
   return '';
@@ -4137,7 +4325,8 @@ const AKT = {
   saisonende() {
     const me = P.me, pub = P.pub; const R = me.myRep; let h = '';
     const t = pub.report && pub.report.table.find(x => x.id === me.id);
-    h += '<div class="bigmsg">' + ic('pokal') + '<h2>' + (t ? 'Platz ' + t.rank : 'Saisonende') + '</h2><p>Saison ' + (pub.report ? pub.report.season : pub.season) + ' ist vorbei.</p></div>';
+    let ds = ''; try { ds = deineSaison(); } catch (e) { console.error(e); }
+    h += ds || '<div class="bigmsg">' + ic('pokal') + '<h2>' + (t ? 'Platz ' + t.rank : 'Saisonende') + '</h2><p>Saison ' + (pub.report ? pub.report.season : pub.season) + ' ist vorbei.</p></div>';
     if (R) {
       const sec = (title, rows) => rows.length ? '<div class="sec"><h2><span class="lbl">' + title + '</span></h2>' + rows.join('') + '</div>' : '';
       h += sec('RUHM', R.ruhm.map(x => '<div class="kv"><span>' + esc(x[0]) + '</span><b class="pos">+' + x[1] + '</b></div>'));
@@ -4156,6 +4345,87 @@ const AKT = {
       (row && row.parts.length ? '<div class="sec"><h2><span class="lbl">SCHLUSSWERTUNG</span></h2>' + row.parts.map(x => '<div class="kv"><span>' + esc(x[0]) + '</span><b class="' + (x[1] >= 0 ? 'pos' : 'neg') + '">' + (x[1] > 0 ? '+' : '') + x[1] + '</b></div>').join('') + '</div>' : '');
   }
 };
+/* „Deine Saison“: die eigene Saison in Zahlen, während auf dem iPad der Rückblick läuft */
+const RB_NAMES = { big: 'Höchster Sieg', fest: 'Torfestival', att: 'Bester Sturm', def: 'Beste Abwehr', serie: 'Längste Siegesserie', auf: 'Aufsteiger der Saison', tr: 'Rekordtransfer', pech: 'Pechvogel' };
+function deineSaison() {
+  const pub = P.pub, me = P.me; const V = pub.report && pub.report.review; const d = V && V.clubs && V.clubs[me.id];
+  if (!d) return '';
+  const nm = id => { const c = cPub(id); return c ? esc(c.name) : '–'; };
+  const cupT = d.cup === 'win' ? 'Pokalsieger!' : d.cup === 'Pokalfinale' ? 'im Finale verloren' : d.cup ? 'Aus im ' + esc(String(d.cup).replace('Pokal-', '').replace('Pokalrunde', 'ersten Runde')) : '';
+  const rows = [];
+  if (cupT) rows.push(['Pokal', cupT]);
+  if (d.top) rows.push(['Dein Torjäger', esc(d.top.n) + ' · ' + d.top.g + (d.top.g === 1 ? ' Tor' : ' Tore')]);
+  if (d.bw) rows.push(['Höchster Sieg', d.bw.gf + ':' + d.bw.ga + ' gegen ' + nm(d.bw.o)]);
+  if (d.wl) rows.push(['Bitterste Niederlage', d.wl.gf + ':' + d.wl.ga + ' gegen ' + nm(d.wl.o)]);
+  if (d.best >= 2) rows.push(['Längste Siegesserie', d.best + ' Siege']);
+  if (d.money != null) rows.push(['Kasse seit Saisonbeginn', '<span class="' + (d.money >= 0 ? 'pos' : 'neg') + '">' + fmtMs(d.money) + '</span>']);
+  rows.push(['Ruhm-Gesamtwertung', 'Platz ' + d.rr]);
+  const mine = (V.tiles || []).filter(x => x.c === me.id).map(x => RB_NAMES[x.k]).filter(Boolean);
+  return '<div class="sec ds"><h2><span class="lbl">DEINE SAISON ' + (pub.report.season || '') + '</span></h2>' +
+    '<div class="ds-hero"><b>PLATZ ' + d.rank + '</b><span>' + d.pts + (d.pts === 1 ? ' Punkt' : ' Punkte') + ' · ' + d.gf + ':' + d.ga + ' Tore</span></div>' +
+    '<div class="kvals"><div><b>' + d.s + '</b>SIEGE</div><div><b>' + d.u + '</b>REMIS</div><div><b>' + d.n + '</b>NIEDERL.</div><div><b class="lime">' + (d.ruhm >= 0 ? '+' : '') + d.ruhm + '</b>RUHM</div></div>' +
+    rows.map(r => '<div class="kv"><span>' + r[0] + '</span><b>' + r[1] + '</b></div>').join('') +
+    (mine.length ? '<div class="ds-tiles"><span class="lbl">AUF DEM IPAD GEEHRT</span><div>' + mine.map(x => '<span class="chip on">' + x + '</span>').join('') + '</div></div>' : '') +
+    '</div><div class="sec" style="margin-bottom:6px"><h2><span class="lbl">ABRECHNUNG</span></h2><p class="hint">Was am Saisonende dazukommt und wegfällt.</p></div>';
+}
+
+/* ---------- Spickzettel: die wichtigsten Regeln, oben steht, was gerade dran ist ---------- */
+function spickNow() {
+  const pub = P.pub, me = P.me; const set = pub.set || {};
+  const dice = set.dice === 'echt' ? 'würfelst du mit einem echten Würfel und tippst die Zahl hier ein' : set.dice === 'auto' ? 'würfelt das iPad für dich' : 'würfelst du hier am Handy (schütteln oder tippen)';
+  const M = me.match, L = pub.live;
+  switch (pub.ph) {
+    case 'lobby': return ['Warten auf den Start', 'Sobald alle Vereine da sind, startet jemand das Spiel am iPad.'];
+    case 'profil': return ['Vereinsprofil wählen', 'Wähle unter „Aktion“ eines der drei Profile und tippe „Bereit“. Das iPad deckt alle auf, wenn jeder gewählt hat.'];
+    case 'wurf': return ['Draft-Reihenfolge', 'Jetzt ' + dice.replace('für dich', 'für alle') + '. Wer am höchsten würfelt, wählt im Draft zuerst.'];
+    case 'draft': return ['Draft', 'Reihum holt sich jeder ' + ((pub.draft && pub.draft.rounds) || 8) + ' Spieler. Bist du dran, steht oben „Du bist dran“. Denk an alle Positionen: Torwart, Abwehr, Mittelfeld, Sturm.'];
+    case 'kader': return ['Die Teams stehen', 'Schau dir unter „Kader“ deine Mannschaft an. Gleich beginnt die Saison.'];
+    case 'saisonstart': return ['Saisonstart', 'Unter „Aktion“ einen Sponsor wählen und bis zu drei Spieler auf die Transferliste setzen. Unter „Stadion“ ausbauen. Dann „Bereit“.'];
+    case 'winter': return ['Winterpause', 'Spieler auf die Transferliste setzen und das Stadion ausbauen, dann „Bereit“. Danach kommt ein kleiner Transfermarkt.'];
+    case 'bieten': return ['Transfermarkt', 'Biete geheim auf die Spieler, die du willst. Das höchste Gebot gewinnt, bei gleichem Gebot wird gewürfelt. Dann „Bereit“.'];
+    case 'aufdecken': return ['Aufdecken', 'Das iPad zeigt Spieler für Spieler, wer welches Gebot abgegeben hat und wer den Zuschlag bekommt.'];
+    case 'spiel': {
+      if (L && L.stage === 'cards') return ['Ereigniskarten', 'Wer auf einem Ereignisfeld steht, deckt jetzt seine Karte auf. Eine Pechkarte kannst du vorher mit einer Glücksmünze abwehren.'];
+      const cup = L && L.cup;
+      if (!M) return cup ? ['Pokal', 'Du spielst in dieser Runde nicht. Schau aufs iPad.'] : ['Spielfrei', 'Du hast an diesem Spieltag frei. Schau aufs iPad.'];
+      if (M.stat === 'ht') return ['Halbzeit', 'Jetzt kannst du unter „Kader“ umstellen und wechseln, höchstens 3 Wechsel pro Spiel. Dann „Bereit“.'];
+      if (M.stat === 'wait' || M.stat === 'pre') return [(cup ? 'Pokal: ' : '') + 'Aufstellung', 'Unter „Kader“ Formation, Taktik und Einsatz wählen, dann „Bereit“ tippen. Die Spiele laufen nacheinander auf dem iPad.'];
+      if (M.stat === 'done') return ['Die anderen spielen', 'Dein Spiel ist vorbei. Schau aufs iPad, gleich geht es weiter.'];
+      return ['Dein Spiel läuft', 'Bei jeder Torchance ' + dice + ': Schütze gegen Torwart. Mit einer Glücksmünze zählt der bessere von zwei Würfen.'];
+    }
+    case 'ergebnis': return ['Ergebnisse', 'Die Figuren ziehen über die Ruhm-Leiste. Gute Zeit, unter „Stadion“ auszubauen.'];
+    case 'saisonende': return pub.rb ? ['Saisonrückblick', 'Auf dem iPad läuft der Rückblick. Unter „Aktion“ steht deine eigene Saison.'] : ['Saisonabschluss', 'Meister, Prämien, Ruhm, Jugendspieler und Karriereenden. Danach beginnt die nächste Saison.'];
+    case 'ende': return ['Siegerehrung', 'Wer den meisten Ruhm hat, ist Football Emperor.'];
+  }
+  return ['', ''];
+}
+function spickHtml() {
+  const pub = P.pub, set = pub.set || {}; const open = P.spk || {};
+  const kv = rows => rows.map(r => '<div class="kv"><span>' + r[0] + '</span><b>' + r[1] + '</b></div>').join('');
+  const chev = '<svg class="ch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+  const sec = (k, icn, title, body) => '<div class="spk' + (open[k] ? ' open' : '') + '"><button class="sum" data-p="spk" data-v="' + k + '">' + ic(icn) + '<b>' + title + '</b>' + chev + '</button>' + (open[k] ? '<div class="bd">' + body + '</div>' : '') + '</div>';
+  const fields = set.fields !== 'aus';
+  const diceT = set.dice === 'echt' ? 'Gewürfelt wird mit echten Würfeln am Tisch, die Zahl tippst du am Handy ein.' : set.dice === 'auto' ? 'Das iPad würfelt automatisch.' : 'Gewürfelt wird am Handy: schütteln oder tippen.';
+  const now = spickNow();
+  return '<div class="spick">' +
+    (now[0] ? '<div class="jetzt"><div class="l">GERADE DRAN</div><b>' + esc(now[0]) + '</b><p>' + esc(now[1]) + '</p></div>' : '') +
+    sec('ablauf', 'liga', 'Ablauf einer Saison', '<ol><li>Sponsor wählen, dazu 2 Glücksmünzen</li><li>Spieler auf die Transferliste, Stadion ausbauen</li><li>Transfermarkt: geheim bieten, das iPad deckt auf</li><li>Hinrunde</li><li>Winterpause mit kleinem Transfermarkt</li><li>Rückrunde</li><li>Pokal (K.-o., bei Unentschieden Elfmeterschießen)</li><li>Saisonrückblick und Abrechnung</li></ol>') +
+    sec('spieltag', 'team', 'Spieltag', kv([['Formation', '4-4-2, 4-3-3, 3-5-2 …'], ['Taktik offensiv', 'Angriff +1, Abwehr −1'], ['Taktik defensiv', 'Abwehr +1, Angriff −1'], ['Einsatz hart', 'Mittelfeld +1, mehr Karten'], ['Halbzeit', 'umstellen, bis zu 3 Wechsel'], ['3. Gelbe oder Rot', '1 Spiel gesperrt']])) +
+    sec('duell', 'shake', 'Würfel-Duell', '<p>Bei jeder Torchance: Schütze gegen Torwart. Beide würfeln, der Stärkere bekommt bis zu <b>+2</b> dazu. Die höhere Zahl gewinnt, bei Gleichstand hält der Torwart.</p>' +
+      kv([['Torjäger', '+2, einmal pro Spiel'], ['Katze (Torwart)', '+1 in jedem Duell'], ['Kopfballstark', '+2 nach Ecken'], ['Joker', '+2, wenn eingewechselt']]) +
+      '<p class="nb">' + diceT + ' Mit einer Glücksmünze würfelst du zweimal, der bessere Wurf zählt.</p>') +
+    sec('muenzen', 'muenze', 'Glücksmünzen', kv([['Zu jeder Saison', '+2'], ['Sieg mit 3 Toren Unterschied', '+1'], ['Grünes Feld 20, 40, 60 …', '+1']]) +
+      '<p class="nb">Einsetzen: im Würfel-Duell für einen zweiten Wurf' + (fields ? ' oder gegen eine Pechkarte, bevor sie aufgedeckt wird' : '') + '.</p>') +
+    sec('ruhm', 'krone', 'So gibt es Ruhm', kv([['Sieg / Unentschieden', '+2 / +1'], ['Stadionausbau (jede Stufe)', '+2'], ['Platzierung', 'Meister +10 … Letzter 0'], ['Pokalsieger / Finale', '+5 / +2'], ['Torschützenkönig', '+2'], ['Fans am Saisonende', '+1 je 5.000'], ['Publikumsliebling', '+1 pro Saison'], ['Schulden', '−1 pro Spieltag']]) +
+      '<p class="nb">Ruhm aus Ausbau und Karten zählt am Ende des nächsten Spieltags.</p>') +
+    (fields ? sec('felder', 'karte', 'Ereignisfelder', kv([['Grün: Glück', 'gute Karte'], ['Rot: Pech', 'mit Münze abwehrbar'], ['Gelb: Entscheidung', 'du wählst']]) +
+      '<p class="nb">Bleibt deine Figur auf so einem Feld stehen, ziehst du vor dem nächsten Anpfiff die Karte.</p>') : '') +
+    sec('geld', 'stadion', 'Geld und Stadion', kv([['Tribüne', '+6.000 Plätze'], ['VIP-Logen', '+1 Mio € pro Saison'], ['Fanshop', '+0,5 Mio €, +800 Fans'], ['Trainingszentrum', 'bessere Entwicklung'], ['Jugendakademie', 'mehr Talente'], ['Über ein grünes Zehnerfeld', '+0,5 Mio €']]) +
+      '<p class="nb">Geld kommt von Zuschauern, TV, Sponsor, Prämien und Verkäufen. Platz 1 bekommt 6 Mio €, der Letzte 2 Mio €.</p>') +
+    sec('ende', 'pokal', 'Spielende', kv([['Vereinskasse', '+1 Ruhm je 5 Mio €'], ['Schulden', '−1 Ruhm je 2 Mio €'], ['Investor', '−5 Ruhm']]) + '<p class="nb">Wer nach der letzten Saison den meisten Ruhm hat, ist Football Emperor.</p>') +
+    '</div>';
+}
+
 /* Was gerade auf dem Brett läuft (für alle, die nicht spielen) */
 function curInfo() {
   const L = P.pub.live; if (!L) return '';
@@ -4302,6 +4572,7 @@ function subSheet(outId) {
 }
 function sheetHtml() {
   const S = P.sheet;
+  if (S.spick) return '<div class="sheet" data-p="sheetbg"><div class="in"><h3>SPICKZETTEL</h3>' + spickHtml() + '<button class="btn dark wide" data-p="sheetclose">Schließen</button></div></div>';
   if (S.html) return '<div class="sheet" data-p="sheetbg"><div class="in"><h3>' + esc(S.title) + '</h3>' + S.html + '<button class="btn dark wide" data-p="sheetclose">Schließen</button></div></div>';
   return '<div class="sheet" data-p="sheetbg"><div class="in"><h3>' + esc(S.title) + '</h3><div class="plist">' +
     (S.rows.length ? S.rows.map(r => '<button class="prow' + (r.cur ? ' sel' : '') + (r.off ? ' off' : '') + '" data-p="sheetpick" data-v="' + r.id + '"' + (r.off ? ' disabled' : '') + '><span class="s">' + r.e + '</span><span class="i"><b>' + esc(r.p.n) + trChip(r.p.tr) + '</b><span>' + posB(r.p.pos) + ' ' + r.p.age + ' J.' + (r.p.st ? ' · <span class="st-inj">' + esc(r.p.st.n) + '</span>' : '') + (r.inXi && !r.cur ? ' · in der Elf' : '') + (r.p.pos !== S.pos ? ' · andere Position' : '') + '</span></span></button>').join('') : '<p class="hint">Keiner verfügbar.</p>') +
@@ -4568,6 +4839,8 @@ document.addEventListener('click', e => {
       return;
     }
     case 'sheetclose': P.sheet = null; phoneRender(); return;
+    case 'help': P.sheet = { spick: true }; P.spk = P.spk || {}; phoneRender(); { const m = $('.sheet .in'); if (m) m.scrollTop = 0; } return;
+    case 'spk': P.spk = P.spk || {}; P.spk[v] = !P.spk[v]; phoneRender(); return;
     case 'sheetbg': if (e.target === b) { P.sheet = null; phoneRender(); } return;
     case 'pinfo': playerSheet(v); return;
     case 'build': send({ t: 'build', k: v }); return;
