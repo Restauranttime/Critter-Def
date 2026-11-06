@@ -1,0 +1,59 @@
+# Wortschmuggel als iOS-App. Das Xcode-Projekt wird daraus mit XcodeGen erzeugt:
+#   brew install xcodegen && xcodegen generate
+# Das Spiel selbst ist ../../wortschmuggel.html; die App zeigt genau diese Datei an.
+name: Wortschmuggel
+options:
+  bundleIdPrefix: de.restauranttime
+  deploymentTarget:
+    iOS: "16.0"
+  developmentLanguage: de
+settings:
+  base:
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+targets:
+  Wortschmuggel:
+    type: application
+    platform: iOS
+    sources:
+      - path: Wortschmuggel
+      - path: ../../wortschmuggel.html
+        buildPhase: resources
+      - path: ../../wortschmuggel-fonts
+        type: folder
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: de.restauranttime.wortschmuggel
+        PRODUCT_NAME: Wortschmuggel
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_PREVIEWS: NO
+        CODE_SIGN_STYLE: Automatic
+    info:
+      path: Wortschmuggel/Info.plist
+      properties:
+        CFBundleDisplayName: Wortschmuggel
+        CFBundleDevelopmentRegion: de
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSRequiresIPhoneOS: true
+        ITSAppUsesNonExemptEncryption: false
+        UIApplicationSupportsIndirectInputEvents: true
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        UIStatusBarHidden: true
+        UIViewControllerBasedStatusBarAppearance: false
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+    scheme: {}

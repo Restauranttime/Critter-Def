@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Wortschmuggel</title>
+<!--pwa-->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Wortschmuggel">
+<meta name="theme-color" content="#0D221C">
+<link rel="apple-touch-icon" href="wortschmuggel-icon-180.png">
+<link rel="icon" type="image/png" href="wortschmuggel-icon-192.png">
+<link rel="manifest" href="wortschmuggel.webmanifest">
+<!--/pwa-->
+<style>
+@font-face{font-family:"Big Shoulders Stencil";src:url("wortschmuggel-fonts/big-shoulders-stencil.woff2") format("woff2");font-weight:700 900;font-style:normal;font-display:swap}
+@font-face{font-family:"Barlow";src:url("wortschmuggel-fonts/barlow-400.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Barlow";src:url("wortschmuggel-fonts/barlow-500.woff2") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:"Barlow";src:url("wortschmuggel-fonts/barlow-600.woff2") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:"Barlow";src:url("wortschmuggel-fonts/barlow-700.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:"Barlow";src:url("wortschmuggel-fonts/barlow-800.woff2") format("woff2");font-weight:800;font-style:normal;font-display:swap}
+@font-face{font-family:"Barlow Condensed";src:url("wortschmuggel-fonts/barlow-condensed-600.woff2") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:"Barlow Condensed";src:url("wortschmuggel-fonts/barlow-condensed-700.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:"Courier Prime";src:url("wortschmuggel-fonts/courier-prime-400.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Courier Prime";src:url("wortschmuggel-fonts/courier-prime-700.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+/* Layout: a one-screen game; every phase is one customs document lying on the counter, with the actions at the bottom where thumbs reach on an iPad and big type that reads from the sofa on a TV */
+:root{
+  --bg:#E2E9DF;
+  --bg-2:#D3DDD0;
+  --ink:#132E27;
+  --ink-2:#4A6258;
+  --rule:#A3B5A8;
+  --doc:#F8F5EB;
+  --doc-ink:#1C2924;
+  --doc-ink-2:#5E675F;
+  --doc-rule:#D8D1BE;
+  --doc-stamp:#BE2530;
+  --doc-ok:#2B774A;
+  --stamp:#BE2530;
+  --stamp-deep:#7E141C;
+  --on-stamp:#FFF6F1;
+  --brass:#B47F1D;
+  --on-brass:#1A1407;
+  --t-b:#B4703F;
+  --t-s:#A0ACB6;
+  --t-g:#D9A62A;
+  --on-tier:#17110A;
+  --barrier-w:#F6F2E7;
+  --scrim:rgba(12,28,23,.62);
+  --shadow:0 1px 1px rgba(0,0,0,.08), 0 18px 40px -18px rgba(8,24,19,.45);
+  --guilloche:rgba(19,46,39,.17);
+
+  --f-display:"Big Shoulders Stencil","Big Shoulders Stencil Display",Impact,"Arial Narrow Bold","Arial Narrow",sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-cond:"Barlow Condensed","Barlow","Arial Narrow",system-ui,sans-serif;
+  --f-mono:"Courier Prime","Courier New",ui-monospace,monospace;
+  --r:6px;
+  --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1.5 0 0 0 1.5'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D221C; --bg-2:#15312A; --ink:#E4ECE1; --ink-2:#9DB5A9; --rule:#2D4D43;
+    --doc:#EDE7D5; --doc-ink:#1C2924; --doc-ink-2:#5E675F; --doc-rule:#CEC5AD; --doc-stamp:#B8222D; --doc-ok:#2B774A;
+    --stamp:#E0474D; --stamp-deep:#8E1C22; --on-stamp:#FFF6F1; --brass:#DCA846; --on-brass:#1A1407;
+    --t-b:#C47C4B; --t-s:#B0BBC4; --t-g:#E4B23A; --on-tier:#17110A; --barrier-w:#EDE8D8;
+    --scrim:rgba(3,10,8,.74); --shadow:0 1px 1px rgba(0,0,0,.3), 0 22px 44px -20px rgba(0,0,0,.75); --guilloche:rgba(228,236,225,.11);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D221C; --bg-2:#15312A; --ink:#E4ECE1; --ink-2:#9DB5A9; --rule:#2D4D43;
+  --doc:#EDE7D5; --doc-ink:#1C2924; --doc-ink-2:#5E675F; --doc-rule:#CEC5AD; --doc-stamp:#B8222D; --doc-ok:#2B774A;
+  --stamp:#E0474D; --stamp-deep:#8E1C22; --on-stamp:#FFF6F1; --brass:#DCA846; --on-brass:#1A1407;
+  --t-b:#C47C4B; --t-s:#B0BBC4; --t-g:#E4B23A; --on-tier:#17110A; --barrier-w:#EDE8D8;
+  --scrim:rgba(3,10,8,.74); --shadow:0 1px 1px rgba(0,0,0,.3), 0 22px 44px -20px rgba(0,0,0,.75); --guilloche:rgba(228,236,225,.11);
+  color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:clamp(16px, .55vw + 12px, 22px);line-height:1.45;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+h1,h2,h3,h4,p{margin:0}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--brass);outline-offset:3px}
+
+#app{min-height:100%;display:flex;flex-direction:column;overflow-x:clip;
+  padding-left:max(clamp(16px,3vw,40px), env(safe-area-inset-left,0px));
+  padding-right:max(clamp(16px,3vw,40px), env(safe-area-inset-right,0px));
+  padding-block:0 18px}
+
+/* ---------- bar ---------- */
+.bar{display:flex;justify-content:space-between;align-items:center;gap:10px 16px;flex-wrap:wrap;padding-block:10px;border-bottom:1px solid var(--rule);font-family:var(--f-cond);font-weight:600;text-transform:uppercase;letter-spacing:.09em;font-size:.8rem;color:var(--ink-2);width:100%;max-width:1240px;margin-inline:auto}
+.bar-l{display:flex;flex-wrap:wrap;align-items:center;gap:4px 18px;min-width:0}
+.bar-l strong{color:var(--ink);font-weight:700}
+.bar-r{display:flex;gap:8px}
+.pill-btn{font-family:var(--f-cond);font-weight:700;text-transform:uppercase;letter-spacing:.09em;font-size:.8rem;color:var(--ink);background:transparent;border:1px solid var(--rule);border-radius:999px;padding:.4em 1em;min-height:40px;cursor:pointer}
+.ev-tag{color:var(--stamp)}
+
+/* ---------- screen ---------- */
+.screen{flex:1;width:100%;max-width:1240px;margin-inline:auto;display:flex;flex-direction:column;gap:clamp(16px,2.6vh,30px);padding-block:clamp(18px,3.4vh,44px) 0}
+.screen.enter{animation:enter .3s ease-out both}
+@keyframes enter{from{opacity:.001;transform:translateY(10px)}}
+.center{align-items:center;justify-content:center;text-align:center}
+
+.eyebrow,.label{font-family:var(--f-cond);font-weight:600;text-transform:uppercase;letter-spacing:.13em;font-size:.82rem;color:var(--ink-2)}
+.h-display{font-family:var(--f-display);font-weight:800;text-transform:uppercase;font-size:clamp(2.4rem,7.4vmin,4.8rem);line-height:.9;letter-spacing:.01em;text-wrap:balance}
+.lede{max-width:60ch;color:var(--ink-2);font-size:1.05rem;text-wrap:pretty}
+.muted{color:var(--ink-2)}
+.small{font-size:.9rem}
+
+/* ---------- buttons ---------- */
+.btn{appearance:none;font-family:var(--f-cond);font-weight:700;text-transform:uppercase;letter-spacing:.07em;font-size:1.05rem;line-height:1.1;padding:.8em 1.35em;min-height:54px;border-radius:var(--r);border:2px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:.5em;text-align:center;transition:transform .08s ease, filter .15s ease}
+.btn:active{transform:translateY(1px) scale(.985)}
+.btn:disabled{opacity:.38;cursor:not-allowed}
+.btn-brass{background:var(--brass);border-color:var(--brass);color:var(--on-brass)}
+.btn-ink{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.btn-stamp{background:var(--stamp);border-color:var(--stamp);color:var(--on-stamp)}
+.btn-ghost{border-color:var(--rule)}
+.btn-lg{font-size:1.3rem;padding:.9em 1.7em;min-height:66px}
+.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:auto;padding-top:6px}
+.actions.end{justify-content:flex-end}
+.actions.mid{justify-content:center}
+
+/* ---------- document ---------- */
+.doc{background:var(--doc);color:var(--doc-ink);border-radius:4px;box-shadow:var(--shadow);position:relative;display:flex;flex-direction:column;min-width:0}
+.doc::before{content:"";display:block;height:9px;border-radius:4px 4px 0 0;background:repeating-linear-gradient(90deg,var(--doc-rule) 0 2px,transparent 2px 6px)}
+.doc-head{display:flex;justify-content:space-between;gap:4px 14px;flex-wrap:wrap;padding:10px 18px 9px;font-family:var(--f-mono);font-size:.76rem;text-transform:uppercase;letter-spacing:.06em;color:var(--doc-ink-2);border-bottom:1px dashed var(--doc-rule)}
+.doc-head strong{color:var(--doc-ink)}
+.doc-body{padding:14px 18px 18px;display:flex;flex-direction:column;gap:12px}
+.doc-foot{padding:10px 18px 12px;border-top:1px dashed var(--doc-rule);font-size:.92rem;color:var(--doc-ink-2)}
+.mrz{font-family:var(--f-mono);letter-spacing:.16em;font-size:.74rem;white-space:nowrap;overflow:hidden;color:var(--ink-2)}
+.doc .mrz{color:var(--doc-ink-2);padding:0 18px 12px}
+
+.ware{list-style:none;margin:0;padding:0 18px}
+.ware-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;padding-block:13px;border-bottom:1px solid var(--doc-rule);position:relative}
+.ware-row:last-child{border-bottom:0}
+.ware-main{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ware-tier{font-family:var(--f-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--doc-ink-2)}
+.ware-word{font-weight:800;font-size:clamp(1.55rem,4.8vmin,2.7rem);line-height:1.04;letter-spacing:-.01em;overflow-wrap:anywhere;-webkit-hyphens:auto;hyphens:auto}
+.ware-val{font-family:var(--f-mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--doc-ink-2);text-align:right;line-height:1.1}
+.ware-val b{display:block;font-family:var(--f-display);font-weight:800;font-size:2rem;color:var(--doc-ink);letter-spacing:0}
+.medal{width:2.5em;height:2.5em;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-weight:900;font-size:1.05rem;color:var(--on-tier);box-shadow:inset 0 0 0 3px rgba(255,255,255,.38), inset 0 -4px 0 rgba(0,0,0,.16);flex:none}
+.medal.b{background:var(--t-b)} .medal.s{background:var(--t-s)} .medal.g{background:var(--t-g)}
+.is-caught .ware-word{text-decoration:line-through;text-decoration-thickness:.08em;opacity:.55}
+
+/* ---------- stamps ---------- */
+.stamp{display:inline-block;font-family:var(--f-display);font-weight:900;text-transform:uppercase;letter-spacing:.06em;line-height:1;color:var(--stamp);border:.11em solid currentColor;border-radius:.16em;padding:.12em .4em .06em;transform:rotate(-6deg);white-space:nowrap;
+  -webkit-mask-image:var(--grain);mask-image:var(--grain);-webkit-mask-size:180px;mask-size:180px}
+.doc .stamp{color:var(--doc-stamp)}
+.stamp.ok{color:var(--doc-ok)}
+.stamp.mini{font-size:.95rem;transform:rotate(-8deg)}
+.stamp-in{animation:stampIn .45s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes stampIn{from{transform:scale(2.3) rotate(-15deg);opacity:0}to{transform:scale(1) rotate(-6deg);opacity:1}}
+
+/* ---------- title ---------- */
+.hero{position:relative;flex:1;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.9fr);gap:clamp(28px,5vw,72px);align-items:center}
+.guilloche{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.hero > :not(canvas){position:relative;z-index:1}
+.hero-copy{display:flex;flex-direction:column;gap:clamp(16px,2.4vh,26px);min-width:0}
+.logo{font-family:var(--f-display);font-weight:900;text-transform:uppercase;line-height:.8;display:flex;flex-direction:column;letter-spacing:.01em}
+.logo-a{font-size:clamp(2.2rem,6.4vw,5rem);color:var(--stamp)}
+.logo-b{font-size:clamp(3.1rem,9.4vw,7.6rem)}
+.pitch{font-size:clamp(1.1rem,2.3vmin,1.45rem);max-width:36ch;line-height:1.38;text-wrap:pretty}
+.hero-card{position:relative;transform:rotate(2deg);max-width:520px;width:100%;justify-self:center}
+.hero-card .stamp-muster{position:absolute;right:-6px;top:32%;font-size:clamp(2.6rem,7vmin,4.2rem);transform:rotate(-14deg);color:var(--doc-stamp);z-index:2;pointer-events:none}
+.page-mrz{padding-top:10px;border-top:1px solid var(--rule)}
+
+/* ---------- setup ---------- */
+.setup-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:clamp(22px,4vw,52px);align-items:start}
+.names{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.name-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:6px;background:var(--doc);color:var(--doc-ink);border-radius:var(--r);padding:4px 4px 4px 14px;box-shadow:var(--shadow);border:2px solid transparent}
+.name-row:focus-within{border-color:var(--brass)}
+.seat{font-family:var(--f-mono);font-size:.85rem;color:var(--doc-ink-2)}
+.name-row input{font:inherit;font-weight:700;font-size:1.15rem;border:0;background:transparent;color:var(--doc-ink);min-width:0;width:100%;padding:.55em .2em;outline:none}
+.name-row input::placeholder{color:var(--doc-ink-2);font-weight:500;opacity:.8}
+.x{width:44px;height:44px;border:0;background:transparent;color:var(--doc-ink-2);font-size:1.5rem;line-height:1;cursor:pointer;border-radius:50%}
+.x:disabled{opacity:.25;cursor:default}
+.add{grid-column:1/-1}
+.settings{display:flex;flex-direction:column;gap:20px}
+fieldset{border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;min-width:0}
+legend{padding:0;margin-bottom:8px}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.opt{flex:1 1 130px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:.65em .9em;min-height:54px;border:2px solid var(--rule);border-radius:var(--r);background:transparent;cursor:pointer}
+.opt b{font-family:var(--f-cond);font-weight:700;text-transform:uppercase;letter-spacing:.07em;font-size:1rem}
+.opt span{font-size:.82rem;color:var(--ink-2)}
+.opt.tight{flex:1 1 70px;align-items:center}
+.opt[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.opt[aria-pressed="true"] span{color:var(--bg);opacity:.8}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding-block:8px;border-bottom:1px solid var(--rule)}
+.toggle-row:last-child{border-bottom:0}
+.toggle-row p{font-size:.86rem;color:var(--ink-2)}
+.toggle-row strong{display:block}
+.switch{flex:none;width:60px;height:34px;border-radius:17px;background:var(--rule);border:0;position:relative;cursor:pointer;transition:background .15s}
+.switch::after{content:"";position:absolute;top:4px;left:4px;width:26px;height:26px;border-radius:50%;background:var(--bg);transition:transform .18s ease}
+.switch[aria-checked="true"]{background:var(--brass)}
+.switch[aria-checked="true"]::after{transform:translateX(26px)}
+.summary{font-family:var(--f-mono);font-size:.86rem;color:var(--ink-2);border-top:1px dashed var(--rule);padding-top:12px}
+
+/* ---------- rules ---------- */
+.rules-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:clamp(22px,4vw,56px);align-items:start}
+.rules-col{display:flex;flex-direction:column;gap:22px;min-width:0}
+.rules h3{font-family:var(--f-cond);font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:1rem;color:var(--ink-2);margin-bottom:8px}
+.steps{list-style:none;counter-reset:s;padding:0;margin:0;display:flex;flex-direction:column;gap:14px}
+.steps li{display:grid;grid-template-columns:2.2rem minmax(0,1fr);gap:10px;counter-increment:s}
+.steps li::before{content:counter(s);font-family:var(--f-display);font-weight:900;font-size:2rem;line-height:.9;color:var(--stamp)}
+.steps b{font-weight:800}
+.plain{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px}
+.points{width:100%;border-collapse:collapse;font-size:.95rem}
+.points th,.points td{padding:9px 0;border-bottom:1px solid var(--doc-rule);text-align:left;vertical-align:top}
+.points th{font-weight:700;padding-right:14px}
+.points tr:last-child th,.points tr:last-child td{border-bottom:0}
+.tiers-inline{display:flex;flex-wrap:wrap;gap:6px 14px}
+.tiers-inline span{display:inline-flex;align-items:center;gap:6px}
+.tiers-inline .medal{font-size:.62rem}
+
+/* ---------- intro ---------- */
+.round-big{font-family:var(--f-display);font-weight:900;text-transform:uppercase;font-size:clamp(3.8rem,15vmin,10rem);line-height:.82}
+.round-big small{font-size:.32em;color:var(--ink-2);letter-spacing:.04em;margin-left:.2em}
+.intro-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(20px,4vw,48px);align-items:start}
+.officers{list-style:none;padding:0;margin:8px 0 12px;display:flex;flex-wrap:wrap;gap:10px}
+.badge-officer{font-family:var(--f-display);font-weight:800;text-transform:uppercase;font-size:clamp(1.9rem,5.4vmin,3.2rem);line-height:1;padding:.14em .42em .08em;border:3px solid var(--ink);border-radius:var(--r);overflow-wrap:anywhere}
+.event-name{font-family:var(--f-display);font-weight:900;text-transform:uppercase;font-size:clamp(2rem,5.6vmin,3.2rem);line-height:.92;color:var(--doc-stamp)}
+.event-text{font-size:1.12rem}
+
+/* ---------- pass ---------- */
+.pass-to{font-size:1.2rem;color:var(--ink-2)}
+.pass-name{font-family:var(--f-display);font-weight:900;text-transform:uppercase;font-size:clamp(3.4rem,14vmin,9rem);line-height:.86;overflow-wrap:anywhere;max-width:100%}
+.dots{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.dot{width:11px;height:11px;border-radius:50%;background:var(--rule)}
+.dot.done{background:var(--ink)}
+.dot.now{background:var(--brass);box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--brass)}
+.card-wrap{width:min(640px,100%);text-align:left;animation:deal .35s cubic-bezier(.2,1.2,.4,1) both}
+@keyframes deal{from{opacity:.001;transform:translateY(18px) rotate(-1.5deg)}}
+.officer-title{font-family:var(--f-display);font-weight:900;text-transform:uppercase;font-size:clamp(2rem,6vmin,3.4rem);line-height:.9}
+.tip{border:2px dashed var(--doc-stamp);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.tip .label{color:var(--doc-stamp)}
+.tip strong{font-size:1.6rem}
+.doc .label{color:var(--doc-ink-2)}
+
+/* ---------- live ---------- */
+.live{gap:clamp(14px,2.2vh,24px)}
+.live-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:clamp(18px,3vw,44px);align-items:start;flex:1}
+.topic-panel{display:flex;flex-direction:column;gap:14px;min-width:0}
+.topic{font-weight:800;font-size:clamp(1.8rem,5.3vmin,3.5rem);line-height:1.1;text-wrap:balance;letter-spacing:-.012em}
+.follow{display:flex;flex-direction:column;gap:10px}
+.follow ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+.follow li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;align-items:baseline;padding-top:10px;border-top:1px dashed var(--rule);font-size:clamp(1.1rem,2.9vmin,1.75rem);font-weight:600;line-height:1.2;animation:enter .45s ease-out both}
+.follow li .label{font-size:.75rem}
+.follow li.last{color:var(--stamp)}
+.follow-wait{color:var(--ink-2);font-size:.95rem}
+.event-note{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border:2px solid var(--stamp);border-radius:var(--r);max-width:60ch}
+.event-note strong{font-family:var(--f-cond);text-transform:uppercase;letter-spacing:.08em;color:var(--stamp)}
+.clock-panel{display:flex;flex-direction:column;gap:14px;padding:clamp(16px,2.2vw,26px);border:2px solid var(--ink);border-radius:var(--r);min-width:0}
+.digits{font-family:var(--f-display);font-weight:800;font-size:clamp(4.4rem,18vmin,10.5rem);line-height:.82;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.digits.urgent{color:var(--stamp);animation:blink 1s steps(2,jump-none) infinite}
+@keyframes blink{50%{opacity:.55}}
+.paused{font-family:var(--f-cond);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--stamp)}
+.barrier{height:26px;border:2px solid var(--ink);border-radius:13px;overflow:hidden;background:var(--bg-2)}
+.barrier i{display:block;height:100%;background:repeating-linear-gradient(-45deg,var(--stamp) 0 16px,var(--barrier-w) 16px 32px);transition:width .25s linear}
+.duty-line{font-size:1.05rem}
+.protocol{display:flex;flex-direction:column;gap:6px;border-top:1px dashed var(--rule);padding-top:12px}
+.protocol ol{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;max-height:9.5em;overflow:auto}
+.protocol li{font-size:.9rem;line-height:1.3}
+.protocol li b{font-family:var(--f-cond);text-transform:uppercase;letter-spacing:.06em}
+.protocol .k-catch b{color:var(--stamp)}
+.live-actions{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:12px;align-items:stretch}
+.btn-zoll{font-family:var(--f-display);font-weight:900;text-transform:uppercase;font-size:clamp(2.8rem,10vmin,5.4rem);letter-spacing:.07em;line-height:1;background:var(--stamp);color:var(--on-stamp);border:0;border-radius:var(--r);min-height:clamp(88px,15vmin,150px);cursor:pointer;box-shadow:0 7px 0 var(--stamp-deep);margin-bottom:7px;transition:transform .07s ease, box-shadow .07s ease}
+.btn-zoll:active{transform:translateY(5px);box-shadow:0 2px 0 var(--stamp-deep)}
+.live-sec{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.live-sec .btn{font-size:.95rem;padding:.6em .5em;min-height:auto}
+
+/* ---------- overlay ---------- */
+.ov{position:fixed;inset:0;z-index:50;background:var(--scrim);display:grid;place-items:center;overflow-y:auto;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+@keyframes fade{from{opacity:.001}}
+.sheet{width:min(940px,100%);background:var(--bg);color:var(--ink);border-radius:10px;border:2px solid var(--ink);padding:clamp(18px,3vw,36px);display:flex;flex-direction:column;gap:18px;position:relative}
+.ov.enter{animation:fade .18s ease-out both}
+.ov.enter .sheet{animation:enter .22s ease-out both}
+.sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+.sheet-head > div{display:flex;flex-direction:column;gap:6px;min-width:0}
+.sheet h2{font-family:var(--f-display);font-weight:900;text-transform:uppercase;font-size:clamp(2rem,6vmin,3.6rem);line-height:.9;text-wrap:balance}
+.sheet .x{color:var(--ink-2);flex:none}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:10px}
+.pbtn{font-family:var(--f-cond);font-weight:700;font-size:1.35rem;text-transform:uppercase;letter-spacing:.04em;line-height:1.05;padding:.75em .85em;min-height:76px;background:var(--doc);color:var(--doc-ink);border:2px solid transparent;border-radius:var(--r);box-shadow:var(--shadow);cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;text-align:left;overflow-wrap:anywhere}
+.pbtn small{font-family:var(--f-mono);font-size:.68rem;color:var(--doc-ink-2);letter-spacing:.05em;font-weight:400}
+.pbtn:disabled{opacity:.4;cursor:not-allowed}
+.say{display:flex;flex-direction:column;gap:12px;font-size:clamp(1.1rem,2.8vmin,1.5rem);line-height:1.3}
+.say p{display:grid;grid-template-columns:2rem minmax(0,1fr);gap:8px}
+.say p span{font-family:var(--f-display);font-weight:900;color:var(--stamp)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px}
+.tile{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:16px;min-height:150px;background:var(--doc);color:var(--doc-ink);border:2px solid transparent;border-radius:var(--r);box-shadow:var(--shadow);cursor:pointer;text-align:left;
+  background-image:repeating-linear-gradient(45deg,transparent 0 10px,var(--doc-rule) 10px 11px)}
+.tile b{font-family:var(--f-cond);text-transform:uppercase;letter-spacing:.07em;font-size:1.2rem}
+.tile span{font-family:var(--f-mono);font-size:.75rem;color:var(--doc-ink-2);text-transform:uppercase}
+.result{display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px;padding-block:8px}
+.result .stamp{font-size:clamp(2.2rem,8vmin,4.6rem)}
+.result .word{font-weight:800;font-size:clamp(2.2rem,8vmin,4.4rem);line-height:1;overflow-wrap:anywhere}
+.result p{font-size:1.15rem;max-width:44ch}
+.menu-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:10px}
+.menu-list .btn{justify-content:flex-start}
+
+/* ---------- count ---------- */
+.count-head{display:flex;align-items:center;gap:clamp(16px,3vw,36px);flex-wrap:wrap}
+.count-head .stamp{font-size:clamp(2rem,6.5vmin,3.8rem)}
+.count-head > div{display:flex;flex-direction:column;gap:6px;flex:1 1 320px;min-width:0}
+.count-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:16px;align-items:start}
+.count-doc .doc-head strong{font-family:var(--f-cond);font-size:1.15rem;letter-spacing:.05em}
+.count-doc .ware{padding:0 14px}
+.count-doc .ware-row{gap:12px;padding-block:10px}
+.count-doc .ware-word{font-size:clamp(1.15rem,2.9vmin,1.55rem)}
+.count-doc .medal{font-size:.85rem}
+button.ware-row{width:100%;background:none;border:0;border-bottom:1px solid var(--doc-rule);text-align:left;cursor:pointer;color:var(--doc-ink);border-radius:0}
+button.ware-row:last-child{border-bottom:0}
+.check{width:38px;height:38px;border-radius:8px;border:2px solid var(--doc-rule);display:grid;place-items:center;color:transparent}
+.check svg{width:22px;height:22px}
+button.ware-row[aria-pressed="true"] .check{background:var(--doc-ok);border-color:var(--doc-ok);color:#fff}
+button.ware-row[aria-pressed="true"] .ware-tier{color:var(--doc-ok);font-weight:700}
+
+/* ---------- scores ---------- */
+.ranking{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.rank-row{display:grid;grid-template-columns:2.4rem minmax(0,1fr) auto;align-items:center;gap:6px 16px;padding:12px 16px;background:var(--bg-2);border-radius:var(--r)}
+.rank-row.top{background:var(--doc);color:var(--doc-ink);box-shadow:var(--shadow)}
+.rank{font-family:var(--f-display);font-weight:900;font-size:1.8rem;line-height:1}
+.who{display:flex;flex-direction:column;gap:6px;min-width:0}
+.rn{font-weight:800;font-size:1.3rem;line-height:1.1;overflow-wrap:anywhere}
+.tag{font-family:var(--f-mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;border:1px solid currentColor;border-radius:4px;padding:.1em .4em;margin-left:.5em;vertical-align:middle;font-weight:400}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:var(--f-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;padding:.2em .6em;border:1px solid var(--rule);border-radius:999px;color:var(--ink-2)}
+.top .chip{border-color:var(--doc-rule);color:var(--doc-ink-2)}
+.chip.neg{color:var(--stamp);border-color:currentColor}
+.top .chip.neg{color:var(--doc-stamp)}
+.score{display:flex;align-items:baseline;gap:12px;font-variant-numeric:tabular-nums}
+.delta{font-family:var(--f-mono);font-weight:700;font-size:1rem;color:var(--ink-2)}
+.top .delta{color:var(--doc-ink-2)}
+.total{font-family:var(--f-display);font-weight:900;font-size:2.3rem;line-height:1;min-width:2ch;text-align:right}
+
+/* ---------- final ---------- */
+.winner{display:flex;flex-direction:column;gap:8px}
+.winner-name{font-family:var(--f-display);font-weight:900;text-transform:uppercase;font-size:clamp(3.2rem,12vmin,8rem);line-height:.84;overflow-wrap:anywhere}
+.winner-line{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.winner-line .stamp{font-size:clamp(1.4rem,4vmin,2.2rem)}
+.final-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(20px,4vw,48px);align-items:start}
+.awards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:12px}
+.award .doc-body{gap:6px}
+.award h4{font-family:var(--f-display);font-weight:900;text-transform:uppercase;font-size:1.7rem;line-height:.95;color:var(--doc-stamp)}
+.award .who-won{font-weight:800;font-size:1.2rem;overflow-wrap:anywhere}
+.award p{font-size:.88rem;color:var(--doc-ink-2)}
+
+/* ---------- responsive ---------- */
+@media (max-width:860px){
+  .hero,.setup-grid,.rules-grid,.intro-grid,.final-grid{grid-template-columns:minmax(0,1fr)}
+  .hero{align-items:start}
+  .hero-card{max-width:440px}
+}
+@media (max-width:780px){
+  .live-grid,.live-actions{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:560px){
+  .names{grid-template-columns:minmax(0,1fr)}
+  .live-sec{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .live-sec .btn:last-child{grid-column:1/-1}
+  .rank-row{grid-template-columns:2rem minmax(0,1fr) auto;padding:10px 12px}
+  .total{font-size:1.9rem}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition:none!important}
+}
+/* Eigenständige Seite: Safe-Area wie im Artifact, App-Gefühl auf iPad und als iOS-App */
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+input{-webkit-user-select:text;user-select:text}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div id="app" lang="de"></div>
+
+<script>
+(() => {
+'use strict';
+document.documentElement.lang = 'de';
+const KEY = 'wortschmuggel:v1';
+const $app = document.getElementById('app');
+
+/* ================= Inhalt ================= */
+const TIER = { b:{name:'Bronze', v:1}, s:{name:'Silber', v:2}, g:{name:'Gold', v:3} };
+const WORDS = {
+  b:`Kaffee Fahrrad Montag Regenschirm Schlüssel Kühlschrank Pizza Urlaub Handy Zahnbürste Bahnhof Wetter Socken Fenster Brot Nachbar Supermarkt Auto Treppe Wecker Kissen Butter Zeitung Garten Brille Rucksack Fernseher Dusche Kino Hund Katze Bus Briefkasten Stuhl Apfel Kerze Sofa Rechnung Termin Geburtstag Wochenende Frühstück Mittagspause Parkplatz Ampel Jacke Mütze Schokolade Tee Wasser Kalender Uhr Laptop Drucker Passwort Spülmaschine Waschmaschine Bäcker Arzt Friseur Zug Flughafen Hotel Strand Berg Wald Fluss Sonne Regen Schnee Nudeln Käse Milch Salat Tomate Kartoffel Suppe Kuchen Eis Bier Wein Musik Buch Film Foto Geschenk Party Kollege Chef Schule Büro Küche Bett Lampe Spiegel Handtuch Hausaufgaben Stau Sport Fußball Restaurant Geld`.split(/\s+/),
+  s:`Gartenzwerg Staubsauger Pinguin Leuchtturm Wohnmobil Kronleuchter Zebrastreifen Trampolin Bienenstock Feuerlöscher Ananas Schneemann Zahnarzt Gummistiefel Hängematte Kompass Sanduhr Fallschirm Taschenlampe Bügeleisen Wäscheklammer Schaukelstuhl Mikrowelle Rasenmäher Gießkanne Wasserkocher Schubkarre Luftmatratze Tankstelle Seilbahn Kreuzfahrt Achterbahn Zirkus Museum Bibliothek Planetarium Bowlingbahn Minigolf Flohmarkt Weihnachtsmarkt Karaoke Lagerfeuer Picknickkorb Thermoskanne Kochmütze Schürze Igel Eichhörnchen Papagei Schildkröte Goldfisch Waschbär Elch Kamel Delfin Krokodil Avocado Brezel Currywurst Spiegelei Pfannkuchen Popcorn Zuckerwatte Lebkuchen Knoblauch Rosenkohl Mozzarella Sushi Döner Gitarre Schlagzeug Trompete Mundharmonika Fernglas Lupe Teleskop Kassette Schallplatte Walkie-Talkie Joystick Fernbedienung Ladekabel Fahrstuhl Rolltreppe Wolkenkratzer Burg Brunnen Vulkan Wasserfall Gletscher Wüste Insel Höhle Regenbogen Gewitter Nebel Hubschrauber U-Boot Traktor Heißluftballon Feuerwehr Briefmarke`.split(/\s+/),
+  g:`Nilpferd Dudelsack Ritterrüstung Zahnseide Bauchnabel Raclette Kettensäge Stinktier Gebiss Perücke Einhorn Seepferdchen Tintenfisch Faultier Lama Flamingo Wombat Pelikan Gürteltier Erdmännchen Tukan Qualle Kaktus Bonsai Fliegenpilz Gurkenglas Fischstäbchen Sauerkraut Leberwurst Marzipan Rollmops Lakritz Fondue Weißwurst Eierlikör Kaviar Toupet Monokel Zylinder Lederhose Tutu Taucherbrille Schnorchel Clownsnase Strumpfhose Pantoffel Hosenträger Bademantel Schwimmflügel Lockenwickler Zauberstab Kristallkugel Schatztruhe Holzbein Augenklappe Mumie Vampir Werwolf Zombie Gespenst Raumschiff Ufo Dinosaurier Mammut Yeti Meerjungfrau Wikinger Gladiator Pharao Sumoringer Bauchredner Jongleur Feuerspucker Kuckucksuhr Klobürste Fußpilz Hühnerauge Schluckauf Muskelkater Ohrenschmalz Nasenhaar Hüpfburg Bollerwagen Federboa Diskokugel Blockflöte Triangel Akkordeon Harfe Alphorn Kuhglocke Maibaum Wackelpudding Mettigel Eisbein Gartenschlauch Kettenkarussell Zahnspange Gummiente Wärmflasche Schneekugel Lametta Fliegenklatsche`.split(/\s+/)
+};
+const TOPICS = [
+ ['Ihr plant gemeinsam den perfekten Urlaub für genau diese Gruppe.','Wo übernachtet ihr – und warum ausgerechnet dort?','Was geht am ersten Abend schief?'],
+ ['Erzählt vom schlimmsten Job, den ihr je hattet – oder hättet haben können.','Wer war der schrecklichste Kollege?','Wie habt ihr gekündigt?'],
+ ['Ihr eröffnet zusammen ein Restaurant. Was kommt auf die Karte?','Wie heißt der Laden?','Welche Katastrophe passiert am Eröffnungsabend?'],
+ ['Ihr wacht gemeinsam auf einer einsamen Insel auf.','Was habt ihr zufällig dabei?','Wer dreht zuerst durch – und warum?'],
+ ['Plant die verrückteste Hochzeit aller Zeiten.','Wo findet sie statt?','Was passiert am Buffet?'],
+ ['Ihr gründet ein Start-up. Was ist die Geschäftsidee?','Wer soll investieren?','Warum seid ihr nach einem Jahr pleite?'],
+ ['Beschreibt euren perfekten Sonntag.','Was gibt es zum Frühstück?','Was darf auf keinen Fall passieren?'],
+ ['Ihr zieht alle zusammen in eine WG. Stellt die Hausregeln auf.','Wer putzt das Bad?','Worüber gibt es den ersten großen Streit?'],
+ ['In der Firmenküche wurde ein Joghurt gestohlen. Ihr ermittelt.','Wer ist verdächtig?','Welche Beweise habt ihr?'],
+ ['Ihr macht einen Roadtrip quer durch Europa.','Wer fährt und wer navigiert?','Wo bleibt ihr liegen?'],
+ ['Erzählt von eurer peinlichsten Kindheitserinnerung.','Wer war dabei?','Wie habt ihr euch rausgeredet?'],
+ ['Ihr organisiert ein Dorffest. Was steht auf dem Programm?','Was ist der Hauptpreis der Tombola?','Welcher Programmpunkt eskaliert?'],
+ ['Morgen geht die Welt unter. Was macht ihr heute noch?','Was esst ihr als Letztes?','Wem sagt ihr endlich die Wahrheit?'],
+ ['Ihr dreht einen Actionfilm mit null Euro Budget.','Wer spielt den Bösewicht?','Wie baut ihr die große Explosion?'],
+ ['Ihr habt zusammen im Lotto gewonnen.','Was kauft ihr als Erstes?','Worüber zerstreitet ihr euch?'],
+ ['Ihr seid Astronauten auf dem Weg zum Mars.','Was habt ihr vergessen einzupacken?','Was seht ihr als Erstes, wenn ihr landet?'],
+ ['Erzählt vom besten Essen, das ihr je hattet.','Wo war das?','Was war die geheime Zutat?'],
+ ['Ihr schreibt zusammen einen Krimi.','Wer ist das Opfer?','Wer war es wirklich?'],
+ ['Ihr landet mit einer Zeitmaschine im Mittelalter.','Wie erklärt ihr eure Kleidung?','Womit verdient ihr dort Geld?'],
+ ['Ihr plant eine Überraschungsparty für jemanden, der nichts merken darf.','Wo versteckt ihr euch?','Wer verplappert sich?'],
+ ['Ihr tretet gemeinsam bei einer Castingshow an.','Was ist euer Talent?','Was sagt die Jury?'],
+ ['Ihr seid auf Expedition im Dschungel.','Was ist in eurem Rucksack?','Welches Tier begegnet euch?'],
+ ['Erzählt von eurem schlimmsten Urlaub.','Was ging als Erstes schief?','Wie seid ihr wieder nach Hause gekommen?'],
+ ['Ihr habt ein altes Spukhaus gekauft und renoviert es.','Was findet ihr im Keller?','Wer gibt zuerst auf?'],
+ ['Ihr seid Erfinder. Stellt eure neueste Erfindung vor.','Wofür ist sie gut?','Was ist der große Haken?'],
+ ['Ihr gründet eine Band.','Wie heißt euer erstes Album?','Was passiert auf der ersten Tour?'],
+ ['Ihr seid auf einer Kreuzfahrt, die völlig aus dem Ruder läuft.','Was ist mit dem Kapitän los?','Was gibt es am Buffet?'],
+ ['Ihr müsst ein Wochenende lang auf zehn Kinder aufpassen.','Was ist das größte Chaos?','Wie bekommt ihr sie ins Bett?'],
+ ['Beschreibt den perfekten Spieleabend.','Wer schummelt immer?','Welche Snacks gehören unbedingt dazu?'],
+ ['Ihr sollt ein neues Nationalgericht erfinden.','Welche Zutaten sind Pflicht?','Wer ist strikt dagegen?'],
+ ['Ihr plant den Ausbruch aus einem sehr gemütlichen Gefängnis.','Wie sieht der Plan aus?','Was nehmt ihr mit?'],
+ ['Ihr wollt mit einem Video berühmt werden.','Was ist die Idee?','Was geht beim Dreh schief?'],
+ ['Ihr habt ein kleines Hotel geerbt.','Wer ist der seltsamste Gast?','Was steht in der ersten Online-Bewertung?'],
+ ['Es ist das Jahr 2080. Ihr erzählt euren Enkeln von früher.','Was war damals ganz normal?','Was vermisst ihr am meisten?'],
+ ['Ihr müsst Außerirdische überzeugen, die Erde nicht zu zerstören.','Was zeigt ihr ihnen zuerst?','Was sollten sie lieber nicht erfahren?'],
+ ['Ihr moderiert den Wetterbericht für einen völlig verrückten Tag.','Was fällt vom Himmel?','Was sollen die Leute anziehen?'],
+ ['Ihr plant einen Betriebsausflug, den niemand je vergisst.','Wohin geht es?','Wer verliert was?'],
+ ['Kürt das schlechteste Geschenk, das ihr je bekommen habt.','Von wem war es?','Was habt ihr damit gemacht?'],
+ ['Erzählt, wie ihr euch alle kennengelernt habt – aber erfindet es komplett neu.','Wo war das?','Wer hat sich danebenbenommen?'],
+ ['Ihr seid Nachbarn und streitet über eine Hecke.','Wer hat angefangen?','Wie soll die Versöhnung aussehen?']
+];
+const EVENTS = [
+ {id:'calm', name:'Ruhige Nacht', text:'Keine besonderen Vorkommnisse. Es gelten die normalen Regeln.'},
+ {id:'goldrush', name:'Goldrausch', text:'Gold-Ware ist diese Runde 5 statt 3 Punkte wert – beim Schmuggeln und beim Erwischen.'},
+ {id:'express', name:'Expressabfertigung', text:'Die Runde dauert nur halb so lang. Dafür bringt jedes geschmuggelte Wort 1 Punkt extra.'},
+ {id:'bigsearch', name:'Großfahndung', text:'Wer Gold-Ware erwischt, bekommt doppelte Punkte.'},
+ {id:'corrupt', name:'Bestechlicher Zoll', text:'Zöllner verlieren bei Fehlalarm diese Runde keinen Punkt. Sie dürfen also wild raten.'},
+ {id:'tipoff', name:'Anonymer Hinweis', text:'Jeder Zöllner erfährt bei der Verteilung ein Wort, das heute geschmuggelt wird. Aber nicht, von wem.'},
+ {id:'whisper', name:'Nachtschicht', text:'Alle sprechen die ganze Runde nur im Flüsterton.'},
+ {id:'questions', name:'Verhör', text:'Ihr dürft nur in Fragen sprechen. Jeder Satz endet mit einem Fragezeichen.'},
+ {id:'accent', name:'Internationaler Grenzverkehr', text:'Alle sprechen mit einem Akzent oder Dialekt ihrer Wahl.'},
+ {id:'queue', name:'Schlange am Schalter', text:'Ihr redet reihum, jede Person genau einen Satz. Ein Zöllner fängt an.'},
+ {id:'drama', name:'Seifenoper', text:'Jeder Satz wird so dramatisch wie möglich vorgetragen.'}
+];
+const SAMPLE = [{t:'b',w:'Kaffee'},{t:'s',w:'Leuchtturm'},{t:'g',w:'Flamingo'}];
+
+/* ================= Zustand ================= */
+const DEF = { length:'normal', duration:240, events:true, sound:true };
+const S = { screen:'title', prev:'title', names:['','','',''], settings:{...DEF}, ov:null, saved:null, focus:null };
+let G = null;
+
+/* ================= Helfer ================= */
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rnd = n => Math.floor(Math.random()*n);
+const shuffle = a => { a=[...a]; for(let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const P = id => G.players.find(p => p.id === id);
+const nm = id => esc(P(id).name);
+const isOff = id => G.round.officers.includes(id);
+const evOf = id => EVENTS.find(e => e.id === id) || EVENTS[0];
+const fmt = ms => { const s=Math.ceil(Math.max(0,ms)/1000); return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; };
+const sign = n => n>0 ? `+${n}` : n<0 ? `−${Math.abs(n)}` : '±0';
+const list = arr => arr.length<=1 ? arr.join('') : arr.slice(0,-1).join(', ') + ' und ' + arr[arr.length-1];
+const officersPer = n => n>=7 ? 2 : 1;
+const perCycle = n => Math.ceil(n/officersPer(n));
+const roundsFor = (n,len) => len==='short' ? 3 : len==='long' ? perCycle(n)*2 : perCycle(n);
+const plural = (n, one, many) => `${n} ${n===1?one:many}`;
+const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>';
+
+/* ================= Ton ================= */
+const Sound = {
+  ctx:null,
+  get(){
+    if(!S.settings.sound) return null;
+    try{
+      if(!this.ctx){ const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return null; this.ctx = new AC(); }
+      if(this.ctx.state === 'suspended') this.ctx.resume();
+    }catch(e){ return null; }
+    return this.ctx;
+  },
+  tone(f, d, o={}){
+    const c=this.get(); if(!c) return;
+    const {type='sine', vol=.18, at=0, to=null, attack=.006} = o;
+    const t=c.currentTime+at, osc=c.createOscillator(), g=c.createGain();
+    osc.type=type; osc.frequency.setValueAtTime(f,t); if(to) osc.frequency.exponentialRampToValueAtTime(to,t+d);
+    g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+attack); g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    osc.connect(g); g.connect(c.destination); osc.start(t); osc.stop(t+d+.05);
+  },
+  noise(d, o={}){
+    const c=this.get(); if(!c) return;
+    const {vol=.3, at=0, freq=800} = o;
+    const len=Math.max(1,Math.floor(c.sampleRate*d)), b=c.createBuffer(1,len,c.sampleRate), data=b.getChannelData(0);
+    for(let i=0;i<len;i++) data[i]=(Math.random()*2-1)*Math.pow(1-i/len,3);
+    const s=c.createBufferSource(); s.buffer=b; const fl=c.createBiquadFilter(); fl.type='lowpass'; fl.frequency.value=freq; const g=c.createGain(); g.gain.value=vol;
+    s.connect(fl); fl.connect(g); g.connect(c.destination); s.start(c.currentTime+at);
+  },
+  whistle(){
+    const c=this.get(); if(!c) return;
+    const blast=(at,d)=>{ const t=c.currentTime+at, o=c.createOscillator(), l=c.createOscillator(), lg=c.createGain(), g=c.createGain();
+      o.type='sine'; o.frequency.value=2850; l.frequency.value=26; lg.gain.value=170; l.connect(lg); lg.connect(o.frequency);
+      g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.13,t+.02); g.gain.setValueAtTime(.13,t+d-.04); g.gain.exponentialRampToValueAtTime(.0001,t+d);
+      o.connect(g); g.connect(c.destination); o.start(t); l.start(t); o.stop(t+d+.02); l.stop(t+d+.02); };
+    blast(0,.16); blast(.22,.42);
+  },
+  stamp(){ this.noise(.16,{vol:.9,freq:520}); this.tone(120,.28,{vol:.38,to:48}); },
+  buzz(){ this.tone(150,.42,{type:'sawtooth',vol:.07,to:110}); this.noise(.12,{vol:.5,freq:420}); },
+  tick(){ this.tone(1500,.045,{type:'square',vol:.04}); },
+  chime(){ this.tone(880,.3,{vol:.07}); this.tone(1320,.42,{vol:.05,at:.09}); },
+  flip(){ this.noise(.12,{vol:.22,freq:2600}); },
+  gong(){ [[196,2.4,.2],[392,1.9,.1],[588,1.5,.06],[784,1.1,.04]].forEach(([f,d,v])=>this.tone(f,d,{vol:v,attack:.01})); this.noise(.1,{vol:.4,freq:300}); },
+  fanfare(){ [523,659,784].forEach((f,i)=>this.tone(f,.3,{type:'triangle',vol:.11,at:i*.13})); this.tone(1047,1,{type:'triangle',vol:.12,at:.4}); }
+};
+
+/* ================= Wachhalten ================= */
+let wl = null;
+async function wakeOn(){ try{ if('wakeLock' in navigator && !wl){ wl = await navigator.wakeLock.request('screen'); wl.addEventListener('release', () => { wl = null; }); } }catch(e){ wl = null; } }
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible' && G) wakeOn(); });
+
+/* ================= Speichern ================= */
+function serialize(){
+  const base = { names:S.names, settings:S.settings };
+  if(G){
+    const copy = JSON.parse(JSON.stringify(G));
+    if(copy.round){ copy.round.running = false; copy.round.revealed = false; }
+    return { ...base, screen:S.screen, G:copy };
+  }
+  if(S.saved) return { ...base, screen:S.saved.screen, G:S.saved.G };
+  return { ...base, screen:S.screen };
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(serialize())); }catch(e){} }
+function load(){ try{ const raw = localStorage.getItem(KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; } }
+function clearSave(){ try{ localStorage.setItem(KEY, JSON.stringify({ names:S.names, settings:S.settings, screen:'title' })); }catch(e){} }
+
+/* ================= Spiel-Logik ================= */
+function newGame(){
+  const seen = new Set();
+  const players = S.names.map((raw,i) => {
+    let n = String(raw||'').trim().slice(0,16) || `Person ${i+1}`;
+    const base = n; let k = 2;
+    while(seen.has(n.toLowerCase())) n = `${base} ${k++}`;
+    seen.add(n.toLowerCase());
+    return { id:'p'+i, name:n, score:0, st:{ smugPts:0, smugN:0, catchN:0, fa:0, acc:0, caught:0 } };
+  });
+  const n = players.length;
+  G = { players, op:officersPer(n), total:roundsFor(n, S.settings.length), no:0, used:{b:[],s:[],g:[],t:[],e:[]}, round:null };
+  S.saved = null;
+  startRound();
+  wakeOn();
+}
+function draw(kind, pool){
+  let used = G.used[kind];
+  let avail = pool.map((_,i)=>i).filter(i => !used.includes(i));
+  if(!avail.length){ G.used[kind] = []; used = G.used[kind]; avail = pool.map((_,i)=>i); }
+  const i = avail[rnd(avail.length)]; used.push(i); return i;
+}
+function chooseEvent(){
+  if(!S.settings.events || G.no === 1) return 'calm';
+  if(Math.random() < .22) return 'calm';
+  const pool = EVENTS.filter(e => e.id !== 'calm');
+  let avail = pool.filter(e => !G.used.e.includes(e.id));
+  if(!avail.length){ G.used.e = []; avail = pool; }
+  const e = avail[rnd(avail.length)]; G.used.e.push(e.id); return e.id;
+}
+function startRound(){
+  G.no++;
+  const n = G.players.length, r = G.no - 1;
+  const officers = [];
+  for(let k=0;k<G.op;k++){ const id = G.players[(r*G.op + k) % n].id; if(!officers.includes(id)) officers.push(id); }
+  const event = chooseEvent();
+  const topic = draw('t', TOPICS);
+  const cards = {};
+  G.players.forEach(p => { if(!officers.includes(p.id)) cards[p.id] = ['b','s','g'].map(t => ({ t, w:WORDS[t][draw(t, WORDS[t])], st:'open' })); });
+  const tips = {};
+  if(event === 'tipoff'){
+    const cand = shuffle(Object.values(cards).flatMap(c => c.filter(x => x.t !== 'b').map(x => x.w)));
+    officers.forEach((o,i) => { if(cand[i]) tips[o] = cand[i]; });
+  }
+  const delta = {}; G.players.forEach(p => delta[p.id] = { smug:0, catch:0, fa:0, acc:0 });
+  const duration = S.settings.duration * 1000 * (event === 'express' ? .5 : 1);
+  G.round = { officers, event, topic, cards, tips, log:[], delta, duration, remaining:duration, running:false, pass:0, revealed:false, follow:0, scored:false };
+  S.screen = 'intro';
+}
+const smugglers = () => G.players.filter(p => !isOff(p.id));
+function wareVal(t){ return (t==='g' && G.round.event==='goldrush') ? 5 : TIER[t].v; }
+function catchPts(t, caller){ let v = wareVal(t); if(t==='g' && G.round.event==='bigsearch') v *= 2; if(isOff(caller)) v += 1; return v; }
+function smugPts(t){ return wareVal(t) + (G.round.event==='express' ? 1 : 0); }
+function falsePen(caller){ return (isOff(caller) && G.round.event==='corrupt') ? 0 : -1; }
+function add(id, kind, pts){ P(id).score += pts; G.round.delta[id][kind] += pts; }
+function openCount(pid){ return (G.round.cards[pid]||[]).filter(x => x.st !== 'caught').length; }
+
+/* ================= Uhr ================= */
+let endsAt = 0, lastSec = null;
+function startClock(){ const R = G && G.round; if(!R || R.running || R.remaining <= 0) return; R.running = true; endsAt = performance.now() + R.remaining; lastSec = null; wakeOn(); }
+function stopClock(){ const R = G && G.round; if(!R || !R.running) return; R.remaining = Math.max(0, endsAt - performance.now()); R.running = false; }
+function followCount(R){
+  const f = (R.duration - R.remaining) / R.duration; let c = 0;
+  if(f >= .3) c = 1; if(f >= .6) c = 2;
+  if(R.remaining <= 60000 && R.duration >= 150000) c = 3;
+  return c;
+}
+setInterval(() => {
+  if(!G || !G.round || !G.round.running) return;
+  const R = G.round; R.remaining = Math.max(0, endsAt - performance.now());
+  const sec = Math.ceil(R.remaining/1000);
+  if(sec !== lastSec){ lastSec = sec; if(sec <= 10 && sec > 0) Sound.tick(); }
+  if(R.remaining <= 0){ R.running = false; timeUp(); return; }
+  updateClock();
+}, 200);
+function updateClock(){
+  const R = G.round, d = document.getElementById('digits'); if(!d) return;
+  d.textContent = fmt(R.remaining);
+  d.classList.toggle('urgent', R.running && R.remaining <= 10000);
+  const bf = document.getElementById('barrier-fill'); if(bf) bf.style.width = (R.remaining / R.duration * 100).toFixed(2) + '%';
+  const fc = followCount(R);
+  if(fc !== R.follow){ R.follow = fc; const el = document.getElementById('follow'); if(el) el.innerHTML = followHTML(); Sound.chime(); save(); }
+}
+function timeUp(){ Sound.gong(); S.ov = null; S.screen = 'count'; render(); }
+
+/* ================= Bausteine ================= */
+const medal = t => `<span class="medal ${t}" aria-hidden="true">${t.toUpperCase()}</span>`;
+function mrz(name){
+  const n = String(name).toUpperCase().normalize('NFD').replace(/[^A-Z]/g,'').slice(0,12) || 'X';
+  const r = String(G ? G.no : 0).padStart(2,'0');
+  return esc(`ZOL<DEU${n}<<RUNDE${r}<<WARE`.padEnd(44,'<').slice(0,44));
+}
+function wareCard(name, items, sample=false){
+  return `<article class="doc">
+    <header class="doc-head"><span>Zollinhaltserklärung</span><span>${sample ? 'Beispiel' : 'Vertraulich'} · <strong>${esc(name)}</strong></span></header>
+    <ol class="ware">${items.map(x => `<li class="ware-row${x.st==='caught'?' is-caught':''}">${medal(x.t)}<span class="ware-main"><span class="ware-tier">${TIER[x.t].name}</span><span class="ware-word">${esc(x.w)}</span></span>${x.st==='caught' ? '<span class="stamp mini">Beschlagnahmt</span>' : `<span class="ware-val">Warenwert<b>${sample ? TIER[x.t].v : wareVal(x.t)}</b></span>`}</li>`).join('')}</ol>
+    <footer class="doc-foot">${sample ? 'So sieht eure geheime Ware aus. Alle drei Wörter müssen unauffällig in ganz normale Sätze.' : 'Bau die Wörter unauffällig in normale Sätze ein. Mehrzahl zählt, zusammengesetzte Wörter nicht.'}</footer>
+    <div class="mrz" aria-hidden="true">${mrz(name)}</div>
+  </article>`;
+}
+function officerCard(pid){
+  const tip = G.round.tips[pid];
+  return `<article class="doc">
+    <header class="doc-head"><span>Dienstausweis · Zoll</span><span>Runde ${G.no} · <strong>${nm(pid)}</strong></span></header>
+    <div class="doc-body">
+      <p class="officer-title">Du hast heute Zolldienst.</p>
+      <ul class="plain">
+        <li>Du hast keine Ware.</li>
+        <li>Lies das Thema vor, leite das Gespräch und stell Fragen. Nachfragen erscheinen auf dem Bildschirm.</li>
+        <li>Jeder richtige Fang bringt dir 1 Bonuspunkt extra.</li>
+      </ul>
+      ${tip ? `<div class="tip"><span class="label">Anonymer Hinweis</span><p>Heute wird <strong>„${esc(tip)}“</strong> geschmuggelt.</p></div>` : ''}
+    </div>
+    <div class="mrz" aria-hidden="true">${mrz(P(pid).name)}</div>
+  </article>`;
+}
+function cardFor(pid){ return isOff(pid) ? officerCard(pid) : wareCard(P(pid).name, G.round.cards[pid]); }
+
+function bar(){
+  let left = '';
+  if(G && ['intro','pass','ready','live','count','scores'].includes(S.screen)){
+    const R = G.round, ev = evOf(R.event);
+    left = `<span>Runde <strong>${G.no}/${G.total}</strong></span><span>Zolldienst: <strong>${list(R.officers.map(nm))}</strong></span>${S.settings.events && R.event!=='calm' && S.screen!=='intro' ? `<span class="ev-tag">${esc(ev.name)}</span>` : ''}`;
+  } else if(G && S.screen==='final'){
+    left = `<span>Endabrechnung · <strong>${G.total} Runden</strong></span>`;
+  } else {
+    left = `<span><strong>Wortschmuggel</strong></span><span>4–10 Personen</span><span>iPad oder Fernseher</span>`;
+  }
+  return `<header class="bar"><div class="bar-l">${left}</div><div class="bar-r">
+    <button class="pill-btn" data-a="sound" aria-pressed="${S.settings.sound}">${S.settings.sound ? 'Ton an' : 'Ton aus'}</button>
+    ${G && S.screen!=='final' ? '<button class="pill-btn" data-a="menu">Menü</button>' : ''}
+  </div></header>`;
+}
+
+/* ================= Ansichten ================= */
+function vTitle(){
+  return `<section class="screen">
+    <div class="hero">
+      <canvas class="guilloche" aria-hidden="true"></canvas>
+      <div class="hero-copy">
+        <p class="eyebrow">Ein Partyspiel für euren Spieleabend</p>
+        <h1 class="logo"><span class="logo-a">Wort</span><span class="logo-b">schmuggel</span></h1>
+        <p class="pitch">Jede Person bekommt drei geheime Wörter und muss sie unauffällig ins Gespräch schmuggeln. Wer zu auffällig redet, wird vom Zoll erwischt.</p>
+        <div class="actions" style="margin-top:0">
+          ${S.saved ? `<button class="btn btn-brass btn-lg" data-a="resume">Weiterspielen · Runde ${S.saved.G.no}</button>` : ''}
+          <button class="btn ${S.saved ? '' : 'btn-brass btn-lg'}" data-a="setup">Neues Spiel</button>
+          <button class="btn btn-ghost ${S.saved ? '' : 'btn-lg'}" data-a="rules">Spielregeln</button>
+        </div>
+      </div>
+      <div class="hero-card">${wareCard('Muster', SAMPLE, true)}<span class="stamp stamp-muster">Muster</span></div>
+    </div>
+    <p class="mrz page-mrz" aria-hidden="true">P&lt;DEUWORTSCHMUGGEL&lt;&lt;PARTYSPIEL&lt;&lt;4&lt;BIS&lt;10&lt;PERSONEN&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;</p>
+  </section>`;
+}
+
+function rulesHTML(){
+  return `<div class="rules rules-grid">
+    <div class="rules-col">
+      <section><h3>Ablauf einer Runde</h3>
+        <ol class="steps">
+          <li><p><b>Ware verteilen.</b> Das iPad geht reihum. Jede Person sieht heimlich ihre drei Schmuggelwörter: Bronze, Silber und Gold.</p></li>
+          <li><p><b>Zolldienst.</b> Pro Runde hat eine Person Zolldienst, ab 7 Personen zwei. Zöllner haben keine Ware. Sie lesen das Thema vor, leiten das Gespräch und stellen Fragen.</p></li>
+          <li><p><b>Grenze offen.</b> Ein Gesprächsthema erscheint und die Zeit läuft. Alle reden über das Thema und bauen ihre Wörter in ganz normale Sätze ein.</p></li>
+          <li><p><b>Zoll!</b> Wer ein Schmuggelwort zu hören glaubt, ruft „Zoll!“, tippt auf den roten Knopf und nennt Person und Wort. Die Zeit hält an.</p></li>
+          <li><p><b>Schlagbaum zu.</b> Ist die Zeit um, deckt jede Person ihre Ware auf. Jedes Wort, das gesagt und nicht erwischt wurde, bringt Punkte.</p></li>
+        </ol>
+      </section>
+      <section><h3>Was zählt als geschmuggelt?</h3>
+        <ul class="plain">
+          <li>Das Wort fällt in einem echten Satz, der zum Gespräch passt.</li>
+          <li>Mehrzahl und gebeugte Formen zählen („Flamingos“). Zusammengesetzte Wörter nicht („Flamingofeder“).</li>
+          <li>Aufzählen, buchstabieren oder unverständlich nuscheln zählt nicht.</li>
+          <li>Bei Zweifeln wiederholt die Person ihren Satz. Die Gruppe entscheidet.</li>
+        </ul>
+      </section>
+    </div>
+    <div class="rules-col">
+      <article class="doc"><header class="doc-head"><span>Gebührenordnung</span><span>Punkte</span></header>
+        <div class="doc-body"><table class="points"><tbody>
+          <tr><th>Geschmuggelt</th><td><div class="tiers-inline"><span>${medal('b')} 1</span><span>${medal('s')} 2</span><span>${medal('g')} 3</span></div></td></tr>
+          <tr><th>Richtig erwischt</th><td>Der Warenwert geht an die Person, die gerufen hat. Zöllner bekommen 1 Punkt extra.</td></tr>
+          <tr><th>Fehlalarm</th><td>Wer gerufen hat: −1. Die verdächtigte Person: +1.</td></tr>
+        </tbody></table></div>
+      </article>
+      <section><h3>Taktik</h3>
+        <ul class="plain">
+          <li>Sag absichtlich seltsame Wörter, die gar nicht auf deiner Karte stehen. Wer dich zu Unrecht verdächtigt, schenkt dir einen Punkt.</li>
+          <li>Gold bringt viel, fällt aber auf. Bronze ist die sichere Bank.</li>
+        </ul>
+      </section>
+      <section><h3>Lage an der Grenze</h3>
+        <p>Ab Runde 2 kann eine Ereigniskarte die Regeln ändern: flüstern, nur Fragen stellen, doppelte Punkte für Gold und mehr.</p>
+      </section>
+      <section><h3>Am Fernseher spielen</h3>
+        <p>Spiegelt das iPad per AirPlay auf den Fernseher. Während die Ware verteilt wird, stoppt ihr die Bildschirmsynchronisierung kurz, sonst sieht der ganze Raum die Wörter.</p>
+      </section>
+    </div>
+  </div>`;
+}
+function vRules(){
+  return `<section class="screen">
+    <div><p class="eyebrow">Spielregeln · in 2 Minuten erklärt</p><h2 class="h-display">So wird geschmuggelt</h2></div>
+    ${rulesHTML()}
+    <div class="actions"><button class="btn btn-brass" data-a="back">Zurück</button></div>
+  </section>`;
+}
+
+function vSetup(){
+  const n = S.names.length, op = officersPer(n), per = perCycle(n), set = S.settings;
+  const rounds = roundsFor(n, set.length);
+  const est = Math.round(rounds * (set.duration/60 + 2.5));
+  const exact = per*op === n;
+  const lens = [
+    ['short','Kurz','3 Runden'],
+    ['normal','Standard',`${per} Runden · ${exact ? 'alle 1×' : 'alle mind. 1×'} im Zoll`],
+    ['long','Lang',`${per*2} Runden · ${exact ? 'alle 2×' : 'alle mind. 2×'} im Zoll`]
+  ];
+  return `<section class="screen">
+    <div><p class="eyebrow">Neues Spiel</p><h2 class="h-display">Wer reist mit?</h2></div>
+    <p class="lede">Tragt euch in Sitzreihenfolge ein. In dieser Reihenfolge wandert das iPad und wechselt der Zolldienst. Leere Felder heißen „Person 1“, „Person 2“ und so weiter.</p>
+    <div class="setup-grid">
+      <div class="names">
+        ${S.names.map((v,i) => `<div class="name-row"><label class="seat" for="name-${i}">${String(i+1).padStart(2,'0')}</label><input id="name-${i}" data-i="${i}" value="${esc(v)}" placeholder="Person ${i+1}" maxlength="16" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="next"><button class="x" data-a="delName" data-arg="${i}" aria-label="Platz ${i+1} entfernen" ${n<=4?'disabled':''}>×</button></div>`).join('')}
+        <button class="btn btn-ghost add" data-a="addName" ${n>=10?'disabled':''}>${n>=10 ? 'Maximal 10 Personen' : '+ Person hinzufügen'}</button>
+      </div>
+      <div class="settings">
+        <fieldset><legend class="label">Spiellänge</legend><div class="seg">
+          ${lens.map(([k,a,b]) => `<button class="opt" data-a="len" data-arg="${k}" aria-pressed="${set.length===k}"><b>${a}</b><span>${b}</span></button>`).join('')}
+        </div></fieldset>
+        <fieldset><legend class="label">Zeit pro Runde</legend><div class="seg">
+          ${[180,240,300,360].map(d => `<button class="opt tight" data-a="dur" data-arg="${d}" aria-pressed="${set.duration===d}"><b>${d/60} Min.</b></button>`).join('')}
+        </div></fieldset>
+        <fieldset><legend class="label">Extras</legend>
+          <div class="toggle-row"><div><strong>Ereigniskarten</strong><p>Ab Runde 2 ändert die „Lage an der Grenze“ die Regeln.</p></div><button class="switch" role="switch" aria-checked="${set.events}" aria-label="Ereigniskarten" data-a="tglEvents"></button></div>
+          <div class="toggle-row"><div><strong>Ton</strong><p>Trillerpfeife, Stempel, Gong am Rundenende.</p></div><button class="switch" role="switch" aria-checked="${set.sound}" aria-label="Ton" data-a="sound"></button></div>
+        </fieldset>
+        <p class="summary">${n} Personen · ${rounds} Runden à ${set.duration/60} Min. · ${op} Zöllner pro Runde · ca. ${est} Minuten</p>
+      </div>
+    </div>
+    <div class="actions"><button class="btn btn-ghost" data-a="back">Zurück</button><button class="btn btn-brass btn-lg" data-a="start">Los geht’s</button></div>
+  </section>`;
+}
+
+function vIntro(){
+  const R = G.round, ev = evOf(R.event);
+  return `<section class="screen">
+    <h2 class="round-big">Runde ${G.no}<small>von ${G.total}</small></h2>
+    <div class="intro-grid">
+      <div>
+        <p class="label">Im Zolldienst</p>
+        <ul class="officers">${R.officers.map(id => `<li class="badge-officer">${nm(id)}</li>`).join('')}</ul>
+        <p class="lede">${R.officers.length>1 ? 'Die Zöllner bekommen' : 'Der Zoll bekommt'} keine Ware, liest das Thema vor und jagt Schmuggler. Alle anderen bekommen gleich drei geheime Wörter.</p>
+      </div>
+      ${S.settings.events ? `<article class="doc card-wrap"><header class="doc-head"><span>Lagebericht</span><span>Runde ${G.no}</span></header><div class="doc-body"><h3 class="event-name">${esc(ev.name)}</h3><p class="event-text">${esc(ev.text)}</p>${R.event==='express' ? `<p class="small">Rundenzeit: ${fmt(R.duration)} Min.</p>` : ''}</div></article>` : ''}
+    </div>
+    <div class="actions end"><button class="btn btn-brass btn-lg" data-a="beginPass">Ware verteilen</button></div>
+  </section>`;
+}
+
+function vPass(){
+  const R = G.round, p = G.players[R.pass];
+  const dots = G.players.map((_,i) => `<span class="dot ${i<R.pass?'done':i===R.pass?'now':''}"></span>`).join('');
+  if(!R.revealed){
+    return `<section class="screen center">
+      <p class="eyebrow">Übergabe ${R.pass+1} von ${G.players.length}</p>
+      <p class="pass-to">Gib das iPad an</p>
+      <h2 class="pass-name">${esc(p.name)}</h2>
+      <p class="muted">Alle anderen schauen weg${R.pass===0 ? '. Spielt ihr am Fernseher, stoppt jetzt kurz die Bildschirmsynchronisierung.' : '.'}</p>
+      <button class="btn btn-brass btn-lg" data-a="reveal">Ich bin ${esc(p.name)} – zeigen</button>
+      <div class="dots" aria-hidden="true">${dots}</div>
+    </section>`;
+  }
+  return `<section class="screen center">
+    <p class="eyebrow">Nur für ${esc(p.name)}</p>
+    <div class="card-wrap">${cardFor(p.id)}</div>
+    <button class="btn btn-ink btn-lg" data-a="hide">Gemerkt – verdecken</button>
+    <div class="dots" aria-hidden="true">${dots}</div>
+  </section>`;
+}
+
+function vReady(){
+  const R = G.round;
+  return `<section class="screen center">
+    <span class="stamp stamp-in" style="font-size:clamp(2.2rem,8vmin,4.4rem)">Ware verteilt</span>
+    <h2 class="h-display">Gleich öffnet die Grenze</h2>
+    <p class="lede">Das Gesprächsthema erscheint auf dem Bildschirm. ${list(R.officers.map(nm))} liest es laut vor und eröffnet das Gespräch.</p>
+    <p class="muted small">Spielt ihr am Fernseher? Jetzt könnt ihr die Bildschirmsynchronisierung wieder einschalten.</p>
+    <button class="btn btn-brass btn-lg" data-a="openBorder">Schlagbaum öffnen</button>
+  </section>`;
+}
+
+function followHTML(){
+  const R = G.round, t = TOPICS[R.topic], items = [];
+  if(R.follow >= 1) items.push(['Nachfrage 1', t[1], '']);
+  if(R.follow >= 2) items.push(['Nachfrage 2', t[2], '']);
+  if(R.follow >= 3) items.push(['Letzte Minute', 'Wer noch Ware hat, muss jetzt liefern.', 'last']);
+  if(!items.length) return `<p class="follow-wait">Im Lauf der Runde erscheinen hier Nachfragen für den Zolldienst.</p>`;
+  return `<ul>${items.map(([l,x,c]) => `<li class="${c}"><span class="label">${l}</span><span>${esc(x)}</span></li>`).join('')}</ul>`;
+}
+function logHTML(){
+  const L = G.round.log;
+  if(!L.length) return `<p class="muted small">Noch keine Kontrollen.</p>`;
+  return `<ol>${L.slice().reverse().map(e => e.k==='catch'
+    ? `<li class="k-catch"><b>Beschlagnahmt</b> „${esc(e.w)}“ bei ${nm(e.s)} · ${nm(e.c)} ${sign(e.pts)}</li>`
+    : `<li><b>Fehlalarm</b> ${nm(e.c)} gegen ${nm(e.s)} · ${nm(e.c)} ${sign(e.pen)}, ${nm(e.s)} +1</li>`).join('')}</ol>`;
+}
+function vLive(){
+  const R = G.round, t = TOPICS[R.topic], ev = evOf(R.event);
+  return `<section class="screen live">
+    <div class="live-grid">
+      <div class="topic-panel">
+        <p class="label">Gesprächsthema</p>
+        <h2 class="topic">${esc(t[0])}</h2>
+        <div class="follow" id="follow">${followHTML()}</div>
+        ${S.settings.events && R.event!=='calm' ? `<div class="event-note"><strong>${esc(ev.name)}</strong><span>${esc(ev.text)}</span></div>` : ''}
+      </div>
+      <aside class="clock-panel">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><p class="label">Restzeit</p>${R.running ? '' : '<span class="paused">Pausiert</span>'}</div>
+        <div class="digits" id="digits" role="timer" aria-live="off">${fmt(R.remaining)}</div>
+        <div class="barrier" aria-hidden="true"><i id="barrier-fill" style="width:${(R.remaining/R.duration*100).toFixed(2)}%"></i></div>
+        <div class="protocol"><p class="label">Kontrollprotokoll</p>${logHTML()}</div>
+      </aside>
+    </div>
+    <div class="live-actions">
+      <button class="btn-zoll" data-a="zoll">Zoll!</button>
+      <div class="live-sec">
+        <button class="btn ${R.running ? '' : 'btn-brass'}" data-a="pause">${R.running ? 'Pause' : 'Weiter'}</button>
+        <button class="btn" data-a="peek">Ware nachsehen</button>
+        <button class="btn btn-ghost" data-a="askEnd">Runde beenden</button>
+      </div>
+    </div>
+  </section>`;
+}
+
+function vCount(){
+  const R = G.round;
+  return `<section class="screen">
+    <div class="count-head">
+      <span class="stamp stamp-in">Schlagbaum zu</span>
+      <div><h2 class="h-display">Ware aufdecken</h2>
+      <p class="lede">Tippt jedes Wort an, das im Gespräch gefallen ist, ohne erwischt zu werden. Im Zweifel wiederholt die Person ihren Satz.</p></div>
+    </div>
+    <div class="count-grid">${smugglers().map(p => {
+      const items = R.cards[p.id];
+      const sub = items.reduce((a,x) => a + (x.st==='smuggled' ? smugPts(x.t) : 0), 0);
+      return `<article class="doc count-doc"><header class="doc-head"><strong>${esc(p.name)}</strong><span>${sub ? '+'+sub+' Pkt.' : '0 Pkt.'}</span></header>
+        <div class="ware">${items.map((x,i) => x.st==='caught'
+          ? `<div class="ware-row is-caught">${medal(x.t)}<span class="ware-main"><span class="ware-tier">${TIER[x.t].name}</span><span class="ware-word">${esc(x.w)}</span></span><span class="stamp mini">Beschlagnahmt</span></div>`
+          : `<button class="ware-row" data-a="toggleSm" data-arg="${p.id}|${i}" aria-pressed="${x.st==='smuggled'}">${medal(x.t)}<span class="ware-main"><span class="ware-tier">${x.st==='smuggled' ? `Geschmuggelt · +${smugPts(x.t)}` : TIER[x.t].name + ' · nicht gesagt'}</span><span class="ware-word">${esc(x.w)}</span></span><span class="check">${CHECK}</span></button>`).join('')}</div>
+      </article>`; }).join('')}
+    </div>
+    <div class="actions end"><button class="btn btn-brass btn-lg" data-a="score">Punkte vergeben</button></div>
+  </section>`;
+}
+
+function ranked(){
+  const arr = [...G.players].sort((a,b) => b.score - a.score);
+  let last = null, rank = 0;
+  return arr.map((p,i) => { if(p.score !== last){ rank = i+1; last = p.score; } return { p, rank }; });
+}
+function chipsFor(id){
+  const d = G.round.delta[id], out = [];
+  if(d.smug) out.push(`<span class="chip">Schmuggel ${sign(d.smug)}</span>`);
+  if(d.catch) out.push(`<span class="chip">Fang ${sign(d.catch)}</span>`);
+  if(d.fa) out.push(`<span class="chip neg">Fehlalarm ${sign(d.fa)}</span>`);
+  if(d.acc) out.push(`<span class="chip">Unschuld ${sign(d.acc)}</span>`);
+  return out.join('');
+}
+function rankingHTML(withDelta){
+  return `<ol class="ranking">${ranked().map(({p,rank}) => {
+    const d = G.round.delta[p.id], sum = d.smug + d.catch + d.fa + d.acc;
+    return `<li class="rank-row ${rank===1 ? 'top' : ''}"><span class="rank">${rank}</span>
+      <div class="who"><span class="rn">${esc(p.name)}${withDelta && isOff(p.id) ? '<span class="tag">Zoll</span>' : ''}</span>${withDelta ? `<div class="chips">${chipsFor(p.id)}</div>` : ''}</div>
+      <span class="score">${withDelta ? `<span class="delta">${sign(sum)}</span>` : ''}<span class="total">${p.score}</span></span></li>`; }).join('')}</ol>`;
+}
+function vScores(){
+  const last = G.no >= G.total;
+  return `<section class="screen">
+    <div><p class="eyebrow">Zwischenstand nach Runde ${G.no} von ${G.total}</p><h2 class="h-display">Zollbilanz</h2></div>
+    ${rankingHTML(true)}
+    <div class="actions end"><button class="btn btn-brass btn-lg" data-a="next">${last ? 'Zur Endabrechnung' : `Weiter zu Runde ${G.no+1}`}</button></div>
+  </section>`;
+}
+
+const AWARDS = [
+  ['smugPts','Meisterschmuggel','Die meisten Punkte mit geschmuggelter Ware', v => plural(v,'Punkt','Punkte')],
+  ['catchN','Spürnase','Am häufigsten richtig „Zoll!“ gerufen', v => `${v}× erwischt`],
+  ['acc','Unschuldslamm','Am häufigsten zu Unrecht verdächtigt', v => `${v}× verdächtigt`],
+  ['fa','Paranoia-Preis','Die meisten Fehlalarme', v => plural(v,'Fehlalarm','Fehlalarme')],
+  ['caught','Pechvogel','Am häufigsten selbst erwischt', v => `${v}× aufgeflogen`]
+];
+function vFinal(){
+  const r = ranked(), top = r.filter(x => x.rank === 1).map(x => x.p);
+  const awards = AWARDS.map(([k,title,desc,f]) => {
+    const max = Math.max(...G.players.map(p => p.st[k]));
+    if(max <= 0) return '';
+    const who = G.players.filter(p => p.st[k] === max).map(p => esc(p.name));
+    return `<article class="doc award"><header class="doc-head"><span>Urkunde</span><span>${f(max)}</span></header><div class="doc-body"><h4>${title}</h4><p class="who-won">${list(who)}</p><p>${desc}</p></div></article>`;
+  }).join('');
+  return `<section class="screen">
+    <div class="winner">
+      <p class="eyebrow">Endabrechnung nach ${G.total} Runden</p>
+      <h2 class="winner-name">${list(top.map(p => esc(p.name)))}</h2>
+      <div class="winner-line"><span class="stamp stamp-in">${top.length>1 ? 'Gleichstand' : 'Freie Fahrt'}</span><span class="lede">${top.length>1 ? 'teilen sich' : 'gewinnt'} mit ${plural(top[0].score,'Punkt','Punkten')}.</span></div>
+    </div>
+    <div class="final-grid">
+      <div><p class="label" style="margin-bottom:10px">Endstand</p>${rankingHTML(false)}</div>
+      <div><p class="label" style="margin-bottom:10px">Auszeichnungen</p><div class="awards">${awards || '<p class="muted">Niemand wurde erwischt, niemand hat geschmuggelt. Verdächtig ruhig.</p>'}</div></div>
+    </div>
+    <div class="actions end"><button class="btn btn-ghost" data-a="newGroup">Neue Reisegruppe</button><button class="btn btn-brass btn-lg" data-a="rematch">Revanche</button></div>
+  </section>`;
+}
+
+/* ================= Overlays ================= */
+function sheet(title, sub, body, closable=true){
+  return `<div class="ov" role="dialog" aria-modal="true" aria-label="${esc(title.replace(/<[^>]+>/g,''))}"><div class="sheet">
+    <div class="sheet-head"><div>${sub ? `<p class="label">${sub}</p>` : ''}<h2>${title}</h2></div>${closable ? '<button class="x" data-a="closeOv" aria-label="Schließen">×</button>' : ''}</div>
+    ${body}
+  </div></div>`;
+}
+function vOverlay(){
+  const o = S.ov;
+  if(o.type === 'zoll') return vZoll(o);
+  if(o.type === 'peek'){
+    if(o.step === 1) return sheet('Wer will nachsehen?', 'Ware nachsehen · die Zeit läuft weiter', `<div class="pgrid">${G.players.map(p => `<button class="pbtn" data-a="peekWho" data-arg="${p.id}">${esc(p.name)}${isOff(p.id) ? '<small>Zolldienst</small>' : ''}</button>`).join('')}</div>`);
+    if(o.step === 2) return sheet(`Nur ${nm(o.pid)} schaut hin`, 'Ware nachsehen', `<div class="actions" style="margin-top:0"><button class="btn btn-brass btn-lg" data-a="peekShow">Zeigen</button><button class="btn btn-ghost" data-a="closeOv">Abbrechen</button></div>`);
+    return sheet(`Ware von ${nm(o.pid)}`, 'Vertraulich', `${cardFor(o.pid)}<div class="actions" style="margin-top:0"><button class="btn btn-ink btn-lg" data-a="closeOv">Verdecken</button></div>`, false);
+  }
+  if(o.type === 'end') return sheet('Runde jetzt beenden?', 'Vorzeitiger Schlagbaum', `<p class="lede">Die restliche Zeit verfällt. Danach wird die Ware aufgedeckt.</p><div class="actions" style="margin-top:0"><button class="btn btn-stamp btn-lg" data-a="endNow">Ja, Schlagbaum zu</button><button class="btn btn-ghost" data-a="closeOv">Weiterspielen</button></div>`);
+  if(o.type === 'menu'){
+    if(o.view === 'scores') return sheet('Punktestand', `Runde ${G.no} von ${G.total}`, `${rankingHTML(false)}<div class="actions" style="margin-top:0"><button class="btn btn-ghost" data-a="menuView" data-arg="main">Zurück zum Menü</button></div>`);
+    if(o.view === 'rules') return sheet('Spielregeln', 'Kurz erklärt', `${rulesHTML()}<div class="actions" style="margin-top:0"><button class="btn btn-ghost" data-a="menuView" data-arg="main">Zurück zum Menü</button></div>`);
+    if(o.view === 'quit') return sheet('Spiel abbrechen?', 'Achtung', `<p class="lede">Der Spielstand geht verloren. Die Namen bleiben für das nächste Spiel gespeichert.</p><div class="actions" style="margin-top:0"><button class="btn btn-stamp" data-a="quit">Ja, abbrechen</button><button class="btn btn-ghost" data-a="menuView" data-arg="main">Nein, weiterspielen</button></div>`);
+    const fs = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+    return sheet('Menü', S.screen==='live' ? 'Die Zeit ist angehalten' : 'Wortschmuggel', `<div class="menu-list">
+      <button class="btn" data-a="menuView" data-arg="scores">Punktestand</button>
+      <button class="btn" data-a="menuView" data-arg="rules">Spielregeln</button>
+      ${fs ? '<button class="btn" data-a="fullscreen">Vollbild</button>' : ''}
+      <button class="btn btn-ghost" data-a="menuView" data-arg="quit">Spiel abbrechen</button>
+    </div><div class="actions" style="margin-top:0"><button class="btn btn-brass btn-lg" data-a="closeOv">Zurück zum Spiel</button></div>`);
+  }
+  return '';
+}
+function vZoll(o){
+  const sub = 'Kontrolle · die Zeit ist angehalten';
+  if(o.step === 1) return sheet('Zoll! Wer hat gerufen?', sub, `<div class="pgrid">${G.players.map(p => `<button class="pbtn" data-a="zCaller" data-arg="${p.id}">${esc(p.name)}${isOff(p.id) ? '<small>Zolldienst</small>' : ''}</button>`).join('')}</div>`);
+  if(o.step === 2) return sheet(`Wen verdächtigt ${nm(o.caller)}?`, sub, `<div class="pgrid">${smugglers().filter(p => p.id !== o.caller).map(p => { const c = openCount(p.id); return `<button class="pbtn" data-a="zSuspect" data-arg="${p.id}" ${c ? '' : 'disabled'}>${esc(p.name)}<small>${c ? plural(c,'Ware','Waren') + ' im Gepäck' : 'Gepäck leer'}</small></button>`; }).join('')}</div><div class="actions" style="margin-top:0"><button class="btn btn-ghost" data-a="zBack">Zurück</button></div>`);
+  if(o.step === 3) return sheet(`${nm(o.caller)} verdächtigt ${nm(o.suspect)}`, sub, `<div class="say">
+      <p><span>1</span><span><b>${nm(o.caller)}</b>, nenne jetzt laut das Wort, das du gehört hast.</span></p>
+      <p><span>2</span><span><b>${nm(o.suspect)}</b>, steht dieses Wort auf deiner Karte? Ehrlich antworten. Mehrzahl oder gebeugte Form zählt als Treffer.</span></p>
+    </div>
+    <div class="actions" style="margin-top:0"><button class="btn btn-stamp btn-lg" data-a="zYes">Ja, steht drauf</button><button class="btn btn-ink btn-lg" data-a="zNo">Nein, Fehlalarm</button><button class="btn btn-ghost" data-a="zBack">Zurück</button></div>`);
+  if(o.step === 4){
+    const items = G.round.cards[o.suspect];
+    return sheet(`${nm(o.suspect)}, welches Wort war es?`, sub, `<p class="lede">Tippe die passende Ware an. Nur dieses eine Wort wird aufgedeckt.</p>
+      <div class="tiles">${items.map((x,i) => x.st==='caught' ? '' : `<button class="tile" data-a="zTile" data-arg="${i}">${medal(x.t)}<b>${TIER[x.t].name}</b><span>Warenwert ${wareVal(x.t)} · verdeckt</span></button>`).join('')}</div>
+      <div class="actions" style="margin-top:0"><button class="btn btn-ghost" data-a="zBack">Zurück</button></div>`);
+  }
+  if(o.step === 5){
+    const e = G.round.log[G.round.log.length-1];
+    return sheet('Treffer', 'Kontrolle abgeschlossen', `<div class="result">
+      <span class="word">${esc(e.w)}</span>
+      <span class="stamp stamp-in">Beschlagnahmt</span>
+      <p>Die ${TIER[e.t].name}-Ware von ${nm(e.s)} ist weg. ${nm(e.c)} bekommt ${sign(e.pts)}${isOff(e.c) ? ' inklusive Zoll-Bonus' : ''}.</p>
+    </div><div class="actions mid" style="margin-top:0"><button class="btn btn-brass btn-lg" data-a="zDone">Weiter, Grenze offen</button><button class="btn btn-ghost" data-a="zUndo">Rückgängig</button></div>`, false);
+  }
+  if(o.step === 6){
+    const e = G.round.log[G.round.log.length-1];
+    return sheet('Daneben', 'Kontrolle abgeschlossen', `<div class="result">
+      <span class="stamp stamp-in">Fehlalarm</span>
+      <p>${nm(e.c)} ${e.pen ? sign(e.pen) : 'verliert nichts (bestechlicher Zoll)'} · ${nm(e.s)} +1 für die Unschuld.</p>
+    </div><div class="actions mid" style="margin-top:0"><button class="btn btn-brass btn-lg" data-a="zDone">Weiter, Grenze offen</button><button class="btn btn-ghost" data-a="zUndo">Rückgängig</button></div>`, false);
+  }
+  return '';
+}
+
+/* ================= Aktionen ================= */
+function pauseFor(type, extra={}){ const was = !!(G && G.round && G.round.running && S.screen==='live'); stopClock(); S.ov = { type, resume:was, ...extra }; }
+function closeOv(){ const o = S.ov; S.ov = null; if(o && o.resume && S.screen==='live') startClock(); }
+const A = {
+  sound(){ S.settings.sound = !S.settings.sound; if(S.settings.sound) Sound.chime(); },
+  setup(){ S.screen = 'setup'; },
+  rules(){ S.prev = S.screen; S.screen = 'rules'; },
+  back(){ S.screen = S.screen==='rules' ? (S.prev==='setup' ? 'setup' : 'title') : 'title'; },
+  resume(){ const sv = S.saved; if(!sv) return; G = sv.G; S.screen = sv.screen; S.saved = null; wakeOn(); },
+  addName(){ if(S.names.length < 10){ S.names.push(''); S.focus = 'name-' + (S.names.length-1); } },
+  delName(i){ if(S.names.length > 4){ S.names.splice(+i,1); } },
+  len(k){ S.settings.length = k; },
+  dur(d){ S.settings.duration = +d; },
+  tglEvents(){ S.settings.events = !S.settings.events; },
+  start(){ newGame(); Sound.chime(); },
+  beginPass(){ G.round.pass = 0; G.round.revealed = false; S.screen = 'pass'; },
+  reveal(){ G.round.revealed = true; Sound.flip(); },
+  hide(){ const R = G.round; R.revealed = false; R.pass++; if(R.pass >= G.players.length) S.screen = 'ready'; },
+  openBorder(){ S.screen = 'live'; startClock(); Sound.whistle(); },
+  pause(){ const R = G.round; if(R.running) stopClock(); else startClock(); },
+  zoll(){ pauseFor('zoll', { step:1 }); Sound.whistle(); },
+  zCaller(id){ S.ov.caller = id; S.ov.step = 2; },
+  zSuspect(id){ S.ov.suspect = id; S.ov.step = 3; },
+  zBack(){ S.ov.step = Math.max(1, S.ov.step-1); },
+  zYes(){ S.ov.step = 4; },
+  zNo(){
+    const o = S.ov, pen = falsePen(o.caller);
+    add(o.caller, 'fa', pen); add(o.suspect, 'acc', 1); P(o.caller).st.fa++; P(o.suspect).st.acc++;
+    G.round.log.push({ k:'fa', c:o.caller, s:o.suspect, pen });
+    o.step = 6; Sound.buzz();
+  },
+  zTile(i){
+    const o = S.ov, x = G.round.cards[o.suspect][+i]; if(!x || x.st==='caught') return;
+    const pts = catchPts(x.t, o.caller);
+    x.st = 'caught'; add(o.caller, 'catch', pts); P(o.caller).st.catchN++; P(o.suspect).st.caught++;
+    G.round.log.push({ k:'catch', c:o.caller, s:o.suspect, i:+i, t:x.t, w:x.w, pts });
+    o.step = 5; Sound.stamp();
+  },
+  zUndo(){
+    const e = G.round.log.pop(); if(!e) return;
+    if(e.k === 'catch'){ add(e.c,'catch',-e.pts); P(e.c).st.catchN--; P(e.s).st.caught--; G.round.cards[e.s][e.i].st = 'open'; }
+    else { add(e.c,'fa',-e.pen); add(e.s,'acc',-1); P(e.c).st.fa--; P(e.s).st.acc--; }
+    S.ov.step = 3;
+  },
+  zDone(){ closeOv(); },
+  peek(){ S.ov = { type:'peek', step:1, resume:false }; },
+  peekWho(id){ S.ov.pid = id; S.ov.step = 2; },
+  peekShow(){ S.ov.step = 3; Sound.flip(); },
+  askEnd(){ pauseFor('end'); },
+  endNow(){ S.ov = null; stopClock(); G.round.remaining = 0; Sound.gong(); S.screen = 'count'; },
+  closeOv(){ closeOv(); },
+  menu(){ pauseFor('menu', { view:'main' }); },
+  menuView(v){ S.ov.view = v; },
+  fullscreen(){
+    try{
+      const d = document, el = d.documentElement;
+      if(!(d.fullscreenElement || d.webkitFullscreenElement)){ const r = (el.requestFullscreen || el.webkitRequestFullscreen).call(el); if(r && r.catch) r.catch(()=>{}); }
+      else { const r = (d.exitFullscreen || d.webkitExitFullscreen).call(d); if(r && r.catch) r.catch(()=>{}); }
+    }catch(e){}
+  },
+  quit(){ stopClock(); G = null; S.ov = null; S.saved = null; S.screen = 'title'; clearSave(); },
+  toggleSm(arg){ const [pid,i] = arg.split('|'); const x = G.round.cards[pid][+i]; if(x.st === 'caught') return; x.st = x.st === 'smuggled' ? 'open' : 'smuggled'; },
+  score(){
+    const R = G.round;
+    if(!R.scored){
+      smugglers().forEach(p => R.cards[p.id].forEach(x => { if(x.st === 'smuggled'){ const pts = smugPts(x.t); add(p.id,'smug',pts); p.st.smugPts += pts; p.st.smugN++; } }));
+      R.scored = true;
+    }
+    S.screen = 'scores'; Sound.stamp();
+  },
+  next(){ if(G.no >= G.total){ S.screen = 'final'; Sound.fanfare(); } else { startRound(); Sound.chime(); } },
+  rematch(){ S.names = G.players.map(p => p.name); newGame(); },
+  newGroup(){ S.names = G.players.map(p => p.name); G = null; S.screen = 'setup'; clearSave(); }
+};
+
+/* ================= Rendern ================= */
+const VIEWS = { title:vTitle, rules:vRules, setup:vSetup, intro:vIntro, pass:vPass, ready:vReady, live:vLive, count:vCount, scores:vScores, final:vFinal };
+function render(){
+  if(G == null && !['title','rules','setup'].includes(S.screen)) S.screen = 'title';
+  const newScreen = S.screen !== S._last, newOv = !!S.ov && !S._ovOpen;
+  $app.innerHTML = bar() + (VIEWS[S.screen] || vTitle)() + (S.ov ? vOverlay() : '');
+  const scr = $app.querySelector('.screen');
+  if(newScreen){ window.scrollTo(0,0); if(scr) scr.classList.add('enter'); }
+  else if(scr){ scr.querySelectorAll('.stamp-in').forEach(el => el.classList.remove('stamp-in')); }
+  if(newOv){ const ov = $app.querySelector('.ov'); if(ov) ov.classList.add('enter'); }
+  S._last = S.screen; S._ovOpen = !!S.ov;
+  if(S.screen === 'title') requestAnimationFrame(drawGuilloche);
+  if(S.screen === 'live' && G) updateClock();
+  if(S.focus){ const el = document.getElementById(S.focus); S.focus = null; if(el) el.focus(); }
+  save();
+}
+
+$app.addEventListener('click', e => {
+  const b = e.target.closest('[data-a]'); if(!b || b.disabled) return;
+  const fn = A[b.dataset.a]; if(!fn) return;
+  Sound.get();
+  fn(b.dataset.arg, b);
+  render();
+});
+$app.addEventListener('input', e => { const i = e.target.dataset && e.target.dataset.i; if(i !== undefined){ S.names[+i] = e.target.value; save(); } });
+$app.addEventListener('keydown', e => {
+  const i = e.target.dataset && e.target.dataset.i;
+  if(e.key === 'Enter' && i !== undefined){ e.preventDefault(); const nx = document.getElementById('name-' + (+i+1)); if(nx) nx.focus(); else e.target.blur(); }
+});
+document.addEventListener('keydown', e => {
+  if(e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+  if(e.key === 'Escape' && S.ov && !(S.ov.type==='zoll' && S.ov.step >= 5) && !(S.ov.type==='peek' && S.ov.step===3)){ closeOv(); render(); return; }
+  if(S.screen === 'live' && !S.ov){
+    if(e.key === 'z' || e.key === 'Z'){ e.preventDefault(); Sound.get(); A.zoll(); render(); }
+    else if(e.key === ' '){ e.preventDefault(); A.pause(); render(); }
+  }
+});
+
+/* ================= Guilloche ================= */
+function drawGuilloche(){
+  const c = document.querySelector('.guilloche'); if(!c) return;
+  const rect = c.getBoundingClientRect(); if(!rect.width || !rect.height) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  c.width = Math.round(rect.width*dpr); c.height = Math.round(rect.height*dpr);
+  const ctx = c.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,rect.width,rect.height);
+  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--guilloche').trim() || 'rgba(0,0,0,.12)';
+  ctx.lineWidth = .7;
+  const wide = rect.width > 860;
+  const cx = wide ? rect.width*.72 : rect.width*.5, cy = wide ? rect.height*.5 : Math.min(rect.height*.32, 260);
+  const size = Math.min(wide ? rect.height*.62 : rect.width*.62, 440);
+  const N = 900;
+  for(let j=0;j<22;j++){
+    const ph = j/22 * Math.PI*2/12;
+    ctx.beginPath();
+    for(let i=0;i<=N;i++){
+      const t = i/N*Math.PI*2;
+      const r = size*(.7 + .17*Math.sin(12*t + ph*12) + .05*Math.sin(36*t - ph*24));
+      const x = cx + r*Math.cos(t), y = cy + r*Math.sin(t);
+      i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
+    }
+    ctx.stroke();
+  }
+  for(let j=0;j<14;j++){
+    const ph = j/14 * Math.PI*2/18;
+    ctx.beginPath();
+    for(let i=0;i<=N;i++){
+      const t = i/N*Math.PI*2;
+      const r = size*(.36 + .07*Math.sin(18*t + ph*18));
+      const x = cx + r*Math.cos(t), y = cy + r*Math.sin(t);
+      i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
+    }
+    ctx.stroke();
+  }
+}
+let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if(S.screen==='title') drawGuilloche(); }, 120); });
+try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if(S.screen==='title') drawGuilloche(); }); }catch(e){}
+try{ new MutationObserver(() => { if(S.screen==='title') drawGuilloche(); }).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] }); }catch(e){}
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if(S.screen==='title') drawGuilloche(); });
+
+/* ================= Start ================= */
+function boot(data){
+  const sv = load();
+  if(sv){
+    if(Array.isArray(sv.names) && sv.names.length >= 4) S.names = sv.names.slice(0,10).map(x => String(x||''));
+    if(sv.settings) S.settings = { ...DEF, ...sv.settings };
+    if(sv.G && sv.G.round && !['title','setup','rules','final'].includes(sv.screen)) S.saved = sv;
+  }
+  const hot = data && data.S;
+  if(hot && hot.G && hot.G.round){
+    G = hot.G; S.screen = hot.screen; S.saved = null;
+    if(Array.isArray(hot.names)) S.names = hot.names;
+    if(hot.settings) S.settings = { ...DEF, ...hot.settings };
+  } else if(hot && (hot.screen === 'setup' || hot.screen === 'rules')){
+    S.screen = hot.screen;
+  }
+  render();
+}
+try{ if(window.claude && window.claude.hot && typeof window.claude.hot.snapshot === 'function') window.claude.hot.snapshot(() => ({ S:serialize() })); }catch(e){}
+const hot = window.claude && window.claude.hot;
+if(hot && typeof hot.ready === 'function') hot.ready(boot); else boot((hot && hot.data) || {});
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+# wird von XcodeGen bzw. beim Bauen erzeugt
+Wortschmuggel.xcodeproj/
+Wortschmuggel/Info.plist
+build/
+build-sim/
+out/

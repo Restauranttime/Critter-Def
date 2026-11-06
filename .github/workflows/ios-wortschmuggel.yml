@@ -1,0 +1,75 @@
+name: Wortschmuggel iOS-App
+
+on:
+  push:
+    paths:
+      - 'wortschmuggel.html'
+      - 'wortschmuggel-fonts/**'
+      - 'ios/Wortschmuggel/**'
+      - '.github/workflows/ios-wortschmuggel.yml'
+  workflow_dispatch:
+
+jobs:
+  bauen:
+    name: App bauen und im Simulator starten
+    runs-on: macos-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: ios/Wortschmuggel
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Xcode-Projekt erzeugen
+        run: |
+          xcodebuild -version
+          brew install xcodegen
+          xcodegen generate
+
+      - name: App für iPhone und iPad bauen (ohne Signatur)
+        run: |
+          xcodebuild -project Wortschmuggel.xcodeproj -scheme Wortschmuggel \
+            -configuration Release -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Unsignierte IPA packen
+        run: |
+          mkdir -p out/Payload
+          cp -R build/Build/Products/Release-iphoneos/Wortschmuggel.app out/Payload/
+          ls out/Payload/Wortschmuggel.app
+          (cd out && zip -qry Wortschmuggel-unsigniert.ipa Payload)
+          ls -lh out/Wortschmuggel-unsigniert.ipa
+
+      - name: Für den Simulator bauen
+        run: |
+          xcodebuild -project Wortschmuggel.xcodeproj -scheme Wortschmuggel \
+            -configuration Debug -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build-sim CODE_SIGNING_ALLOWED=NO build
+
+      - name: Im iPad-Simulator starten und Bildschirmfoto machen
+        run: |
+          UDID=$(xcrun simctl list -j devices available | jq -r '[.devices[][] | select(.name | test("iPad"))][0].udid')
+          echo "Simulator: $UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl install "$UDID" build-sim/Build/Products/Debug-iphonesimulator/Wortschmuggel.app
+          xcrun simctl launch "$UDID" de.restauranttime.wortschmuggel
+          sleep 12
+          xcrun simctl io "$UDID" screenshot out/simulator-ipad.png
+          xcrun simctl spawn "$UDID" launchctl list | grep -i wortschmuggel
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Wortschmuggel-unsigniert-ipa
+          path: ios/Wortschmuggel/out/Wortschmuggel-unsigniert.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Simulator-Bildschirmfoto
+          path: ios/Wortschmuggel/out/simulator-ipad.png
