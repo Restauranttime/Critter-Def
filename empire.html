@@ -2891,6 +2891,8 @@ function toast(msg, ms) {
    Deshalb richtet sich die Seite dann fest nach der Bildschirmhöhe – wie bei Funkenwerk und Tiefgang. */
 let FULLPX = -1;
 function isApp() { return !!(navigator.standalone || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches); }
+/* iOS-App (Ordner ios/): lädt dieselbe Seite und setzt vorher window.FE_NATIVE */
+function isNative() { return !!(window.FE_NATIVE && window.FE_NATIVE.platform); }
 function applyGap() {
   const app = isApp();
   const portrait = innerHeight >= innerWidth, full = portrait ? Math.max(screen.height, screen.width) : Math.min(screen.height, screen.width);
@@ -2970,7 +2972,7 @@ function showStart(err) {
     '<button class="btn white wide" data-s="board">' + ic('krone') + 'Neues Spielbrett öffnen</button>' +
     (saves.length ? '<div class="lbl" style="text-align:left;margin-top:4px">Gespeicherte Spiele</div><div class="saves">' + saves.map(saveRow).join('') + '</div>' : '') +
     '</div>' +
-    '<p style="font-size:12px">' + (LOCAL ? 'Testmodus: Verbindung nur zwischen Tabs in diesem Browser.' : 'Tipp: Über Safari › Teilen › „Zum Home-Bildschirm“ wird Football Empire zur Vollbild-App.') + '<br>Version ' + APP_VERSION + '</p>' +
+    '<p style="font-size:12px">' + (LOCAL ? 'Testmodus: Verbindung nur zwischen Tabs in diesem Browser.<br>' : isNative() ? '' : 'Tipp: Über Safari › Teilen › „Zum Home-Bildschirm“ wird Football Empire zur Vollbild-App.<br>') + 'Version ' + APP_VERSION + (isNative() ? ' · iOS-App ' + esc(String(window.FE_NATIVE.version || '')) : '') + '</p>' +
     '</div>';
 }
 function boardSaves() {
@@ -4101,7 +4103,7 @@ function joinHtml() {
   return '<div id="ph-main" style="padding:calc(20px + var(--safe-t)) 18px 30px"><form class="join" id="jf">' +
     '<div class="wordmark" style="font-size:22px">FOOTBALL <b>EMPIRE</b></div>' +
     '<p class="hint">Raum ' + esc(P.code) + ' · Gründe deinen Verein.</p>' +
-    (!P.me && !isApp() && matchMedia('(pointer: coarse)').matches ? '<div class="apphint"><b>Football Empire als App am Home-Bildschirm?</b> Die Handy-Kamera öffnet Links immer im Browser. Für Vollbild öffne lieber die App und tippe dort „QR-Code am iPad scannen“ oder gib den Code <b>' + esc(P.code) + '</b> ein.</div>' : '') +
+    (!P.me && !isApp() && !isNative() && matchMedia('(pointer: coarse)').matches ? '<div class="apphint"><b>Football Empire als App am Home-Bildschirm?</b> Die Handy-Kamera öffnet Links immer im Browser. Für Vollbild öffne lieber die App und tippe dort „QR-Code am iPad scannen“ oder gib den Code <b>' + esc(P.code) + '</b> ein.</div>' : '') +
     '<label>DEIN NAME<input id="jmgr" maxlength="14" value="' + esc(f.mgr) + '" placeholder="z. B. Lea" autocomplete="off"></label>' +
     '<label>VEREINSNAME<input id="jname" maxlength="24" value="' + esc(f.name) + '" placeholder="z. B. FC Nordlicht" autocomplete="off"></label>' +
     '<label>KÜRZEL (3 BUCHSTABEN)<input id="jshort" maxlength="3" value="' + esc(f.short) + '" placeholder="FCN" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase"></label>' +
