@@ -64,6 +64,9 @@ jobs:
           xcrun simctl io "$UDID" screenshot out/simulator-ipad.png
           xcrun simctl spawn "$UDID" launchctl list | grep -i wortschmuggel
 
+      - name: Prüfen, ob das Spiel zu sehen ist
+        run: xcrun swift ci/check-screenshot.swift out/simulator-ipad.png
+
       - uses: actions/upload-artifact@v4
         with:
           name: Wortschmuggel-unsigniert-ipa
