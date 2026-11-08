@@ -954,6 +954,14 @@ function pValue(p) {
   if (p.tr && TRAITS[p.tr]) v *= TRAITS[p.tr].good ? 1.1 : 0.85;
   return Math.max(1, Math.round(v));
 }
+/* Talente bis 23 Jahre wachsen am Saisonende: ★★★ meist +3, ★★ meist +2, ★ sicher +1 (mit Glück +2).
+   Jede Stufe Trainingszentrum gibt 5 % mehr Chance auf den größten Sprung. */
+function talentGrowth(tal, train) {
+  const r = rnd() - 0.05 * (train || 0);
+  if (tal >= 3) return r < 0.70 ? 3 : r < 0.95 ? 2 : 1;
+  if (tal === 2) return r < 0.05 ? 3 : r < 0.75 ? 2 : 1;
+  return r < 0.25 ? 2 : 1;
+}
 function pSalary(p) { return Math.max(1, Math.round(pValue(p) * 0.16)); } // pro Saison
 function randTrait(pos, goodOnly) {
   const keys = Object.keys(TRAITS).filter(k => TRAITS[k].pos.includes(pos) && (!goodOnly || TRAITS[k].good));
@@ -2147,7 +2155,7 @@ function seasonEnd(G) {
     for (const p of c.players.slice()) {
       p.age++;
       const old = p.s;
-      if (p.age <= 23) { if (rnd() < clamp(0.22 + 0.18 * p.tal + 0.1 * train, 0, 0.92)) p.s++; if (p.tal >= 3 && rnd() < 0.25 + 0.05 * train) p.s++; }
+      if (p.age <= 23) { if (p.tal > 0) p.s += talentGrowth(p.tal, train); else if (rnd() < clamp(0.22 + 0.1 * train, 0, 0.92)) p.s++; }
       else if (p.age <= 29) { if (rnd() < 0.06 + 0.06 * train) p.s++; }
       else if (p.age >= 31) { if (rnd() < 0.3 + 0.1 * (p.age - 31) - 0.05 * train) p.s--; }
       p.s = clamp(p.s, 1, 10);
@@ -2832,7 +2840,7 @@ function makeClient(handlers) {
 /* ==========================================================================
    GEMEINSAME BAUSTEINE (Brett und Handy)
    ========================================================================== */
-const APP_VERSION = '12';
+const APP_VERSION = '13';
 const $ = (s, r) => (r || document).querySelector(s);
 const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
@@ -4525,7 +4533,7 @@ function spickHtml() {
   const now = spickNow();
   return '<div class="spick">' +
     (now[0] ? '<div class="jetzt"><div class="l">GERADE DRAN</div><b>' + esc(now[0]) + '</b><p>' + esc(now[1]) + '</p></div>' : '') +
-    sec('ablauf', 'liga', 'Ablauf einer Saison', '<ol><li>Sponsor wählen, dazu 1 Glücksmünze</li><li>Spieler auf die Transferliste, Stadion ausbauen</li><li>Transfermarkt: geheim bieten, das iPad deckt auf</li><li>Hinrunde</li><li>Winterpause mit kleinem Transfermarkt</li><li>Rückrunde</li><li>Pokal (K.-o., bei Unentschieden Elfmeterschießen)</li><li>Saisonrückblick und Abrechnung</li></ol>') +
+    sec('ablauf', 'liga', 'Ablauf einer Saison', '<ol><li>Sponsor wählen, dazu 1 Glücksmünze</li><li>Spieler auf die Transferliste, Stadion ausbauen</li><li>Transfermarkt: geheim bieten, das iPad deckt auf</li><li>Hinrunde</li><li>Winterpause mit kleinem Transfermarkt</li><li>Rückrunde</li><li>Pokal (K.-o., bei Unentschieden Elfmeterschießen)</li><li>Saisonrückblick und Abrechnung</li></ol><p class="nb">Am Saisonende werden Talente bis 23 besser: ★★★ meist +3, ★★ meist +2, ★ +1 (mit Glück +2).</p>') +
     sec('spieltag', 'team', 'Spieltag', kv([['Formation', '4-4-2, 4-3-3, 3-5-2 …'], ['Taktik offensiv', 'Angriff +1, Abwehr −1'], ['Taktik defensiv', 'Abwehr +1, Angriff −1'], ['Einsatz hart', 'Mittelfeld +1, mehr Karten'], ['Halbzeit', 'umstellen, bis zu 3 Wechsel'], ['3. Gelbe oder Rot', '1 Spiel gesperrt']])) +
     sec('duell', 'shake', 'Würfel-Duell', '<p>Bei jeder Torchance: Schütze gegen Torwart. Beide würfeln, der Stärkere bekommt bis zu <b>+2</b> dazu. Die höhere Zahl gewinnt, bei Gleichstand hält der Torwart.</p>' +
       kv([['Elfmeter', '+2 für den Schützen'], ['Kopfball nach Ecke', '−1 für den Schützen'], ['Torjäger', '+2, einmal pro Spiel'], ['Katze (Torwart)', '+1 in jedem Duell'], ['Kopfballstark', '+2 nach Ecken'], ['Joker', '+2, wenn eingewechselt']]) +
@@ -4839,7 +4847,7 @@ function playerSheet(pid) {
     '<div class="kv"><span>Tore (Saison / gesamt)</span><b>' + p.goals + ' / ' + (p.gt + p.goals) + '</b></div><div class="kv"><span>Einsätze</span><b>' + p.apps + '</b></div>' +
     (p.yc ? '<div class="kv"><span>Gelbe Karten</span><b>' + p.yc + ' (bei 3 gesperrt)</b></div>' : '') +
     (p.st ? '<div class="kv"><span>Status</span><b class="st-inj">' + esc(p.st.n) + ', noch ' + p.st.left + (p.st.left === 1 ? ' Spiel' : ' Spiele') + '</b></div>' : '') +
-    '<p class="hint" style="margin-top:8px">Junge Spieler mit Talent werden am Saisonende oft besser, ab 31 lassen sie nach.</p>' +
+    '<p class="hint" style="margin-top:8px">Talente bis 23 Jahre werden am Saisonende besser: ★★★ meist um 3, ★★ meist um 2, ★ um 1 (mit Glück 2). Ab 31 lassen Spieler nach.</p>' +
     (P.me.canManage && !(P.me.onMarket || []).includes(p.id) ? '<button class="btn dark wide" data-p="release" data-v="' + p.id + '">Vertrag auflösen · Abfindung ' + fmtM(P.me.releaseCost[p.id] || 0) + '</button><p class="hint">Der Spieler geht sofort. Mindestens 14 Spieler müssen im Kader bleiben.</p>' : '') };
   phoneRender();
 }
