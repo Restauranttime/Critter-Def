@@ -258,7 +258,7 @@ input{font:inherit;color:inherit}
 .duel .res .tag{display:flex;align-items:center;font-size:18px}
 .duel .res .rt{flex:1;display:flex;align-items:center;padding:0 12px;background:#fff;color:var(--ink);font-weight:800;font-size:14px}
 .duel .dice2{display:flex;gap:6px}
-.goalflash{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;pointer-events:none;animation:gf 2.6s ease-out forwards}
+.goalflash{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;pointer-events:none;animation:gf 1.6s ease-out forwards}
 .goalflash span{background:var(--lime);color:var(--ink);font-weight:900;font-style:italic;font-size:64px;padding:4px 40px;transform:skewX(-12deg);letter-spacing:.06em}
 @keyframes gf{0%{opacity:0;transform:scale(.6)}12%{opacity:1;transform:scale(1.08)}20%{transform:scale(1)}80%{opacity:1}100%{opacity:0}}
 .httop{position:absolute;inset:0;z-index:8;background:#040D1FE6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center}
@@ -807,6 +807,48 @@ input{font:inherit;color:inherit}
 .mcard.big .mev>div.g span{color:#fff;font-weight:800}
 .mcard.big .mev>div.r{border-left-color:#E5484D}
 .mcard.big .mev>div:nth-child(n+3){opacity:.75}
+
+/* Version 12: Würfel-Duell als Rechnung */
+.mcard.big .duel{gap:12px;padding:14px 20px}
+.dq{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:12px;align-items:stretch}
+.dq-side{background:#0D1E3E;border:2px solid #1C3360;padding:10px 14px 8px;display:flex;flex-direction:column;gap:8px;min-width:0;transition:opacity .3s,border-color .3s}
+.dq-side.win{border-color:var(--lime);box-shadow:0 0 24px #C6F13533}
+.dq-side.lose{opacity:.72}
+.dq-who{min-width:0}
+.dq-role{display:block;font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--lime)}
+.dq-who b{display:block;font-stretch:75%;font-weight:900;font-style:italic;font-size:24px;line-height:1.02;text-transform:uppercase;overflow-wrap:anywhere;margin:2px 0}
+.dq-who>span:last-child{font-size:13px;color:var(--muted)}
+.dq-dice{display:flex;justify-content:center;align-items:center;gap:8px;min-height:80px}
+.dq-calc{display:flex;flex-direction:column;margin-top:auto}
+.dq-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:14px;line-height:1.25;color:#C9D4E8;padding:4px 0;border-bottom:1px solid #1C3360}
+.dq-row span{min-width:0}
+.dq-row b{font-weight:900;font-size:18px;color:#fff;white-space:nowrap}
+.dq-row.pos b{color:var(--lime)}
+.dq-row.neg b{color:#FF7A85}
+.dq-row.none span{color:var(--muted);font-style:italic}
+.dq-sum{display:flex;justify-content:space-between;align-items:baseline;padding-top:4px}
+.dq-sum span{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+.dq-sum b{font-stretch:75%;font-weight:900;font-style:italic;font-size:50px;line-height:1;color:#fff}
+.dq-side.win .dq-sum b{color:var(--lime)}
+.dq-mid{align-self:center;text-align:center;min-width:70px}
+.dq-vs{font-weight:900;font-style:italic;font-size:26px;color:var(--muted)}
+.dq-score{display:block;font-stretch:75%;font-weight:900;font-style:italic;font-size:60px;line-height:1;color:#fff;white-space:nowrap;animation:fin .25s ease-out}
+.dq-score i{color:var(--lime);font-style:normal;padding:0 4px}
+.dq-res{display:flex;align-items:stretch;min-height:48px;animation:fin .25s ease-out}
+.dq-res .tag{font-size:20px;display:flex;align-items:center}
+.dq-res .rt{flex:1;display:flex;flex-direction:column;justify-content:center;padding:4px 14px;background:#fff;color:var(--ink);min-width:0}
+.dq-res .rt b{font-weight:900;font-size:17px;line-height:1.15}
+.dq-res .rt span{font-size:13px;color:var(--ink2)}
+.dq-res.pending{align-items:center;justify-content:center;min-height:30px;color:var(--muted);font-size:13px;animation:none}
+/* Handy: Rechnung nach dem Duell */
+.dqp-w{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+.dqp{background:#0D1E3E;border:2px solid #1C3360;padding:8px 10px;min-width:0}
+.dqp.win{border-color:var(--lime)}
+.dqp .lbl{display:block;margin-bottom:2px}
+.dqp .dq-row{font-size:12px;padding:3px 0}
+.dqp .dq-row b{font-size:14px}
+.dqp .dq-sum b{font-size:34px}
+.dqp.win .dq-sum b{color:var(--lime)}
 </style>
 </head>
 <body>
@@ -892,7 +934,7 @@ const SP_PRE = ['Nordwind', 'Goldquell', 'Sonnhof', 'Blitzblank', 'Alpenglück',
 const SP_SUF = ['Energie', 'Versicherung', 'Logistik', 'Brauerei', 'Telekom', 'Reisen', 'Bank', 'Motoren', 'Molkerei', 'Software', 'Bau', 'Getränke'];
 
 /* Zeiten (ms) für den Live-Ablauf auf dem Brett */
-const T = { pick: 45000, botPick: 1600, round: 1700, attack: 1300, goal: 3800, miss: 2700, duel: 30000, auto: 1400, ht: 45000, kick: 1100 };
+const T = { pick: 45000, botPick: 1600, round: 1700, attack: 1300, goal: 5500, miss: 5500, so: 5000, duel: 30000, auto: 1400, ht: 45000, kick: 1100 };
 const SQUAD_MAX = 25;
 const MAXV = 2; // ein Stärkeunterschied zählt höchstens so viel
 
@@ -1151,10 +1193,11 @@ function addRuhm(G, c, v, why) {
   if (c.rlog.length > 80) c.rlog.splice(0, c.rlog.length - 80);
   G.rdelta[c.id] = (G.rdelta[c.id] || 0) + v;
 }
-function bigWin(G, c, diff) {
-  c.coins++;
-  news(G, c.name + ' gewinnt mit ' + diff + ' Toren Unterschied: +1 Glücksmünze', 'info');
-  pushFlash(G, { k: 'muenzen', t: c.name + ' gewinnt mit ' + diff + ' Toren Unterschied: +1 Glücksmünze' });
+/* Die Letzten der Ligatabelle einer Saison: ab 4 Vereinen die letzten zwei, sonst nur der Letzte */
+function lastOfSeason(G, season) {
+  const h = (G.hist || []).find(x => x.season === season);
+  if (!h || !h.table || h.table.length < 2) return [];
+  return h.table.slice(h.table.length <= 3 ? -1 : -2).map(t => clubById(G, t.id)).filter(Boolean);
 }
 function withBank(G, f) { const b = G.bankMode; G.bankMode = true; try { return f(); } finally { G.bankMode = b; } }
 function payBank(G) {
@@ -1243,9 +1286,12 @@ function enterPhase(G, ph) {
     G.md = 0;
     for (const c of G.clubs) { c.ruhmS0 = c.ruhm; c.moneyS0 = c.money; }
     G.sstat = blankStat();
-    for (const c of G.clubs) c.coins += 2;
-    news(G, 'Saison ' + G.season + ': Jeder Verein bekommt 2 Glücksmünzen.', 'info');
-    pushFlash(G, { k: 'muenzen', t: 'Saison ' + G.season + ': Jeder Verein bekommt 2 Glücksmünzen' });
+    for (const c of G.clubs) c.coins += 1;
+    const trost = lastOfSeason(G, G.season - 1);
+    for (const c of trost) c.coins += 2;
+    const tn = trost.map(c => c.name).join(' und ');
+    news(G, 'Saison ' + G.season + ': Jeder Verein bekommt 1 Glücksmünze.' + (trost.length ? ' ' + tn + (trost.length === 1 ? ' bekommt als Letzter' : ' bekommen als Letzte') + ' der Saison ' + (G.season - 1) + ' 2 dazu.' : ''), 'info');
+    pushFlash(G, { k: 'muenzen', t: 'Saison ' + G.season + ': Jeder Verein bekommt 1 Glücksmünze' + (trost.length ? ' · ' + tn + ' +2' : '') });
     for (const c of G.clubs) { c.offers = sponsorOffers(G, c); c.sponsor = null; c.listed = []; c.bids = {}; }
   } else if (ph === 'winter') {
     for (const c of G.clubs) { c.listed = []; c.bids = {}; }
@@ -1589,7 +1635,6 @@ function finishCupRound(G) {
     const win = m.hg > m.ag ? 'h' : m.ag > m.hg ? 'a' : (m.soWin || 'h');
     const w = m[win], l = m[other(win)];
     C.out.push(l); addFans(clubById(G, w), 300);
-    if (Math.abs(m.hg - m.ag) >= 3) bigWin(G, clubById(G, w), Math.abs(m.hg - m.ag));
     const scorers = m.ev.filter(e => e.t === 'goal').map(e => ({ sd: e.sd, min: e.min, n: (e.text.match(/([^!]+?) trifft/) || [])[1] || '' }));
     res.push({ h: m.h, a: m.a, hg: m.hg, ag: m.ag, so: m.so ? soTally(m) : null, w, scorers, spect: 0, st: m.st });
     statMatch(G, m, 0, l, C.name);
@@ -1874,7 +1919,7 @@ function resolveDuel(G, m, now) {
     let win = soDecided(m);
     if (!win && m.so.h.length >= 15 && m.so.h.length === m.so.a.length) { win = rnd() < 0.5 ? 'h' : 'a'; mEv(m, 'solot', win, 'Nach 15 Elfmetern pro Team entscheidet das Los'); }
     if (win) { m.soWin = win; mEv(m, 'sowin', win, clubById(G, m[win]).name + ' gewinnt im Elfmeterschießen'); }
-    m.next = now + (goal ? 2600 : 2400);
+    m.next = now + T.so;
     return;
   }
   if (goal) {
@@ -1948,7 +1993,6 @@ function finishMatchday(G) {
     const upd = (c, gf, ga) => {
       c.tab.sp++; c.tab.gf += gf; c.tab.ga += ga;
       const r = gf > ga ? 'S' : gf === ga ? 'U' : 'N';
-      if (gf - ga >= 3) bigWin(G, c, gf - ga);
       if (r === 'S') { c.tab.s++; c.tab.pts += 3; addRuhm(G, c, 2, 'Sieg'); addFans(c, 600 * fs); if (c.sponsor && c.sponsor.win) pay(G, c, c.sponsor.win, 'Siegprämie ' + c.sponsor.n); }
       else if (r === 'U') { c.tab.u++; c.tab.pts += 1; addRuhm(G, c, 1, 'Unentschieden'); addFans(c, 100 * fs); }
       else { c.tab.n++; addFans(c, -300 * fs); }
@@ -2788,7 +2832,7 @@ function makeClient(handlers) {
 /* ==========================================================================
    GEMEINSAME BAUSTEINE (Brett und Handy)
    ========================================================================== */
-const APP_VERSION = '11';
+const APP_VERSION = '12';
 const $ = (s, r) => (r || document).querySelector(s);
 const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
@@ -2891,6 +2935,8 @@ function toast(msg, ms) {
    Deshalb richtet sich die Seite dann fest nach der Bildschirmhöhe – wie bei Funkenwerk und Tiefgang. */
 let FULLPX = -1;
 function isApp() { return !!(navigator.standalone || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches); }
+/* iOS-App (Ordner ios/): lädt dieselbe Seite und setzt vorher window.FE_NATIVE */
+function isNative() { return !!(window.FE_NATIVE && window.FE_NATIVE.platform); }
 function applyGap() {
   const app = isApp();
   const portrait = innerHeight >= innerWidth, full = portrait ? Math.max(screen.height, screen.width) : Math.min(screen.height, screen.width);
@@ -2970,7 +3016,7 @@ function showStart(err) {
     '<button class="btn white wide" data-s="board">' + ic('krone') + 'Neues Spielbrett öffnen</button>' +
     (saves.length ? '<div class="lbl" style="text-align:left;margin-top:4px">Gespeicherte Spiele</div><div class="saves">' + saves.map(saveRow).join('') + '</div>' : '') +
     '</div>' +
-    '<p style="font-size:12px">' + (LOCAL ? 'Testmodus: Verbindung nur zwischen Tabs in diesem Browser.' : 'Tipp: Über Safari › Teilen › „Zum Home-Bildschirm“ wird Football Empire zur Vollbild-App.') + '<br>Version ' + APP_VERSION + '</p>' +
+    '<p style="font-size:12px">' + (LOCAL ? 'Testmodus: Verbindung nur zwischen Tabs in diesem Browser.<br>' : isNative() ? '' : 'Tipp: Über Safari › Teilen › „Zum Home-Bildschirm“ wird Football Empire zur Vollbild-App.<br>') + 'Version ' + APP_VERSION + (isNative() ? ' · iOS-App ' + esc(String(window.FE_NATIVE.version || '')) : '') + '</p>' +
     '</div>';
 }
 function boardSaves() {
@@ -3144,6 +3190,37 @@ async function checkUpdate() {
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !window.BOARD_ON && !window.PHONE_ON) setTimeout(checkUpdate, 300); });
 document.addEventListener('click', e => { const b = e.target.closest('[data-s="upd"]'); if (b) location.replace(location.pathname + '?v=' + b.dataset.v + '&t=' + Date.now()); });
+
+/* ---------- Würfel-Duell als Rechnung (iPad und Handy) ----------
+   Jede Seite bekommt ihre eigenen Zuschläge. Verglichen wird wie im Spiel:
+   Schütze gewinnt, wenn seine Summe höher ist; bei Gleichstand hält der Torwart. */
+function duelCalc(d) {
+  const S = [], K = [];
+  const diff = d.sh.s - d.kp.s, cap = Math.max(-MAXV, Math.min(MAXV, diff));
+  const capTxt = Math.abs(diff) > MAXV ? ' (zählt höchstens +' + MAXV + ')' : '';
+  if (cap > 0) S.push({ l: 'Stärke ' + d.sh.s + ' gegen ' + d.kp.s + capTxt, v: cap });
+  if (cap < 0) K.push({ l: 'Stärke ' + d.kp.s + ' gegen ' + d.sh.s + capTxt, v: -cap });
+  for (const n of d.notes || []) { const m = /^(.*?)\s*([+−-])\s*(\d+)$/.exec(n); if (m) S.push({ l: m[1], v: (m[2] === '+' ? 1 : -1) * +m[3] }); }
+  if (d.trait) S.push({ l: 'Torjäger', v: 2 });
+  if (d.kb) K.push({ l: 'Katze', v: d.kb });
+  // Elfmeterschießen: der Vorteil zählt höchstens ±SO_MAXADV
+  const net = S.reduce((a, x) => a + x.v, 0) - K.reduce((a, x) => a + x.v, 0);
+  if (d.so && Math.abs(net) > SO_MAXADV) (net > 0 ? S : K).push({ l: 'Im Elfmeterschießen höchstens +' + SO_MAXADV, v: -(Math.abs(net) - SO_MAXADV) });
+  const best = (a, b) => a == null ? null : Math.max(a, b || 0);
+  const rs = best(d.rs, d.rs2), rk = best(d.rk, d.rk2);
+  const sum = (r, L) => r == null ? null : r + L.reduce((a, x) => a + x.v, 0);
+  const s = sum(rs, S), k = sum(rk, K);
+  let res = null;
+  if (s != null && k != null) {
+    const kind = d.kind === 'elf' || d.so ? 'elf' : d.kind;
+    if (s > k) res = { goal: true, why: s + ' gegen ' + k + ': Tor!' };
+    else if (s === k) res = { goal: false, why: s + ' gegen ' + k + ': Gleichstand, der Torwart hält' };
+    else if (k - s >= 3) res = { goal: false, wide: true, why: s + ' gegen ' + k + ': ' + (kind === 'elf' ? 'verschossen' : 'weit vorbei') };
+    else res = { goal: false, why: s + ' gegen ' + k + ': gehalten' };
+  }
+  return { S, K, rs, rk, s, k, res };
+}
+const fmtV = v => (v > 0 ? '+' : '−') + Math.abs(v);
 
 /* ==========================================================================
    SPIELBRETT (iPad): Gastgeber, rechnet alles und zeigt das Brett
@@ -3903,7 +3980,7 @@ function updateCard(m) {
   const seen = B.evSeen[m.id] || 0;
   if (m.ev.length > seen) {
     for (const e of m.ev.slice(seen)) {
-      if (e.t === 'goal') { SND.goal(); const f = document.createElement('div'); f.className = 'goalflash'; f.innerHTML = '<span>TOR!</span>'; el.appendChild(f); setTimeout(() => f.remove(), 2700); }
+      if (e.t === 'goal') { SND.goal(); const f = document.createElement('div'); f.className = 'goalflash'; f.innerHTML = '<span>TOR!</span>'; el.appendChild(f); setTimeout(() => f.remove(), 1700); }
       else if (e.t === 'red') SND.whistle(2);
       else if (e.t === 'ht') SND.whistle(2);
       else if (e.t === 'end') SND.whistle(3);
@@ -3914,7 +3991,8 @@ function updateCard(m) {
 function duelParts(m) {
   const G = B.G, d = m.duel;
   const cs = clubById(G, m[d.att]), ck = clubById(G, m[other(d.att)]);
-  const t = duelTotals(d);
+  const C = duelCalc(d);
+  const elf = d.kind === 'elf' || d.so;
   const kind = d.so ? 'ELFMETERSCHIESSEN ' + soTally(m).h + ':' + soTally(m).a : d.kind === 'elf' ? 'ELFMETER' : d.kind === 'kopf' ? 'KOPFBALL NACH ECKE' : 'TORSCHUSS';
   const left = Math.max(0, Math.ceil((d.dl - Date.now()) / 1000));
   const waitS = d.rs == null, waitK = d.rk == null;
@@ -3925,22 +4003,35 @@ function duelParts(m) {
     if (who) wait = (mode === 'echt' ? 'Mit echtem Würfel würfeln und am Handy eintippen: ' : 'Am Handy würfeln: ') + who + ' · noch ' + left + ' s';
   }
   const dice = (v, v2, rolling, cls) => {
-    if (rolling) return '<div class="dice2">' + dieHtml(1, 'roll ' + cls, 86) + '</div>';
-    if (v2 != null) { const best = Math.max(v, v2); return '<div class="dice2">' + dieHtml(v, 'land ' + cls + (v < best ? ' ghost' : ''), 70) + dieHtml(v2, 'land ' + cls + (v2 < best || v2 === v ? ' ghost' : ''), 70) + '</div>'; }
-    return '<div class="dice2">' + dieHtml(v, 'land ' + cls, 86) + '</div>';
+    if (rolling) return dieHtml(1, 'roll ' + cls, 74);
+    if (v2 != null) { const best = Math.max(v, v2); return dieHtml(v, 'land ' + cls + (v < best ? ' ghost' : ''), 62) + dieHtml(v2, 'land ' + cls + (v2 < best || v2 === v ? ' ghost' : ''), 62); }
+    return dieHtml(v, 'land ' + cls, 74);
   };
-  const adv = t.adv;
-  const sR = d.att === 'a' ? ' r' : '', kR = d.att === 'a' ? '' : ' r';
-  const sideS = '<div class="side' + sR + '">' + dice(d.rs, d.rs2, waitS, 'lime') + '<div class="who"><b>' + esc(d.sh.n.toUpperCase()) + '</b><span>' + esc(cs.short) + ' · Abschluss ' + d.sh.s + (d.notes.length ? ' · ' + d.notes.map(esc).join(', ') : '') + (d.trait ? ' · Torjäger +2' : '') + (d.coinS ? ' · Münze' : '') + '</span>' +
-    (waitS ? '' : '<span class="sum">' + (adv > 0 ? t.rs + ' + ' + adv + ' = <span>' + t.s + '</span>' : '<span>' + t.s + '</span>') + '</span>') + '</div></div>';
-  const sideK = '<div class="side' + kR + '">' + dice(d.rk, d.rk2, waitK, '') + '<div class="who"><b>' + esc(d.kp.n.toUpperCase()) + '</b><span>' + esc(ck.short) + ' · Torwart ' + d.kp.s + (d.kb ? ' · Katze +1' : '') + (d.coinK ? ' · Münze' : '') + '</span>' +
-    (waitK ? '' : '<span class="sum">' + (adv < 0 ? t.rk + ' + ' + (-adv) + ' = <span>' + t.k + '</span>' : '<span>' + t.k + '</span>') + '</span>') + '</div></div>';
-  const vs = '<span class="vs">VS' + (adv ? '<small>VORTEIL<br>+' + Math.abs(adv) + ' ' + (adv > 0 ? 'SCHÜTZE' : 'TORWART') + '</small>' : '') + '</span>';
-  const [lft, rgt] = d.att === 'a' ? [sideK, sideS] : [sideS, sideK];
-  let res = '';
-  if (d.res) res = d.res.goal ? '<div class="res"><span class="tag"><span>TOR!</span></span><span class="rt">' + esc(d.sh.n) + ' trifft für ' + esc(cs.name) + '</span></div>'
-    : '<div class="res"><span class="tag white"><span>' + (t.k - t.s >= 3 ? 'DANEBEN' : 'GEHALTEN') + '</span></span><span class="rt">' + (t.k - t.s >= 3 ? esc(d.sh.n) + ' verfehlt das Tor' : esc(d.kp.n) + ' pariert') + '</span></div>';
-  return { head: '<div class="dk"><span class="tag"><span>' + kind + '</span></span><span class="dwait">' + esc(wait) + '</span></div>', main: '<div class="dg">' + lft + vs + rgt + '</div>' + res };
+  const done = !!d.res;
+  // Rechnung einer Seite: Würfel, Zuschläge mit Grund, Summe
+  const side = role => {
+    const isS = role === 's', club = isS ? cs : ck, p = isS ? d.sh : d.kp;
+    const rows = isS ? C.S : C.K, r = isS ? C.rs : C.rk, tot = isS ? C.s : C.k, rolling = isS ? waitS : waitK, coin = isS ? d.coinS : d.coinK;
+    const win = done ? (isS ? d.res.goal : !d.res.goal) : null;
+    return '<div class="dq-side' + (win === true ? ' win' : win === false ? ' lose' : '') + '">' +
+      '<div class="dq-who"><span class="dq-role">' + (isS ? (elf ? 'SCHÜTZE · ELFMETER' : 'SCHÜTZE') : 'TORWART') + '</span><b>' + esc(p.n) + '</b><span>' + esc(club.short) + ' · ' + (isS ? 'Abschluss ' : 'Torwart ') + p.s + '</span></div>' +
+      '<div class="dq-dice">' + dice(isS ? d.rs : d.rk, isS ? d.rs2 : d.rk2, rolling, isS ? 'lime' : '') + '</div>' +
+      '<div class="dq-calc"><div class="dq-row"><span>' + (coin ? 'Würfel, bester von 2 (Münze)' : 'Würfel') + '</span><b>' + (r == null ? '?' : r) + '</b></div>' +
+      rows.map(x => '<div class="dq-row ' + (x.v < 0 ? 'neg' : 'pos') + '"><span>' + esc(x.l) + '</span><b>' + fmtV(x.v) + '</b></div>').join('') +
+      (rows.length ? '' : '<div class="dq-row none"><span>kein Zuschlag</span><b></b></div>') +
+      '<div class="dq-sum"><span>Summe</span><b>' + (tot == null ? '?' : tot) + '</b></div></div></div>';
+  };
+  const home = d.att === 'a' ? 'k' : 's', away = home === 's' ? 'k' : 's'; // Heim links, Gast rechts
+  const tl = home === 's' ? C.s : C.k, tr = home === 's' ? C.k : C.s;
+  const mid = '<div class="dq-mid">' + (done && tl != null && tr != null ? '<b class="dq-score">' + tl + '<i>:</i>' + tr + '</b>' : '<b class="dq-vs">VS</b>') + '</div>';
+  let res;
+  if (done && C.res) {
+    const tag = d.res.goal ? 'TOR!' : C.res.wide ? (elf ? 'VERSCHOSSEN' : 'DANEBEN') : 'GEHALTEN';
+    const who = d.res.goal ? esc(d.sh.n) + ' trifft für ' + esc(cs.name) : C.res.wide ? esc(d.sh.n) + (elf ? ' verschießt' : ' verfehlt das Tor') : esc(d.kp.n) + ' pariert';
+    res = '<div class="dq-res' + (d.res.goal ? ' goal' : '') + '"><span class="tag' + (d.res.goal ? '' : ' white') + '"><span>' + tag + '</span></span><span class="rt"><b>' + esc(C.res.why) + '</b><span>' + who + '</span></span></div>';
+  } else res = '<div class="dq-res pending">Die höhere Summe gewinnt. Bei Gleichstand hält der Torwart.</div>';
+  return { head: '<div class="dk"><span class="tag"><span>' + kind + '</span></span><span class="dwait">' + esc(wait) + '</span></div>',
+    main: '<div class="dq">' + side(home) + mid + side(away) + '</div>' + res };
 }
 
 /* ---------- Knöpfe auf dem Brett ---------- */
@@ -4101,7 +4192,7 @@ function joinHtml() {
   return '<div id="ph-main" style="padding:calc(20px + var(--safe-t)) 18px 30px"><form class="join" id="jf">' +
     '<div class="wordmark" style="font-size:22px">FOOTBALL <b>EMPIRE</b></div>' +
     '<p class="hint">Raum ' + esc(P.code) + ' · Gründe deinen Verein.</p>' +
-    (!P.me && !isApp() && matchMedia('(pointer: coarse)').matches ? '<div class="apphint"><b>Football Empire als App am Home-Bildschirm?</b> Die Handy-Kamera öffnet Links immer im Browser. Für Vollbild öffne lieber die App und tippe dort „QR-Code am iPad scannen“ oder gib den Code <b>' + esc(P.code) + '</b> ein.</div>' : '') +
+    (!P.me && !isApp() && !isNative() && matchMedia('(pointer: coarse)').matches ? '<div class="apphint"><b>Football Empire als App am Home-Bildschirm?</b> Die Handy-Kamera öffnet Links immer im Browser. Für Vollbild öffne lieber die App und tippe dort „QR-Code am iPad scannen“ oder gib den Code <b>' + esc(P.code) + '</b> ein.</div>' : '') +
     '<label>DEIN NAME<input id="jmgr" maxlength="14" value="' + esc(f.mgr) + '" placeholder="z. B. Lea" autocomplete="off"></label>' +
     '<label>VEREINSNAME<input id="jname" maxlength="24" value="' + esc(f.name) + '" placeholder="z. B. FC Nordlicht" autocomplete="off"></label>' +
     '<label>KÜRZEL (3 BUCHSTABEN)<input id="jshort" maxlength="3" value="' + esc(f.short) + '" placeholder="FCN" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase"></label>' +
@@ -4434,12 +4525,12 @@ function spickHtml() {
   const now = spickNow();
   return '<div class="spick">' +
     (now[0] ? '<div class="jetzt"><div class="l">GERADE DRAN</div><b>' + esc(now[0]) + '</b><p>' + esc(now[1]) + '</p></div>' : '') +
-    sec('ablauf', 'liga', 'Ablauf einer Saison', '<ol><li>Sponsor wählen, dazu 2 Glücksmünzen</li><li>Spieler auf die Transferliste, Stadion ausbauen</li><li>Transfermarkt: geheim bieten, das iPad deckt auf</li><li>Hinrunde</li><li>Winterpause mit kleinem Transfermarkt</li><li>Rückrunde</li><li>Pokal (K.-o., bei Unentschieden Elfmeterschießen)</li><li>Saisonrückblick und Abrechnung</li></ol>') +
+    sec('ablauf', 'liga', 'Ablauf einer Saison', '<ol><li>Sponsor wählen, dazu 1 Glücksmünze</li><li>Spieler auf die Transferliste, Stadion ausbauen</li><li>Transfermarkt: geheim bieten, das iPad deckt auf</li><li>Hinrunde</li><li>Winterpause mit kleinem Transfermarkt</li><li>Rückrunde</li><li>Pokal (K.-o., bei Unentschieden Elfmeterschießen)</li><li>Saisonrückblick und Abrechnung</li></ol>') +
     sec('spieltag', 'team', 'Spieltag', kv([['Formation', '4-4-2, 4-3-3, 3-5-2 …'], ['Taktik offensiv', 'Angriff +1, Abwehr −1'], ['Taktik defensiv', 'Abwehr +1, Angriff −1'], ['Einsatz hart', 'Mittelfeld +1, mehr Karten'], ['Halbzeit', 'umstellen, bis zu 3 Wechsel'], ['3. Gelbe oder Rot', '1 Spiel gesperrt']])) +
     sec('duell', 'shake', 'Würfel-Duell', '<p>Bei jeder Torchance: Schütze gegen Torwart. Beide würfeln, der Stärkere bekommt bis zu <b>+2</b> dazu. Die höhere Zahl gewinnt, bei Gleichstand hält der Torwart.</p>' +
-      kv([['Torjäger', '+2, einmal pro Spiel'], ['Katze (Torwart)', '+1 in jedem Duell'], ['Kopfballstark', '+2 nach Ecken'], ['Joker', '+2, wenn eingewechselt']]) +
+      kv([['Elfmeter', '+2 für den Schützen'], ['Kopfball nach Ecke', '−1 für den Schützen'], ['Torjäger', '+2, einmal pro Spiel'], ['Katze (Torwart)', '+1 in jedem Duell'], ['Kopfballstark', '+2 nach Ecken'], ['Joker', '+2, wenn eingewechselt']]) +
       '<p class="nb">' + diceT + ' Mit einer Glücksmünze würfelst du zweimal, der bessere Wurf zählt.</p>') +
-    sec('muenzen', 'muenze', 'Glücksmünzen', kv([['Zu jeder Saison', '+2'], ['Sieg mit 3 Toren Unterschied', '+1'], ['Grünes Feld 20, 40, 60 …', '+1']]) +
+    sec('muenzen', 'muenze', 'Glücksmünzen', kv([['Zu jeder Saison', '+1'], ['Die Letzten der Liga nach einer Saison', '+2'], ['Grünes Feld 20, 40, 60 …', '+1']]) + '<p class="nb">Ab 4 Vereinen bekommen die letzten zwei der Tabelle die 2 Münzen, sonst nur der Letzte.</p>' +
       '<p class="nb">Einsetzen: im Würfel-Duell für einen zweiten Wurf' + (fields ? ' oder gegen eine Pechkarte, bevor sie aufgedeckt wird' : '') + '.</p>') +
     sec('ruhm', 'krone', 'So gibt es Ruhm', kv([['Sieg / Unentschieden', '+2 / +1'], ['Stadionausbau (jede Stufe)', '+2'], ['Platzierung', 'Meister +10 … Letzter 0'], ['Pokalsieger / Finale', '+5 / +2'], ['Torschützenkönig', '+2'], ['Fans am Saisonende', '+1 je 5.000'], ['Publikumsliebling', '+1 pro Saison'], ['Schulden', '−1 pro Spieltag']]) +
       '<p class="nb">Ruhm aus Ausbau und Karten zählt am Ende des nächsten Spieltags.</p>') +
@@ -4621,8 +4712,19 @@ function duelHtmlPhone() {
   let center, btn = '';
   if (d.res) {
     const good = s ? d.res.goal : !d.res.goal;
-    center = '<div class="row" style="gap:12px">' + dieHtml(d.my[0], 'land lime', 110) + (d.my[1] ? dieHtml(d.my[1], 'land', 80) : '') + '</div>' +
-      '<div class="bigmsg" style="padding:0"><h2 class="' + (good ? 'lime' : '') + '" style="font-size:42px">' + (s ? (d.res.goal ? 'TOOOR!' : 'Gehalten …') : (d.res.goal ? 'Gegentor …' : 'GEHALTEN!')) + '</h2><p>' + (s ? d.res.s + ' gegen ' + d.res.k : d.res.k + ' gegen ' + d.res.s) + '</p></div>';
+    // Rechnung beider Seiten aus dem öffentlichen Spielstand (gleiche Rechnung wie auf dem iPad)
+    const pl = P.pub && P.pub.live && P.pub.live.ms.find(x => x.duel && x.duel.id === d.id), pd = pl && pl.duel;
+    const C = pd ? duelCalc(pd) : null;
+    const col = (title, rows, roll, coin, tot, won) => '<div class="dqp' + (won ? ' win' : '') + '"><span class="lbl">' + title + '</span>' +
+      '<div class="dq-row"><span>' + (coin ? 'Würfel (bester von 2)' : 'Würfel') + '</span><b>' + roll + '</b></div>' +
+      rows.map(x => '<div class="dq-row ' + (x.v < 0 ? 'neg' : 'pos') + '"><span>' + esc(x.l) + '</span><b>' + fmtV(x.v) + '</b></div>').join('') +
+      '<div class="dq-sum"><span>Summe</span><b>' + tot + '</b></div></div>';
+    const mine = s ? 's' : 'k';
+    const calc = C && C.res ? '<div class="dqp-w">' +
+      col(s ? 'DU · SCHÜTZE' : 'DU · TORWART', mine === 's' ? C.S : C.K, mine === 's' ? C.rs : C.rk, mine === 's' ? pd.coinS : pd.coinK, mine === 's' ? C.s : C.k, good) +
+      col(s ? 'TORWART' : 'SCHÜTZE', mine === 's' ? C.K : C.S, mine === 's' ? C.rk : C.rs, mine === 's' ? pd.coinK : pd.coinS, mine === 's' ? C.k : C.s, !good) + '</div>' : '';
+    center = '<div class="bigmsg" style="padding:0"><h2 class="' + (good ? 'lime' : '') + '" style="font-size:42px">' + (s ? (d.res.goal ? 'TOOOR!' : 'Gehalten …') : (d.res.goal ? 'Gegentor …' : 'GEHALTEN!')) + '</h2><p>' +
+      (C && C.res ? esc(C.res.why) : (s ? d.res.s + ' gegen ' + d.res.k : d.res.k + ' gegen ' + d.res.s)) + '</p></div>' + calc;
   } else if (d.rolled) {
     center = '<div class="row" style="gap:12px">' + dieHtml(d.my[0], 'land lime', 130) + (d.my[1] ? dieHtml(d.my[1], 'land', 90) : '') + '</div><p class="hint">Warte auf ' + esc(cPub(me.match.opp).mgr) + ' …</p>';
   } else if (d.real) {
@@ -4770,7 +4872,7 @@ function geldHtml() {
     (me.sponsor ? '<div class="kv"><span>Sponsor</span><b>' + esc(me.sponsor.n) + '</b></div>' : '') +
     '<div class="kv"><span>Glücksmünzen</span><b>' + me.coins + '</b></div>' +
     '<p class="hint">Schulden kosten Zinsen und jeden Spieltag 1 Ruhm. Am Spielende bringt die Vereinskasse je 5 Mio € 1 Ruhm. Jedes grüne Zehnerfeld auf der Ruhm-Leiste bringt 0,5 Mio €.</p>' +
-    '<p class="hint"><b>Glücksmünzen</b> gibt es zu jeder Saison (2), für einen Sieg mit 3 Toren Unterschied (1) und auf jedem zweiten grünen Feld der Ruhm-Leiste (20, 40, …). Einsetzen: im Würfel-Duell für einen zweiten Würfel oder gegen eine Pechkarte.</p></div>' + fcSec();
+    '<p class="hint"><b>Glücksmünzen</b> gibt es zu jeder Saison (1), auf jedem zweiten grünen Feld der Ruhm-Leiste (20, 40, …) und für die Letzten der Liga nach einer Saison (2). Einsetzen: im Würfel-Duell für einen zweiten Würfel oder gegen eine Pechkarte.</p></div>' + fcSec();
   for (const f of me.fin.slice().reverse()) {
     h += '<div class="sec"><h2><span class="lbl">' + esc(f.label.toUpperCase()) + ' · SAISON ' + f.s + '</span><b class="' + (f.sum >= 0 ? 'pos' : 'neg') + '">' + fmtMs(f.sum) + '</b></h2>' + f.items.map(x => '<div class="kv"><span>' + esc(x.t) + '</span><b class="' + (x.v >= 0 ? 'pos' : 'neg') + '">' + fmtMs(x.v) + '</b></div>').join('') + '</div>';
   }
